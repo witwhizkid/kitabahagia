@@ -11,7 +11,7 @@ Website komunitas sosial Kita Bahagia dengan halaman terpisah untuk setiap menu 
 - `relawan.html` — Gabung Jadi Relawan
 - `kolaborasi.html` — Kolaborasi
 - `kontak.html` — Kontak
-- `galeri.html` — pengalihan dari tautan jadwal lama ke `jadwal.html`
+- `galeri.html` — ga ada isinya ini udeh
 - `css/style.css` — seluruh styling
 - `js/script.js` — interaksi dan konfigurasi kontak
 - `img/` — foto dokumentasi serta hero versi WebP
