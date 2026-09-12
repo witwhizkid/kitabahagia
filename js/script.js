@@ -6,8 +6,60 @@ const SITE_CONFIG = {
   tiktokUrl: "https://tiktok.com/@kita.bahagia_",
   emailAddress: "kitabahagiaidn@gmail.com",
   email: "https://mail.google.com/mail/?view=cm&fs=1&to=kitabahagiaidn@gmail.com&su=Halo%20Kita%20Bahagia,%20saya%20tertarik%20ikut%20kegiatan.%20Boleh%20info%20kegiatan%20terdekat?&body=&bcc=",
-  googleFormUrl: "https://linktr.ee/kitabahagia",
 };
+
+const EVENT_DATA = Object.freeze({
+  "asa-raya-baduy": {
+    slug: "asa-raya-baduy",
+    name: "Asa Raya Baduy",
+    date: "29–30 Agustus 2026",
+    time: "09.00–12.00 WIB",
+    location: "Baduy, Banten",
+    status: "Tersedia",
+    capacity: "12 slot tersisa",
+    category: "Komunitas",
+    price: null
+  },
+  "blueventure-di-pulau-tidung": {
+    slug: "blueventure-di-pulau-tidung",
+    name: "Blueventure di Pulau Tidung",
+    date: "5–6 September 2026",
+    time: "13.00–15.30 WIB",
+    location: "Pulau Tidung, Jakarta",
+    status: "Tersedia",
+    capacity: "8 slot tersisa",
+    category: "Anak-anak",
+    price: null
+  },
+  "bahagia-kasih": {
+    slug: "bahagia-kasih",
+    name: "Bahagia Kasih",
+    date: "24 Agustus 2026",
+    time: "10.00–12.00 WIB",
+    location: "Bandung",
+    status: "Terbatas",
+    capacity: "3 slot tersisa",
+    category: "Kreatif",
+    price: null
+  },
+  "bahagia-belajar-beraksi": {
+    slug: "bahagia-belajar-beraksi",
+    name: "Bahagia Belajar & Beraksi",
+    date: "31 Agustus 2026",
+    time: "08.30–11.30 WIB",
+    location: "Bandung",
+    status: "Tersedia",
+    capacity: "20 slot tersisa",
+    category: "Lingkungan",
+    price: null
+  }
+});
+
+// Configure these endpoints only after the production registration and payment flow exists.
+const REGISTRATION_CONFIG = Object.freeze({
+  registrationEndpoint: "",
+  paymentEndpoint: ""
+});
 
 const setMobileMenuState = (shouldOpen) => {
   const nav = document.querySelector('.nav');
@@ -76,17 +128,13 @@ document.querySelectorAll('[data-wa]').forEach(link => {
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
 });
-document.querySelectorAll('[data-google-form]').forEach(link => {
-  const eventName = (link.dataset.eventName || '').trim();
-  const url = new URL(SITE_CONFIG.googleFormUrl);
+document.querySelectorAll('[data-registration-link]').forEach(link => {
+  const slug = (link.dataset.eventSlug || '').trim();
+  if (!EVENT_DATA[slug]) return;
 
-  if (eventName) {
-    url.searchParams.set('event', eventName);
-  }
-
-  link.href = url.toString();
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
+  link.href = `pendaftaran.html?event=${encodeURIComponent(slug)}`;
+  link.removeAttribute('target');
+  link.removeAttribute('rel');
 });
 document.querySelectorAll('[data-instagram]').forEach(link => {
   link.href = SITE_CONFIG.instagramUrl;
@@ -129,6 +177,7 @@ const heroTrack = document.querySelector('.hero-campaign-track');
 if (heroSlider && heroTrack && heroSlides.length) {
   let heroIndex = 0;
   let heroTimer = null;
+  const reduceHeroMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   const updateHeroSlider = () => {
     heroSlides.forEach((slide, index) => {
@@ -145,10 +194,12 @@ if (heroSlider && heroTrack && heroSlides.length) {
 
   const startHeroAutoplay = () => {
     clearInterval(heroTimer);
+    if (reduceHeroMotion.matches) return;
+
     heroTimer = setInterval(() => {
       heroIndex = (heroIndex + 1) % heroSlides.length;
       updateHeroSlider();
-    }, 4000);
+    }, 6000);
   };
 
   heroDots.forEach(dot => {
@@ -161,6 +212,7 @@ if (heroSlider && heroTrack && heroSlides.length) {
 
   updateHeroSlider();
   startHeroAutoplay();
+  reduceHeroMotion.addEventListener?.('change', startHeroAutoplay);
 }
 
 const testimonialSlides = Array.from(document.querySelectorAll('.testimonial-slide'));
@@ -202,10 +254,6 @@ if (testimonialSlides.length && testimonialTrack) {
   });
 
   updateTestimonials();
-  setInterval(() => {
-    activeIndex = (activeIndex + 1) % testimonialSlides.length;
-    updateTestimonials();
-  }, 5000);
 }
 
 document.getElementById('year')?.replaceChildren(document.createTextNode(new Date().getFullYear()));
@@ -232,7 +280,10 @@ if (scheduleCards.length && eventCards.length) {
   scheduleCards.forEach((button) => {
     button.addEventListener("click", () => {
       const filter = button.dataset.scheduleFilter;
-      scheduleCards.forEach((item) => item.classList.remove("active"));
+      scheduleCards.forEach((item) => {
+        item.classList.remove("active");
+        item.setAttribute("aria-pressed", String(item === button));
+      });
       button.classList.add("active");
       let visible = 0;
       eventCards.forEach((card) => {
@@ -288,3 +339,130 @@ function initScheduleCountdown() {
 }
 
 initScheduleCountdown();
+
+const registrationForm = document.querySelector('[data-registration-form]');
+
+if (registrationForm) {
+  const params = new URLSearchParams(window.location.search);
+  const eventSlug = (params.get('event') || '').trim().toLowerCase();
+  const selectedEvent = EVENT_DATA[eventSlug];
+  const registrationContent = document.getElementById('registrationContent');
+  const eventFallback = document.getElementById('eventFallback');
+  const selectedEventIntro = document.getElementById('selectedEventIntro');
+
+  if (!selectedEvent) {
+    if (selectedEventIntro) selectedEventIntro.textContent = 'Kegiatan belum dipilih';
+    eventFallback?.classList.remove('hidden');
+  } else {
+    const setText = (id, value) => {
+      const element = document.getElementById(id);
+      if (element) element.textContent = value;
+    };
+
+    if (selectedEventIntro) selectedEventIntro.textContent = selectedEvent.name;
+    setText('eventName', selectedEvent.name);
+    setText('eventDate', selectedEvent.date);
+    setText('eventTime', selectedEvent.time);
+    setText('eventLocation', selectedEvent.location);
+    setText('eventStatus', `${selectedEvent.status} · ${selectedEvent.capacity}`);
+
+    const eventNameInput = document.getElementById('kegiatan');
+    const eventSlugInput = document.getElementById('eventSlug');
+    if (eventNameInput) eventNameInput.value = selectedEvent.name;
+    if (eventSlugInput) eventSlugInput.value = selectedEvent.slug;
+
+    if (selectedEvent.price !== null && selectedEvent.price !== undefined) {
+      setText('eventPrice', new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        maximumFractionDigits: 0
+      }).format(selectedEvent.price));
+      document.getElementById('eventPriceRow')?.classList.remove('hidden');
+    }
+
+    registrationContent?.classList.remove('hidden');
+    const submitButton = registrationForm.querySelector('[type="submit"]');
+    const availabilityNote = document.getElementById('registrationAvailabilityNote');
+    const registrationAvailable = Boolean(REGISTRATION_CONFIG.registrationEndpoint);
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = registrationAvailable ? 'Kirim pendaftaran' : 'Daftar via WhatsApp';
+    }
+    if (availabilityNote) {
+      availabilityNote.textContent = registrationAvailable
+        ? 'Pastikan data sudah benar sebelum mengirim pendaftaran.'
+        : 'Belum ada pengiriman otomatis. Setelah data lengkap, lanjutkan pendaftaran melalui WhatsApp.';
+    }
+  }
+
+  const showRegistrationMessage = (message, state = 'pending') => {
+    const status = document.getElementById('registrationStatus');
+    if (!status) return;
+    status.textContent = message;
+    status.className = `registration-message is-${state}`;
+    status.focus();
+  };
+
+  const submitRegistration = async (form) => {
+    if (!REGISTRATION_CONFIG.registrationEndpoint) {
+      return { configured: false };
+    }
+
+    const response = await fetch(REGISTRATION_CONFIG.registrationEndpoint, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { Accept: 'application/json' }
+    });
+
+    if (!response.ok) throw new Error('Registration request failed');
+    return { configured: true, response };
+  };
+
+  const buildRegistrationWhatsAppUrl = (form, eventData) => {
+    const formData = new FormData(form);
+    const lines = [
+      'Halo Kita Bahagia, saya ingin mendaftar kegiatan.',
+      '',
+      `Kegiatan: ${eventData.name}`,
+      `Nama: ${formData.get('nama') || '-'}`,
+      `Nomor WhatsApp: ${formData.get('telepon') || '-'}`,
+      `Email: ${formData.get('email') || '-'}`
+    ];
+    const reason = String(formData.get('alasan') || '').trim();
+    const notes = String(formData.get('catatan') || '').trim();
+    if (reason) lines.push(`Alasan ikut: ${reason}`);
+    if (notes) lines.push(`Catatan: ${notes}`);
+    lines.push('', 'Mohon informasi langkah pendaftaran berikutnya.');
+
+    return `https://wa.me/${SITE_CONFIG.whatsappNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
+  };
+
+  registrationForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!selectedEvent || !registrationForm.checkValidity()) {
+      registrationForm.reportValidity();
+      return;
+    }
+
+    const submitButton = registrationForm.querySelector('[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+
+    if (!REGISTRATION_CONFIG.registrationEndpoint) {
+      const whatsappUrl = buildRegistrationWhatsAppUrl(registrationForm, selectedEvent);
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      showRegistrationMessage('WhatsApp telah dibuka. Pendaftaran belum tercatat sampai kamu mengirim pesannya ke tim Kita Bahagia.', 'pending');
+      if (submitButton) submitButton.disabled = false;
+      return;
+    }
+
+    try {
+      const result = await submitRegistration(registrationForm);
+      showRegistrationMessage('Pendaftaran diterima. Tim Kita Bahagia akan menghubungi kamu untuk langkah berikutnya.', 'success');
+      registrationForm.reset();
+    } catch (error) {
+      showRegistrationMessage('Pendaftaran belum dapat dikirim. Periksa koneksi lalu coba lagi, atau hubungi tim Kita Bahagia.', 'error');
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
+  });
+}

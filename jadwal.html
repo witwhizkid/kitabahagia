@@ -13,34 +13,84 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32.png">
   <link rel="apple-touch-icon" href="assets/logo/apple-touch-icon.png">
 </head>
-<body>
+<body class="schedule-page">
   <header class="site-header">
     <div class="container nav-wrap">
       <a aria-label="Kita Bahagia home" class="brand brand-logo-wrap" href="index.html"><img alt="Logo Kita Bahagia" class="brand-logo" src="assets/logo/2.%20Logo%20Gabungan/Logo%20Kita%20Bahagiaa.png"></a>
       <button aria-expanded="false" aria-label="Buka menu" class="menu-toggle" type="button"><span></span><span></span><span></span></button>
-      <nav aria-label="Navigasi utama" class="nav"><a href="index.html">Beranda</a><a href="tentang.html">Tentang</a><a href="program.html">Program</a><a class="active" href="jadwal.html">Jadwal Kegiatan</a><a href="relawan.html">Relawan</a><a href="kolaborasi.html">Kolaborasi</a><a href="kontak.html">Kontak</a></nav>
+      <nav aria-label="Navigasi utama" class="nav"><a href="index.html">Beranda</a><a href="tentang.html">Tentang</a><a href="program.html">Program</a><a class="active" href="jadwal.html">Jadwal Kegiatan</a><a href="relawan.html">Relawan</a><a href="kontak.html">Kontak</a></nav>
       <a class="btn btn-primary nav-cta" href="relawan.html">Ikut Menyambut Bahagia</a>
     </div>
   </header>
 
   <main>
-    <section class="page-hero">
-      <div class="container page-hero-grid">
-        <div><div class="breadcrumb"><a href="index.html">Beranda</a><span>/</span><span>Jadwal Kegiatan</span></div><span class="page-kicker">Agenda Kegiatan</span><h1>Pilih kegiatan yang <em>ingin kamu jalani.</em></h1><p>Lihat detail singkat setiap agenda, pilih yang paling sesuai, lalu daftar melalui tautan resmi Kita Bahagia.</p></div>
-        <div class="page-hero-note"><strong>Datang dengan nyaman</strong><span>Setiap kegiatan punya kapasitas dan kebutuhan yang berbeda. Periksa detail agenda sebelum mendaftar.</span></div>
+    <section class="schedule-intro">
+      <div class="container schedule-intro-grid">
+        <div>
+          <div class="breadcrumb"><a href="index.html">Beranda</a><span>/</span><span>Jadwal Kegiatan</span></div>
+          <h1>Jadwal kegiatan</h1>
+        </div>
+        <p>Pilih agenda yang sesuai, periksa waktu dan kapasitasnya, lalu lanjutkan ke pendaftaran.</p>
       </div>
     </section>
 
-    <section class="section section-soft">
+    <section class="schedule-featured-section" aria-labelledby="featuredEventTitle">
       <div class="container">
-        <div class="schedule-toolbar"><div class="schedule-filters" role="group" aria-label="Filter kegiatan"><button class="filter-btn active" data-schedule-filter="all" type="button">Semua</button><button class="filter-btn" data-schedule-filter="anak-anak" type="button">Anak-anak</button><button class="filter-btn" data-schedule-filter="komunitas" type="button">Komunitas</button><button class="filter-btn" data-schedule-filter="kreatif" type="button">Kreatif</button><button class="filter-btn" data-schedule-filter="lingkungan" type="button">Lingkungan</button></div><a class="text-link" href="kontak.html">Butuh rekomendasi kegiatan? &rarr;</a></div>
+        <article class="schedule-featured reveal">
+          <figure class="schedule-featured-image">
+            <img src="img/DSC04303.jpeg" alt="Relawan dan anak-anak berkumpul dalam kegiatan komunitas Kita Bahagia">
+          </figure>
+          <div class="schedule-featured-content">
+            <span class="schedule-featured-label">Kegiatan terdekat</span>
+            <h2 id="featuredEventTitle">Asa Raya Baduy</h2>
+            <p>Trip menjelajah dan edukasi di Baduy, sambil membangun koneksi yang bermakna.</p>
+            <dl class="schedule-featured-meta">
+              <div><dt>Tanggal</dt><dd>29&ndash;30 Agustus 2026</dd></div>
+              <div><dt>Waktu</dt><dd>09.00&ndash;12.00 WIB</dd></div>
+              <div><dt>Lokasi</dt><dd>Baduy, Banten</dd></div>
+              <div><dt>Status</dt><dd>Tersedia &middot; 12 slot tersisa</dd></div>
+            </dl>
+            <a class="btn btn-primary" data-registration-link data-event-slug="asa-raya-baduy" href="pendaftaran.html?event=asa-raya-baduy">Daftar</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="schedule-section">
+      <div class="container">
+        <div class="schedule-toolbar"><div class="schedule-filters" role="group" aria-label="Filter kegiatan"><button class="filter-btn active" data-schedule-filter="all" type="button" aria-pressed="true">Semua</button><button class="filter-btn" data-schedule-filter="anak-anak" type="button" aria-pressed="false">Anak-anak</button><button class="filter-btn" data-schedule-filter="komunitas" type="button" aria-pressed="false">Komunitas</button><button class="filter-btn" data-schedule-filter="kreatif" type="button" aria-pressed="false">Kreatif</button><button class="filter-btn" data-schedule-filter="lingkungan" type="button" aria-pressed="false">Lingkungan</button></div><a class="text-link" href="kontak.html">Butuh rekomendasi kegiatan? &rarr;</a></div>
         <p class="schedule-count" id="scheduleCount" aria-live="polite">Menampilkan 4 kegiatan</p>
 
+        <div class="schedule-columns" aria-hidden="true"><span>Tanggal</span><span>Kegiatan</span><span>Waktu &amp; lokasi</span><span>Status</span><span>Aksi</span></div>
         <div class="schedule-grid" id="scheduleGrid">
-          <article class="schedule-card reveal" data-category="komunitas" data-date="2026-08-29T09:00:00+07:00"><div class="schedule-image"><img alt="Kegiatan komunitas" loading="lazy" src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&amp;fit=crop&amp;w=1100&amp;q=85"><div class="schedule-badges"><span class="schedule-badge category">Komunitas</span><span class="schedule-badge available">Tersedia</span></div><span class="quota">12 slot tersisa</span></div><div class="schedule-body"><h2>Asa Raya Baduy</h2><p>Trip menjelajah dan edukasi di Baduy, sambil membangun koneksi yang bermakna.</p><div class="schedule-meta"><span>29&ndash;30 Agustus 2026</span><span>09.00&ndash;12.00 WIB</span><span>Baduy, Banten</span></div><a class="btn btn-primary btn-full" data-event-name="Asa Raya Baduy" data-google-form href="#">Daftar Kegiatan</a></div></article>
-          <article class="schedule-card reveal" data-category="anak-anak" data-date="2026-09-05T13:00:00+07:00"><div class="schedule-image"><img alt="Kegiatan bersama anak-anak" loading="lazy" src="https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&amp;fit=crop&amp;w=1100&amp;q=85"><div class="schedule-badges"><span class="schedule-badge category">Anak-anak</span><span class="schedule-badge available">Tersedia</span></div><span class="quota">8 slot tersisa</span></div><div class="schedule-body"><h2>Blueventure di Pulau Tidung</h2><p>Kegiatan bermain dan berkarya bersama anak-anak dengan pendekatan yang aman, hangat, dan menyenangkan.</p><div class="schedule-meta"><span>5&ndash;6 September 2026</span><span>13.00&ndash;15.30 WIB</span><span>Pulau Tidung, Jakarta</span></div><a class="btn btn-primary btn-full" data-event-name="Blueventure di Pulau Tidung" data-google-form href="#">Daftar Kegiatan</a></div></article>
-          <article class="schedule-card reveal" data-category="kreatif" data-date="2026-08-24T10:00:00+07:00"><div class="schedule-image"><img alt="Kegiatan seni dan kreativitas" loading="lazy" src="https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&amp;fit=crop&amp;w=1100&amp;q=85"><div class="schedule-badges"><span class="schedule-badge category">Kreatif</span><span class="schedule-badge limited">Terbatas</span></div><span class="quota">3 slot tersisa</span></div><div class="schedule-body"><h2>Bahagia Kasih</h2><p>Workshop kreativitas ringan untuk berekspresi sambil memberi manfaat kepada masyarakat sekitar.</p><div class="schedule-meta"><span>24 Agustus 2026</span><span>10.00&ndash;12.00 WIB</span><span>Bandung</span></div><a class="btn btn-secondary btn-full" data-event-name="Bahagia Kasih" data-google-form href="#">Daftar Kegiatan</a></div></article>
-          <article class="schedule-card reveal" data-category="lingkungan" data-date="2026-08-31T08:30:00+07:00"><div class="schedule-image"><img alt="Kegiatan lingkungan" loading="lazy" src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&amp;fit=crop&amp;w=1100&amp;q=85"><div class="schedule-badges"><span class="schedule-badge category">Lingkungan</span><span class="schedule-badge available">Tersedia</span></div><span class="quota">20 slot tersisa</span></div><div class="schedule-body"><h2>Bahagia Belajar &amp; Beraksi</h2><p>Program kolaborasi untuk aksi sosial dan pembelajaran bersama di lingkungan sekitar.</p><div class="schedule-meta"><span>31 Agustus 2026</span><span>08.30&ndash;11.30 WIB</span><span>Bandung</span></div><a class="btn btn-primary btn-full" data-event-name="Bahagia Belajar dan Beraksi" data-google-form href="#">Daftar Kegiatan</a></div></article>
+          <article class="schedule-card reveal" data-category="komunitas" data-date="2026-08-29T09:00:00+07:00">
+            <time class="schedule-date" datetime="2026-08-29"><strong>29&ndash;30</strong><span>Agu 2026</span></time>
+            <div class="schedule-event"><span class="schedule-category">Komunitas</span><h2>Asa Raya Baduy</h2><p>Trip menjelajah dan edukasi di Baduy, sambil membangun koneksi yang bermakna.</p></div>
+            <div class="schedule-meta"><span>Waktu<strong>09.00&ndash;12.00 WIB</strong></span><span>Lokasi<strong>Baduy, Banten</strong></span></div>
+            <div class="schedule-status"><span class="status-label available">Tersedia</span><strong>12 slot tersisa</strong></div>
+            <a class="schedule-register" data-registration-link data-event-slug="asa-raya-baduy" href="pendaftaran.html?event=asa-raya-baduy">Daftar <span aria-hidden="true">&rarr;</span></a>
+          </article>
+          <article class="schedule-card reveal" data-category="anak-anak" data-date="2026-09-05T13:00:00+07:00">
+            <time class="schedule-date" datetime="2026-09-05"><strong>05&ndash;06</strong><span>Sep 2026</span></time>
+            <div class="schedule-event"><span class="schedule-category">Anak-anak</span><h2>Blueventure di Pulau Tidung</h2><p>Kegiatan bermain dan berkarya bersama anak-anak dengan pendekatan yang aman, hangat, dan menyenangkan.</p></div>
+            <div class="schedule-meta"><span>Waktu<strong>13.00&ndash;15.30 WIB</strong></span><span>Lokasi<strong>Pulau Tidung, Jakarta</strong></span></div>
+            <div class="schedule-status"><span class="status-label available">Tersedia</span><strong>8 slot tersisa</strong></div>
+            <a class="schedule-register" data-registration-link data-event-slug="blueventure-di-pulau-tidung" href="pendaftaran.html?event=blueventure-di-pulau-tidung">Daftar <span aria-hidden="true">&rarr;</span></a>
+          </article>
+          <article class="schedule-card reveal" data-category="kreatif" data-date="2026-08-24T10:00:00+07:00">
+            <time class="schedule-date" datetime="2026-08-24"><strong>24</strong><span>Agu 2026</span></time>
+            <div class="schedule-event"><span class="schedule-category">Kreatif</span><h2>Bahagia Kasih</h2><p>Workshop kreativitas ringan untuk berekspresi sambil memberi manfaat kepada masyarakat sekitar.</p></div>
+            <div class="schedule-meta"><span>Waktu<strong>10.00&ndash;12.00 WIB</strong></span><span>Lokasi<strong>Bandung</strong></span></div>
+            <div class="schedule-status"><span class="status-label limited">Terbatas</span><strong>3 slot tersisa</strong></div>
+            <a class="schedule-register" data-registration-link data-event-slug="bahagia-kasih" href="pendaftaran.html?event=bahagia-kasih">Daftar <span aria-hidden="true">&rarr;</span></a>
+          </article>
+          <article class="schedule-card reveal" data-category="lingkungan" data-date="2026-08-31T08:30:00+07:00">
+            <time class="schedule-date" datetime="2026-08-31"><strong>31</strong><span>Agu 2026</span></time>
+            <div class="schedule-event"><span class="schedule-category">Lingkungan</span><h2>Bahagia Belajar &amp; Beraksi</h2><p>Program kolaborasi untuk aksi sosial dan pembelajaran bersama di lingkungan sekitar.</p></div>
+            <div class="schedule-meta"><span>Waktu<strong>08.30&ndash;11.30 WIB</strong></span><span>Lokasi<strong>Bandung</strong></span></div>
+            <div class="schedule-status"><span class="status-label available">Tersedia</span><strong>20 slot tersisa</strong></div>
+            <a class="schedule-register" data-registration-link data-event-slug="bahagia-belajar-beraksi" href="pendaftaran.html?event=bahagia-belajar-beraksi">Daftar <span aria-hidden="true">&rarr;</span></a>
+          </article>
         </div>
         <div class="schedule-empty hidden" id="scheduleEmpty"><strong>Belum ada kegiatan pada kategori ini.</strong><span>Coba pilih kategori lain atau hubungi kami untuk informasi agenda berikutnya.</span></div>
       </div>
@@ -61,7 +111,6 @@
           <a href="tentang.html">Tentang</a>
           <a href="program.html">Program</a>
           <a href="relawan.html">Relawan</a>
-          <a href="kolaborasi.html">Kolaborasi</a>
           <a href="kontak.html">Kontak</a>
         </nav>
       </div>

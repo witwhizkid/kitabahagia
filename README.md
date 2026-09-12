@@ -9,7 +9,7 @@ Website komunitas sosial Kita Bahagia dengan halaman terpisah untuk setiap menu 
 - `program.html` — Program & Kegiatan
 - `jadwal.html` — Jadwal Kegiatan dan filter kategori
 - `relawan.html` — Gabung Jadi Relawan
-- `kolaborasi.html` — Kolaborasi
+- Kolaborasi — tersedia sebagai bagian dari `kontak.html`
 - `kontak.html` — Kontak
 - `galeri.html` — ga ada isinya ini udeh
 - `css/style.css` — seluruh styling
