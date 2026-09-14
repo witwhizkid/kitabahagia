@@ -18,7 +18,7 @@ window.KB_EVENTS = Object.freeze([
     statusKey: "open",
     capacity: "12 slot tersisa",
     price: 350000,
-    image: "img/hero-relawan.webp",
+    image: "img/Baduy 1.webp",
     imageAlt: "Relawan Kita Bahagia dalam kegiatan bersama"
   },
   {
@@ -53,7 +53,7 @@ window.KB_EVENTS = Object.freeze([
     dateDay: "22",
     dateMonth: "Nov 2026",
     time: "10.00–12.00 WIB",
-    location: "Bandung",
+    location: "Jakarta Selatan",
     status: "Pendaftaran dibuka",
     statusKey: "open",
     capacity: "20 slot tersisa",

@@ -594,7 +594,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   background: transparent;
 }
 .home-program-section .program-card.featured .program-content {
-  padding: 32px 72px 32px 54px;
+  padding: 32px 72px 32px 0;
 }
 .home-program-section .program-content::before {
   content: none;
@@ -2959,6 +2959,14 @@ h2 em {
   line-height: 1.45;
 }
 
+.impact-editorial-note {
+  max-width: 54ch;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .impact-editorial-image {
   min-height: 500px;
   margin: 0;
@@ -3068,6 +3076,14 @@ h2 em {
   margin-top: 10px;
   font-size: clamp(40px, 5vw, 64px);
   letter-spacing: -.045em;
+}
+
+.home-upcoming-intro {
+  max-width: 55ch;
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .home-upcoming-all {

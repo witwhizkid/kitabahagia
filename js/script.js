@@ -1,6 +1,6 @@
 const SITE_CONFIG = {
   whatsappNumber: "6285282672806",
-  whatsappMessage: "Halo Joy, saya tertarik ikut kegiatan. Boleh info kegiatan terdekat?",
+  whatsappMessage: "Halo Joy, saya tertarik ikut kegiatan. Boleh minta info lengkap?",
   whatsappChannelUrl: "https://whatsapp.com/channel/0029VapOA3D0lwgi1687Hq0X",
   instagramUrl: "https://instagram.com/kitabahagiaa_",
   tiktokUrl: "https://tiktok.com/@kita.bahagia_",
