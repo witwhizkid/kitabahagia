@@ -8,52 +8,100 @@ const SITE_CONFIG = {
   email: "https://mail.google.com/mail/?view=cm&fs=1&to=kitabahagiaidn@gmail.com&su=Halo%20Kita%20Bahagia,%20saya%20tertarik%20ikut%20kegiatan.%20Boleh%20info%20kegiatan%20terdekat?&body=&bcc=",
 };
 
-const EVENT_DATA = Object.freeze({
-  "asa-raya-baduy": {
-    slug: "asa-raya-baduy",
-    name: "Asa Raya Baduy",
-    date: "29–30 Agustus 2026",
-    time: "09.00–12.00 WIB",
-    location: "Baduy, Banten",
-    status: "Tersedia",
-    capacity: "12 slot tersisa",
-    category: "Komunitas",
-    price: null
-  },
-  "blueventure-di-pulau-tidung": {
-    slug: "blueventure-di-pulau-tidung",
-    name: "Blueventure di Pulau Tidung",
-    date: "5–6 September 2026",
-    time: "13.00–15.30 WIB",
-    location: "Pulau Tidung, Jakarta",
-    status: "Tersedia",
-    capacity: "8 slot tersisa",
-    category: "Anak-anak",
-    price: null
-  },
-  "bahagia-kasih": {
-    slug: "bahagia-kasih",
-    name: "Bahagia Kasih",
-    date: "24 Agustus 2026",
-    time: "10.00–12.00 WIB",
-    location: "Bandung",
-    status: "Terbatas",
-    capacity: "3 slot tersisa",
-    category: "Kreatif",
-    price: null
-  },
-  "bahagia-belajar-beraksi": {
-    slug: "bahagia-belajar-beraksi",
-    name: "Bahagia Belajar & Beraksi",
-    date: "31 Agustus 2026",
-    time: "08.30–11.30 WIB",
-    location: "Bandung",
-    status: "Tersedia",
-    capacity: "20 slot tersisa",
-    category: "Lingkungan",
-    price: null
+const EVENTS = Array.isArray(window.KB_EVENTS) ? window.KB_EVENTS : [];
+const EVENT_DATA = Object.freeze(Object.fromEntries(EVENTS.map((event) => [event.slug, event])));
+
+const escapeHTML = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+}[character]));
+
+const formatEventPrice = (price) => price === 0 ? 'Gratis' : new Intl.NumberFormat('id-ID', {
+  style: 'currency', currency: 'IDR', maximumFractionDigits: 0
+}).format(price);
+
+const activeEvents = EVENTS.filter((event) => {
+  const endTime = new Date(event.end).getTime();
+  return !Number.isNaN(endTime)
+    && endTime >= Date.now()
+    && !['closed', 'cancelled'].includes(String(event.statusKey).toLowerCase());
+}).sort((a, b) => new Date(a.start) - new Date(b.start));
+
+const eventRegistrationLink = (event, className, label) => `<a class="${className}"
+  data-registration-link data-event-slug="${escapeHTML(event.slug)}"
+  href="pendaftaran.html?event=${encodeURIComponent(event.slug)}">${label}</a>`;
+
+const renderHomepageEvents = () => {
+  const list = document.querySelector('[data-upcoming-list]');
+  const empty = document.querySelector('[data-upcoming-empty]');
+  if (!list || !empty) return;
+
+  const events = activeEvents.slice(0, 3);
+  if (!events.length) {
+    list.hidden = true;
+    empty.hidden = false;
+    return;
   }
-});
+
+  const eventMarkup = (event, featured = false) => `<article class="home-upcoming-event${featured ? ' featured' : ''} reveal" data-upcoming-event>
+    <figure><img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}"></figure>
+    <div class="home-upcoming-event-copy">
+      <div class="home-upcoming-event-topline"><span>${escapeHTML(event.category)}</span><span>${escapeHTML(event.status)}</span></div>
+      <h3>${escapeHTML(event.name)}</h3>
+      <dl class="home-upcoming-meta">
+        <div><dt>Tanggal</dt><dd>${escapeHTML(event.date)}</dd></div>
+        <div><dt>Lokasi</dt><dd>${escapeHTML(event.location)}</dd></div>
+        <div><dt>Harga</dt><dd>${formatEventPrice(event.price)}</dd></div>
+      </dl>
+      ${eventRegistrationLink(event, 'home-upcoming-register', 'Daftar sekarang &rarr;')}
+    </div>
+  </article>`;
+
+  list.innerHTML = `${eventMarkup(events[0], true)}<div class="home-upcoming-supporting">
+    ${events.slice(1).map((event) => eventMarkup(event)).join('')}</div>`;
+  list.hidden = false;
+  empty.hidden = true;
+};
+
+const renderScheduleEvents = () => {
+  const grid = document.getElementById('scheduleGrid');
+  const featuredSection = document.querySelector('[data-schedule-featured]');
+  const featured = document.getElementById('scheduleFeatured');
+  const empty = document.getElementById('scheduleEmpty');
+  const count = document.getElementById('scheduleCount');
+  if (!grid || !featuredSection || !featured) return;
+
+  if (!activeEvents.length) {
+    featuredSection.hidden = true;
+    empty?.classList.remove('hidden');
+    if (count) count.textContent = 'Menampilkan 0 kegiatan';
+    return;
+  }
+
+  const nextEvent = activeEvents[0];
+  featured.innerHTML = `<article class="schedule-featured reveal">
+    <figure class="schedule-featured-image"><img src="${escapeHTML(nextEvent.image)}" alt="${escapeHTML(nextEvent.imageAlt)}"></figure>
+    <div class="schedule-featured-content"><span class="schedule-featured-label">Kegiatan terdekat</span>
+      <h2 id="featuredEventTitle">${escapeHTML(nextEvent.name)}</h2><p>${escapeHTML(nextEvent.description)}</p>
+      <dl class="schedule-featured-meta">
+        <div><dt>Tanggal</dt><dd>${escapeHTML(nextEvent.date)}</dd></div><div><dt>Waktu</dt><dd>${escapeHTML(nextEvent.time)}</dd></div>
+        <div><dt>Lokasi</dt><dd>${escapeHTML(nextEvent.location)}</dd></div><div><dt>Status</dt><dd>${escapeHTML(nextEvent.status)} · ${escapeHTML(nextEvent.capacity)}</dd></div>
+      </dl>${eventRegistrationLink(nextEvent, 'btn btn-primary', 'Daftar')}
+    </div></article>`;
+  featuredSection.hidden = false;
+
+  grid.innerHTML = activeEvents.map((event) => `<article class="schedule-card reveal" data-category="${escapeHTML(event.categoryKey)}" data-date="${escapeHTML(event.start)}">
+    <time class="schedule-date" datetime="${escapeHTML(event.start.slice(0, 10))}"><strong>${escapeHTML(event.dateDay)}</strong><span>${escapeHTML(event.dateMonth)}</span></time>
+    <div class="schedule-event"><span class="schedule-category">${escapeHTML(event.category)}</span><h2>${escapeHTML(event.name)}</h2><p>${escapeHTML(event.description)}</p></div>
+    <div class="schedule-meta"><span>Waktu<strong>${escapeHTML(event.time)}</strong></span><span>Lokasi<strong>${escapeHTML(event.location)}</strong></span></div>
+    <div class="schedule-status"><span class="status-label ${event.statusKey === 'limited' ? 'limited' : 'available'}">${escapeHTML(event.status)}</span><strong>${escapeHTML(event.capacity)}</strong></div>
+    ${eventRegistrationLink(event, 'schedule-register', 'Daftar <span aria-hidden="true">&rarr;</span>')}
+  </article>`).join('');
+  if (count) count.textContent = `Menampilkan ${activeEvents.length} kegiatan`;
+  empty?.classList.add('hidden');
+};
+
+renderHomepageEvents();
+renderScheduleEvents();
 
 // Configure these endpoints only after the production registration and payment flow exists.
 const REGISTRATION_CONFIG = Object.freeze({
@@ -136,6 +184,7 @@ document.querySelectorAll('[data-registration-link]').forEach(link => {
   link.removeAttribute('target');
   link.removeAttribute('rel');
 });
+
 document.querySelectorAll('[data-instagram]').forEach(link => {
   link.href = SITE_CONFIG.instagramUrl;
   link.target = '_blank';
@@ -372,11 +421,7 @@ if (registrationForm) {
     if (eventSlugInput) eventSlugInput.value = selectedEvent.slug;
 
     if (selectedEvent.price !== null && selectedEvent.price !== undefined) {
-      setText('eventPrice', new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        maximumFractionDigits: 0
-      }).format(selectedEvent.price));
+      setText('eventPrice', formatEventPrice(selectedEvent.price));
       document.getElementById('eventPriceRow')?.classList.remove('hidden');
     }
 

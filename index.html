@@ -9,13 +9,13 @@
   </title>
   <link href="https://fonts.googleapis.com" rel="preconnect"/>
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Instrument+Sans:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
   <link href="css/style.css" rel="stylesheet"/>
   <link rel="icon" type="image/x-icon" href="assets/logo/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32.png">
   <link rel="apple-touch-icon" href="assets/logo/apple-touch-icon.png">
  </head>
- <body>
+ <body class="home-page">
   <header class="site-header">
    <div class="container nav-wrap">
     <a aria-label="Kita Bahagia home" class="brand brand-logo-wrap" href="index.html">
@@ -31,9 +31,9 @@
     </button>
     <nav aria-label="Navigasi utama" class="nav">
       <a class="active" href="index.html">
-      Beranda 
+      Beranda
      </a>
-     <a class="" href="tentang.html">
+      <a class="" href="tentang.html">
       Tentang
      </a>
      <a class="" href="program.html">
@@ -42,16 +42,13 @@
      <a class="" href="jadwal.html">
       Jadwal Kegiatan
      </a>
-     <a class="" href="relawan.html">
-      Relawan
+     <a class="" href="kolaborasi.html">
+      Kolaborasi
      </a>
      <a href="kontak.html">
       Kontak
      </a>
     </nav>
-    <a class="btn btn-primary nav-cta" href="relawan.html">
-     Ikut Menyambut Bahagia
-    </a>
    </div>
   </header>
   <main>
@@ -148,10 +145,22 @@
       <h2>Di balik setiap kegiatan, ada ruang untuk hadir, berbagi waktu, dan pulang dengan cerita.</h2>
       <p>Kita Bahagia tumbuh dari orang-orang yang mau datang, saling mengenal, dan membuat kegiatan sederhana terasa berarti.</p>
       <div class="impact-editorial-meta" aria-label="Perjalanan Kita Bahagia">
-       <span>25+ kegiatan yang pernah kami jalani</span>
-       <span>300+ orang terlibat dalam berbagai program</span>
-       <span>8 program komunitas yang terus berjalan</span>
-       <span>2024 awal perjalanan Kita Bahagia</span>
+       <div class="impact-editorial-stat">
+        <strong>50+</strong>
+        <span>Kegiatan yang pernah kami jalani</span>
+       </div>
+       <div class="impact-editorial-stat">
+        <strong>300+</strong>
+        <span>Orang terlibat dalam berbagai program</span>
+       </div>
+       <div class="impact-editorial-stat">
+        <strong>5</strong>
+        <span>Program komunitas yang terus berjalan</span>
+       </div>
+       <div class="impact-editorial-stat">
+        <strong>2024</strong>
+        <span>Awal perjalanan Kita Bahagia</span>
+       </div>
       </div>
      </div>
      <figure class="impact-editorial-image">
@@ -246,11 +255,11 @@
       </p>
      </div>
      <div class="editorial-photo">
-      <img alt="Suasana kebersamaan dalam komunitas" src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&amp;fit=crop&amp;w=1200&amp;q=80"/>
+      <img alt="Suasana kebersamaan dalam komunitas" src="img/DSC00103.webp"/>
      </div>
     </div>
    </section>
-   <section class="section section-soft">
+    <section class="section section-soft home-program-section">
     <div class="container">
      <div class="section-topline">
       <div>
@@ -331,6 +340,25 @@
       <a class="btn btn-secondary" href="program.html">
        Lihat Semua Program
       </a>
+     </div>
+    </div>
+   </section>
+   <section class="section home-upcoming-section" aria-labelledby="homeUpcomingTitle">
+    <div class="container">
+     <div class="home-upcoming-heading">
+      <div>
+       <span class="eyebrow">Agenda berikutnya</span>
+       <h2 id="homeUpcomingTitle">Kegiatan Terdekat</h2>
+      </div>
+      <a class="home-upcoming-all" href="jadwal.html">Lihat semua jadwal &rarr;</a>
+     </div>
+     <div class="home-upcoming-list" data-upcoming-list hidden></div>
+     <div class="home-upcoming-empty" data-upcoming-empty hidden>
+      <h3>Belum ada kegiatan dalam waktu dekat.</h3>
+      <div>
+       <p>Jadwal kegiatan berikutnya akan segera hadir. Pantau halaman jadwal untuk informasi terbaru.</p>
+       <a href="jadwal.html">Lihat halaman jadwal &rarr;</a>
+      </div>
      </div>
     </div>
    </section>
@@ -439,8 +467,8 @@
      </div>
     </div>
    </section>
-   <section class="section">
-    <div class="container join-card">
+    <section class="section home-closing-section">
+     <div class="container join-card home-closing">
      <div class="join-copy">
       <span class="eyebrow light">
        Langkah pertama itu sederhana
@@ -471,7 +499,7 @@
        Only a life lived for others is a life worthwhile
       </p>
       <small>
-       &mdash; Albert Einstein
+        - Albert Einstein
       </small>
      </div>
     </div>
@@ -486,26 +514,18 @@
      <p>Bahagia Bersama, Berbagi Makna</p>
     </div>
     <div class="footer-col">
-     <h3>Tentang</h3>
+     <h3>Navigasi</h3>
      <nav class="footer-nav">
       <a href="tentang.html">Tentang</a>
       <a href="program.html">Program</a>
+      <a href="jadwal.html">Jadwal Kegiatan</a>
       <a href="relawan.html">Relawan</a>
+      <a href="kolaborasi.html">Kolaborasi</a>
       <a href="kontak.html">Kontak</a>
      </nav>
     </div>
-    <div class="footer-col">
-     <h3>Jadwal</h3>
-     <nav class="footer-nav">
-      <a href="jadwal.html">Jadwal Kegiatan</a>
-     </nav>
-     <h3>Bantuan</h3>
-     <nav class="footer-nav">
-      <a href="relawan.html">FAQ</a>
-     </nav>
-    </div>
     <div class="footer-col footer-contact-col">
-     <h3>Ikuti Kami</h3>
+     <h3>Hubungi Kami</h3>
      <div class="footer-social" aria-label="Media sosial Kita Bahagia">
       <a class="social-link" data-wa="" href="#" aria-label="WhatsApp Kita Bahagia">
        <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -522,19 +542,26 @@
         <path d="M16.5 3c.4 1.4 1.3 2.5 2.8 3.2v2.5c-1.3-.1-2.5-.5-3.6-1.3v6.8a5.3 5.3 0 1 1-5.3-5.3c.3 0 .6 0 .9.1v2.6a2.8 2.8 0 1 0 1.9 2.7V3h3.3Z" fill="currentColor"/>
        </svg>
       </a>
+      <a class="social-link" data-email="" href="#" aria-label="Email Kita Bahagia"></a>
      </div>
     </div>
+    <div class="footer-col footer-location-col">
+     <h3>Temukan Kami</h3>
+     <div class="footer-map">
+      <iframe title="Peta Kantor Kelurahan Kampung Melayu, Jakarta"
+      src="https://www.openstreetmap.org/export/embed.html?bbox=106.8500%2C-6.2225%2C106.8695%2C-6.2065&amp;layer=mapnik&amp;marker=-6.2145599%2C106.8597449" loading="lazy"></iframe>
+      <a class="footer-map-link"
+      href="https://maps.app.goo.gl/FYecpCb8kT5rTYjG9"
+       target="_blank" rel="noopener noreferrer"
+       >Lihat di peta</a>
    </div>
    <div class="footer-bottom">
     <div class="container footer-copy-wrap">
      <p>&copy; <span id="year"></span> Kita Bahagia. Bahagia Bersama, Berbagi Makna.</p>
-     <div class="footer-links">
-       <p>Jakarta, Indonesia</p>
-     </div>
     </div>
    </div>
   </footer>
-  <script src="js/script.js">
-  </script>
+  <script src="js/events.js"></script>
+  <script src="js/script.js"></script>
  </body>
 </html>
