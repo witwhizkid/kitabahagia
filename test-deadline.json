@@ -1,0 +1,9 @@
+﻿{
+  "event_slug": "e2e-deadline-test",
+  "name": "Test Deadline User",
+  "phone": "081234567894",
+  "email": "deadline-test@example.com",
+  "reason": "Testing REGISTRATION_CLOSED",
+  "notes": null,
+  "consent": true
+}

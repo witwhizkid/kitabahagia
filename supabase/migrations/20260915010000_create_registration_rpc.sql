@@ -61,7 +61,11 @@ begin
     v_code := 'KB-'
       || pg_catalog.to_char(pg_catalog.clock_timestamp() at time zone 'Asia/Jakarta', 'YYYYMMDD')
       || '-'
-      || pg_catalog.substring(pg_catalog.upper(pg_catalog.replace(gen_random_uuid()::text, '-', '')) from 1 for 6);
+      || pg_catalog.substr(
+        pg_catalog.upper(pg_catalog.replace(gen_random_uuid()::text, '-', '')),
+        1,
+        6
+      );
     begin
       insert into public.registrations (
         registration_code, event_id, name, phone, email, reason, notes, consent,

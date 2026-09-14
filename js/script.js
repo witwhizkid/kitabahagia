@@ -105,7 +105,7 @@ renderScheduleEvents();
 
 // Configure these endpoints only after the production registration and payment flow exists.
 const REGISTRATION_CONFIG = Object.freeze({
-  registrationEndpoint: "",
+  registrationEndpoint: "https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1/create-registration",
   paymentEndpoint: ""
 });
 
@@ -226,6 +226,9 @@ const heroTrack = document.querySelector('.hero-campaign-track');
 if (heroSlider && heroTrack && heroSlides.length) {
   let heroIndex = 0;
   let heroTimer = null;
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchDeltaX = 0;
   const reduceHeroMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   const updateHeroSlider = () => {
@@ -258,6 +261,35 @@ if (heroSlider && heroTrack && heroSlides.length) {
       startHeroAutoplay();
     });
   });
+
+  heroTrack.addEventListener('touchstart', (event) => {
+    const touch = event.changedTouches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    touchDeltaX = 0;
+  }, { passive: true });
+
+  heroTrack.addEventListener('touchmove', (event) => {
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      event.preventDefault();
+      touchDeltaX = deltaX;
+    }
+  }, { passive: false });
+
+  heroTrack.addEventListener('touchend', () => {
+    if (Math.abs(touchDeltaX) < 50) return;
+
+    heroIndex = touchDeltaX < 0
+      ? (heroIndex + 1) % heroSlides.length
+      : (heroIndex - 1 + heroSlides.length) % heroSlides.length;
+    updateHeroSlider();
+    startHeroAutoplay();
+    touchDeltaX = 0;
+  }, { passive: true });
 
   updateHeroSlider();
   startHeroAutoplay();
@@ -430,13 +462,13 @@ if (registrationForm) {
     const availabilityNote = document.getElementById('registrationAvailabilityNote');
     const registrationAvailable = Boolean(REGISTRATION_CONFIG.registrationEndpoint);
     if (submitButton) {
-      submitButton.disabled = false;
-      submitButton.textContent = registrationAvailable ? 'Kirim pendaftaran' : 'Daftar via WhatsApp';
+      submitButton.disabled = !registrationAvailable;
+      submitButton.textContent = 'Kirim pendaftaran';
     }
     if (availabilityNote) {
       availabilityNote.textContent = registrationAvailable
         ? 'Pastikan data sudah benar sebelum mengirim pendaftaran.'
-        : 'Belum ada pengiriman otomatis. Setelah data lengkap, lanjutkan pendaftaran melalui WhatsApp.';
+        : 'Backend pendaftaran belum dikonfigurasi. Form belum dapat dikirim.';
     }
   }
 
@@ -448,39 +480,42 @@ if (registrationForm) {
     status.focus();
   };
 
-  const submitRegistration = async (form) => {
-    if (!REGISTRATION_CONFIG.registrationEndpoint) {
-      return { configured: false };
-    }
-
+  const submitRegistration = async (form, slug) => {
+    const formData = new FormData(form);
+    const payload = {
+      event_slug: slug,
+      name: String(formData.get('nama') || '').trim(),
+      phone: String(formData.get('telepon') || '').trim(),
+      email: String(formData.get('email') || '').trim().toLowerCase(),
+      reason: String(formData.get('alasan') || '').trim(),
+      notes: String(formData.get('catatan') || '').trim() || null,
+      consent: formData.get('consent') !== null
+    };
     const response = await fetch(REGISTRATION_CONFIG.registrationEndpoint, {
       method: 'POST',
-      body: new FormData(form),
-      headers: { Accept: 'application/json' }
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(payload)
     });
-
-    if (!response.ok) throw new Error('Registration request failed');
-    return { configured: true, response };
+    const result = await response.json().catch(() => null);
+    if (!response.ok) {
+      const code = result?.error?.code;
+      throw { code: typeof code === 'string' ? code : 'SERVER_ERROR' };
+    }
+    if (!result?.success || !result.registration) throw { code: 'SERVER_ERROR' };
+    return result.registration;
   };
 
-  const buildRegistrationWhatsAppUrl = (form, eventData) => {
-    const formData = new FormData(form);
-    const lines = [
-      'Halo Kita Bahagia, saya ingin mendaftar kegiatan.',
-      '',
-      `Kegiatan: ${eventData.name}`,
-      `Nama: ${formData.get('nama') || '-'}`,
-      `Nomor WhatsApp: ${formData.get('telepon') || '-'}`,
-      `Email: ${formData.get('email') || '-'}`
-    ];
-    const reason = String(formData.get('alasan') || '').trim();
-    const notes = String(formData.get('catatan') || '').trim();
-    if (reason) lines.push(`Alasan ikut: ${reason}`);
-    if (notes) lines.push(`Catatan: ${notes}`);
-    lines.push('', 'Mohon informasi langkah pendaftaran berikutnya.');
-
-    return `https://wa.me/${SITE_CONFIG.whatsappNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
+  const registrationErrorMessages = {
+    INVALID_REQUEST: 'Data pendaftaran belum valid. Periksa kembali isian kamu.',
+    EVENT_NOT_FOUND: 'Kegiatan ini belum ditemukan di sistem pendaftaran.',
+    EVENT_NOT_OPEN: 'Pendaftaran untuk kegiatan ini sedang tidak dibuka.',
+    REGISTRATION_CLOSED: 'Batas waktu pendaftaran kegiatan ini sudah berakhir.',
+    EVENT_FULL: 'Kapasitas kegiatan ini sudah penuh.',
+    SERVER_ERROR: 'Layanan pendaftaran sedang bermasalah. Silakan coba lagi.'
   };
+
+  let isSubmitting = false;
+  let registrationCompleted = false;
 
   registrationForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -489,25 +524,54 @@ if (registrationForm) {
       return;
     }
 
-    const submitButton = registrationForm.querySelector('[type="submit"]');
-    if (submitButton) submitButton.disabled = true;
-
     if (!REGISTRATION_CONFIG.registrationEndpoint) {
-      const whatsappUrl = buildRegistrationWhatsAppUrl(registrationForm, selectedEvent);
-      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-      showRegistrationMessage('WhatsApp telah dibuka. Pendaftaran belum tercatat sampai kamu mengirim pesannya ke tim Kita Bahagia.', 'pending');
-      if (submitButton) submitButton.disabled = false;
+      showRegistrationMessage('Backend pendaftaran belum dikonfigurasi. Pendaftaran belum dapat dikirim.', 'error');
       return;
     }
+    if (isSubmitting || registrationCompleted) return;
+
+    const submitButton = registrationForm.querySelector('[type="submit"]');
+    const originalButtonText = submitButton?.textContent || 'Kirim pendaftaran';
+    isSubmitting = true;
+    registrationForm.setAttribute('aria-busy', 'true');
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Mengirim...';
+    }
+    showRegistrationMessage('Mengirim data pendaftaran...', 'pending');
 
     try {
-      const result = await submitRegistration(registrationForm);
-      showRegistrationMessage('Pendaftaran diterima. Tim Kita Bahagia akan menghubungi kamu untuk langkah berikutnya.', 'success');
-      registrationForm.reset();
+      const registration = await submitRegistration(registrationForm, selectedEvent.slug);
+      const code = String(registration.registration_code || '');
+      const title = String(registration.event_title || selectedEvent.name);
+      if (!code || typeof registration.amount !== 'number'
+        || typeof registration.registration_status !== 'string'
+        || typeof registration.payment_status !== 'string') throw { code: 'SERVER_ERROR' };
+      const isFreeConfirmed = registration.registration_status === 'confirmed'
+        && registration.payment_status === 'not_required';
+      const isPaidPending = registration.registration_status === 'pending_payment'
+        && registration.payment_status === 'unpaid';
+
+      if (isFreeConfirmed) {
+        showRegistrationMessage(`Pendaftaran ${title} sudah tercatat. Kode pendaftaran kamu: ${code}.`, 'success');
+      } else if (isPaidPending) {
+        const amount = formatEventPrice(registration.amount);
+        showRegistrationMessage(`Pendaftaran ${title} sudah tercatat dengan kode ${code}. Biaya ${amount}; pembayaran belum diselesaikan dan layanan pembayaran belum tersedia.`, 'pending');
+      } else {
+        throw { code: 'SERVER_ERROR' };
+      }
+      registrationCompleted = true;
+      if (submitButton) submitButton.textContent = 'Pendaftaran tercatat';
     } catch (error) {
-      showRegistrationMessage('Pendaftaran belum dapat dikirim. Periksa koneksi lalu coba lagi, atau hubungi tim Kita Bahagia.', 'error');
+      const code = typeof error?.code === 'string' ? error.code : 'SERVER_ERROR';
+      showRegistrationMessage(registrationErrorMessages[code] || registrationErrorMessages.SERVER_ERROR, 'error');
     } finally {
-      if (submitButton) submitButton.disabled = false;
+      isSubmitting = false;
+      registrationForm.removeAttribute('aria-busy');
+      if (!registrationCompleted && submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      }
     }
   });
 }

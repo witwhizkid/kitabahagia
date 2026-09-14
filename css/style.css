@@ -206,6 +206,7 @@ button { font: inherit; }
   display: flex;
   width: 100%;
   transition: transform .55s ease;
+  touch-action: pan-y;
 }
 .hero-slide {
   position: relative;
@@ -591,11 +592,11 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   flex: 1;
   flex-direction: column;
   align-items: flex-start;
-  padding: 24px 24px 26px;
+  padding: 28px 30px 30px;
   background: transparent;
 }
 .home-program-section .program-card.featured .program-content {
-  padding: 24px 24px 26px;
+  padding: 28px 30px 30px;
 }
 .home-program-section .program-content::before {
   content: none;
@@ -1202,7 +1203,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   .home-program-section .program-card.featured .program-content,
   .home-program-section .program-card:nth-child(2) .program-content,
   .home-program-section .program-card:nth-child(3) .program-content {
-    padding: 24px 18px 26px;
+    padding: 24px 26px 28px;
   }
   .home-program-section .program-card:nth-child(2) .program-content,
   .home-program-section .program-card:nth-child(3) .program-content { padding-right: 18px; }
@@ -1330,7 +1331,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   .home-program-section .program-card.featured .program-content,
   .home-program-section .program-content,
   .home-program-section .program-card:nth-child(2) .program-content,
-  .home-program-section .program-card:nth-child(3) .program-content { padding: 24px 0 28px; }
+  .home-program-section .program-card:nth-child(3) .program-content { padding: 24px 28px 28px; }
   .home-closing-section { padding: 62px 0; }
   .home-closing { min-height: 0; display: block; padding: 42px 0; }
   .home-closing .join-note { margin-top: 38px; padding: 32px 0 0; border-left: 0; border-top: 1px solid var(--line); }

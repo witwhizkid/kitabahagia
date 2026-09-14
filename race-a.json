@@ -1,0 +1,9 @@
+﻿{
+  "event_slug": "e2e-race-test",
+  "name": "Race User A",
+  "phone": "081234567897",
+  "email": "race-a@example.com",
+  "reason": "Concurrency test A",
+  "notes": null,
+  "consent": true
+}

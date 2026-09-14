@@ -1,0 +1,9 @@
+﻿{
+  "event_slug": "e2e-full-test",
+  "name": "Test Full User 2",
+  "phone": "081234567896",
+  "email": "full2-test@example.com",
+  "reason": "Testing EVENT_FULL",
+  "notes": null,
+  "consent": true
+}

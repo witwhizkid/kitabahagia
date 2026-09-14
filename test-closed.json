@@ -1,0 +1,9 @@
+﻿{
+  "event_slug": "e2e-closed-test",
+  "name": "Test Closed User",
+  "phone": "081234567893",
+  "email": "closed-test@example.com",
+  "reason": "Testing EVENT_NOT_OPEN",
+  "notes": null,
+  "consent": true
+}
