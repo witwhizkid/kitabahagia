@@ -1,24 +1,58 @@
-# Supabase backend foundation
+# Supabase backend
 
-## Schema
+## Data and security
 
-- `events` stores event identity, schedule, price, capacity, deadline, and lifecycle status.
-- `registrations` stores attendee contact details, consent, registration/payment state, and the amount recorded at registration time. Each registration references one event.
+- `public.events` stores authoritative event availability, price, capacity, and deadlines.
+- `public.registrations` stores participant data and server-derived registration/payment state.
+- RLS remains enabled. Browser roles cannot read or mutate these tables.
+- `public.create_registration(...)` locks the event, checks its state/deadline/capacity, and inserts atomically. Only `service_role` may execute it.
+- `SUPABASE_SERVICE_ROLE_KEY` is server-only. Never expose it in browser code, public build variables, logs, or commits.
 
-Event statuses: `draft` (not published), `open` (accepting registrations), `full` (capacity reached), `closed` (registration stopped), `completed` (event finished), and `cancelled`.
+## Registration endpoint
 
-Registration statuses: `pending_payment`, `confirmed`, or `cancelled`. Payment statuses: `not_required`, `unpaid`, `pending`, `paid`, `failed`, `expired`, or `refunded`.
+`POST /functions/v1/create-registration`
 
-## Apply migrations
+```json
+{
+  "event_slug": "asa-raya-baduy",
+  "name": "Nama Peserta",
+  "phone": "+628123456789",
+  "email": "peserta@example.com",
+  "reason": "Ingin ikut berkontribusi.",
+  "notes": null,
+  "consent": true
+}
+```
 
-With the Supabase CLI installed, use `supabase db reset` for the local database. For a hosted project, run `supabase link --project-ref <project-ref>` once and then `supabase db push`.
+Success (`201`):
 
-No event seed is included because the website data is not an authoritative source for future dates, prices, capacity, or availability.
+```json
+{
+  "success": true,
+  "registration": {
+    "registration_code": "KB-20260915-A1B2C3",
+    "event_slug": "asa-raya-baduy",
+    "event_title": "Asa Raya Baduy",
+    "amount": 0,
+    "registration_status": "confirmed",
+    "payment_status": "not_required"
+  }
+}
+```
 
-## Security and future configuration
+Errors: `INVALID_REQUEST` (`400`), `EVENT_NOT_FOUND` (`404`), `EVENT_NOT_OPEN`, `REGISTRATION_CLOSED`, `EVENT_FULL` (`409`), and `SERVER_ERROR` (`500`). Non-POST methods return `405`; CORS preflight returns `204`.
 
-RLS is enabled and `anon`/`authenticated` privileges are revoked for both tables. There are no public policies. A future public event feed should add only a narrowly scoped `SELECT` grant and policy for `events`; registration mutations must stay behind trusted server-side code.
+Free events are confirmed with `not_required`; paid events become `pending_payment` with `unpaid`. Amount and statuses always come from the database. Payment is not implemented.
 
-The future registration API will require `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. A client-facing event feed may additionally use `SUPABASE_PUBLISHABLE_KEY`. **Never expose `SUPABASE_SERVICE_ROLE_KEY` in browser code, committed files, logs, or public build variables.**
+## Local and deployment commands
 
-Next step: implement a server-side registration API or Supabase Edge Function that validates event availability and input before inserting a registration.
+The function requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in its server environment.
+
+```sh
+supabase db reset
+supabase functions serve create-registration --no-verify-jwt
+supabase functions deploy create-registration --no-verify-jwt
+supabase db push
+```
+
+`--no-verify-jwt` allows registration without Supabase Auth; validation and database access remain server-side. Frontend integration is not implemented, and frontend event data may be demo data rather than authoritative database records.
