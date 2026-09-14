@@ -430,6 +430,58 @@ if (registrationForm) {
   const registrationContent = document.getElementById('registrationContent');
   const eventFallback = document.getElementById('eventFallback');
   const selectedEventIntro = document.getElementById('selectedEventIntro');
+  const paymentStates = {
+    pending: ['Menunggu pembayaran', 'Layanan pembayaran belum tersedia. Belum ada pembayaran yang diproses.'],
+    processing: ['Pembayaran sedang diverifikasi', 'Kami sedang memastikan pembayaranmu. Halaman ini akan diperbarui setelah statusnya terkonfirmasi.'],
+    paid: ['Pembayaran berhasil', 'Tempatmu sudah dikonfirmasi.'],
+    expired: ['Waktu pembayaran habis', 'QRIS sebelumnya sudah tidak dapat digunakan.'],
+    failed: ['Pembayaran belum berhasil', 'Pendaftaranmu tetap tercatat. Pembayaran dapat dicoba kembali setelah layanan pembayaran tersedia.']
+  };
+  const paymentStatusCopy = {
+    pending: paymentStates.pending,
+    processing: ['Pembayaran sedang diperiksa', 'Pembayaranmu sedang diperiksa. Tidak perlu melakukan pembayaran ulang.'],
+    expired: ['Pendaftaran tetap tercatat', 'Opsi pembayaran baru akan tersedia setelah layanan pembayaran terhubung.']
+  };
+  const requestedDemo = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? params.get('payment_demo') : null;
+  const paymentDemo = Object.hasOwn(paymentStates, requestedDemo) ? requestedDemo : null;
+
+  const renderPaymentState = (state, data) => {
+    const stage = document.getElementById('paymentStage');
+    if (!stage || !Object.hasOwn(paymentStates, state)) return;
+    const [heading, body] = paymentStates[state];
+    Object.keys(paymentStates).forEach((key) => stage.classList.toggle(`payment_${key}`, key === state));
+    stage.querySelectorAll('[data-payment-state]').forEach((container) => {
+      const statusCopy = paymentStatusCopy[state];
+      container.hidden = container.dataset.paymentState !== `payment_${state}` || !statusCopy;
+      if (!container.hidden) {
+        container.querySelector('strong').textContent = statusCopy[0];
+        let paragraph = container.querySelector('p');
+        if (!paragraph) {
+          paragraph = document.createElement('p');
+          container.append(paragraph);
+        }
+        paragraph.textContent = statusCopy[1];
+      }
+    });
+    stage.querySelector('[data-result-code]').textContent = data.registration_code;
+    stage.querySelector('[data-result-title]').textContent = data.event_title;
+    stage.querySelector('[data-payment-amount]').textContent = formatEventPrice(data.amount);
+    stage.querySelector('#paymentHeading').textContent = state === 'pending' ? 'Selesaikan pembayaran' : heading;
+    stage.querySelector('.payment-primary > p').textContent = state === 'pending'
+      ? 'Pendaftaranmu sudah tercatat. Selesaikan pembayaran untuk mengamankan tempatmu.' : body;
+    stage.querySelector('.payment-details dl > div:last-child dd').textContent = state === 'paid'
+      ? 'Pendaftaran kegiatan · pembayaran dikonfirmasi' : `Pendaftaran kegiatan · ${heading.toLowerCase()}`;
+    const qr = stage.querySelector('.payment-qr-placeholder');
+    qr.hidden = state !== 'pending';
+    qr.setAttribute('aria-label', 'QRIS belum tersedia');
+    qr.querySelector('span').textContent = 'QRIS belum tersedia';
+    qr.querySelector('p').textContent = 'QRIS akan muncul di sini setelah layanan pembayaran terhubung.';
+    stage.querySelector('.payment-countdown').hidden = state !== 'pending';
+    document.getElementById('freeRegistrationConfirmation').hidden = true;
+    stage.hidden = false;
+    stage.focus();
+  };
 
   if (!selectedEvent) {
     if (selectedEventIntro) selectedEventIntro.textContent = 'Kegiatan belum dipilih';
@@ -517,8 +569,19 @@ if (registrationForm) {
   let isSubmitting = false;
   let registrationCompleted = false;
 
+  if (paymentDemo) {
+    registrationContent?.classList.add('hidden');
+    eventFallback?.classList.add('hidden');
+    registrationForm.querySelector('[type="submit"]').disabled = true;
+    if (selectedEventIntro) selectedEventIntro.textContent = 'Pratinjau lokal · Bahagia Kasih';
+    renderPaymentState(paymentDemo, {
+      registration_code: 'KB-DEMO-123456', event_title: 'Bahagia Kasih (demo lokal)', amount: 35000
+    });
+  }
+
   registrationForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (paymentDemo) return;
     if (!selectedEvent || !registrationForm.checkValidity()) {
       registrationForm.reportValidity();
       return;
@@ -550,7 +613,7 @@ if (registrationForm) {
       const isFreeConfirmed = registration.registration_status === 'confirmed'
         && registration.payment_status === 'not_required';
       const isPaidPending = registration.registration_status === 'pending_payment'
-        && registration.payment_status === 'unpaid';
+        && registration.payment_status === 'unpaid' && registration.amount > 0;
 
       if (isFreeConfirmed) {
         showRegistrationMessage(`Pendaftaran ${title} sudah tercatat. Kode pendaftaran kamu: ${code}.`, 'success');
@@ -562,6 +625,19 @@ if (registrationForm) {
       }
       registrationCompleted = true;
       if (submitButton) submitButton.textContent = 'Pendaftaran tercatat';
+      if (isPaidPending) {
+        renderPaymentState('pending', registration);
+        document.getElementById('registrationStatus')?.classList.add('hidden');
+      }
+      const resultStage = isFreeConfirmed ? document.getElementById('freeRegistrationConfirmation') : null;
+      if (resultStage) {
+        document.getElementById('paymentStage').hidden = true;
+        resultStage.querySelector('[data-result-code]').textContent = code;
+        resultStage.querySelector('[data-result-title]').textContent = title;
+        resultStage.hidden = false;
+        document.getElementById('registrationStatus')?.classList.add('hidden');
+        resultStage.focus();
+      }
     } catch (error) {
       const code = typeof error?.code === 'string' ? error.code : 'SERVER_ERROR';
       showRegistrationMessage(registrationErrorMessages[code] || registrationErrorMessages.SERVER_ERROR, 'error');

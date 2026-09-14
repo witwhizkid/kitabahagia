@@ -2051,6 +2051,37 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-message { margin:24px 0 0; padding:12px 0 12px 16px; border-left:3px solid var(--maroon); color:var(--ink); font-size:13px; }
 .registration-message.is-error { border-left-color:#9b2c2c; }
 .registration-message.is-success { border-left-color:#2d7950; }
+.registration-page .payment-stage { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr); gap:64px; margin-top:56px; padding:40px 0; border-top:1px solid var(--line); background:var(--cream); }
+.registration-page .payment-stage[hidden], .registration-page .payment-state[hidden], .registration-page .registration-confirmation[hidden] { display:none; }
+.payment-primary, .payment-details { min-width:0; }
+.payment-stage .payment-qr-placeholder[hidden], .payment-stage .payment-countdown[hidden] { display:none; }
+.payment-primary { padding-inline:24px; }
+.payment-primary h2, .registration-confirmation h2 { margin:0 0 16px; font-size:clamp(30px,3.5vw,44px); }
+.payment-primary > p { max-width:50ch; color:var(--muted); }
+.payment-amount { display:grid; gap:6px; margin:28px 0; }
+.payment-amount span, .payment-countdown span { font-size:13px; color:var(--muted); }
+.payment-amount strong { font-family:"Instrument Sans","DM Sans",sans-serif; color:var(--maroon); font-size:clamp(32px,4vw,48px); line-height:1.15; overflow-wrap:anywhere; }
+.payment-qr-placeholder { display:flex; flex-direction:column; justify-content:center; width:min(100%,280px); aspect-ratio:1; margin-inline:auto; padding:24px; border:1px dashed var(--line); border-radius:4px; text-align:center; }
+.payment-qr-placeholder > span { color:var(--maroon); font-weight:600; }
+.payment-qr-placeholder p, .payment-state p, .payment-details > p { color:var(--muted); font-size:14px; line-height:1.65; }
+.payment-countdown { display:grid; gap:4px; width:min(100%,280px); margin:12px auto 20px; text-align:center; }
+.payment-countdown strong { font-size:24px; font-variant-numeric:tabular-nums; color:var(--muted); }
+.payment-countdown small { color:var(--muted); font-size:12px; }
+.payment-state { padding-top:20px; border-top:1px solid var(--line); }
+.payment-state > strong { color:var(--maroon); }
+.payment-details { padding-left:32px; border-left:1px solid var(--line); }
+.payment-details h3 { margin:0 0 24px; font-size:22px; }
+.payment-details dl, .registration-confirmation dl { margin:0; }
+.payment-details dl > div, .registration-confirmation dl > div { padding:16px 0; border-bottom:1px solid var(--line); }
+.payment-details dt, .registration-confirmation dt { font-size:12px; color:var(--muted); }
+.payment-details dd, .registration-confirmation dd { margin:6px 0 0; overflow-wrap:anywhere; font-weight:600; }
+.registration-confirmation { margin-top:48px; padding:32px 0; border-top:1px solid var(--line); max-width:680px; }
+@media (max-width:640px) {
+  .registration-page .payment-stage { grid-template-columns:1fr; gap:32px; margin-top:40px; padding:28px 6px; }
+  .payment-primary { padding-inline:0; }
+  .payment-qr-placeholder, .payment-countdown { width:min(100%,240px); margin-left:auto; margin-right:auto; }
+  .payment-details { padding:24px 0 0; border-left:0; border-top:1px solid var(--line); }
+}
 .registration-fallback { max-width:720px; padding:42px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 .registration-fallback h2 { margin:0 0 12px; font-size:32px; }
 .registration-fallback p { max-width:590px; margin:0 0 20px; color:var(--muted); }

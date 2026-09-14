@@ -81,6 +81,35 @@
             </form>
           </div>
         </div>
+        <section class="payment-stage payment_pending" id="paymentStage" aria-labelledby="paymentHeading" tabindex="-1" hidden>
+          <div class="payment-primary">
+            <h2 id="paymentHeading">Selesaikan pembayaran</h2>
+            <p>Pendaftaranmu sudah tercatat. Selesaikan pembayaran untuk mengamankan tempatmu.</p>
+            <div class="payment-amount"><span>Total pembayaran</span><strong data-payment-amount></strong></div>
+            <div class="payment-qr-placeholder" aria-label="QRIS belum tersedia">
+              <span>QRIS belum tersedia</span>
+              <p>QRIS akan muncul di sini setelah layanan pembayaran terhubung.</p>
+            </div>
+            <div class="payment-countdown" aria-label="Timer akan aktif setelah QRIS tersedia">
+              <span>QR berlaku selama</span><strong>15:00</strong><small>Timer akan aktif setelah QRIS tersedia.</small>
+            </div>
+            <div class="payment-state payment_pending" data-payment-state="payment_pending"><strong>Menunggu pembayaran</strong><p>Layanan pembayaran belum tersedia. Belum ada pembayaran yang diproses.</p></div>
+            <div class="payment-state payment_processing" data-payment-state="payment_processing" hidden><strong>Pembayaran sedang diverifikasi</strong></div>
+            <div class="payment-state payment_paid" data-payment-state="payment_paid" hidden><strong>Pembayaran berhasil</strong><p>Tempatmu sudah dikonfirmasi.</p></div>
+            <div class="payment-state payment_expired" data-payment-state="payment_expired" hidden><strong>Waktu pembayaran habis.</strong></div>
+            <div class="payment-state payment_failed" data-payment-state="payment_failed" hidden><strong>Pembayaran belum berhasil.</strong></div>
+          </div>
+          <aside class="payment-details" aria-label="Ringkasan pendaftaran">
+            <h3>Ringkasan pendaftaran</h3>
+            <dl><div><dt>Kode pendaftaran</dt><dd data-result-code></dd></div><div><dt>Kegiatan</dt><dd data-result-title></dd></div><div><dt>Transaksi</dt><dd>Pendaftaran kegiatan · pembayaran belum selesai</dd></div></dl>
+            <p>Simpan kode pendaftaranmu untuk menghubungi tim Kita Bahagia.</p>
+          </aside>
+        </section>
+        <section class="registration-confirmation" id="freeRegistrationConfirmation" aria-labelledby="freeConfirmationHeading" tabindex="-1" hidden>
+          <h2 id="freeConfirmationHeading">Kamu sudah terdaftar.</h2>
+          <p>Tempatmu sudah dikonfirmasi.</p>
+          <dl><div><dt>Kode pendaftaran</dt><dd data-result-code></dd></div><div><dt>Kegiatan</dt><dd data-result-title></dd></div></dl>
+        </section>
       </div>
     </section>
   </main>
