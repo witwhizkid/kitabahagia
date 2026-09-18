@@ -42,7 +42,7 @@ Success (`201`):
 
 Errors: `INVALID_REQUEST` (`400`), `EVENT_NOT_FOUND` (`404`), `EVENT_NOT_OPEN`, `REGISTRATION_CLOSED`, `EVENT_FULL` (`409`), and `SERVER_ERROR` (`500`). Non-POST methods return `405`; CORS preflight returns `204`.
 
-Free events are confirmed with `not_required`; paid events become `pending_payment` with `unpaid`. Amount and statuses always come from the database. Payment is not implemented.
+Free events are confirmed with `not_required`; paid events become `pending_payment` with `unpaid`. Amount and statuses always come from the database. Paid registrations use the deployed Midtrans Sandbox `create-payment` integration.
 
 ## Local and deployment commands
 
@@ -56,3 +56,11 @@ supabase db push
 ```
 
 `--no-verify-jwt` allows registration without Supabase Auth; validation and database access remain server-side. Frontend integration is not implemented, and frontend event data may be demo data rather than authoritative database records.
+
+## Midtrans Sandbox webhook
+
+Set the Payment Notification URL in the Midtrans Sandbox dashboard to:
+
+`https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1/midtrans-webhook`
+
+The webhook accepts POST JSON notifications, checks Midtrans SHA-512 signatures with the server-only `MIDTRANS_SERVER_KEY`, and applies payment state through the service-role-only `apply_midtrans_notification` RPC. It rejects unknown orders, identity/amount mismatches, and stale status downgrades. Configure `MIDTRANS_ENV=sandbox` and `MIDTRANS_SERVER_KEY` as Supabase function secrets. Test with a new Sandbox payment and the Midtrans simulator; do not mark payment paid from the browser or by editing database rows.
