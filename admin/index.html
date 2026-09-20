@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>KB Admin — Kegiatan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Instrument+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="icon" href="../assets/logo/favicon.ico" />
+    <link rel="stylesheet" href="../css/admin.css" />
+  </head>
+  <body>
+    <main id="login-view" class="login-shell">
+      <section class="login-panel" aria-labelledby="login-title">
+        <img class="login-logo" src="../assets/logo/2.%20Logo%20Gabungan/19.png" alt="Kita Bahagia" />
+        <p class="eyebrow">Ruang kerja internal</p>
+        <h1 id="login-title">Masuk ke KB Admin</h1>
+        <p class="login-copy">Kelola informasi kegiatan yang tampil di website Kita Bahagia.</p>
+        <form id="login-form" class="stack-form">
+          <label>
+            Email
+            <input id="login-email" name="email" type="email" autocomplete="username" required />
+          </label>
+          <label>
+            Kata sandi
+            <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <button id="login-button" class="button button-primary" type="submit">Masuk</button>
+        </form>
+        <p id="login-feedback" class="feedback" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <div id="admin-view" class="admin-shell" hidden>
+      <aside class="sidebar">
+        <a class="brand" href="#events" aria-label="KB Admin">
+          <img src="../assets/logo/2.%20Logo%20Gabungan/19.png" alt="" />
+          <span>Admin</span>
+        </a>
+        <nav aria-label="Navigasi admin">
+          <a class="nav-link is-active" href="#events" aria-current="page">Kegiatan</a>
+        </nav>
+        <button id="logout-button" class="logout-button" type="button">Keluar</button>
+      </aside>
+
+      <div class="workspace">
+        <header class="mobile-header">
+          <span>KB Admin</span>
+          <button id="mobile-logout-button" type="button">Keluar</button>
+        </header>
+
+        <section id="events-view" class="content-view" aria-labelledby="events-title">
+          <div class="view-heading">
+            <div>
+              <p class="eyebrow">Pengelolaan konten</p>
+              <h1 id="events-title">Kegiatan</h1>
+              <p>Atur informasi kegiatan dan tentukan kapan kegiatan tampil di website.</p>
+            </div>
+            <button id="add-event-button" class="button button-primary" type="button">Tambah Kegiatan</button>
+          </div>
+          <p id="events-feedback" class="feedback" role="status" aria-live="polite"></p>
+          <div id="events-loading" class="state-panel" role="status">Memuat kegiatan…</div>
+          <div id="events-empty" class="state-panel" hidden>Belum ada kegiatan. Tambahkan kegiatan pertama untuk memulai.</div>
+          <div id="events-list" class="event-list" hidden></div>
+        </section>
+
+        <section id="form-view" class="content-view" aria-labelledby="form-title" hidden>
+          <div class="form-heading">
+            <button id="back-button" class="text-button" type="button">← Kembali ke kegiatan</button>
+            <p class="eyebrow">Data kegiatan</p>
+            <h1 id="form-title">Tambah Kegiatan</h1>
+          </div>
+
+          <form id="event-form" class="event-form">
+            <input id="original-slug" type="hidden" />
+            <section class="form-section" aria-labelledby="basic-heading">
+              <div class="section-heading">
+                <h2 id="basic-heading">Informasi utama</h2>
+                <p>Informasi yang membantu pengunjung memahami kegiatannya.</p>
+              </div>
+              <div class="form-grid">
+                <label class="span-2">Judul kegiatan<input id="event-title" name="title" required maxlength="180" /></label>
+                <label>Slug<input id="event-slug" name="slug" required maxlength="120" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" aria-describedby="slug-help" /></label>
+                <p id="slug-help" class="field-help">Huruf kecil, angka, dan tanda hubung.</p>
+                <label>Kategori<input id="event-category" name="category" /></label>
+                <label>Kunci kategori<input id="event-category-key" name="category_key" /></label>
+                <label class="span-2">Deskripsi<textarea id="event-description" name="description" rows="4"></textarea></label>
+                <label class="span-2">Deskripsi pendaftaran<textarea id="event-registration-description" name="registration_description" rows="4"></textarea></label>
+              </div>
+            </section>
+
+            <section class="form-section" aria-labelledby="schedule-heading">
+              <div class="section-heading">
+                <h2 id="schedule-heading">Jadwal dan tempat</h2>
+                <p>Semua waktu menggunakan zona Asia/Jakarta.</p>
+              </div>
+              <div class="form-grid">
+                <label>Tanggal<input id="event-date" name="event_date" type="date" required /></label>
+                <label>Jam mulai<input id="event-start-time" name="start_time" type="time" /></label>
+                <label>Waktu selesai<input id="event-end-at" name="end_at" type="datetime-local" /></label>
+                <label>Batas pendaftaran<input id="event-deadline" name="registration_deadline" type="datetime-local" /></label>
+                <label class="span-2">Lokasi<input id="event-location" name="location" /></label>
+              </div>
+            </section>
+
+            <section class="form-section" aria-labelledby="detail-heading">
+              <div class="section-heading">
+                <h2 id="detail-heading">Detail peserta</h2>
+                <p>Kosongkan kapasitas bila jumlah peserta tidak dibatasi.</p>
+              </div>
+              <div class="form-grid">
+                <label>Harga<input id="event-price" name="price" type="number" min="0" step="1" value="0" required /></label>
+                <label>Kapasitas peserta<input id="event-capacity" name="capacity" type="number" min="1" step="1" /></label>
+                <label class="span-2">Yang akan dilakukan <span class="label-note">Satu item per baris</span><textarea id="event-activities" name="activities" rows="5"></textarea></label>
+                <label class="span-2">Yang dibawa pulang <span class="label-note">Satu item per baris</span><textarea id="event-benefits" name="benefits" rows="5"></textarea></label>
+              </div>
+            </section>
+
+            <section class="form-section" aria-labelledby="media-heading">
+              <div class="section-heading">
+                <h2 id="media-heading">Foto dan komunikasi</h2>
+                <p>Unggah foto belum tersedia; gunakan URL atau path yang sudah ada.</p>
+              </div>
+              <div class="form-grid">
+                <label class="span-2">Foto kegiatan (URL/path)<input id="event-image-url" name="image_url" /></label>
+                <label class="span-2">Teks alternatif foto<input id="event-image-alt" name="image_alt" /></label>
+                <label class="span-2">Link grup WhatsApp<input id="event-whatsapp" name="whatsapp_group_url" type="url" placeholder="https://chat.whatsapp.com/…" /></label>
+              </div>
+            </section>
+
+            <section class="form-section publish-section" aria-labelledby="publish-heading">
+              <div class="section-heading">
+                <h2 id="publish-heading">Status publikasi</h2>
+                <p>Status mengatur pendaftaran; visibilitas mengatur apakah kegiatan dapat ditemukan di website.</p>
+              </div>
+              <div class="form-grid">
+                <label>Status
+                  <select id="event-status" name="status" required>
+                    <option value="draft">Draf</option>
+                    <option value="open">Dibuka</option>
+                    <option value="full">Penuh</option>
+                    <option value="closed">Ditutup</option>
+                    <option value="completed">Selesai</option>
+                    <option value="cancelled">Dibatalkan</option>
+                  </select>
+                </label>
+                <label class="check-label"><input id="event-public" name="is_public" type="checkbox" /><span><strong>Tampilkan di website</strong><small>Pengunjung dapat menemukan kegiatan ini sesuai statusnya.</small></span></label>
+              </div>
+            </section>
+
+            <p id="form-feedback" class="feedback" role="status" aria-live="polite"></p>
+            <div class="form-actions">
+              <button id="cancel-button" class="button button-secondary" type="button">Batal</button>
+              <button id="save-button" class="button button-primary" type="submit">Simpan Kegiatan</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+    <script src="../js/admin.js"></script>
+  </body>
+</html>
