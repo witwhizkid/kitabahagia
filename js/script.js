@@ -8,8 +8,8 @@ const SITE_CONFIG = {
   email: "https://mail.google.com/mail/?view=cm&fs=1&to=kitabahagiaidn@gmail.com&su=Halo%20Kita%20Bahagia,%20saya%20tertarik%20ikut%20kegiatan.%20Boleh%20info%20kegiatan%20terdekat?&body=&bcc=",
 };
 
-const EVENTS = Array.isArray(window.KB_EVENTS) ? window.KB_EVENTS : [];
-const EVENT_DATA = Object.freeze(Object.fromEntries(EVENTS.map((event) => [event.slug, event])));
+const SUPABASE_FUNCTIONS_BASE_URL = "https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1";
+const PUBLIC_EVENTS_CONFIG = Object.freeze({ demo: true });
 
 const escapeHTML = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
@@ -19,36 +19,144 @@ const formatEventPrice = (price) => price === 0 ? 'Gratis' : new Intl.NumberForm
   style: 'currency', currency: 'IDR', maximumFractionDigits: 0
 }).format(price);
 
-const activeEvents = EVENTS.filter((event) => {
-  const endTime = new Date(event.end).getTime();
-  return !Number.isNaN(endTime)
-    && endTime >= Date.now()
-    && !['closed', 'cancelled'].includes(String(event.statusKey).toLowerCase());
-}).sort((a, b) => new Date(a.start) - new Date(b.start));
+const fetchPublicEvents = async ({ slug = null, limit = null } = {}) => {
+  const url = new URL(`${SUPABASE_FUNCTIONS_BASE_URL}/public-events`);
+  if (PUBLIC_EVENTS_CONFIG.demo) url.searchParams.set('demo', 'true');
+  if (slug) url.searchParams.set('slug', slug);
+  if (limit !== null) url.searchParams.set('limit', String(limit));
+
+  const response = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error(`Public events request failed with status ${response.status}`);
+
+  const payload = await response.json();
+  if (!payload || !Array.isArray(payload.events)) throw new Error('Public events response is invalid');
+  return payload.events;
+};
+
+const eventDateFormatter = new Intl.DateTimeFormat('id-ID', {
+  day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta'
+});
+const eventTimeFormatter = new Intl.DateTimeFormat('id-ID', {
+  hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Jakarta'
+});
+const eventDateParts = (date) => Object.fromEntries(new Intl.DateTimeFormat('id-ID', {
+  day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta'
+}).formatToParts(date).map((part) => [part.type, part.value]));
+
+const formatEventDateRange = (start, end) => {
+  if (!end) return eventDateFormatter.format(start);
+  const startParts = eventDateParts(start);
+  const endParts = eventDateParts(end);
+  if (startParts.day === endParts.day && startParts.month === endParts.month && startParts.year === endParts.year) {
+    return eventDateFormatter.format(start);
+  }
+  if (startParts.month === endParts.month && startParts.year === endParts.year) {
+    return `${startParts.day}\u2013${endParts.day} ${endParts.month} ${endParts.year}`;
+  }
+  if (startParts.year === endParts.year) {
+    return `${startParts.day} ${startParts.month}\u2013${endParts.day} ${endParts.month} ${endParts.year}`;
+  }
+  return `${eventDateFormatter.format(start)}\u2013${eventDateFormatter.format(end)}`;
+};
+
+const normalizeScheduleEvent = (event) => {
+  const start = new Date(event.start_at);
+  const end = event.end_at ? new Date(event.end_at) : null;
+  if (!event.slug || !event.title || Number.isNaN(start.getTime()) || (end && Number.isNaN(end.getTime()))) return null;
+
+  const remainingCapacity = event.remaining_capacity;
+  const statusKey = remainingCapacity === 0 ? 'full' : String(event.status || '').toLowerCase();
+  const statusLabels = {
+    open: 'Pendaftaran dibuka',
+    full: 'Kuota penuh',
+    closed: 'Pendaftaran ditutup',
+    completed: 'Selesai',
+    cancelled: 'Dibatalkan'
+  };
+  const capacity = remainingCapacity === null
+    ? 'Kuota tidak dibatasi'
+    : remainingCapacity === 0
+      ? 'Kuota penuh'
+      : `${remainingCapacity} slot tersisa`;
+
+  return {
+    slug: event.slug,
+    name: event.title,
+    description: event.description || '',
+    category: event.category || 'Tanpa kategori',
+    categoryKey: event.category_key || 'uncategorized',
+    start: event.start_at,
+    end: event.end_at,
+    date: formatEventDateRange(start, end),
+    time: end
+      ? `${eventTimeFormatter.format(start)}\u2013${eventTimeFormatter.format(end)} WIB`
+      : `${eventTimeFormatter.format(start)} WIB`,
+    location: event.location || 'Lokasi menyusul',
+    status: statusLabels[statusKey] || event.status || 'Status belum tersedia',
+    statusKey,
+    capacity,
+    price: Number(event.price) || 0,
+    image: event.image_url || '',
+    imageAlt: event.image_alt || `Dokumentasi ${event.title}`
+  };
+};
+
+const normalizeRegistrationEvent = (event) => {
+  const normalized = normalizeScheduleEvent(event);
+  if (!normalized) return null;
+  return {
+    ...normalized,
+    registrationDescription: event.registration_description || event.description || '',
+    activities: Array.isArray(event.activities) ? event.activities.filter(Boolean) : [],
+    benefits: Array.isArray(event.benefits) ? event.benefits.filter(Boolean) : [],
+    remainingCapacity: event.remaining_capacity,
+    registrationDeadline: event.registration_deadline || null
+  };
+};
 
 const eventRegistrationLink = (event, className, label) => `<a class="${className}"
   data-registration-link data-event-slug="${escapeHTML(event.slug)}"
   href="pendaftaran.html?event=${encodeURIComponent(event.slug)}">${label}</a>`;
 
-const renderHomepageEvents = () => {
+const renderHomepageEvents = async () => {
   const list = document.querySelector('[data-upcoming-list]');
   const empty = document.querySelector('[data-upcoming-empty]');
   if (!list || !empty) return;
 
-  const events = activeEvents.slice(0, 3);
-  if (!events.length) {
+  const setState = (title, message) => {
     list.hidden = true;
+    empty.querySelector('h3')?.replaceChildren(document.createTextNode(title));
+    empty.querySelector('p')?.replaceChildren(document.createTextNode(message));
     empty.hidden = false;
+  };
+
+  setState('Memuat kegiatan terdekat\u2026', 'Mengambil agenda terbaru untuk kamu.');
+
+  let events;
+  try {
+    events = (await fetchPublicEvents({ limit: 3 }))
+      .map(normalizeScheduleEvent)
+      .filter(Boolean)
+      .sort((a, b) => new Date(a.start) - new Date(b.start))
+      .slice(0, 3);
+  } catch (error) {
+    console.error('Kegiatan terdekat gagal dimuat', error);
+    setState('Kegiatan belum dapat dimuat.', 'Periksa koneksi lalu muat ulang halaman ini.');
     return;
   }
 
-  const eventMarkup = (event, featured = false) => `<article class="home-upcoming-event${featured ? ' featured' : ''} reveal" data-upcoming-event>
+  if (!events.length) {
+    setState('Belum ada kegiatan dalam waktu dekat.', 'Jadwal kegiatan berikutnya akan segera hadir. Pantau halaman jadwal untuk informasi terbaru.');
+    return;
+  }
+
+  const eventMarkup = (event, featured = false) => `<article class="home-upcoming-event${featured ? ' featured' : ''} reveal visible" data-upcoming-event>
     <figure><img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}"></figure>
     <div class="home-upcoming-event-copy">
       <div class="home-upcoming-event-topline"><span>${escapeHTML(event.category)}</span><span>${escapeHTML(event.status)}</span></div>
       <h3>${escapeHTML(event.name)}</h3>
       <dl class="home-upcoming-meta">
-        <div><dt>Tanggal</dt><dd>${escapeHTML(event.date)}</dd></div>
+        <div><dt>Tanggal &amp; waktu</dt><dd>${escapeHTML(event.date)} · ${escapeHTML(event.time)}</dd></div>
         <div><dt>Lokasi</dt><dd>${escapeHTML(event.location)}</dd></div>
         <div><dt>Harga</dt><dd>${formatEventPrice(event.price)}</dd></div>
       </dl>
@@ -62,7 +170,7 @@ const renderHomepageEvents = () => {
   empty.hidden = true;
 };
 
-const renderScheduleEvents = () => {
+const renderScheduleEvents = async () => {
   const grid = document.getElementById('scheduleGrid');
   const featuredSection = document.querySelector('[data-schedule-featured]');
   const featured = document.getElementById('scheduleFeatured');
@@ -70,15 +178,39 @@ const renderScheduleEvents = () => {
   const count = document.getElementById('scheduleCount');
   if (!grid || !featuredSection || !featured) return;
 
-  if (!activeEvents.length) {
+  const setMessage = (title, detail) => {
     featuredSection.hidden = true;
-    empty?.classList.remove('hidden');
-    if (count) count.textContent = 'Menampilkan 0 kegiatan';
+    grid.replaceChildren();
+    if (empty) {
+      empty.innerHTML = `<strong>${escapeHTML(title)}</strong><span>${escapeHTML(detail)}</span>`;
+      empty.classList.remove('hidden');
+    }
+  };
+
+  if (count) count.textContent = 'Memuat kegiatan\u2026';
+  setMessage('Memuat jadwal kegiatan\u2026', 'Mohon tunggu sebentar.');
+
+  let scheduleEvents;
+  try {
+    scheduleEvents = (await fetchPublicEvents())
+      .map(normalizeScheduleEvent)
+      .filter(Boolean)
+      .sort((a, b) => new Date(a.start) - new Date(b.start));
+  } catch (error) {
+    console.error('Jadwal kegiatan gagal dimuat', error);
+    if (count) count.textContent = 'Jadwal gagal dimuat';
+    setMessage('Jadwal belum dapat dimuat.', 'Periksa koneksi lalu muat ulang halaman ini.');
     return;
   }
 
-  const nextEvent = activeEvents[0];
-  featured.innerHTML = `<article class="schedule-featured reveal">
+  if (!scheduleEvents.length) {
+    if (count) count.textContent = 'Menampilkan 0 kegiatan';
+    setMessage('Belum ada kegiatan yang tersedia.', 'Silakan cek kembali untuk agenda berikutnya.');
+    return;
+  }
+
+  const nextEvent = scheduleEvents[0];
+  featured.innerHTML = `<article class="schedule-featured reveal visible">
     <figure class="schedule-featured-image"><img src="${escapeHTML(nextEvent.image)}" alt="${escapeHTML(nextEvent.imageAlt)}"></figure>
     <div class="schedule-featured-content"><span class="schedule-featured-label">Kegiatan terdekat</span>
       <h2 id="featuredEventTitle">${escapeHTML(nextEvent.name)}</h2><p>${escapeHTML(nextEvent.description)}</p>
@@ -89,7 +221,7 @@ const renderScheduleEvents = () => {
     </div></article>`;
   featuredSection.hidden = false;
 
-  grid.innerHTML = activeEvents.map((event) => `<article class="schedule-card reveal" data-category="${escapeHTML(event.categoryKey)}" data-date="${escapeHTML(event.start)}">
+  grid.innerHTML = scheduleEvents.map((event) => `<article class="schedule-card reveal visible" data-category="${escapeHTML(event.categoryKey)}" data-date="${escapeHTML(event.start)}">
     <figure class="schedule-card-image">
       <img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}">
     </figure>
@@ -110,17 +242,33 @@ const renderScheduleEvents = () => {
     <div class="schedule-status"><strong>${escapeHTML(event.capacity)}</strong></div>
     ${eventRegistrationLink(event, 'schedule-register', 'Daftar sekarang <span aria-hidden="true">&rarr;</span>')}
   </article>`).join('');
-  if (count) count.textContent = `Menampilkan ${activeEvents.length} kegiatan`;
+  if (count) count.textContent = `Menampilkan ${scheduleEvents.length} kegiatan`;
   empty?.classList.add('hidden');
+
+  const filterContainer = document.querySelector('.schedule-filters');
+  const knownFilters = new Set([...document.querySelectorAll('[data-schedule-filter]')]
+    .map((button) => button.dataset.scheduleFilter));
+  scheduleEvents.forEach((event) => {
+    if (!filterContainer || knownFilters.has(event.categoryKey)) return;
+    const button = document.createElement('button');
+    button.className = 'filter-btn';
+    button.type = 'button';
+    button.dataset.scheduleFilter = event.categoryKey;
+    button.setAttribute('aria-pressed', 'false');
+    button.textContent = event.category;
+    filterContainer.append(button);
+    knownFilters.add(event.categoryKey);
+  });
+  initializeScheduleFilters();
 };
 
-renderHomepageEvents();
-renderScheduleEvents();
+void renderHomepageEvents();
+void renderScheduleEvents();
 
 const REGISTRATION_CONFIG = Object.freeze({
-  registrationEndpoint: "https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1/create-registration",
-  paymentEndpoint: "https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1/create-payment",
-  paymentStatusEndpoint: "https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1/payment-status"
+  registrationEndpoint: `${SUPABASE_FUNCTIONS_BASE_URL}/create-registration`,
+  paymentEndpoint: `${SUPABASE_FUNCTIONS_BASE_URL}/create-payment`,
+  paymentStatusEndpoint: `${SUPABASE_FUNCTIONS_BASE_URL}/payment-status`
 });
 
 const setMobileMenuState = (shouldOpen) => {
@@ -194,15 +342,6 @@ document.querySelectorAll('[data-wa]').forEach(link => {
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
 });
-document.querySelectorAll('[data-registration-link]').forEach(link => {
-  const slug = (link.dataset.eventSlug || '').trim();
-  if (!EVENT_DATA[slug]) return;
-
-  link.href = `pendaftaran.html?event=${encodeURIComponent(slug)}`;
-  link.removeAttribute('target');
-  link.removeAttribute('rel');
-});
-
 document.querySelectorAll('[data-instagram]').forEach(link => {
   link.href = SITE_CONFIG.instagramUrl;
   link.target = '_blank';
@@ -443,12 +582,13 @@ if ('IntersectionObserver' in window) {
   revealItems.forEach(item => observer.observe(item));
 } else revealItems.forEach(item => item.classList.add('visible'));
 
-const scheduleCards = [...document.querySelectorAll("[data-schedule-filter]")];
-const eventCards = [...document.querySelectorAll("[data-category]")];
-const scheduleCount = document.getElementById("scheduleCount");
-const scheduleEmpty = document.getElementById("scheduleEmpty");
+function initializeScheduleFilters() {
+  const scheduleCards = [...document.querySelectorAll('[data-schedule-filter]')];
+  const eventCards = [...document.querySelectorAll('[data-category]')];
+  const scheduleCount = document.getElementById('scheduleCount');
+  const scheduleEmpty = document.getElementById('scheduleEmpty');
+  if (!scheduleCards.length || !eventCards.length) return;
 
-if (scheduleCards.length && eventCards.length) {
   scheduleCards.forEach((button) => {
     button.addEventListener("click", () => {
       const filter = button.dataset.scheduleFilter;
@@ -473,7 +613,7 @@ function initScheduleCountdown() {
   const timer = document.getElementById("countdown");
   if (!timer) return;
 
-  const events = eventCards
+  const events = [...document.querySelectorAll("[data-category]")]
     .map((card) => ({
       name: card.querySelector("h2")?.textContent?.trim() || "Kegiatan Kita Bahagia",
       date: new Date(card.dataset.date),
@@ -517,7 +657,7 @@ const registrationForm = document.querySelector('[data-registration-form]');
 if (registrationForm) {
   const params = new URLSearchParams(window.location.search);
   const eventSlug = (params.get('event') || '').trim().toLowerCase();
-  const selectedEvent = EVENT_DATA[eventSlug];
+  let selectedEvent = null;
   const registrationContent = document.getElementById('registrationContent');
   const eventFallback = document.getElementById('eventFallback');
   const selectedEventIntro = document.getElementById('selectedEventIntro');
@@ -721,10 +861,18 @@ if (registrationForm) {
 
   window.addEventListener('pagehide', stopPaymentMonitoring, { once: true });
 
-  if (!selectedEvent) {
-    if (selectedEventIntro) selectedEventIntro.textContent = 'Kegiatan belum dipilih';
+  const showEventFallback = (title, message, intro = title) => {
+    registrationContent?.classList.add('hidden');
+    if (selectedEventIntro) selectedEventIntro.textContent = intro;
+    const heading = eventFallback?.querySelector('h2');
+    const paragraph = eventFallback?.querySelector('p');
+    if (heading) heading.textContent = title;
+    if (paragraph) paragraph.textContent = message;
     eventFallback?.classList.remove('hidden');
-  } else {
+  };
+
+  const renderSelectedEvent = () => {
+    if (!selectedEvent) return;
     const setText = (id, value) => {
       const element = document.getElementById(id);
       if (element) element.textContent = value;
@@ -736,7 +884,9 @@ if (registrationForm) {
     setText('eventDate', selectedEvent.date);
     setText('eventTime', selectedEvent.time);
     setText('eventLocation', selectedEvent.location);
-    setText('eventStatus', `${selectedEvent.status} · ${selectedEvent.capacity}`);
+    setText('eventStatus', selectedEvent.status === selectedEvent.capacity
+      ? selectedEvent.status
+      : `${selectedEvent.status} · ${selectedEvent.capacity}`);
 
     const descriptionSection = document.getElementById('eventDescriptionSection');
     const eventDescription = selectedEvent.registrationDescription || selectedEvent.description;
@@ -768,10 +918,15 @@ if (registrationForm) {
       document.getElementById('eventPriceRow')?.classList.remove('hidden');
     }
 
+    eventFallback?.classList.add('hidden');
     registrationContent?.classList.remove('hidden');
     const submitButton = registrationForm.querySelector('[type="submit"]');
     const availabilityNote = document.getElementById('registrationAvailabilityNote');
-    const registrationAvailable = Boolean(REGISTRATION_CONFIG.registrationEndpoint) && new Date(selectedEvent.end).getTime() >= Date.now() && !['closed', 'cancelled', 'full'].includes(selectedEvent.statusKey);
+    const availabilityEnd = new Date(selectedEvent.end || selectedEvent.start).getTime();
+    const registrationAvailable = Boolean(REGISTRATION_CONFIG.registrationEndpoint)
+      && !Number.isNaN(availabilityEnd)
+      && availabilityEnd >= Date.now()
+      && !['closed', 'cancelled', 'completed', 'full'].includes(selectedEvent.statusKey);
     if (submitButton) {
       submitButton.disabled = !registrationAvailable;
       submitButton.textContent = 'Kirim pendaftaran';
@@ -781,7 +936,40 @@ if (registrationForm) {
         ? 'Pastikan data sudah benar sebelum mengirim pendaftaran.'
         : 'Pendaftaran belum tersedia. Hubungi admin untuk informasi kegiatan berikutnya.';
     }
-  }
+  };
+
+  const initializeRegistrationEvent = async () => {
+    if (!eventSlug) {
+      showEventFallback(
+        'Kegiatan tidak ditemukan',
+        'Tautan pendaftaran ini tidak memuat kegiatan yang valid. Silakan kembali ke jadwal dan pilih kegiatan yang tersedia.',
+        'Kegiatan belum dipilih'
+      );
+      return;
+    }
+
+    showEventFallback('Memuat kegiatan\u2026', 'Mengambil detail kegiatan yang dipilih.', 'Memuat kegiatan\u2026');
+    try {
+      const events = await fetchPublicEvents({ slug: eventSlug });
+      if (!events.length) {
+        showEventFallback(
+          'Kegiatan tidak ditemukan',
+          'Kegiatan ini tidak tersedia. Silakan kembali ke jadwal dan pilih kegiatan lain.'
+        );
+        return;
+      }
+      const event = normalizeRegistrationEvent(events[0]);
+      if (!event || event.slug !== eventSlug) throw new Error('Public event response does not match requested slug');
+      selectedEvent = event;
+      renderSelectedEvent();
+    } catch (error) {
+      console.error('Detail kegiatan gagal dimuat', error);
+      showEventFallback(
+        'Kegiatan belum dapat dimuat',
+        'Periksa koneksi lalu muat ulang halaman ini, atau kembali ke jadwal kegiatan.'
+      );
+    }
+  };
 
   const showRegistrationMessage = (message, state = 'pending') => {
     const status = document.getElementById('registrationStatus');
@@ -842,7 +1030,7 @@ if (registrationForm) {
     renderPaymentState(paymentDemo, {
       registration_code: 'KB-DEMO-123456', event_title: 'Bahagia Kasih (demo lokal)', amount: 35000
     });
-  }
+  } else void initializeRegistrationEvent();
 
   registrationForm.addEventListener('submit', async (event) => {
     event.preventDefault();
