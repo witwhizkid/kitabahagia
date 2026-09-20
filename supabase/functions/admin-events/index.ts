@@ -142,7 +142,7 @@ const validatePayload = (input: unknown, creating: boolean) => {
   if (data.whatsapp_group_url !== undefined && data.whatsapp_group_url !== null) {
     try {
       const url = new URL(String(data.whatsapp_group_url));
-      if (url.protocol !== "https:" || url.hostname !== "chat.whatsapp.com") throw new Error();
+      if (url.protocol !== "https:" || url.hostname !== "chat.whatsapp.com" || url.pathname.length <= 1) throw new Error();
       data.whatsapp_group_url = url.toString();
     } catch { return { error: "Link grup WhatsApp harus memakai https://chat.whatsapp.com/." } as const; }
   }

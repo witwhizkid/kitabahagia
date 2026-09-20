@@ -40,7 +40,8 @@
           <span>Admin</span>
         </a>
         <nav aria-label="Navigasi admin">
-          <a class="nav-link is-active" href="#events" aria-current="page">Kegiatan</a>
+          <a class="nav-link is-active" href="#events" data-admin-view="events" aria-current="page">Kegiatan</a>
+          <a class="nav-link" href="#registrations" data-admin-view="registrations">Pendaftar</a>
         </nav>
         <button id="logout-button" class="logout-button" type="button">Keluar</button>
       </aside>
@@ -50,6 +51,10 @@
           <span>KB Admin</span>
           <button id="mobile-logout-button" type="button">Keluar</button>
         </header>
+        <nav class="mobile-nav" aria-label="Navigasi admin seluler">
+          <a class="is-active" href="#events" data-admin-view="events" aria-current="page">Kegiatan</a>
+          <a href="#registrations" data-admin-view="registrations">Pendaftar</a>
+        </nav>
 
         <section id="events-view" class="content-view" aria-labelledby="events-title">
           <div class="view-heading">
@@ -121,12 +126,23 @@
             <section class="form-section" aria-labelledby="media-heading">
               <div class="section-heading">
                 <h2 id="media-heading">Foto dan komunikasi</h2>
-                <p>Unggah foto belum tersedia; gunakan URL atau path yang sudah ada.</p>
+                <p>Gunakan JPG, PNG, atau WebP dengan ukuran maksimal 5 MB.</p>
               </div>
               <div class="form-grid">
-                <label class="span-2">Foto kegiatan (URL/path)<input id="event-image-url" name="image_url" /></label>
+                <div class="span-2 image-upload-field">
+                  <span class="field-label">Foto kegiatan</span>
+                  <div id="event-image-preview" class="image-preview" hidden>
+                    <img id="event-image-preview-img" alt="Pratinjau foto kegiatan" />
+                  </div>
+                  <input id="event-image-url" name="image_url" type="hidden" />
+                  <input id="event-image-file" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" />
+                  <div class="image-upload-actions">
+                    <label class="button button-secondary upload-button" for="event-image-file">Upload foto</label>
+                    <span id="image-upload-status" class="field-help-inline" role="status" aria-live="polite">Belum ada foto dipilih.</span>
+                  </div>
+                </div>
                 <label class="span-2">Teks alternatif foto<input id="event-image-alt" name="image_alt" /></label>
-                <label class="span-2">Link grup WhatsApp<input id="event-whatsapp" name="whatsapp_group_url" type="url" placeholder="https://chat.whatsapp.com/…" /></label>
+                <label class="span-2">Link grup WhatsApp peserta<input id="event-whatsapp" name="whatsapp_group_url" type="url" pattern="https://chat\.whatsapp\.com/.+" placeholder="https://chat.whatsapp.com/…" /></label>
               </div>
             </section>
 
@@ -156,6 +172,55 @@
               <button id="save-button" class="button button-primary" type="submit">Simpan Kegiatan</button>
             </div>
           </form>
+        </section>
+
+        <section id="registrations-view" class="content-view" aria-labelledby="registrations-title" hidden>
+          <div class="view-heading registrations-heading">
+            <div>
+              <p class="eyebrow">Data peserta</p>
+              <h1 id="registrations-title">Pendaftar</h1>
+              <p>Lihat pendaftar berdasarkan kegiatan dan status. Data di halaman ini hanya dapat dibaca.</p>
+            </div>
+            <p class="registrant-total"><strong id="registrations-total">0</strong><span>pendaftar</span></p>
+          </div>
+
+          <form id="registration-filters" class="registration-filters" role="search">
+            <label>Cari pendaftar
+              <input id="registration-search" type="search" placeholder="Nama, email, atau kode" autocomplete="off" />
+            </label>
+            <label>Kegiatan
+              <select id="registration-event-filter">
+                <option value="">Semua kegiatan</option>
+              </select>
+            </label>
+            <label>Status pendaftaran
+              <select id="registration-status-filter">
+                <option value="">Semua status</option>
+                <option value="pending_payment">Menunggu pembayaran</option>
+                <option value="confirmed">Terkonfirmasi</option>
+                <option value="cancelled">Dibatalkan</option>
+              </select>
+            </label>
+            <label>Status pembayaran
+              <select id="payment-status-filter">
+                <option value="">Semua status</option>
+                <option value="not_required">Tidak perlu bayar</option>
+                <option value="unpaid">Belum dibayar</option>
+                <option value="pending">Diproses</option>
+                <option value="paid">Lunas</option>
+                <option value="failed">Gagal</option>
+                <option value="expired">Kedaluwarsa</option>
+                <option value="refunded">Dikembalikan</option>
+              </select>
+            </label>
+            <button class="button button-primary" type="submit">Terapkan</button>
+            <button id="reset-registration-filters" class="button button-secondary" type="button">Reset</button>
+          </form>
+
+          <p id="registrations-feedback" class="feedback" role="status" aria-live="polite"></p>
+          <div id="registrations-loading" class="state-panel" role="status" hidden>Memuat pendaftar…</div>
+          <div id="registrations-empty" class="state-panel" hidden>Tidak ada pendaftar yang cocok dengan filter ini.</div>
+          <div id="registrations-list" class="registration-list" hidden></div>
         </section>
       </div>
     </div>

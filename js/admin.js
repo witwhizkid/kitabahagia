@@ -7,16 +7,21 @@
     sessionKey: "kb_admin_session",
   });
   const adminEventsUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-events`;
+  const adminRegistrationsUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-registrations`;
 
   const $ = (selector) => document.querySelector(selector);
   const loginView = $("#login-view");
   const adminView = $("#admin-view");
   const eventsView = $("#events-view");
   const formView = $("#form-view");
+  const registrationsView = $("#registrations-view");
   const loginForm = $("#login-form");
   const eventForm = $("#event-form");
   const eventsList = $("#events-list");
+  const registrationsList = $("#registrations-list");
   let events = [];
+  let registrations = [];
+  let imageUploading = false;
 
   const statusLabels = {
     draft: "Draf",
@@ -25,6 +30,22 @@
     closed: "Ditutup",
     completed: "Selesai",
     cancelled: "Dibatalkan",
+  };
+
+  const registrationStatusLabels = {
+    pending_payment: "Menunggu pembayaran",
+    confirmed: "Terkonfirmasi",
+    cancelled: "Dibatalkan",
+  };
+
+  const paymentStatusLabels = {
+    not_required: "Tidak perlu bayar",
+    unpaid: "Belum dibayar",
+    pending: "Diproses",
+    paid: "Lunas",
+    failed: "Gagal",
+    expired: "Kedaluwarsa",
+    refunded: "Dikembalikan",
   };
 
   const setFeedback = (element, message = "", type = "") => {
@@ -73,15 +94,12 @@
     }
   };
 
-  const adminRequest = async (method = "GET", slug = "", body) => {
+  const authorizedRequest = async (url, options = {}) => {
     const token = await validAccessToken();
     if (!token) throw new Error("Sesi berakhir. Silakan masuk kembali.");
-    const url = new URL(adminEventsUrl);
-    if (slug) url.searchParams.set("slug", slug);
     const response = await fetch(url, {
-      method,
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: body ? JSON.stringify(body) : undefined,
+      ...options,
+      headers: { Authorization: `Bearer ${token}`, ...(options.headers || {}) },
     });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401 || response.status === 403) {
@@ -91,6 +109,22 @@
     }
     if (!response.ok) throw new Error(data.error?.message || "Permintaan belum dapat diproses.");
     return data;
+  };
+
+  const adminRequest = (method = "GET", slug = "", body) => {
+    const url = new URL(adminEventsUrl);
+    if (slug) url.searchParams.set("slug", slug);
+    return authorizedRequest(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  };
+
+  const registrationRequest = (params) => {
+    const url = new URL(adminRegistrationsUrl);
+    Object.entries(params).forEach(([key, value]) => { if (value) url.searchParams.set(key, value); });
+    return authorizedRequest(url, { method: "GET" });
   };
 
   const showLogin = (message = "") => {
@@ -145,9 +179,70 @@
       const data = await adminRequest();
       events = Array.isArray(data.events) ? data.events : [];
       renderEvents();
+      const eventFilter = $("#registration-event-filter");
+      const currentFilter = eventFilter.value;
+      eventFilter.innerHTML = `<option value="">Semua kegiatan</option>${events.map((event) =>
+        `<option value="${escapeHtml(event.slug)}">${escapeHtml(event.title)}</option>`).join("")}`;
+      eventFilter.value = currentFilter;
     } catch (error) {
       $("#events-loading").hidden = true;
       setFeedback($("#events-feedback"), error.message, "error");
+    }
+  };
+
+  const formatDateTime = (iso) => {
+    if (!iso) return "-";
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+      timeZone: "Asia/Jakarta",
+    }).format(new Date(iso));
+  };
+
+  const renderRegistrations = (total) => {
+    $("#registrations-loading").hidden = true;
+    $("#registrations-empty").hidden = registrations.length > 0;
+    registrationsList.hidden = registrations.length === 0;
+    $("#registrations-total").textContent = String(total);
+    registrationsList.innerHTML = registrations.map((registration) => {
+      const linkedEvent = registration.events || {};
+      return `
+        <article class="registration-row">
+          <div class="registration-person">
+            <strong>${escapeHtml(registration.name)}</strong>
+            <span>${escapeHtml(registration.email)}</span>
+            <span>${escapeHtml(registration.phone)}</span>
+          </div>
+          <div class="registration-event">
+            <strong>${escapeHtml(linkedEvent.title || "Kegiatan tidak ditemukan")}</strong>
+            <span>${escapeHtml(registration.registration_code)}</span>
+          </div>
+          <div class="registration-statuses">
+            <span>${escapeHtml(registrationStatusLabels[registration.registration_status] || registration.registration_status)}</span>
+            <span>${escapeHtml(paymentStatusLabels[registration.payment_status] || registration.payment_status)}</span>
+          </div>
+          <time datetime="${escapeHtml(registration.created_at)}">${escapeHtml(formatDateTime(registration.created_at))}</time>
+        </article>
+      `;
+    }).join("");
+  };
+
+  const loadRegistrations = async () => {
+    $("#registrations-loading").hidden = false;
+    $("#registrations-empty").hidden = true;
+    registrationsList.hidden = true;
+    setFeedback($("#registrations-feedback"));
+    try {
+      const data = await registrationRequest({
+        event: $("#registration-event-filter").value,
+        search: $("#registration-search").value.trim(),
+        registration_status: $("#registration-status-filter").value,
+        payment_status: $("#payment-status-filter").value,
+      });
+      registrations = Array.isArray(data.registrations) ? data.registrations : [];
+      renderRegistrations(Number(data.total) || 0);
+    } catch (error) {
+      $("#registrations-loading").hidden = true;
+      setFeedback($("#registrations-feedback"), error.message, "error");
     }
   };
 
@@ -162,6 +257,50 @@
 
   const toIso = (value) => value ? new Date(`${value}:00+07:00`).toISOString() : null;
   const splitLines = (value) => value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+
+  const setImagePreview = (url = "") => {
+    const preview = $("#event-image-preview");
+    const image = $("#event-image-preview-img");
+    if (!url) {
+      preview.hidden = true;
+      image.removeAttribute("src");
+      $("#image-upload-status").textContent = "Belum ada foto dipilih.";
+      return;
+    }
+    image.src = url;
+    preview.hidden = false;
+    $("#image-upload-status").textContent = "Foto siap digunakan.";
+  };
+
+  const uploadEventImage = async (file) => {
+    const allowedTypes = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+    const extension = allowedTypes[file.type];
+    if (!extension) throw new Error("Gunakan file JPG, PNG, atau WebP.");
+    if (file.size > 5 * 1024 * 1024) throw new Error("Ukuran foto maksimal 5 MB.");
+
+    const token = await validAccessToken();
+    if (!token) throw new Error("Sesi berakhir. Silakan masuk kembali.");
+    const slug = $("#event-slug").value.trim().toLowerCase();
+    const folder = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? slug : "draft";
+    const objectPath = `${folder}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+    const response = await fetch(`${CONFIG.supabaseUrl}/storage/v1/object/event-images/${objectPath}`, {
+      method: "POST",
+      headers: {
+        apikey: CONFIG.publishableKey,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": file.type,
+        "x-upsert": "false",
+      },
+      body: file,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 401 || response.status === 403) {
+      throw new Error("Akun ini tidak memiliki izin upload foto.");
+    }
+    if (!response.ok) throw new Error(data.message || data.error || "Foto belum dapat diunggah.");
+    const publicPath = objectPath.split("/").map(encodeURIComponent).join("/");
+    return `${CONFIG.supabaseUrl}/storage/v1/object/public/event-images/${publicPath}`;
+  };
 
   const fillForm = (event = null) => {
     eventForm.reset();
@@ -183,6 +322,8 @@
     $("#event-activities").value = event?.activities?.join("\n") || "";
     $("#event-benefits").value = event?.benefits?.join("\n") || "";
     $("#event-image-url").value = event?.image_url || "";
+    $("#event-image-file").value = "";
+    setImagePreview(event?.image_url || "");
     $("#event-image-alt").value = event?.image_alt || "";
     $("#event-whatsapp").value = event?.whatsapp_group_url || "";
     $("#event-status").value = event?.status || "draft";
@@ -193,6 +334,7 @@
   const showForm = (event = null) => {
     fillForm(event);
     eventsView.hidden = true;
+    registrationsView.hidden = true;
     formView.hidden = false;
     window.scrollTo({ top: 0, behavior: "instant" });
     $("#event-title").focus();
@@ -200,9 +342,30 @@
 
   const showEvents = () => {
     formView.hidden = true;
+    registrationsView.hidden = true;
     eventsView.hidden = false;
+    setActiveNavigation("events");
     window.scrollTo({ top: 0, behavior: "instant" });
     $("#add-event-button").focus();
+  };
+
+  const setActiveNavigation = (view) => {
+    document.querySelectorAll("[data-admin-view]").forEach((link) => {
+      const active = link.dataset.adminView === view;
+      link.classList.toggle("is-active", active);
+      if (active) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
+    });
+  };
+
+  const showRegistrations = async () => {
+    formView.hidden = true;
+    eventsView.hidden = true;
+    registrationsView.hidden = false;
+    setActiveNavigation("registrations");
+    window.scrollTo({ top: 0, behavior: "instant" });
+    if (!events.length) await loadEvents();
+    await loadRegistrations();
   };
 
   const formPayload = () => ({
@@ -229,6 +392,45 @@
     is_public: $("#event-public").checked,
   });
 
+  $("#event-image-file").addEventListener("change", async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const button = $("#save-button");
+    const status = $("#image-upload-status");
+    imageUploading = true;
+    button.disabled = true;
+    status.textContent = "Mengunggah foto…";
+    try {
+      const publicUrl = await uploadEventImage(file);
+      $("#event-image-url").value = publicUrl;
+      setImagePreview(publicUrl);
+    } catch (error) {
+      event.target.value = "";
+      status.textContent = error.message;
+    } finally {
+      imageUploading = false;
+      button.disabled = false;
+    }
+  });
+
+  document.querySelectorAll("[data-admin-view]").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (link.dataset.adminView === "registrations") showRegistrations();
+      else showEvents();
+    });
+  });
+
+  $("#registration-filters").addEventListener("submit", (event) => {
+    event.preventDefault();
+    loadRegistrations();
+  });
+
+  $("#reset-registration-filters").addEventListener("click", () => {
+    $("#registration-filters").reset();
+    loadRegistrations();
+  });
+
   loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = $("#login-button");
@@ -252,6 +454,10 @@
 
   eventForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (imageUploading) {
+      setFeedback($("#form-feedback"), "Tunggu sampai upload foto selesai.", "error");
+      return;
+    }
     const payload = formPayload();
     const originalSlug = $("#original-slug").value;
     const original = events.find((item) => item.slug === originalSlug);
@@ -292,6 +498,7 @@
     catch { /* Local session is still cleared when the server session has expired. */ }
     clearSession();
     events = [];
+    registrations = [];
     loginForm.reset();
     showLogin();
   };
