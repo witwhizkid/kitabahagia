@@ -4,6 +4,7 @@
 
 - `public.events` stores authoritative event availability, price, capacity, and deadlines.
 - `public.registrations` stores participant data and server-derived registration/payment state.
+- `public.events.whatsapp_group_url` optionally stores one event-specific HTTPS WhatsApp invite. Set it manually in Supabase Table Editor under `events`; leave it null until the group is ready.
 - RLS remains enabled. Browser roles cannot read or mutate these tables.
 - `public.create_registration(...)` locks the event, checks its state/deadline/capacity, and inserts atomically. Only `service_role` may execute it.
 - `SUPABASE_SERVICE_ROLE_KEY` is server-only. Never expose it in browser code, public build variables, logs, or commits.
@@ -44,6 +45,14 @@ Errors: `INVALID_REQUEST` (`400`), `EVENT_NOT_FOUND` (`404`), `EVENT_NOT_OPEN`, 
 
 Free events are confirmed with `not_required`; paid events become `pending_payment` with `unpaid`. Amount and statuses always come from the database. Paid registrations use the deployed Midtrans Sandbox `create-payment` integration.
 
+## Confirmed registration onboarding
+
+`POST /functions/v1/payment-status` requires `registration_code` and the matching
+`email`. It returns `whatsapp_group_url` only when the registration is confirmed
+and its payment status is `paid` or `not_required`. The URL is returned only when
+it is an HTTPS link on `chat.whatsapp.com`; pending, failed, expired, refunded,
+cancelled, invalid, and malformed-link cases return `null`.
+
 ## Local and deployment commands
 
 The function requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in its server environment.
@@ -55,7 +64,7 @@ supabase functions deploy create-registration --no-verify-jwt
 supabase db push
 ```
 
-`--no-verify-jwt` allows registration without Supabase Auth; validation and database access remain server-side. Frontend integration is not implemented, and frontend event data may be demo data rather than authoritative database records.
+`--no-verify-jwt` allows registration without Supabase Auth; validation and database access remain server-side. Public event fixtures do not contain WhatsApp invite URLs.
 
 ## Midtrans Sandbox webhook
 

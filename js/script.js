@@ -90,11 +90,25 @@ const renderScheduleEvents = () => {
   featuredSection.hidden = false;
 
   grid.innerHTML = activeEvents.map((event) => `<article class="schedule-card reveal" data-category="${escapeHTML(event.categoryKey)}" data-date="${escapeHTML(event.start)}">
-    <time class="schedule-date" datetime="${escapeHTML(event.start.slice(0, 10))}"><strong>${escapeHTML(event.dateDay)}</strong><span>${escapeHTML(event.dateMonth)}</span></time>
-    <div class="schedule-event"><span class="schedule-category">${escapeHTML(event.category)}</span><h2>${escapeHTML(event.name)}</h2><p>${escapeHTML(event.description)}</p></div>
-    <div class="schedule-meta"><span>Waktu<strong>${escapeHTML(event.time)}</strong></span><span>Lokasi<strong>${escapeHTML(event.location)}</strong></span></div>
-    <div class="schedule-status"><span class="status-label ${event.statusKey === 'limited' ? 'limited' : 'available'}">${escapeHTML(event.status)}</span><strong>${escapeHTML(event.capacity)}</strong></div>
-    ${eventRegistrationLink(event, 'schedule-register', 'Daftar <span aria-hidden="true">&rarr;</span>')}
+    <figure class="schedule-card-image">
+      <img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}">
+    </figure>
+    <div class="schedule-event">
+      <div class="schedule-event-head">
+        <span class="schedule-category">${escapeHTML(event.category)}</span>
+        <span class="status-label ${event.statusKey === 'limited' ? 'limited' : 'available'}">${escapeHTML(event.status)}</span>
+      </div>
+      <h2>${escapeHTML(event.name)}</h2>
+      <p>${escapeHTML(event.description)}</p>
+    </div>
+    <div class="schedule-meta">
+      <span>Tanggal<strong>${escapeHTML(event.date)}</strong></span>
+      <span>Waktu<strong>${escapeHTML(event.time)}</strong></span>
+      <span>Lokasi<strong>${escapeHTML(event.location)}</strong></span>
+      <span>Harga<strong>${formatEventPrice(event.price)}</strong></span>
+    </div>
+    <div class="schedule-status"><strong>${escapeHTML(event.capacity)}</strong></div>
+    ${eventRegistrationLink(event, 'schedule-register', 'Daftar sekarang <span aria-hidden="true">&rarr;</span>')}
   </article>`).join('');
   if (count) count.textContent = `Menampilkan ${activeEvents.length} kegiatan`;
   empty?.classList.add('hidden');
@@ -103,20 +117,24 @@ const renderScheduleEvents = () => {
 renderHomepageEvents();
 renderScheduleEvents();
 
-// Configure these endpoints only after the production registration and payment flow exists.
 const REGISTRATION_CONFIG = Object.freeze({
   registrationEndpoint: "https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1/create-registration",
-  paymentEndpoint: ""
+  paymentEndpoint: "https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1/create-payment",
+  paymentStatusEndpoint: "https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1/payment-status"
 });
 
 const setMobileMenuState = (shouldOpen) => {
   const nav = document.querySelector('.nav');
   const toggle = document.querySelector('.menu-toggle');
+  const header = document.querySelector('.site-header');
 
   if (!nav || !toggle) return;
 
   nav.classList.toggle('open', shouldOpen);
+  header?.classList.toggle('menu-open', shouldOpen);
+  document.body.classList.toggle('mobile-menu-open', shouldOpen);
   toggle.setAttribute('aria-expanded', String(shouldOpen));
+  toggle.setAttribute('aria-label', shouldOpen ? 'Tutup menu' : 'Buka menu');
 };
 
 const closeMobileMenu = () => setMobileMenuState(false);
@@ -210,11 +228,16 @@ document.querySelectorAll('[data-email]').forEach(link => {
 });
 
 document.querySelectorAll('.accordion-trigger').forEach(trigger => {
+  const panel = trigger.closest('.accordion-item').querySelector('.accordion-panel');
+  panel.id ||= `faq-${Array.from(document.querySelectorAll('.accordion-trigger')).indexOf(trigger)}`;
+  trigger.setAttribute('aria-controls', panel.id);
+  trigger.setAttribute('aria-expanded', String(trigger.closest('.accordion-item').classList.contains('open')));
   trigger.addEventListener('click', () => {
     const item = trigger.closest('.accordion-item');
     const wasOpen = item.classList.contains('open');
     document.querySelectorAll('.accordion-item').forEach(other => other.classList.remove('open'));
     if (!wasOpen) item.classList.add('open');
+    document.querySelectorAll('.accordion-trigger').forEach(button => button.setAttribute('aria-expanded', String(button.closest('.accordion-item').classList.contains('open'))));
   });
 });
 
@@ -222,6 +245,28 @@ const heroSlider = document.querySelector('[data-hero-slider]');
 const heroSlides = Array.from(document.querySelectorAll('.hero-slide'));
 const heroDots = Array.from(document.querySelectorAll('.hero-dot'));
 const heroTrack = document.querySelector('.hero-campaign-track');
+
+const homepageHeader = document.querySelector('.home-page .site-header');
+const homepageHero = document.querySelector('.home-page .hero-campaign');
+const desktopHeaderQuery = window.matchMedia('(min-width: 1024px)');
+
+if (homepageHeader && homepageHero && 'IntersectionObserver' in window) {
+  let headerObserver;
+
+  const updateHomepageHeader = () => {
+    headerObserver?.disconnect();
+    homepageHeader.classList.remove('is-scrolled');
+
+    const headerHeight = homepageHeader.getBoundingClientRect().height;
+    headerObserver = new IntersectionObserver(([entry]) => {
+      homepageHeader.classList.toggle('is-scrolled', !entry.isIntersecting);
+    }, { rootMargin: `-${Math.round(headerHeight)}px 0px 0px 0px`, threshold: 0 });
+    headerObserver.observe(homepageHero);
+  };
+
+  updateHomepageHeader();
+  desktopHeaderQuery.addEventListener?.('change', updateHomepageHeader);
+}
 
 if (heroSlider && heroTrack && heroSlides.length) {
   let heroIndex = 0;
@@ -293,48 +338,94 @@ if (heroSlider && heroTrack && heroSlides.length) {
 
   updateHeroSlider();
   startHeroAutoplay();
+  heroSlider.addEventListener('focusin', () => clearInterval(heroTimer));
+  heroSlider.addEventListener('focusout', startHeroAutoplay);
   reduceHeroMotion.addEventListener?.('change', startHeroAutoplay);
 }
 
 const testimonialSlides = Array.from(document.querySelectorAll('.testimonial-slide'));
-const testimonialDots = Array.from(document.querySelectorAll('.testimonial-dot'));
 const testimonialTrack = document.querySelector('.testimonial-track');
+const testimonialSection = document.querySelector('.testimonial-section');
 const prevTestimonialBtn = document.querySelector('.testimonial-arrow.prev');
 const nextTestimonialBtn = document.querySelector('.testimonial-arrow.next');
+const testimonialStatus = document.querySelector('[data-testimonial-status]');
 
 if (testimonialSlides.length && testimonialTrack) {
   let activeIndex = 0;
+  let testimonialTimer;
+  let testimonialPointerHover = false;
+  const testimonialMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  const updateTestimonials = () => {
+  const updateTestimonials = ({ announce = false } = {}) => {
     testimonialSlides.forEach((slide, index) => {
-      slide.classList.toggle('active', index === activeIndex);
+      const isActive = index === activeIndex;
+      slide.classList.toggle('active', isActive);
+      slide.setAttribute('aria-hidden', String(!isActive));
     });
 
-    testimonialDots.forEach((dot, index) => {
-      dot.classList.toggle('active', index === activeIndex);
-    });
-
-    testimonialTrack.style.transform = `translateX(-${activeIndex * 100}%)`;
+    if (announce && testimonialStatus) {
+      const activeSlide = testimonialSlides[activeIndex];
+      const name = activeSlide.querySelector('.person strong')?.textContent?.trim() || '';
+      const role = activeSlide.querySelector('.person span')?.textContent?.trim() || '';
+      testimonialStatus.textContent = `Testimoni ${activeIndex + 1} dari ${testimonialSlides.length}: ${name}, ${role}.`;
+    }
   };
 
-  prevTestimonialBtn?.addEventListener('click', () => {
-    activeIndex = (activeIndex - 1 + testimonialSlides.length) % testimonialSlides.length;
-    updateTestimonials();
-  });
+  const stopTestimonialAutoplay = () => {
+    clearInterval(testimonialTimer);
+    testimonialTimer = undefined;
+  };
 
-  nextTestimonialBtn?.addEventListener('click', () => {
-    activeIndex = (activeIndex + 1) % testimonialSlides.length;
-    updateTestimonials();
-  });
-
-  testimonialDots.forEach(dot => {
-    dot.addEventListener('click', () => {
-      activeIndex = Number(dot.dataset.index || 0);
+  const startTestimonialAutoplay = ({ ignoreFocus = false } = {}) => {
+    stopTestimonialAutoplay();
+    if (
+      testimonialMotion.matches
+      || document.hidden
+      || testimonialPointerHover
+      || (!ignoreFocus && testimonialSection?.contains(document.activeElement))
+    ) return;
+    testimonialTimer = window.setInterval(() => {
+      activeIndex = (activeIndex + 1) % testimonialSlides.length;
       updateTestimonials();
-    });
+    }, 5000);
+  };
+
+  const navigateTestimonials = (direction, { ignoreFocus = false } = {}) => {
+    activeIndex = (activeIndex + direction + testimonialSlides.length) % testimonialSlides.length;
+    updateTestimonials({ announce: true });
+    startTestimonialAutoplay({ ignoreFocus });
+  };
+
+  prevTestimonialBtn?.addEventListener('click', event => {
+    navigateTestimonials(-1, { ignoreFocus: event.detail > 0 });
   });
+
+  nextTestimonialBtn?.addEventListener('click', event => {
+    navigateTestimonials(1, { ignoreFocus: event.detail > 0 });
+  });
+
+  testimonialSection?.addEventListener('pointerenter', event => {
+    if (event.pointerType !== 'mouse') return;
+    testimonialPointerHover = true;
+    stopTestimonialAutoplay();
+  });
+  testimonialSection?.addEventListener('pointerleave', event => {
+    if (event.pointerType !== 'mouse') return;
+    testimonialPointerHover = false;
+    startTestimonialAutoplay();
+  });
+  testimonialSection?.addEventListener('focusin', stopTestimonialAutoplay);
+  testimonialSection?.addEventListener('focusout', event => {
+    if (!testimonialSection.contains(event.relatedTarget)) startTestimonialAutoplay();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopTestimonialAutoplay();
+    else startTestimonialAutoplay();
+  });
+  testimonialMotion.addEventListener?.('change', startTestimonialAutoplay);
 
   updateTestimonials();
+  startTestimonialAutoplay();
 }
 
 document.getElementById('year')?.replaceChildren(document.createTextNode(new Date().getFullYear()));
@@ -431,24 +522,67 @@ if (registrationForm) {
   const eventFallback = document.getElementById('eventFallback');
   const selectedEventIntro = document.getElementById('selectedEventIntro');
   const paymentStates = {
-    pending: ['Menunggu pembayaran', 'Layanan pembayaran belum tersedia. Belum ada pembayaran yang diproses.'],
+    pending: ['Selesaikan pembayaran', 'Pendaftaranmu sudah tercatat. Selesaikan pembayaran untuk mengamankan tempatmu.'],
     processing: ['Pembayaran sedang diverifikasi', 'Kami sedang memastikan pembayaranmu. Halaman ini akan diperbarui setelah statusnya terkonfirmasi.'],
     paid: ['Pembayaran berhasil', 'Tempatmu sudah dikonfirmasi.'],
-    expired: ['Waktu pembayaran habis', 'QRIS sebelumnya sudah tidak dapat digunakan.'],
-    failed: ['Pembayaran belum berhasil', 'Pendaftaranmu tetap tercatat. Pembayaran dapat dicoba kembali setelah layanan pembayaran tersedia.']
+    expired: ['Waktu pembayaran habis', 'QRIS sebelumnya sudah tidak dapat digunakan. Pendaftaranmu tetap tercatat.'],
+    failed: ['Pembayaran belum berhasil', 'Pembayaran tidak berhasil diselesaikan. Pendaftaranmu tetap tercatat.'],
+    refunded: ['Pembayaran dikembalikan', 'Pembayaran ini sudah dikembalikan. Hubungi tim Kita Bahagia bila perlu bantuan.']
   };
   const paymentStatusCopy = {
-    pending: paymentStates.pending,
+    pending: ['Menunggu pembayaran', 'Selesaikan pembayaran melalui QRIS sebelum waktu pembayaran habis.'],
     processing: ['Pembayaran sedang diperiksa', 'Pembayaranmu sedang diperiksa. Tidak perlu melakukan pembayaran ulang.'],
-    expired: ['Pendaftaran tetap tercatat', 'Opsi pembayaran baru akan tersedia setelah layanan pembayaran terhubung.']
+    paid: ['Pembayaran berhasil', 'Pendaftaranmu sudah dikonfirmasi.'],
+    expired: ['Waktu pembayaran habis', 'QRIS sebelumnya sudah tidak dapat digunakan.'],
+    failed: ['Pembayaran belum berhasil', 'Pembayaran tidak berhasil diselesaikan.'],
+    refunded: ['Pembayaran dikembalikan', 'Pembayaran ini sudah dikembalikan.']
   };
   const requestedDemo = ['localhost', '127.0.0.1'].includes(window.location.hostname)
     ? params.get('payment_demo') : null;
-  const paymentDemo = Object.hasOwn(paymentStates, requestedDemo) ? requestedDemo : null;
+  const paymentDemoStates = ['pending', 'processing', 'paid', 'expired', 'failed'];
+  const paymentDemo = paymentDemoStates.includes(requestedDemo) ? requestedDemo : null;
+
+  let countdownTimer = null;
+  let paymentPollTimer = null;
+  let paymentPollStopped = false;
+
+  const stopPaymentMonitoring = () => {
+    window.clearInterval(countdownTimer);
+    window.clearTimeout(paymentPollTimer);
+    countdownTimer = null;
+    paymentPollTimer = null;
+    paymentPollStopped = true;
+  };
+
+  const formatPaymentCountdown = (milliseconds) => {
+    const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+    return `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(totalSeconds % 60).padStart(2, '0')}`;
+  };
+
+  const updatePaymentCountdown = (expiresAt, onExpired) => {
+    const countdown = document.querySelector('#paymentStage .payment-countdown');
+    const countdownValue = countdown?.querySelector('strong');
+    const expiry = new Date(expiresAt).getTime();
+    if (!countdown || !countdownValue || Number.isNaN(expiry)) return;
+    countdown.hidden = false;
+    const update = () => {
+      const remaining = expiry - Date.now();
+      countdownValue.textContent = formatPaymentCountdown(remaining);
+      if (remaining <= 0) {
+        window.clearInterval(countdownTimer);
+        countdownTimer = null;
+        onExpired();
+      }
+    };
+    window.clearInterval(countdownTimer);
+    update();
+    if (expiry > Date.now()) countdownTimer = window.setInterval(update, 1000);
+  };
 
   const renderPaymentState = (state, data) => {
     const stage = document.getElementById('paymentStage');
     if (!stage || !Object.hasOwn(paymentStates, state)) return;
+    if (['paid', 'expired', 'failed'].includes(state)) stopPaymentMonitoring();
     const [heading, body] = paymentStates[state];
     Object.keys(paymentStates).forEach((key) => stage.classList.toggle(`payment_${key}`, key === state));
     stage.querySelectorAll('[data-payment-state]').forEach((container) => {
@@ -466,22 +600,126 @@ if (registrationForm) {
     });
     stage.querySelector('[data-result-code]').textContent = data.registration_code;
     stage.querySelector('[data-result-title]').textContent = data.event_title;
-    stage.querySelector('[data-payment-amount]').textContent = formatEventPrice(data.amount);
-    stage.querySelector('#paymentHeading').textContent = state === 'pending' ? 'Selesaikan pembayaran' : heading;
-    stage.querySelector('.payment-primary > p').textContent = state === 'pending'
-      ? 'Pendaftaranmu sudah tercatat. Selesaikan pembayaran untuk mengamankan tempatmu.' : body;
+    stage.querySelector('[data-payment-amount]').textContent = typeof data.amount === 'number' ? formatEventPrice(data.amount) : 'Tidak tersedia';
+    stage.querySelector('#paymentHeading').textContent = heading;
+    stage.querySelector('.payment-primary > p').textContent = body;
     stage.querySelector('.payment-details dl > div:last-child dd').textContent = state === 'paid'
       ? 'Pendaftaran kegiatan · pembayaran dikonfirmasi' : `Pendaftaran kegiatan · ${heading.toLowerCase()}`;
     const qr = stage.querySelector('.payment-qr-placeholder');
-    qr.hidden = state !== 'pending';
-    qr.setAttribute('aria-label', 'QRIS belum tersedia');
-    qr.querySelector('span').textContent = 'QRIS belum tersedia';
-    qr.querySelector('p').textContent = 'QRIS akan muncul di sini setelah layanan pembayaran terhubung.';
-    stage.querySelector('.payment-countdown').hidden = state !== 'pending';
+    const qrImage = qr?.querySelector('[data-payment-qr]');
+    const hasQr = typeof data.qr_url === 'string' && /^https:\/\//.test(data.qr_url);
+    qr.hidden = !hasQr || !['pending', 'processing'].includes(state);
+    if (qrImage && hasQr) {
+      qrImage.src = data.qr_url;
+      qrImage.alt = `QRIS pembayaran ${formatEventPrice(data.amount)} untuk ${data.event_title || selectedEvent?.name || 'kegiatan Kita Bahagia'}`;
+    }
+    qr.setAttribute('aria-label', hasQr ? 'QRIS pembayaran' : 'QRIS belum tersedia');
+    stage.querySelector('.payment-countdown').hidden = true;
+    if (paymentDemo && state === 'pending') {
+      stage.querySelector('#paymentHeading').textContent = 'Simulasi pembayaran';
+      stage.querySelector('.payment-primary > p').textContent = 'Pendaftaran demo tercatat. Gunakan tombol simulasi di bawah untuk mencoba hasil pembayaran berhasil. Tidak ada uang yang ditagih.';
+      stage.querySelector('[data-payment-state="payment_pending"] strong').textContent = 'Menunggu simulasi';
+      stage.querySelector('[data-payment-state="payment_pending"] p').textContent = 'Ini bukan tagihan atau reservasi kegiatan sungguhan.';
+    }
     document.getElementById('freeRegistrationConfirmation').hidden = true;
+    const orderRow = stage.querySelector('[data-result-order]');
+    if (orderRow) orderRow.textContent = data.order_id || 'Menunggu dibuat';
     stage.hidden = false;
     stage.focus();
+    if (state === 'pending' && data.expires_at) {
+      updatePaymentCountdown(data.expires_at, () => renderPaymentState('expired', { ...data, payment_status: 'expired' }));
+    }
   };
+
+  const safeWhatsAppGroupUrl = (value) => {
+    if (typeof value !== 'string' || !value.trim()) return null;
+    try {
+      const url = new URL(value.trim());
+      return url.protocol === 'https:' && url.hostname === 'chat.whatsapp.com' ? url.toString() : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const renderOnboarding = (container, data) => {
+    if (!container) return;
+    const copy = container.querySelector('[data-onboarding-copy]');
+    const link = container.querySelector('[data-whatsapp-group]');
+    const groupUrl = safeWhatsAppGroupUrl(data?.whatsapp_group_url);
+    container.hidden = false;
+    if (!groupUrl) {
+      if (copy) copy.textContent = 'Link grup akan tersedia setelah disiapkan oleh tim Kita Bahagia.';
+      if (link) {
+        link.hidden = true;
+        link.removeAttribute('href');
+      }
+      return;
+    }
+    if (copy) copy.textContent = 'Gabung ke grup kegiatan untuk menerima informasi dan koordinasi dari tim Kita Bahagia.';
+    if (link) {
+      link.href = groupUrl;
+      link.hidden = false;
+    }
+  };
+
+  const fetchRegistrationStatus = async (registration, email) => {
+    const response = await fetch(REGISTRATION_CONFIG.paymentStatusEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ registration_code: registration.registration_code, email }),
+      signal: AbortSignal.timeout(10000)
+    });
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.payment_status) throw new Error('STATUS_ERROR');
+    return result;
+  };
+
+  const createPayment = async (registration) => {
+    const email = String(new FormData(registrationForm).get('email') || '').trim().toLowerCase();
+    const response = await fetch(REGISTRATION_CONFIG.paymentEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ registration_code: registration.registration_code, email }),
+      signal: AbortSignal.timeout(20000)
+    });
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.registration_code || result.payment_status !== 'pending'
+      || typeof result.amount !== 'number' || typeof result.qr_url !== 'string' || typeof result.expires_at !== 'string') {
+      throw { code: result?.error?.code || 'PAYMENT_ERROR' };
+    }
+    return { ...registration, ...result, event_title: registration.event_title || selectedEvent.name };
+  };
+
+  const showConfirmedRegistration = (data) => {
+    stopPaymentMonitoring();
+    renderPaymentState('paid', data);
+    renderOnboarding(document.querySelector('#paymentStage [data-registration-onboarding]'), data);
+    document.getElementById('paymentStage')?.focus();
+  };
+
+  const pollPaymentStatus = (registration, email) => {
+    paymentPollStopped = false;
+    const poll = async () => {
+      if (paymentPollStopped) return;
+      try {
+        const result = await fetchRegistrationStatus(registration, email);
+        if (result.payment_status === 'paid' && result.registration_status === 'confirmed') {
+          showConfirmedRegistration({ ...registration, ...result });
+          return;
+        }
+        if (['expired', 'failed', 'refunded'].includes(result.payment_status)) {
+          renderPaymentState(result.payment_status, { ...registration, ...result });
+          return;
+        }
+      } catch {
+        // A transient polling error should not interrupt the payment attempt.
+      }
+      if (!paymentPollStopped) paymentPollTimer = window.setTimeout(poll, 5000);
+    };
+    paymentPollTimer = window.setTimeout(poll, 5000);
+  };
+
+  window.addEventListener('pagehide', stopPaymentMonitoring, { once: true });
 
   if (!selectedEvent) {
     if (selectedEventIntro) selectedEventIntro.textContent = 'Kegiatan belum dipilih';
@@ -494,10 +732,31 @@ if (registrationForm) {
 
     if (selectedEventIntro) selectedEventIntro.textContent = selectedEvent.name;
     setText('eventName', selectedEvent.name);
+    setText('eventCategory', selectedEvent.category);
     setText('eventDate', selectedEvent.date);
     setText('eventTime', selectedEvent.time);
     setText('eventLocation', selectedEvent.location);
     setText('eventStatus', `${selectedEvent.status} · ${selectedEvent.capacity}`);
+
+    const descriptionSection = document.getElementById('eventDescriptionSection');
+    const eventDescription = selectedEvent.registrationDescription || selectedEvent.description;
+    setText('eventDescription', eventDescription || '');
+    if (descriptionSection) descriptionSection.hidden = !eventDescription;
+
+    const renderEventList = (sectionId, listId, items) => {
+      const section = document.getElementById(sectionId);
+      const list = document.getElementById(listId);
+      if (!section || !list) return;
+      const entries = Array.isArray(items) ? items.filter(Boolean) : [];
+      list.replaceChildren(...entries.map((item) => {
+        const entry = document.createElement('li');
+        entry.textContent = item;
+        return entry;
+      }));
+      section.hidden = entries.length === 0;
+    };
+    renderEventList('eventActivitiesSection', 'eventActivities', selectedEvent.activities);
+    renderEventList('eventBenefitsSection', 'eventBenefits', selectedEvent.benefits);
 
     const eventNameInput = document.getElementById('kegiatan');
     const eventSlugInput = document.getElementById('eventSlug');
@@ -512,7 +771,7 @@ if (registrationForm) {
     registrationContent?.classList.remove('hidden');
     const submitButton = registrationForm.querySelector('[type="submit"]');
     const availabilityNote = document.getElementById('registrationAvailabilityNote');
-    const registrationAvailable = Boolean(REGISTRATION_CONFIG.registrationEndpoint);
+    const registrationAvailable = Boolean(REGISTRATION_CONFIG.registrationEndpoint) && new Date(selectedEvent.end).getTime() >= Date.now() && !['closed', 'cancelled', 'full'].includes(selectedEvent.statusKey);
     if (submitButton) {
       submitButton.disabled = !registrationAvailable;
       submitButton.textContent = 'Kirim pendaftaran';
@@ -520,7 +779,7 @@ if (registrationForm) {
     if (availabilityNote) {
       availabilityNote.textContent = registrationAvailable
         ? 'Pastikan data sudah benar sebelum mengirim pendaftaran.'
-        : 'Backend pendaftaran belum dikonfigurasi. Form belum dapat dikirim.';
+        : 'Pendaftaran belum tersedia. Hubungi admin untuk informasi kegiatan berikutnya.';
     }
   }
 
@@ -546,7 +805,8 @@ if (registrationForm) {
     const response = await fetch(REGISTRATION_CONFIG.registrationEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(20000)
     });
     const result = await response.json().catch(() => null);
     if (!response.ok) {
@@ -563,6 +823,11 @@ if (registrationForm) {
     EVENT_NOT_OPEN: 'Pendaftaran untuk kegiatan ini sedang tidak dibuka.',
     REGISTRATION_CLOSED: 'Batas waktu pendaftaran kegiatan ini sudah berakhir.',
     EVENT_FULL: 'Kapasitas kegiatan ini sudah penuh.',
+    PAYMENT_IN_PROGRESS: 'Pembayaran sedang disiapkan. Muat ulang halaman ini beberapa saat lagi untuk melanjutkan.',
+    PAYMENT_AWAITING_CONFIRMATION: 'Pembayaran sedang menunggu konfirmasi. Muat ulang halaman ini untuk melihat status terbaru.',
+    PAYMENT_ALREADY_PAID: 'Pembayaran untuk pendaftaran ini sudah selesai.',
+    PAYMENT_PROVIDER_ERROR: 'Layanan pembayaran sedang bermasalah. Pendaftaranmu tetap tercatat.',
+    PAYMENT_ERROR: 'QRIS belum dapat dibuat. Pendaftaranmu tetap tercatat. Silakan coba lagi beberapa saat lagi.',
     SERVER_ERROR: 'Layanan pendaftaran sedang bermasalah. Silakan coba lagi.'
   };
 
@@ -618,26 +883,38 @@ if (registrationForm) {
       if (isFreeConfirmed) {
         showRegistrationMessage(`Pendaftaran ${title} sudah tercatat. Kode pendaftaran kamu: ${code}.`, 'success');
       } else if (isPaidPending) {
-        const amount = formatEventPrice(registration.amount);
-        showRegistrationMessage(`Pendaftaran ${title} sudah tercatat dengan kode ${code}. Biaya ${amount}; pembayaran belum diselesaikan dan layanan pembayaran belum tersedia.`, 'pending');
+        const payment = await createPayment(registration);
+        showRegistrationMessage(`Pendaftaran ${title} sudah tercatat dengan kode ${code}.`, 'success');
+        renderPaymentState('pending', payment);
+        document.getElementById('registrationStatus')?.classList.add('hidden');
+        pollPaymentStatus(payment, String(new FormData(registrationForm).get('email') || '').trim().toLowerCase());
       } else {
         throw { code: 'SERVER_ERROR' };
       }
       registrationCompleted = true;
       if (submitButton) submitButton.textContent = 'Pendaftaran tercatat';
-      if (isPaidPending) {
-        renderPaymentState('pending', registration);
-        document.getElementById('registrationStatus')?.classList.add('hidden');
-      }
       const resultStage = isFreeConfirmed ? document.getElementById('freeRegistrationConfirmation') : null;
       if (resultStage) {
         document.getElementById('paymentStage').hidden = true;
         resultStage.querySelector('[data-result-code]').textContent = code;
         resultStage.querySelector('[data-result-title]').textContent = title;
+        renderOnboarding(resultStage.querySelector('[data-registration-onboarding]'), { whatsapp_group_url: null });
         resultStage.hidden = false;
         document.getElementById('registrationStatus')?.classList.add('hidden');
         resultStage.focus();
+        try {
+          const status = await fetchRegistrationStatus(
+            registration,
+            String(new FormData(registrationForm).get('email') || '').trim().toLowerCase(),
+          );
+          if (status.registration_status === 'confirmed' && status.payment_status === 'not_required') {
+            renderOnboarding(resultStage.querySelector('[data-registration-onboarding]'), status);
+          }
+        } catch {
+          // The confirmed registration remains visible if onboarding lookup is temporarily unavailable.
+        }
       }
+      window.KBReceipt?.actions(isPaidPending ? document.getElementById('paymentStage') : resultStage, registration);
     } catch (error) {
       const code = typeof error?.code === 'string' ? error.code : 'SERVER_ERROR';
       showRegistrationMessage(registrationErrorMessages[code] || registrationErrorMessages.SERVER_ERROR, 'error');
