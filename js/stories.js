@@ -77,7 +77,7 @@
     link.append(document.createTextNode("Baca kisah "));
     const arrow = document.createElement("span");
     arrow.setAttribute("aria-hidden", "true");
-    arrow.textContent = "Ã¢â€ â€™";
+    arrow.textContent = "→";
     link.append(arrow);
     return link;
   };
@@ -127,7 +127,7 @@
     if (!container) return;
     const state = document.querySelector("[data-home-stories-state]");
     container.hidden = true;
-    setState(state, "loading", "Memuat kisah terbaruÃ¢â‚¬Â¦");
+    setState(state, "loading", "Memuat kisah terbaru…");
     try {
       const stories = await fetchPublicStories({ limit: 3 });
       if (!stories.length) {
@@ -159,7 +159,7 @@
     const state = document.querySelector("[data-stories-state]");
     latestContainer.hidden = true;
     archiveContainer.hidden = true;
-    setState(state, "loading", "Memuat arsip kisahÃ¢â‚¬Â¦");
+    setState(state, "loading", "Memuat arsip kisah…");
     try {
       const stories = await fetchPublicStories();
       if (!stories.length) {
@@ -210,7 +210,7 @@
     if (!article) return;
     const state = document.querySelector("[data-story-detail-state]");
     article.hidden = true;
-    setState(state, "loading", "Memuat kisahÃ¢â‚¬Â¦");
+    setState(state, "loading", "Memuat kisah…");
     const slug = new URLSearchParams(window.location.search).get("slug")?.trim() || "";
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
       setState(state, "empty", "Kisah tidak ditemukan.");
@@ -223,7 +223,7 @@
         return;
       }
       const story = stories[0];
-      document.title = `${story.title} Ã¢â‚¬â€ Kita Bahagia`;
+      document.title = `${story.title} — Kita Bahagia`;
       document.querySelector("[data-story-detail-title]").textContent = story.title;
       const date = publishedDate(story);
       const time = document.querySelector("[data-story-detail-date]");
