@@ -420,6 +420,7 @@
             <button class="button button-secondary" type="submit">Simpan peran</button>
             <button class="button button-secondary" type="button" data-toggle-admin data-next-active="${admin.is_active ? "false" : "true"}"${isSelf && admin.is_active ? " disabled title=\"Akun sendiri tidak dapat dinonaktifkan\"" : ""}>${admin.is_active ? "Nonaktifkan" : "Aktifkan"}</button>
             <button class="button button-secondary" type="button" data-send-recovery>Kirim ulang akses</button>
+            <button class="button button-secondary" type="button" data-generate-access-link>Salin tautan akses</button>
           </span>
         </form>
       `;
@@ -992,6 +993,25 @@
   });
 
   adminsList.addEventListener("click", async (event) => {
+    const linkButton = event.target.closest("[data-generate-access-link]");
+    if (linkButton) {
+      const row = linkButton.closest("[data-admin-id]");
+      const selected = admins.find((admin) => admin.user_id === row?.dataset.adminId);
+      if (!selected || !window.confirm(`Salin tautan akses untuk ${selected.email}?`)) return;
+      linkButton.disabled = true;
+      setFeedback($("#admins-feedback"));
+      try {
+        const data = await adminUsersRequest("PATCH", { action: "generate_access_link", user_id: selected.user_id });
+        if (!data.action_link) throw new Error("Tautan akses belum dapat dibuat.");
+        await navigator.clipboard.writeText(data.action_link);
+        setFeedback($("#admins-feedback"), "Tautan akses berhasil disalin. Kirim langsung kepada admin yang bersangkutan.", "success");
+      } catch (error) {
+        setFeedback($("#admins-feedback"), error.message, "error");
+      } finally {
+        linkButton.disabled = false;
+      }
+      return;
+    }
     const recoveryButton = event.target.closest("[data-send-recovery]");
     if (recoveryButton) {
       const row = recoveryButton.closest("[data-admin-id]");

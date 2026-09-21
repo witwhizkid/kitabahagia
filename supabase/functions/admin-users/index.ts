@@ -79,7 +79,45 @@ const sendPasswordRecovery = async (supabaseUrl: string, serviceKey: string, ema
     headers: serviceHeaders(serviceKey),
     body: JSON.stringify({ email, redirect_to: "https://websitekb.netlify.app/admin/" }),
   });
+  if (!response.ok) {
+    const details = await response.json().catch(() => null) as {
+      code?: string | number;
+      error_code?: string | number;
+      msg?: string;
+      message?: string;
+      error_description?: string;
+    } | null;
+    console.error("admin-users recovery diagnostic", {
+      action: "send_access_recovery",
+      status: response.status,
+      code: details?.code ?? details?.error_code,
+      error: details?.msg ?? details?.message ?? details?.error_description,
+    });
+  }
   return response.ok;
+};
+
+const generateAccessLink = async (supabaseUrl: string, serviceKey: string, email: string) => {
+  const response = await fetch(`${supabaseUrl}/auth/v1/admin/generate_link`, {
+    method: "POST",
+    headers: serviceHeaders(serviceKey),
+    body: JSON.stringify({
+      type: "recovery",
+      email,
+      redirect_to: "https://websitekb.netlify.app/admin/",
+    }),
+  });
+  const data = await response.json().catch(() => null) as {
+    action_link?: string;
+    code?: string | number;
+    error_code?: string | number;
+    msg?: string;
+    message?: string;
+  } | null;
+  if (!response.ok || typeof data?.action_link !== "string" || !data.action_link) {
+    throw new Error(data?.msg || data?.message || `Auth generate_link failed (${response.status})`);
+  }
+  return data.action_link;
 };
 
 const findAuthUserByEmail = async (supabaseUrl: string, serviceKey: string, email: string) => {
@@ -173,10 +211,38 @@ Deno.serve(async (request) => {
       if (!await sendPasswordRecovery(supabaseUrl, serviceKey, targetUser.email)) {
         return fail(500, "RECOVERY_FAILED", "Email akses baru belum dapat dikirim.");
       }
-    } catch {
+    } catch (error) {
+      const details = error as { code?: string | number; status?: string | number };
+      console.error("admin-users recovery diagnostic", {
+        action: "send_access_recovery",
+        status: details?.status,
+        code: details?.code,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return fail(500, "RECOVERY_FAILED", "Email akses baru belum dapat dikirim.");
     }
     return json(200, { message: "Email akses baru sudah dikirim." });
+  }
+
+  if (request.method === "PATCH" && payload.action === "generate_access_link") {
+    const unknown = Object.keys(payload).filter((key) => !["action", "user_id"].includes(key));
+    const userId = typeof payload.user_id === "string" ? payload.user_id.trim() : "";
+    if (unknown.length || !uuidPattern.test(userId)) return fail(400, "INVALID_ADMIN", "Admin yang akan diubah tidak valid.");
+
+    const targetQuery = new URLSearchParams({ select: adminProjection, user_id: `eq.${userId}`, limit: "1" });
+    const targetResponse = await fetch(`${supabaseUrl}/rest/v1/admin_users?${targetQuery}`, { headers: serviceHeaders(serviceKey) });
+    const targetRows = await targetResponse.json().catch(() => null) as AdminRow[] | null;
+    if (!targetResponse.ok || !Array.isArray(targetRows)) return fail(500, "SERVER_ERROR", "Status admin belum dapat diperiksa.");
+    if (targetRows.length !== 1) return fail(404, "ADMIN_NOT_FOUND", "Admin tidak ditemukan.");
+
+    const targetUser = await getAuthUser(supabaseUrl, serviceKey, userId);
+    if (!targetUser?.email) return fail(404, "ADMIN_NOT_FOUND", "Admin tidak ditemukan.");
+    try {
+      const actionLink = await generateAccessLink(supabaseUrl, serviceKey, targetUser.email);
+      return json(200, { action_link: actionLink });
+    } catch {
+      return fail(500, "RECOVERY_FAILED", "Tautan akses belum dapat dibuat.");
+    }
   }
 
   if (request.method === "POST") {
