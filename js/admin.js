@@ -138,10 +138,10 @@
     return data;
   };
 
-  const resetPasswordForEmail = (email) => authRequest("recover", {
-    email,
-    redirect_to: `${window.location.origin}/admin/`,
-  });
+  const resetPasswordForEmail = (email) => {
+    const redirectTo = `${window.location.origin}/admin/`;
+    return authRequest(`recover?redirect_to=${encodeURIComponent(redirectTo)}`, { email });
+  };
 
   const validAccessToken = async () => {
     let session = readSession();

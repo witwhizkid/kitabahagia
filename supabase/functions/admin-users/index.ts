@@ -74,10 +74,12 @@ const getAuthUser = async (supabaseUrl: string, serviceKey: string, userId: stri
 };
 
 const sendPasswordRecovery = async (supabaseUrl: string, serviceKey: string, email: string, redirectTo: string) => {
-  const response = await fetch(`${supabaseUrl}/auth/v1/recover`, {
+  const recoveryUrl = new URL(`${supabaseUrl}/auth/v1/recover`);
+  recoveryUrl.searchParams.set("redirect_to", redirectTo);
+  const response = await fetch(recoveryUrl, {
     method: "POST",
     headers: serviceHeaders(serviceKey),
-    body: JSON.stringify({ email, redirect_to: redirectTo }),
+    body: JSON.stringify({ email }),
   });
   if (!response.ok) {
     const details = await response.json().catch(() => null) as {
