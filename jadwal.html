@@ -43,16 +43,27 @@
       </div>
     </section>
 
-    <section class="schedule-featured-section" aria-labelledby="featuredEventTitle" data-schedule-featured hidden>
-      <div class="container" id="scheduleFeatured"></div>
+    <section class="schedule-featured-section" aria-labelledby="scheduleUrgentTitle" data-schedule-featured hidden>
+      <div class="container">
+        <div class="schedule-section-heading">
+          <div><span class="eyebrow">Batas pendaftaran terdekat</span><h2 id="scheduleUrgentTitle">Segera berakhir</h2></div>
+          <p>Agenda yang masa pendaftarannya akan segera ditutup.</p>
+        </div>
+        <div class="schedule-urgent-grid" id="scheduleFeatured"></div>
+      </div>
     </section>
 
     <section class="schedule-section">
       <div class="container">
-        <div class="schedule-toolbar"><div class="schedule-filters" role="group" aria-label="Filter kegiatan"><button class="filter-btn active" data-schedule-filter="all" type="button" aria-pressed="true">Semua</button><button class="filter-btn" data-schedule-filter="anak-anak" type="button" aria-pressed="false">Anak-anak</button><button class="filter-btn" data-schedule-filter="komunitas" type="button" aria-pressed="false">Komunitas</button><button class="filter-btn" data-schedule-filter="kreatif" type="button" aria-pressed="false">Kreatif</button><button class="filter-btn" data-schedule-filter="lingkungan" type="button" aria-pressed="false">Lingkungan</button></div><a class="text-link" href="kontak.html">Butuh rekomendasi kegiatan? &rarr;</a></div>
+        <div class="schedule-section-heading schedule-explore-heading">
+          <div><span class="eyebrow">Agenda Kita Bahagia</span><h2>Jelajahi kegiatan</h2></div>
+          <p>Temukan kegiatan berdasarkan tema, waktu, dan tempat yang paling sesuai.</p>
+        </div>
+        <div class="schedule-discovery" role="search">
+          <label class="schedule-search" for="scheduleSearch"><span>Cari kegiatan</span><input id="scheduleSearch" type="search" placeholder="Cari judul, lokasi, atau kategori" autocomplete="off"></label>
+          <div class="schedule-filters" role="group" aria-label="Filter kategori kegiatan"><button class="filter-btn active" data-schedule-filter="all" type="button" aria-pressed="true">Semua</button></div>
+        </div>
         <p class="schedule-count" id="scheduleCount" aria-live="polite">Menampilkan 0 kegiatan</p>
-
-        <div class="schedule-columns" aria-hidden="true"><span>Foto</span><span>Kegiatan</span><span>Detail</span><span>Status</span><span>Aksi</span></div>
         <div class="schedule-grid" id="scheduleGrid"></div>
         <div class="schedule-empty hidden" id="scheduleEmpty"><strong>Belum ada kegiatan pada kategori ini.</strong><span>Coba pilih kategori lain atau hubungi kami untuk informasi agenda berikutnya.</span></div>
       </div>

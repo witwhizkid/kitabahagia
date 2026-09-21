@@ -43,6 +43,13 @@ const eventDateParts = (date) => Object.fromEntries(new Intl.DateTimeFormat('id-
   day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta'
 }).formatToParts(date).map((part) => [part.type, part.value]));
 
+const formatEventDeadline = (value) => {
+  if (!value) return '';
+  const deadline = new Date(value);
+  if (Number.isNaN(deadline.getTime())) return '';
+  return `${eventDateFormatter.format(deadline)}, ${eventTimeFormatter.format(deadline)} WIB`;
+};
+
 const formatEventDateRange = (start, end) => {
   if (!end) return eventDateFormatter.format(start);
   const startParts = eventDateParts(start);
@@ -97,7 +104,9 @@ const normalizeScheduleEvent = (event) => {
     capacity,
     price: Number(event.price) || 0,
     image: event.image_url || '',
-    imageAlt: event.image_alt || `Dokumentasi ${event.title}`
+    imageAlt: event.image_alt || `Dokumentasi ${event.title}`,
+    registrationDeadline: event.registration_deadline || null,
+    deadlineLabel: formatEventDeadline(event.registration_deadline)
   };
 };
 
@@ -209,38 +218,56 @@ const renderScheduleEvents = async () => {
     return;
   }
 
-  const nextEvent = scheduleEvents[0];
-  featured.innerHTML = `<article class="schedule-featured reveal visible">
-    <figure class="schedule-featured-image"><img src="${escapeHTML(nextEvent.image)}" alt="${escapeHTML(nextEvent.imageAlt)}"></figure>
-    <div class="schedule-featured-content"><span class="schedule-featured-label">Kegiatan terdekat</span>
-      <h2 id="featuredEventTitle">${escapeHTML(nextEvent.name)}</h2><p>${escapeHTML(nextEvent.description)}</p>
-      <dl class="schedule-featured-meta">
-        <div><dt>Tanggal</dt><dd>${escapeHTML(nextEvent.date)}</dd></div><div><dt>Waktu</dt><dd>${escapeHTML(nextEvent.time)}</dd></div>
-        <div><dt>Lokasi</dt><dd>${escapeHTML(nextEvent.location)}</dd></div><div><dt>Status</dt><dd>${escapeHTML(nextEvent.status)} · ${escapeHTML(nextEvent.capacity)}</dd></div>
-      </dl>${eventRegistrationLink(nextEvent, 'btn btn-primary', 'Daftar')}
-    </div></article>`;
-  featuredSection.hidden = false;
+  const eventImage = (event, className) => `<figure class="${className}${event.image ? '' : ' is-empty'}">${event.image
+    ? `<img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}" loading="lazy" decoding="async">`
+    : ''}</figure>`;
+  const eventMeta = (event) => `<dl class="schedule-meta">
+    <div><dt>Tanggal &amp; waktu</dt><dd>${escapeHTML(event.date)} · ${escapeHTML(event.time)}</dd></div>
+    <div><dt>Lokasi</dt><dd>${escapeHTML(event.location)}</dd></div>
+    <div><dt>Harga</dt><dd>${formatEventPrice(event.price)}</dd></div>
+  </dl>`;
+  const eventTopline = (event) => `<div class="schedule-event-head">
+    <span class="schedule-category">${escapeHTML(event.category)}</span>
+    <span class="status-label ${event.statusKey === 'full' || event.statusKey === 'closed' ? 'limited' : 'available'}">${escapeHTML(event.status)}</span>
+  </div>`;
 
-  grid.innerHTML = scheduleEvents.map((event) => `<article class="schedule-card reveal visible" data-category="${escapeHTML(event.categoryKey)}" data-date="${escapeHTML(event.start)}">
-    <figure class="schedule-card-image">
-      <img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}">
-    </figure>
-    <div class="schedule-event">
-      <div class="schedule-event-head">
-        <span class="schedule-category">${escapeHTML(event.category)}</span>
-        <span class="status-label ${event.statusKey === 'limited' ? 'limited' : 'available'}">${escapeHTML(event.status)}</span>
+  const now = Date.now();
+  const urgencyWindow = 14 * 24 * 60 * 60 * 1000;
+  const urgentEvents = scheduleEvents.filter((event) => {
+    if (!event.registrationDeadline || event.statusKey !== 'open') return false;
+    const remaining = new Date(event.registrationDeadline).getTime() - now;
+    return remaining > 0 && remaining <= urgencyWindow;
+  }).sort((a, b) => new Date(a.registrationDeadline) - new Date(b.registrationDeadline));
+
+  if (urgentEvents.length) {
+    featured.innerHTML = urgentEvents.map((event) => `<article class="schedule-urgent-card reveal visible">
+      ${eventImage(event, 'schedule-urgent-image')}
+      <div class="schedule-urgent-content">
+        ${eventTopline(event)}
+        <h3>${escapeHTML(event.name)}</h3>
+        <p>${escapeHTML(event.description)}</p>
+        <p class="schedule-deadline"><span>Batas pendaftaran</span><strong>${escapeHTML(event.deadlineLabel)}</strong></p>
+        ${eventMeta(event)}
+        ${eventRegistrationLink(event, 'schedule-register', 'Lihat kegiatan <span aria-hidden="true">→</span>')}
       </div>
+    </article>`).join('');
+    featuredSection.hidden = false;
+  } else {
+    featured.replaceChildren();
+    featuredSection.hidden = true;
+  }
+
+  grid.innerHTML = scheduleEvents.map((event) => `<article class="schedule-card reveal visible" data-category="${escapeHTML(event.categoryKey)}" data-date="${escapeHTML(event.start)}" data-search="${escapeHTML(`${event.name} ${event.location} ${event.category}`.toLocaleLowerCase('id-ID'))}">
+    ${eventImage(event, 'schedule-card-image')}
+    <div class="schedule-card-content">
+    <div class="schedule-event">
+      ${eventTopline(event)}
       <h2>${escapeHTML(event.name)}</h2>
       <p>${escapeHTML(event.description)}</p>
     </div>
-    <div class="schedule-meta">
-      <span>Tanggal<strong>${escapeHTML(event.date)}</strong></span>
-      <span>Waktu<strong>${escapeHTML(event.time)}</strong></span>
-      <span>Lokasi<strong>${escapeHTML(event.location)}</strong></span>
-      <span>Harga<strong>${formatEventPrice(event.price)}</strong></span>
+    ${eventMeta(event)}
+    <div class="schedule-card-footer"><strong>${escapeHTML(event.capacity)}</strong>${eventRegistrationLink(event, 'schedule-register', 'Lihat kegiatan <span aria-hidden="true">→</span>')}</div>
     </div>
-    <div class="schedule-status"><strong>${escapeHTML(event.capacity)}</strong></div>
-    ${eventRegistrationLink(event, 'schedule-register', 'Daftar sekarang <span aria-hidden="true">&rarr;</span>')}
   </article>`).join('');
   if (count) count.textContent = `Menampilkan ${scheduleEvents.length} kegiatan`;
   empty?.classList.add('hidden');
@@ -587,26 +614,36 @@ function initializeScheduleFilters() {
   const eventCards = [...document.querySelectorAll('[data-category]')];
   const scheduleCount = document.getElementById('scheduleCount');
   const scheduleEmpty = document.getElementById('scheduleEmpty');
+  const scheduleSearch = document.getElementById('scheduleSearch');
   if (!scheduleCards.length || !eventCards.length) return;
+
+  let activeFilter = 'all';
+  const applyFilters = () => {
+    const query = scheduleSearch?.value.trim().toLocaleLowerCase('id-ID') || '';
+    let visible = 0;
+    eventCards.forEach((card) => {
+      const categoryMatches = activeFilter === 'all' || card.dataset.category === activeFilter;
+      const searchMatches = !query || card.dataset.search?.includes(query);
+      const match = categoryMatches && searchMatches;
+      card.classList.toggle('hidden', !match);
+      if (match) visible += 1;
+    });
+    if (scheduleCount) scheduleCount.textContent = `Menampilkan ${visible} kegiatan`;
+    scheduleEmpty?.classList.toggle('hidden', visible !== 0);
+  };
 
   scheduleCards.forEach((button) => {
     button.addEventListener("click", () => {
-      const filter = button.dataset.scheduleFilter;
+      activeFilter = button.dataset.scheduleFilter;
       scheduleCards.forEach((item) => {
         item.classList.remove("active");
         item.setAttribute("aria-pressed", String(item === button));
       });
       button.classList.add("active");
-      let visible = 0;
-      eventCards.forEach((card) => {
-        const match = filter === "all" || card.dataset.category === filter;
-        card.classList.toggle("hidden", !match);
-        if (match) visible += 1;
-      });
-      if (scheduleCount) scheduleCount.textContent = `Menampilkan ${visible} kegiatan`;
-      scheduleEmpty?.classList.toggle("hidden", visible !== 0);
+      applyFilters();
     });
   });
+  scheduleSearch?.addEventListener('input', applyFilters);
 }
 
 function initScheduleCountdown() {
@@ -888,14 +925,29 @@ if (registrationForm) {
       ? selectedEvent.status
       : `${selectedEvent.status} · ${selectedEvent.capacity}`);
 
+    const eventImageWrap = document.getElementById('eventImageWrap');
+    const eventImage = document.getElementById('eventImage');
+    if (eventImageWrap && eventImage) {
+      eventImageWrap.hidden = !selectedEvent.image;
+      if (selectedEvent.image) {
+        eventImage.src = selectedEvent.image;
+        eventImage.alt = selectedEvent.imageAlt;
+      } else {
+        eventImage.removeAttribute('src');
+        eventImage.alt = '';
+      }
+    }
+
     const descriptionSection = document.getElementById('eventDescriptionSection');
     const eventDescription = selectedEvent.registrationDescription || selectedEvent.description;
     setText('eventDescription', eventDescription || '');
     if (descriptionSection) descriptionSection.hidden = !eventDescription;
+    document.querySelector('.registration-content-nav a[href="#eventDescriptionSection"]')?.toggleAttribute('hidden', !eventDescription);
 
-    const renderEventList = (sectionId, listId, items) => {
+    const renderEventList = (sectionId, listId, navId, items) => {
       const section = document.getElementById(sectionId);
       const list = document.getElementById(listId);
+      const navLink = document.getElementById(navId);
       if (!section || !list) return;
       const entries = Array.isArray(items) ? items.filter(Boolean) : [];
       list.replaceChildren(...entries.map((item) => {
@@ -904,9 +956,10 @@ if (registrationForm) {
         return entry;
       }));
       section.hidden = entries.length === 0;
+      if (navLink) navLink.hidden = entries.length === 0;
     };
-    renderEventList('eventActivitiesSection', 'eventActivities', selectedEvent.activities);
-    renderEventList('eventBenefitsSection', 'eventBenefits', selectedEvent.benefits);
+    renderEventList('eventActivitiesSection', 'eventActivities', 'eventActivitiesNav', selectedEvent.activities);
+    renderEventList('eventBenefitsSection', 'eventBenefits', 'eventBenefitsNav', selectedEvent.benefits);
 
     const eventNameInput = document.getElementById('kegiatan');
     const eventSlugInput = document.getElementById('eventSlug');
