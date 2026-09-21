@@ -156,7 +156,7 @@ const renderHomepageEvents = async () => {
       <div class="home-upcoming-event-topline"><span>${escapeHTML(event.category)}</span><span>${escapeHTML(event.status)}</span></div>
       <h3>${escapeHTML(event.name)}</h3>
       <dl class="home-upcoming-meta">
-        <div><dt>Tanggal &amp; waktu</dt><dd>${escapeHTML(event.date)} · ${escapeHTML(event.time)}</dd></div>
+        <div><dt>Tanggal &amp; waktu</dt><dd>${escapeHTML(event.date)} Ã‚Â· ${escapeHTML(event.time)}</dd></div>
         <div><dt>Lokasi</dt><dd>${escapeHTML(event.location)}</dd></div>
         <div><dt>Harga</dt><dd>${formatEventPrice(event.price)}</dd></div>
       </dl>
@@ -216,7 +216,7 @@ const renderScheduleEvents = async () => {
       <h2 id="featuredEventTitle">${escapeHTML(nextEvent.name)}</h2><p>${escapeHTML(nextEvent.description)}</p>
       <dl class="schedule-featured-meta">
         <div><dt>Tanggal</dt><dd>${escapeHTML(nextEvent.date)}</dd></div><div><dt>Waktu</dt><dd>${escapeHTML(nextEvent.time)}</dd></div>
-        <div><dt>Lokasi</dt><dd>${escapeHTML(nextEvent.location)}</dd></div><div><dt>Status</dt><dd>${escapeHTML(nextEvent.status)} · ${escapeHTML(nextEvent.capacity)}</dd></div>
+        <div><dt>Lokasi</dt><dd>${escapeHTML(nextEvent.location)}</dd></div><div><dt>Status</dt><dd>${escapeHTML(nextEvent.status)} Ã‚Â· ${escapeHTML(nextEvent.capacity)}</dd></div>
       </dl>${eventRegistrationLink(nextEvent, 'btn btn-primary', 'Daftar')}
     </div></article>`;
   featuredSection.hidden = false;
@@ -636,7 +636,7 @@ function initScheduleCountdown() {
   const update = () => {
     const diff = nextEvent.date.getTime() - Date.now();
     if (diff <= 0) {
-      timer.innerHTML = "<div style=\"grid-column:1/-1\"><strong>Kegiatan sedang berlangsung 🎉</strong><span>Semoga harinya berjalan menyenangkan.</span></div>";
+      timer.innerHTML = "<div style=\"grid-column:1/-1\"><strong>Kegiatan sedang berlangsung Ã°Å¸Å½â€°</strong><span>Semoga harinya berjalan menyenangkan.</span></div>";
       return;
     }
     const days = Math.floor(diff / 86400000);
@@ -744,7 +744,7 @@ if (registrationForm) {
     stage.querySelector('#paymentHeading').textContent = heading;
     stage.querySelector('.payment-primary > p').textContent = body;
     stage.querySelector('.payment-details dl > div:last-child dd').textContent = state === 'paid'
-      ? 'Pendaftaran kegiatan · pembayaran dikonfirmasi' : `Pendaftaran kegiatan · ${heading.toLowerCase()}`;
+      ? 'Pendaftaran kegiatan Ã‚Â· pembayaran dikonfirmasi' : `Pendaftaran kegiatan Ã‚Â· ${heading.toLowerCase()}`;
     const qr = stage.querySelector('.payment-qr-placeholder');
     const qrImage = qr?.querySelector('[data-payment-qr]');
     const hasQr = typeof data.qr_url === 'string' && /^https:\/\//.test(data.qr_url);
@@ -886,7 +886,7 @@ if (registrationForm) {
     setText('eventLocation', selectedEvent.location);
     setText('eventStatus', selectedEvent.status === selectedEvent.capacity
       ? selectedEvent.status
-      : `${selectedEvent.status} · ${selectedEvent.capacity}`);
+      : `${selectedEvent.status} Ã‚Â· ${selectedEvent.capacity}`);
 
     const descriptionSection = document.getElementById('eventDescriptionSection');
     const eventDescription = selectedEvent.registrationDescription || selectedEvent.description;
@@ -1026,7 +1026,7 @@ if (registrationForm) {
     registrationContent?.classList.add('hidden');
     eventFallback?.classList.add('hidden');
     registrationForm.querySelector('[type="submit"]').disabled = true;
-    if (selectedEventIntro) selectedEventIntro.textContent = 'Pratinjau lokal · Bahagia Kasih';
+    if (selectedEventIntro) selectedEventIntro.textContent = 'Pratinjau lokal Ã‚Â· Bahagia Kasih';
     renderPaymentState(paymentDemo, {
       registration_code: 'KB-DEMO-123456', event_title: 'Bahagia Kasih (demo lokal)', amount: 35000
     });

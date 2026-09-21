@@ -2742,6 +2742,257 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   .collaboration-closing-grid { grid-template-columns:1fr; gap:28px; padding:36px 0; }
   .collaboration-closing-action { padding:24px 0 0; border-left:0; border-top:1px solid var(--maroon); }
 }
+
+/* Collaboration page: compact mobile rhythm and restrained partner preview. */
+.collaboration-page .collaboration-paths {
+  padding-top: 84px;
+  padding-bottom: 88px;
+}
+
+.collaboration-page .collaboration-process {
+  padding-top: 86px;
+  padding-bottom: 90px;
+}
+
+.collaboration-page .collaboration-partners {
+  padding-top: 82px;
+  padding-bottom: 86px;
+}
+
+.collaboration-page .collaboration-path-label,
+.collaboration-page .collaboration-partner h3 {
+  letter-spacing: .01em;
+}
+
+.collaboration-page .collaboration-path-link {
+  min-height: 30px;
+  align-items: center;
+  transition: color .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.collaboration-page .collaboration-path-link:hover,
+.collaboration-page .collaboration-path-link:focus-visible {
+  border-color: var(--maroon);
+  color: var(--maroon-dark);
+  transform: translateX(2px);
+}
+
+.collaboration-page .collaboration-partner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 176px;
+  padding: 30px 24px;
+}
+
+.collaboration-page .collaboration-partner-logo {
+  width: 76px;
+  height: 64px;
+  margin-bottom: 20px;
+  border: 1px dashed rgba(111, 102, 103, .42);
+  background: rgba(242, 238, 233, .46);
+  color: var(--muted);
+  font-size: 14px;
+  letter-spacing: .08em;
+}
+
+.collaboration-page .collaboration-partner h3 {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.collaboration-page .collaboration-closing-action .btn-primary {
+  min-height: 48px;
+  padding-inline: 22px;
+}
+
+@media (max-width: 960px) {
+  .collaboration-page .site-header .brand-logo {
+    height: 70px;
+  }
+
+  .collaboration-page .collaboration-hero {
+    padding-top: 42px;
+    padding-bottom: 62px;
+  }
+
+  .collaboration-page .collaboration-hero .breadcrumb {
+    margin-bottom: 34px;
+  }
+
+  .collaboration-page .collaboration-hero-grid {
+    gap: 28px;
+  }
+
+  .collaboration-page .collaboration-hero h1 {
+    max-width: 680px;
+    font-size: clamp(46px, 7.2vw, 62px);
+    line-height: 1;
+  }
+
+  .collaboration-page .collaboration-hero-copy > p {
+    max-width: 620px;
+    margin-top: 22px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .collaboration-page .collaboration-hero-image,
+  .collaboration-page .collaboration-hero-image img {
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 1.55 / 1;
+    max-height: none;
+  }
+
+  .collaboration-page .collaboration-path {
+    padding-top: 32px;
+    padding-bottom: 36px;
+  }
+
+  .collaboration-page .collaboration-process-grid {
+    gap: 48px;
+  }
+}
+
+@media (max-width: 640px) {
+  .collaboration-page .site-header .brand-logo {
+    height: 68px;
+  }
+
+  .collaboration-page .collaboration-hero {
+    padding-top: 28px;
+    padding-bottom: 44px;
+  }
+
+  .collaboration-page .collaboration-hero .breadcrumb {
+    margin-bottom: 24px;
+  }
+
+  .collaboration-page .collaboration-hero-grid {
+    gap: 24px;
+  }
+
+  .collaboration-page .collaboration-hero .page-kicker {
+    margin-bottom: 16px;
+  }
+
+  .collaboration-page .collaboration-hero h1 {
+    max-width: 20ch;
+    font-size: clamp(38px, 10.2vw, 42px);
+    line-height: 1.02;
+    letter-spacing: -.04em;
+    text-wrap: balance;
+  }
+
+  .collaboration-page .collaboration-hero-copy > p {
+    margin-top: 17px;
+    font-size: 15px;
+    line-height: 1.58;
+  }
+
+  .collaboration-page .collaboration-hero-image,
+  .collaboration-page .collaboration-hero-image img {
+    aspect-ratio: 1.45 / 1;
+  }
+
+  .collaboration-page .collaboration-paths {
+    padding-top: 58px;
+    padding-bottom: 62px;
+  }
+
+  .collaboration-page .collaboration-section-heading {
+    gap: 11px;
+    margin-bottom: 25px;
+  }
+
+  .collaboration-page .collaboration-section-heading h2 {
+    line-height: 1.04;
+  }
+
+  .collaboration-page .collaboration-path {
+    gap: 13px;
+    padding: 25px 0 29px;
+  }
+
+  .collaboration-page .collaboration-path-label {
+    font-size: 12px;
+  }
+
+  .collaboration-page .collaboration-path h3 {
+    font-size: 28px;
+    line-height: 1.08;
+  }
+
+  .collaboration-page .collaboration-path p {
+    line-height: 1.6;
+  }
+
+  .collaboration-page .collaboration-path-link {
+    margin-top: 5px;
+  }
+
+  .collaboration-page .collaboration-process {
+    padding-top: 60px;
+    padding-bottom: 64px;
+  }
+
+  .collaboration-page .collaboration-process-grid {
+    gap: 30px;
+  }
+
+  .collaboration-page .collaboration-process-intro h2 {
+    line-height: 1.05;
+  }
+
+  .collaboration-page .collaboration-steps > div {
+    padding-top: 20px;
+    padding-bottom: 22px;
+  }
+
+  .collaboration-page .collaboration-partners {
+    padding-top: 58px;
+    padding-bottom: 62px;
+  }
+
+  .collaboration-page .collaboration-partners-intro {
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 1.62;
+  }
+
+  .collaboration-page .collaboration-partner {
+    min-height: 142px;
+    padding: 20px 12px 22px;
+  }
+
+  .collaboration-page .collaboration-partner-logo {
+    width: 58px;
+    height: 50px;
+    margin-bottom: 14px;
+    font-size: 12px;
+  }
+
+  .collaboration-page .collaboration-closing {
+    padding-top: 58px;
+    padding-bottom: 66px;
+  }
+
+  .collaboration-page .collaboration-closing-grid {
+    gap: 24px;
+    padding-top: 31px;
+    padding-bottom: 32px;
+  }
+
+  .collaboration-page .collaboration-closing h2 {
+    line-height: 1.04;
+  }
+
+  .collaboration-page .collaboration-closing-action .btn-primary {
+    width: 100%;
+  }
+}
 .contact-page {
   background: var(--cream);
 }
