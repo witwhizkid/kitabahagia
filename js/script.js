@@ -695,9 +695,15 @@ if (registrationForm) {
   const params = new URLSearchParams(window.location.search);
   const eventSlug = (params.get('event') || '').trim().toLowerCase();
   let selectedEvent = null;
+  let registrationAvailable = false;
   const registrationContent = document.getElementById('registrationContent');
   const eventFallback = document.getElementById('eventFallback');
   const selectedEventIntro = document.getElementById('selectedEventIntro');
+  const registrationProgress = document.getElementById('registrationProgress');
+  const registrationFormPanel = document.getElementById('registrationFormPanel');
+  const registrationReview = document.getElementById('registrationReview');
+  const editRegistrationButton = document.getElementById('editRegistrationButton');
+  const confirmRegistrationButton = document.getElementById('confirmRegistrationButton');
   const paymentStates = {
     pending: ['Selesaikan pembayaran', 'Pendaftaranmu sudah tercatat. Selesaikan pembayaran untuk mengamankan tempatmu.'],
     processing: ['Pembayaran sedang diverifikasi', 'Kami sedang memastikan pembayaranmu. Halaman ini akan diperbarui setelah statusnya terkonfirmasi.'],
@@ -722,6 +728,23 @@ if (registrationForm) {
   let countdownTimer = null;
   let paymentPollTimer = null;
   let paymentPollStopped = false;
+
+  const setRegistrationStep = (step) => {
+    const order = ['data', 'confirmation', 'payment'];
+    const activeIndex = order.indexOf(step);
+    registrationProgress?.classList.remove('hidden');
+    registrationProgress?.querySelectorAll('[data-registration-step]').forEach((item, index) => {
+      item.classList.toggle('is-active', index === activeIndex);
+      item.classList.toggle('is-complete', activeIndex >= 0 && index < activeIndex);
+      if (index === activeIndex) item.setAttribute('aria-current', 'step');
+      else item.removeAttribute('aria-current');
+    });
+  };
+
+  const setDataText = (selector, value, root = document) => {
+    const element = root.querySelector(selector);
+    if (element) element.textContent = value;
+  };
 
   const stopPaymentMonitoring = () => {
     window.clearInterval(countdownTimer);
@@ -799,6 +822,8 @@ if (registrationForm) {
       stage.querySelector('[data-payment-state="payment_pending"] p').textContent = 'Ini bukan tagihan atau reservasi kegiatan sungguhan.';
     }
     document.getElementById('freeRegistrationConfirmation').hidden = true;
+    registrationContent?.classList.add('hidden');
+    setRegistrationStep('payment');
     const orderRow = stage.querySelector('[data-result-order]');
     if (orderRow) orderRow.textContent = data.order_id || 'Menunggu dibuat';
     stage.hidden = false;
@@ -900,6 +925,7 @@ if (registrationForm) {
 
   const showEventFallback = (title, message, intro = title) => {
     registrationContent?.classList.add('hidden');
+    registrationProgress?.classList.add('hidden');
     if (selectedEventIntro) selectedEventIntro.textContent = intro;
     const heading = eventFallback?.querySelector('h2');
     const paragraph = eventFallback?.querySelector('p');
@@ -971,22 +997,30 @@ if (registrationForm) {
       document.getElementById('eventPriceRow')?.classList.remove('hidden');
     }
 
+    const eventPrice = selectedEvent.price === null || selectedEvent.price === undefined
+      ? 'Tidak tersedia' : formatEventPrice(selectedEvent.price);
+    setDataText('[data-checkout-event-title]', selectedEvent.name);
+    setDataText('[data-checkout-event-date]', `${selectedEvent.date} · ${selectedEvent.time}`);
+    setDataText('[data-checkout-event-location]', selectedEvent.location);
+    setDataText('[data-checkout-event-price]', eventPrice);
+
     eventFallback?.classList.add('hidden');
     registrationContent?.classList.remove('hidden');
+    setRegistrationStep('data');
     const submitButton = registrationForm.querySelector('[type="submit"]');
     const availabilityNote = document.getElementById('registrationAvailabilityNote');
     const availabilityEnd = new Date(selectedEvent.end || selectedEvent.start).getTime();
-    const registrationAvailable = Boolean(REGISTRATION_CONFIG.registrationEndpoint)
+    registrationAvailable = Boolean(REGISTRATION_CONFIG.registrationEndpoint)
       && !Number.isNaN(availabilityEnd)
       && availabilityEnd >= Date.now()
       && !['closed', 'cancelled', 'completed', 'full'].includes(selectedEvent.statusKey);
     if (submitButton) {
       submitButton.disabled = !registrationAvailable;
-      submitButton.textContent = 'Kirim pendaftaran';
+      submitButton.textContent = 'Lanjutkan';
     }
     if (availabilityNote) {
       availabilityNote.textContent = registrationAvailable
-        ? 'Pastikan data sudah benar sebelum mengirim pendaftaran.'
+        ? 'Kamu dapat memeriksa kembali data sebelum pendaftaran dikirim.'
         : 'Pendaftaran belum tersedia. Hubungi admin untuk informasi kegiatan berikutnya.';
     }
   };
@@ -1039,7 +1073,7 @@ if (registrationForm) {
       name: String(formData.get('nama') || '').trim(),
       phone: String(formData.get('telepon') || '').trim(),
       email: String(formData.get('email') || '').trim().toLowerCase(),
-      reason: String(formData.get('alasan') || '').trim(),
+      reason: String(formData.get('alasan') || formData.get('bahagia') || '').trim(),
       notes: String(formData.get('catatan') || '').trim() || null,
       consent: formData.get('consent') !== null
     };
@@ -1085,28 +1119,60 @@ if (registrationForm) {
     });
   } else void initializeRegistrationEvent();
 
-  registrationForm.addEventListener('submit', async (event) => {
+  const showRegistrationReview = () => {
+    const formData = new FormData(registrationForm);
+    const price = selectedEvent.price === null || selectedEvent.price === undefined
+      ? 'Tidak tersedia' : formatEventPrice(selectedEvent.price);
+    setDataText('[data-review-name]', String(formData.get('nama') || '').trim(), registrationReview);
+    setDataText('[data-review-phone]', String(formData.get('telepon') || '').trim(), registrationReview);
+    setDataText('[data-review-email]', String(formData.get('email') || '').trim(), registrationReview);
+    setDataText('[data-review-happiness]', String(formData.get('bahagia') || '').trim(), registrationReview);
+    setDataText('[data-review-event-title]', selectedEvent.name, registrationReview);
+    setDataText('[data-review-event-date]', `${selectedEvent.date} · ${selectedEvent.time}`, registrationReview);
+    setDataText('[data-review-event-location]', selectedEvent.location, registrationReview);
+    setDataText('[data-review-event-price]', price, registrationReview);
+    if (confirmRegistrationButton) {
+      confirmRegistrationButton.textContent = selectedEvent.price > 0
+        ? 'Lanjut ke pembayaran' : 'Konfirmasi pendaftaran';
+    }
+    document.getElementById('registrationStatus')?.classList.add('hidden');
+    registrationFormPanel?.classList.add('hidden');
+    registrationReview?.classList.remove('hidden');
+    setRegistrationStep('confirmation');
+    registrationReview?.focus();
+  };
+
+  registrationForm.addEventListener('submit', (event) => {
     event.preventDefault();
     if (paymentDemo) return;
-    if (!selectedEvent || !registrationForm.checkValidity()) {
+    if (!selectedEvent || !registrationAvailable || !registrationForm.checkValidity()) {
       registrationForm.reportValidity();
       return;
     }
+    showRegistrationReview();
+  });
+
+  editRegistrationButton?.addEventListener('click', () => {
+    if (isSubmitting || registrationCompleted) return;
+    registrationReview?.classList.add('hidden');
+    registrationFormPanel?.classList.remove('hidden');
+    setRegistrationStep('data');
+    registrationForm.querySelector('input:not([type="hidden"])')?.focus();
+  });
+
+  confirmRegistrationButton?.addEventListener('click', async () => {
+    if (!selectedEvent || !registrationAvailable || isSubmitting || registrationCompleted) return;
 
     if (!REGISTRATION_CONFIG.registrationEndpoint) {
       showRegistrationMessage('Backend pendaftaran belum dikonfigurasi. Pendaftaran belum dapat dikirim.', 'error');
       return;
     }
-    if (isSubmitting || registrationCompleted) return;
-
-    const submitButton = registrationForm.querySelector('[type="submit"]');
-    const originalButtonText = submitButton?.textContent || 'Kirim pendaftaran';
+    const originalButtonText = confirmRegistrationButton.textContent;
     isSubmitting = true;
     registrationForm.setAttribute('aria-busy', 'true');
-    if (submitButton) {
-      submitButton.disabled = true;
-      submitButton.textContent = 'Mengirim...';
-    }
+    confirmRegistrationButton.disabled = true;
+    editRegistrationButton.disabled = true;
+    confirmRegistrationButton.textContent = 'Memproses...';
     showRegistrationMessage('Mengirim data pendaftaran...', 'pending');
 
     try {
@@ -1133,10 +1199,12 @@ if (registrationForm) {
         throw { code: 'SERVER_ERROR' };
       }
       registrationCompleted = true;
-      if (submitButton) submitButton.textContent = 'Pendaftaran tercatat';
+      confirmRegistrationButton.textContent = 'Pendaftaran tercatat';
       const resultStage = isFreeConfirmed ? document.getElementById('freeRegistrationConfirmation') : null;
       if (resultStage) {
         document.getElementById('paymentStage').hidden = true;
+        registrationContent?.classList.add('hidden');
+        registrationProgress?.classList.add('hidden');
         resultStage.querySelector('[data-result-code]').textContent = code;
         resultStage.querySelector('[data-result-title]').textContent = title;
         renderOnboarding(resultStage.querySelector('[data-registration-onboarding]'), { whatsapp_group_url: null });
@@ -1162,9 +1230,10 @@ if (registrationForm) {
     } finally {
       isSubmitting = false;
       registrationForm.removeAttribute('aria-busy');
-      if (!registrationCompleted && submitButton) {
-        submitButton.disabled = false;
-        submitButton.textContent = originalButtonText;
+      if (!registrationCompleted) {
+        confirmRegistrationButton.disabled = false;
+        editRegistrationButton.disabled = false;
+        confirmRegistrationButton.textContent = originalButtonText;
       }
     }
   });
