@@ -40,6 +40,16 @@
   let currentRole = "";
   let imageUploading = false;
   let storyImageUploading = false;
+  let storySlugManuallyEdited = false;
+  const adminCacheTtl = 30_000;
+  const tabCache = {
+    stories: { loadedAt: 0, request: null },
+    admins: { loadedAt: 0, request: null },
+    registrations: new Map(),
+  };
+
+  const invalidateStoriesCache = () => { tabCache.stories.loadedAt = 0; };
+  const invalidateAdminsCache = () => { tabCache.admins.loadedAt = 0; };
 
   const statusLabels = {
     draft: "Draf",
@@ -235,6 +245,15 @@
     return new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" }).format(new Date(`${date}T12:00:00+07:00`));
   };
 
+  const slugifyStoryTitle = (value) => value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 140);
+
   const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
 
   const renderEvents = () => {
@@ -327,23 +346,42 @@
   };
 
   const loadRegistrations = async () => {
-    $("#registrations-loading").hidden = false;
-    $("#registrations-empty").hidden = true;
-    registrationsList.hidden = true;
-    setFeedback($("#registrations-feedback"));
-    try {
-      const data = await registrationRequest({
-        event: $("#registration-event-filter").value,
-        search: $("#registration-search").value.trim(),
-        registration_status: $("#registration-status-filter").value,
-        payment_status: $("#payment-status-filter").value,
-      });
-      registrations = Array.isArray(data.registrations) ? data.registrations : [];
-      renderRegistrations(Number(data.total) || 0);
-    } catch (error) {
-      $("#registrations-loading").hidden = true;
-      setFeedback($("#registrations-feedback"), error.message, "error");
+    const params = {
+      event: $("#registration-event-filter").value,
+      search: $("#registration-search").value.trim(),
+      registration_status: $("#registration-status-filter").value,
+      payment_status: $("#payment-status-filter").value,
+    };
+    const cacheKey = JSON.stringify(params);
+    const cached = tabCache.registrations.get(cacheKey);
+    if (cached) {
+      registrations = cached.registrations;
+      renderRegistrations(cached.total);
+      if (Date.now() - cached.loadedAt < adminCacheTtl) return;
     }
+    if (tabCache.registrations.get(`${cacheKey}:request`)) return tabCache.registrations.get(`${cacheKey}:request`);
+    $("#registrations-loading").hidden = Boolean(cached);
+    if (!cached) {
+      $("#registrations-empty").hidden = true;
+      registrationsList.hidden = true;
+      setFeedback($("#registrations-feedback"));
+    }
+    const request = registrationRequest(params)
+      .then((data) => {
+        registrations = Array.isArray(data.registrations) ? data.registrations : [];
+        const total = Number(data.total) || 0;
+        tabCache.registrations.set(cacheKey, { registrations, total, loadedAt: Date.now() });
+        renderRegistrations(total);
+      })
+      .catch((error) => {
+        if (!cached) {
+          $("#registrations-loading").hidden = true;
+          setFeedback($("#registrations-feedback"), error.message, "error");
+        }
+      })
+      .finally(() => tabCache.registrations.delete(`${cacheKey}:request`));
+    tabCache.registrations.set(`${cacheKey}:request`, request);
+    return request;
   };
 
   const renderAdmins = () => {
@@ -381,18 +419,32 @@
   };
 
   const loadAdmins = async () => {
-    $("#admins-loading").hidden = false;
-    $("#admins-empty").hidden = true;
-    adminsList.hidden = true;
-    setFeedback($("#admins-feedback"));
-    try {
-      const data = await adminUsersRequest();
-      admins = Array.isArray(data.admins) ? data.admins : [];
+    const cached = tabCache.admins;
+    if (cached.loadedAt) {
       renderAdmins();
-    } catch (error) {
-      $("#admins-loading").hidden = true;
-      setFeedback($("#admins-feedback"), error.message, "error");
+      if (Date.now() - cached.loadedAt < adminCacheTtl) return;
     }
+    if (cached.request) return cached.request;
+    $("#admins-loading").hidden = Boolean(cached.loadedAt);
+    if (!cached.loadedAt) {
+      $("#admins-empty").hidden = true;
+      adminsList.hidden = true;
+      setFeedback($("#admins-feedback"));
+    }
+    cached.request = adminUsersRequest()
+      .then((data) => {
+        admins = Array.isArray(data.admins) ? data.admins : [];
+        cached.loadedAt = Date.now();
+        renderAdmins();
+      })
+      .catch((error) => {
+        if (!cached.loadedAt) {
+          $("#admins-loading").hidden = true;
+          setFeedback($("#admins-feedback"), error.message, "error");
+        }
+      })
+      .finally(() => { cached.request = null; });
+    return cached.request;
   };
 
   const renderStories = () => {
@@ -425,18 +477,32 @@
   };
 
   const loadStories = async () => {
-    $("#stories-loading").hidden = false;
-    $("#stories-empty").hidden = true;
-    storiesList.hidden = true;
-    setFeedback($("#stories-feedback"));
-    try {
-      const data = await adminStoriesRequest();
-      stories = Array.isArray(data.stories) ? data.stories : [];
+    const cached = tabCache.stories;
+    if (cached.loadedAt) {
       renderStories();
-    } catch (error) {
-      $("#stories-loading").hidden = true;
-      setFeedback($("#stories-feedback"), error.message, "error");
+      if (Date.now() - cached.loadedAt < adminCacheTtl) return;
     }
+    if (cached.request) return cached.request;
+    $("#stories-loading").hidden = Boolean(cached.loadedAt);
+    if (!cached.loadedAt) {
+      $("#stories-empty").hidden = true;
+      storiesList.hidden = true;
+      setFeedback($("#stories-feedback"));
+    }
+    cached.request = adminStoriesRequest()
+      .then((data) => {
+        stories = Array.isArray(data.stories) ? data.stories : [];
+        cached.loadedAt = Date.now();
+        renderStories();
+      })
+      .catch((error) => {
+        if (!cached.loadedAt) {
+          $("#stories-loading").hidden = true;
+          setFeedback($("#stories-feedback"), error.message, "error");
+        }
+      })
+      .finally(() => { cached.request = null; });
+    return cached.request;
   };
 
   const toLocalDateTime = (iso) => {
@@ -852,6 +918,7 @@
         redirect_to: redirectTo,
       });
       inviteAdminForm.reset();
+      invalidateAdminsCache();
       setFeedback($("#invite-admin-feedback"), "Undangan admin berhasil dikirim.", "success");
       await loadAdmins();
     } catch (error) {
@@ -883,6 +950,7 @@
         showEvents();
         setFeedback($("#events-feedback"), "Peran akun kamu berhasil diperbarui.", "success");
       } else {
+        invalidateAdminsCache();
         await loadAdmins();
         setFeedback($("#admins-feedback"), "Peran admin berhasil diperbarui.", "success");
       }
@@ -907,6 +975,7 @@
     setFeedback($("#admins-feedback"));
     try {
       await adminUsersRequest("PATCH", { user_id: selected.user_id, is_active: nextActive });
+      invalidateAdminsCache();
       await loadAdmins();
       setFeedback($("#admins-feedback"), `Akses admin berhasil ${nextActive ? "diaktifkan" : "dinonaktifkan"}.`, "success");
     } catch (error) {
@@ -1010,6 +1079,7 @@
     setFeedback($("#story-form-feedback"));
     try {
       await adminStoriesRequest(originalSlug ? "PATCH" : "POST", originalSlug, payload);
+      invalidateStoriesCache();
       await showStories();
       setFeedback($("#stories-feedback"), "Kisah berhasil disimpan.", "success");
     } catch (error) {
@@ -1070,6 +1140,7 @@
     button.disabled = true;
     try {
       await adminStoriesRequest("PATCH", slug, undefined, archived ? "restore" : "archive");
+      invalidateStoriesCache();
       await loadStories();
       setFeedback($("#stories-feedback"), `Kisah berhasil ${archived ? "dipulihkan" : "diarsipkan"}.`, "success");
     } catch (error) {
@@ -1090,6 +1161,9 @@
     registrations = [];
     admins = [];
     stories = [];
+    tabCache.stories.loadedAt = 0;
+    tabCache.admins.loadedAt = 0;
+    tabCache.registrations.clear();
     currentRole = "";
     loginForm.reset();
     passwordSetupForm.reset();
