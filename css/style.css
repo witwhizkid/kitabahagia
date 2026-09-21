@@ -898,12 +898,12 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 }
 .home-page .impact-editorial-image img,
 .home-page .program-image img,
-.home-page .kisah-entry > img {
+.home-page .kisah-entry .kisah-image-link > img {
   filter: saturate(.96) contrast(1.02);
 }
 .home-page .impact-editorial-image,
 .home-page .program-image,
-.home-page .kisah-entry > img {
+.home-page .kisah-entry .kisah-image-link > img {
   border-radius: 8px;
 }
 
@@ -4001,36 +4001,42 @@ html.home-document { overflow-x: hidden; }
 .kisah-section-kicker { display: block; margin-bottom: 16px; color: var(--maroon); font-size: 11px; font-weight: 800; letter-spacing: .14em; line-height: 1.2; text-transform: uppercase; }
 .kisah-section-heading h2 { max-width: 15ch; margin: 0 0 18px; font-size: clamp(38px,4.6vw,58px); line-height: 1.02; letter-spacing: -.045em; text-wrap: balance; }
 .kisah-section-heading p { max-width: 51ch; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.7; }
-.kisah-section-meta { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-top: 24px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-.kisah-section-meta span { display: inline-flex; align-items: center; gap: 9px; }
-.kisah-section-meta span::before { content: ""; width: 22px; height: 1px; background: var(--maroon); opacity: .65; }
 .kisah-section-heading > a { flex-shrink: 0; }
 .kisah-grid { display: grid; gap: 36px 28px; }
 .kisah-preview-grid { grid-template-columns: minmax(0,1.45fr) minmax(280px,.75fr); gap: 52px; align-items: start; }
 .kisah-secondary-list { display: grid; gap: 34px; }
-.kisah-entry-featured > img { aspect-ratio: 1.45 / 1; }
+.kisah-entry-featured .kisah-image-link > img { aspect-ratio: 1.45 / 1; }
 .kisah-entry-secondary { display: grid; grid-template-columns: minmax(120px,.8fr) minmax(0,1.2fr); column-gap: 20px; align-items: start; padding-top: 24px; border-top: 1px solid var(--line); }
 .kisah-entry-secondary:first-child { padding-top: 0; border-top: 0; }
-.kisah-entry-secondary > img { grid-row: 1 / span 5; aspect-ratio: 1 / 1; }
+.kisah-entry-secondary > .kisah-image-link { grid-row: 1 / span 4; }
+.kisah-entry-secondary .kisah-image-link > img { aspect-ratio: 1 / 1; }
 .kisah-entry-secondary .kisah-meta { display: block; margin: 0 0 9px; }
-.kisah-entry-secondary .kisah-meta time { display: block; margin-top: 4px; }
 .kisah-entry-secondary h3 { font-size: clamp(20px,2vw,26px); }
 .kisah-entry { min-width: 0; scroll-margin-top: 110px; }
-.kisah-entry > img { width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; object-position: center 65%; border-radius: 6px; }
-.kisah-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; margin: 19px 0 12px; color: var(--muted); font-size: 12px; line-height: 1.5; }
-.kisah-meta > span { color: var(--maroon); font-weight: 600; }
+.kisah-image-link { display: block; overflow: hidden; border-radius: 6px; }
+.kisah-image-link > img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; object-position: center 65%; transition: opacity 180ms ease; }
+.kisah-image-link:hover > img { opacity: .92; }
+.kisah-meta { margin: 19px 0 12px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .kisah-meta time { white-space: nowrap; }
 .kisah-entry h2, .kisah-entry h3 { margin: 0 0 12px; color: var(--ink); font-family: "Instrument Sans","DM Sans",sans-serif; font-size: clamp(23px,2.2vw,29px); font-weight: 600; line-height: 1.2; letter-spacing: -.025em; text-wrap: pretty; }
+.kisah-title-link { color: inherit; text-decoration: none; }
+.kisah-title-link:hover { color: var(--maroon); }
 .kisah-entry > p { max-width: 52ch; margin: 0 0 12px; color: var(--muted); font-size: 15px; line-height: 1.65; }
 .kisah-text-link { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--maroon); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 5px; text-decoration-color: rgba(122,31,43,.35); }
 .kisah-text-link:hover { text-decoration-color: currentColor; }
-.kisah-data-state { margin: 34px 0 0; color: var(--muted); font-size: 15px; line-height: 1.65; }
+.kisah-data-state { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; min-height: 88px; margin: 34px 0 0; color: var(--muted); font-size: 15px; line-height: 1.65; }
+.kisah-data-state.is-loading::before { content: ""; width: min(100%, 340px); height: 58px; border-block: 1px solid var(--line); background: linear-gradient(var(--line),var(--line)) 0 18px / 72% 7px no-repeat, linear-gradient(var(--line),var(--line)) 0 36px / 48% 6px no-repeat; opacity: .65; }
+.kisah-data-state.is-loading > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.kisah-state-action { min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--maroon); font: inherit; font-weight: 650; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
 .kisah-preview-grid.has-single-story { grid-template-columns: minmax(0,1fr); max-width: 760px; }
 .kisah-entry.has-no-cover,
 .kisah-latest-story.has-no-cover { display: block; }
 .kisah-entry.has-no-cover { padding-top: 24px; border-top: 1px solid var(--line); }
 .kisah-latest-story.has-no-cover .kisah-latest-copy { max-width: 720px; }
 .kisah-text-link:focus-visible,
+.kisah-image-link:focus-visible,
+.kisah-title-link:focus-visible,
+.kisah-state-action:focus-visible,
 .kisah-page a:focus-visible,
 .about-page .footer-nav a:focus-visible,
 .home-page .footer-nav a:focus-visible { outline: 2px solid var(--maroon); outline-offset: 5px; }
@@ -4044,7 +4050,7 @@ html.home-document { overflow-x: hidden; }
 .kisah-intro-image img { width: 100%; height: 100%; object-fit: cover; object-position: center; border-radius: 6px; }
 .kisah-latest { padding-top: 24px; }
 .kisah-latest-story { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(280px,.8fr); gap: 64px; align-items: center; padding-top: 32px; }
-.kisah-latest-story > img { width: 100%; aspect-ratio: 1.45 / 1; object-fit: cover; object-position: center 65%; border-radius: 6px; }
+.kisah-latest-story > .kisah-image-link > img { aspect-ratio: 1.45 / 1; }
 .kisah-latest-copy { max-width: 520px; }
 .kisah-latest-copy .kisah-meta { margin-top: 0; }
 .kisah-latest-copy h2 { margin: 0 0 14px; font-family: "Instrument Sans","DM Sans",sans-serif; font-size: clamp(30px,3.4vw,48px); font-weight: 600; line-height: 1.08; letter-spacing: -.035em; text-wrap: pretty; }
@@ -4054,15 +4060,20 @@ html.home-document { overflow-x: hidden; }
 .kisah-archive-heading h2 { margin: 0; font-size: 21px; font-weight: 600; }
 .kisah-archive-heading > span { color: var(--muted); font-size: 13px; }
 .kisah-archive-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 48px 28px; }
+.kisah-archive-grid.has-two-stories { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.kisah-archive-grid.has-one-story { grid-template-columns: minmax(0,1fr); max-width: 980px; }
+.kisah-archive-grid.has-one-story .kisah-entry { display: grid; grid-template-columns: minmax(280px,1.1fr) minmax(0,.9fr); column-gap: 36px; align-items: start; }
+.kisah-archive-grid.has-one-story .kisah-image-link { grid-row: 1 / span 3; }
+.kisah-archive-grid.has-one-story .kisah-meta { margin-top: 0; }
 .story-detail-main { min-height: 60vh; padding: 58px 0 96px; }
 .story-detail-shell { max-width: 980px; }
 .story-detail-back { margin-bottom: 38px; }
 .story-detail-header { max-width: 820px; padding-top: 30px; border-top: 1px solid var(--line); }
 .story-detail-header h1 { margin: 14px 0 20px; font-size: clamp(46px,6.4vw,82px); font-weight: 650; line-height: 1.01; letter-spacing: -.045em; text-wrap: balance; }
 .story-detail-header time { color: var(--muted); font-size: 14px; }
-.story-detail-cover { margin: 50px 0 56px; }
-.story-detail-cover img { display: block; width: 100%; max-height: 620px; object-fit: cover; border-radius: 6px; }
-.story-detail-body { max-width: 720px; margin-inline: auto; color: var(--ink); font-size: clamp(17px,1.5vw,19px); line-height: 1.85; }
+.story-detail-cover { width: min(100%,920px); margin: 50px auto 56px; }
+.story-detail-cover img { display: block; width: 100%; height: auto; border-radius: 6px; }
+.story-detail-body { max-width: 66ch; margin-inline: auto; color: var(--ink); font-size: clamp(17px,1.5vw,19px); line-height: 1.85; }
 .story-detail-body p { margin: 0 0 1.5em; white-space: pre-line; }
 .home-page .home-testimonial-compact { padding-block: 40px; }
 .home-testimonial-compact > .container { display: grid; grid-template-columns: minmax(0,.65fr) minmax(0,1.35fr); gap: 60px; align-items: start; }
@@ -4089,7 +4100,8 @@ html.home-document { overflow-x: hidden; }
   .kisah-archive-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .kisah-preview-grid { gap: 32px; }
   .kisah-entry-secondary { grid-template-columns: 1fr; row-gap: 12px; }
-  .kisah-entry-secondary > img { grid-row: auto; aspect-ratio: 3 / 2; }
+  .kisah-entry-secondary > .kisah-image-link { grid-row: auto; }
+  .kisah-entry-secondary .kisah-image-link > img { aspect-ratio: 3 / 2; }
   .kisah-latest-story { gap: 36px; }
 }
 @media (max-width: 767px) {
@@ -4113,7 +4125,9 @@ html.home-document { overflow-x: hidden; }
   .kisah-section-heading h2 { font-size: 36px; }
   .kisah-preview-grid, .kisah-archive-grid { grid-template-columns: 1fr; gap: 34px; }
   .kisah-secondary-list { gap: 28px; }
-  .kisah-entry-secondary { grid-template-columns: minmax(100px,.7fr) minmax(0,1.3fr); }
+  .kisah-entry-secondary { display: block; }
+  .kisah-entry-secondary .kisah-image-link { margin-bottom: 14px; }
+  .kisah-entry-secondary .kisah-image-link > img { aspect-ratio: 1.5 / 1; }
   .kisah-entry h2, .kisah-entry h3 { max-width: 27ch; font-size: 26px; }
   .kisah-entry > p { margin-bottom: 4px; }
   .kisah-meta { margin-top: 14px; }
@@ -4124,7 +4138,9 @@ html.home-document { overflow-x: hidden; }
   .kisah-intro-image { height: clamp(250px,65vw,340px); }
   .kisah-latest { padding-top: 0; }
   .kisah-latest-story { grid-template-columns: 1fr; gap: 24px; padding-top: 24px; }
-  .kisah-latest-story > img { aspect-ratio: 1.35 / 1; }
+  .kisah-latest-story > .kisah-image-link > img { aspect-ratio: 1.35 / 1; }
+  .kisah-archive-grid.has-one-story .kisah-entry { display: block; }
+  .kisah-archive-grid.has-one-story .kisah-meta { margin-top: 14px; }
   .kisah-latest-copy h2 { font-size: 32px; }
   .kisah-archive { padding-bottom: 52px; }
   .kisah-archive-heading { padding-top: 20px; }
