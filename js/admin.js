@@ -802,49 +802,68 @@
     published_at: toIso($("#story-published-at").value),
   });
 
+  const authCallbackParams = () => {
+    const hash = window.location.hash.startsWith("#")
+      ? new URLSearchParams(window.location.hash.slice(1))
+      : new URLSearchParams();
+    if ([...hash.keys()].length) return hash;
+    return new URLSearchParams(window.location.search);
+  };
+
+  const clearAuthCallback = () => window.history.replaceState(null, "", window.location.pathname);
+
   const readInviteSession = () => {
-    if (!window.location.hash.startsWith("#")) return false;
-    const params = new URLSearchParams(window.location.hash.slice(1));
-    if (params.get("type") !== "invite") return false;
+    const params = authCallbackParams();
+    if ((params.get("type") || "").toLowerCase() !== "invite") return false;
     const accessToken = params.get("access_token");
     const refreshToken = params.get("refresh_token");
-    if (!accessToken || !refreshToken) return false;
+    if (!accessToken || !refreshToken) {
+      clearSession();
+      clearAuthCallback();
+      showLogin();
+      setFeedback($("#login-feedback"), "Tautan undangan tidak lengkap atau sudah tidak berlaku. Minta Super Admin mengirim ulang akses.", "error");
+      return true;
+    }
     saveSession({
       access_token: accessToken,
       refresh_token: refreshToken,
       expires_in: Number(params.get("expires_in")) || 3600,
       token_type: params.get("token_type") || "bearer",
     });
-    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    clearAuthCallback();
     showPasswordSetup();
     return true;
   };
 
   const readRecoverySession = () => {
-    if (!window.location.hash.startsWith("#")) return false;
-    const params = new URLSearchParams(window.location.hash.slice(1));
+    const params = authCallbackParams();
     const type = (params.get("type") || "").toLowerCase();
     if (!["recovery", "password_recovery"].includes(type)) return false;
     const accessToken = params.get("access_token");
     const refreshToken = params.get("refresh_token");
-    if (!accessToken || !refreshToken) return false;
+    if (!accessToken || !refreshToken) {
+      clearSession();
+      clearAuthCallback();
+      showLogin();
+      setFeedback($("#login-feedback"), "Tautan pemulihan tidak lengkap atau sudah tidak berlaku. Minta tautan baru melalui Lupa kata sandi.", "error");
+      return true;
+    }
     saveSession({
       access_token: accessToken,
       refresh_token: refreshToken,
       expires_in: Number(params.get("expires_in")) || 3600,
       token_type: params.get("token_type") || "bearer",
     });
-    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    clearAuthCallback();
     showPasswordSetup(true);
     return true;
   };
 
   const readAuthError = () => {
-    if (!window.location.hash.startsWith("#")) return false;
-    const params = new URLSearchParams(window.location.hash.slice(1));
+    const params = authCallbackParams();
     if (!params.has("error") && !params.has("error_code") && !params.has("error_description")) return false;
     clearSession();
-    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    clearAuthCallback();
     showLogin();
     setFeedback($("#login-feedback"), "Tautan akses sudah tidak berlaku. Minta tautan baru melalui Lupa kata sandi.", "error");
     return true;

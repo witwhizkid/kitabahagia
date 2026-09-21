@@ -144,19 +144,7 @@ const presentAdmin = (row: AdminRow, email: string) => ({
   created_at: row.created_at,
 });
 
-const adminRedirectForOrigin = (requestOrigin: string | null) => {
-  if (!requestOrigin || requestOrigin === "null") return null;
-  try {
-    const origin = new URL(requestOrigin);
-    const localHttp = origin.protocol === "http:" && ["localhost", "127.0.0.1"].includes(origin.hostname);
-    if (origin.protocol !== "https:" && !localHttp) return null;
-    return `${origin.origin}/admin/`;
-  } catch {
-    return null;
-  }
-};
-
-const adminInviteRedirect = (configuredOrigin: string | undefined) => {
+const adminSiteRedirect = (configuredOrigin: string | undefined) => {
   if (!configuredOrigin) return null;
   try {
     const origin = new URL(configuredOrigin.trim());
@@ -176,6 +164,7 @@ Deno.serve(async (request) => {
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !anonKey || !serviceKey) return fail(500, "SERVER_ERROR", "Konfigurasi server belum lengkap.");
+  const adminRedirectTo = adminSiteRedirect(Deno.env.get("ADMIN_SITE_ORIGIN"));
 
   const authorization = await authorize(request, supabaseUrl, anonKey, serviceKey);
   if (!authorization.admin) {
@@ -215,10 +204,9 @@ Deno.serve(async (request) => {
 
     const targetUser = await getAuthUser(supabaseUrl, serviceKey, userId);
     if (!targetUser?.email) return fail(404, "ADMIN_NOT_FOUND", "Admin tidak ditemukan.");
-    const redirectTo = adminRedirectForOrigin(request.headers.get("origin"));
-    if (!redirectTo) return fail(400, "INVALID_REDIRECT", "Tujuan akses admin tidak valid.");
+    if (!adminRedirectTo) return fail(500, "SERVER_CONFIG", "Tujuan akses admin belum dikonfigurasi.");
     try {
-      if (!await sendPasswordRecovery(supabaseUrl, serviceKey, targetUser.email, redirectTo)) {
+      if (!await sendPasswordRecovery(supabaseUrl, serviceKey, targetUser.email, adminRedirectTo)) {
         return fail(500, "RECOVERY_FAILED", "Email akses baru belum dapat dikirim.");
       }
     } catch (error) {
@@ -247,10 +235,9 @@ Deno.serve(async (request) => {
 
     const targetUser = await getAuthUser(supabaseUrl, serviceKey, userId);
     if (!targetUser?.email) return fail(404, "ADMIN_NOT_FOUND", "Admin tidak ditemukan.");
-    const redirectTo = adminRedirectForOrigin(request.headers.get("origin"));
-    if (!redirectTo) return fail(400, "INVALID_REDIRECT", "Tujuan akses admin tidak valid.");
+    if (!adminRedirectTo) return fail(500, "SERVER_CONFIG", "Tujuan akses admin belum dikonfigurasi.");
     try {
-      const actionLink = await generateAccessLink(supabaseUrl, serviceKey, targetUser.email, redirectTo);
+      const actionLink = await generateAccessLink(supabaseUrl, serviceKey, targetUser.email, adminRedirectTo);
       return json(200, { action_link: actionLink });
     } catch {
       return fail(500, "RECOVERY_FAILED", "Tautan akses belum dapat dibuat.");
@@ -261,10 +248,9 @@ Deno.serve(async (request) => {
     const unknown = Object.keys(payload).filter((key) => !["email", "role"].includes(key));
     const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
     const role = payload.role;
-    const redirectTo = adminInviteRedirect(Deno.env.get("ADMIN_SITE_ORIGIN"));
     if (unknown.length || !emailPattern.test(email) || email.length > 254) return fail(400, "INVALID_EMAIL", "Email admin tidak valid.");
     if (typeof role !== "string" || !roles.has(role)) return fail(400, "INVALID_ROLE", "Peran admin tidak valid.");
-    if (!redirectTo) return fail(500, "SERVER_CONFIG", "Tujuan undangan admin belum dikonfigurasi.");
+    if (!adminRedirectTo) return fail(500, "SERVER_CONFIG", "Tujuan undangan admin belum dikonfigurasi.");
 
     let existingUser: AuthUser | null;
     try { existingUser = await findAuthUserByEmail(supabaseUrl, serviceKey, email); }
@@ -280,7 +266,7 @@ Deno.serve(async (request) => {
     }
 
     const inviteUrl = new URL(`${supabaseUrl}/auth/v1/invite`);
-    inviteUrl.searchParams.set("redirect_to", redirectTo);
+    inviteUrl.searchParams.set("redirect_to", adminRedirectTo);
     const inviteResponse = await fetch(inviteUrl, {
       method: "POST",
       headers: serviceHeaders(serviceKey),
