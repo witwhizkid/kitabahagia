@@ -44,11 +44,16 @@
   let passwordSetupRecovery = false;
   const adminCacheTtl = 30_000;
   const tabCache = {
+    events: { loadedAt: 0, request: null },
     stories: { loadedAt: 0, request: null },
     admins: { loadedAt: 0, request: null },
     registrations: new Map(),
   };
 
+  const invalidateEventsCache = () => {
+    tabCache.events.loadedAt = 0;
+    tabCache.registrations.clear();
+  };
   const invalidateStoriesCache = () => { tabCache.stories.loadedAt = 0; };
   const invalidateAdminsCache = () => { tabCache.admins.loadedAt = 0; };
 
@@ -296,27 +301,41 @@
         </div>
       </article>
     `).join("");
+    const eventFilter = $("#registration-event-filter");
+    const currentFilter = eventFilter.value;
+    eventFilter.innerHTML = `<option value="">Semua kegiatan</option>${events.map((event) =>
+      `<option value="${escapeHtml(event.slug)}">${escapeHtml(event.title)}</option>`).join("")}`;
+    eventFilter.value = currentFilter;
   };
 
   const loadEvents = async () => {
-    $("#events-loading").hidden = false;
-    $("#events-empty").hidden = true;
-    eventsList.hidden = true;
-    setFeedback($("#events-feedback"));
-    try {
-      const data = await adminRequest();
-      applyRole(data.role);
-      events = Array.isArray(data.events) ? data.events : [];
+    const cached = tabCache.events;
+    if (cached.loadedAt) {
       renderEvents();
-      const eventFilter = $("#registration-event-filter");
-      const currentFilter = eventFilter.value;
-      eventFilter.innerHTML = `<option value="">Semua kegiatan</option>${events.map((event) =>
-        `<option value="${escapeHtml(event.slug)}">${escapeHtml(event.title)}</option>`).join("")}`;
-      eventFilter.value = currentFilter;
-    } catch (error) {
-      $("#events-loading").hidden = true;
-      setFeedback($("#events-feedback"), error.message, "error");
+      if (Date.now() - cached.loadedAt < adminCacheTtl) return;
     }
+    if (cached.request) return cached.request;
+    $("#events-loading").hidden = Boolean(cached.loadedAt);
+    if (!cached.loadedAt) {
+      $("#events-empty").hidden = true;
+      eventsList.hidden = true;
+      setFeedback($("#events-feedback"));
+    }
+    cached.request = adminRequest()
+      .then((data) => {
+        applyRole(data.role);
+        events = Array.isArray(data.events) ? data.events : [];
+        cached.loadedAt = Date.now();
+        renderEvents();
+      })
+      .catch((error) => {
+        if (!cached.loadedAt) {
+          $("#events-loading").hidden = true;
+          setFeedback($("#events-feedback"), error.message, "error");
+        }
+      })
+      .finally(() => { cached.request = null; });
+    return cached.request;
   };
 
   const formatDateTime = (iso) => {
@@ -676,6 +695,7 @@
     setActiveNavigation("events");
     window.scrollTo({ top: 0, behavior: "instant" });
     $("#add-event-button").focus();
+    void loadEvents();
   };
 
   const setActiveNavigation = (view) => {
@@ -696,7 +716,7 @@
     registrationsView.hidden = false;
     setActiveNavigation("registrations");
     window.scrollTo({ top: 0, behavior: "instant" });
-    if (!events.length) await loadEvents();
+    if (!tabCache.events.loadedAt) await loadEvents();
     await loadRegistrations();
   };
 
@@ -765,6 +785,13 @@
     setActiveNavigation("stories");
     window.scrollTo({ top: 0, behavior: "instant" });
     await loadStories();
+  };
+
+  const prefetchAdminTabs = () => {
+    window.setTimeout(() => {
+      void loadStories();
+      if (currentRole === "super_admin") void loadAdmins();
+    }, 0);
   };
 
   const formPayload = () => ({
@@ -951,9 +978,15 @@
   document.querySelectorAll("[data-admin-view]").forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
-      if (link.dataset.adminView === "registrations") showRegistrations();
-      else if (link.dataset.adminView === "stories") showStories();
-      else if (link.dataset.adminView === "admins") showAdmins();
+      const view = link.dataset.adminView;
+      const alreadyVisible = (view === "events" && !eventsView.hidden)
+        || (view === "registrations" && !registrationsView.hidden)
+        || (view === "stories" && !storiesView.hidden)
+        || (view === "admins" && !adminsView.hidden);
+      if (alreadyVisible) return;
+      if (view === "registrations") showRegistrations();
+      else if (view === "stories") showStories();
+      else if (view === "admins") showAdmins();
       else showEvents();
     });
   });
@@ -1105,6 +1138,7 @@
       } else {
         showAdmin();
         await loadEvents();
+        prefetchAdminTabs();
       }
     } catch (error) {
       setFeedback($("#password-setup-feedback"), error.message, "error");
@@ -1127,6 +1161,7 @@
       saveSession(session);
       showAdmin();
       await loadEvents();
+      prefetchAdminTabs();
     } catch (error) {
       setFeedback($("#login-feedback"), error.message, "error");
     } finally {
@@ -1183,6 +1218,7 @@
     setFeedback($("#form-feedback"));
     try {
       await adminRequest(originalSlug ? "PATCH" : "POST", originalSlug, payload);
+      invalidateEventsCache();
       await loadEvents();
       showEvents();
       setFeedback($("#events-feedback"), "Kegiatan berhasil disimpan.", "success");
@@ -1251,6 +1287,7 @@
     button.disabled = true;
     try {
       await adminRequest("PATCH", slug, undefined, archived ? "restore" : "archive");
+      invalidateEventsCache();
       await loadEvents();
       setFeedback($("#events-feedback"), `Kegiatan berhasil ${archived ? "dipulihkan" : "diarsipkan"}.`, "success");
     } catch (error) {
@@ -1294,8 +1331,12 @@
     registrations = [];
     admins = [];
     stories = [];
+    tabCache.events.loadedAt = 0;
+    tabCache.events.request = null;
     tabCache.stories.loadedAt = 0;
+    tabCache.stories.request = null;
     tabCache.admins.loadedAt = 0;
+    tabCache.admins.request = null;
     tabCache.registrations.clear();
     currentRole = "";
     loginForm.reset();
@@ -1318,5 +1359,6 @@
     if (!token) return showLogin();
     showAdmin();
     await loadEvents();
+    prefetchAdminTabs();
   })();
 })();
