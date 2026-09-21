@@ -41,6 +41,7 @@
   let imageUploading = false;
   let storyImageUploading = false;
   let storySlugManuallyEdited = false;
+  let passwordSetupRecovery = false;
   const adminCacheTtl = 30_000;
   const tabCache = {
     stories: { loadedAt: 0, request: null },
@@ -227,11 +228,17 @@
     if (message) setFeedback($("#login-feedback"), message, "error");
   };
 
-  const showPasswordSetup = () => {
+  const showPasswordSetup = (recovery = false) => {
+    passwordSetupRecovery = recovery;
     loginView.hidden = false;
     adminView.hidden = true;
     loginPanel.hidden = true;
     passwordSetupPanel.hidden = false;
+    $("#password-setup-eyebrow").textContent = recovery ? "Pemulihan akses admin" : "Undangan admin";
+    $("#password-setup-title").textContent = recovery ? "Atur kata sandi baru" : "Buat kata sandi";
+    $("#password-setup-copy").textContent = recovery
+      ? "Buat kata sandi baru untuk melanjutkan ke ruang kerja admin."
+      : "Selesaikan akses admin dengan membuat kata sandi untuk akun ini.";
     $("#new-password").focus();
   };
 
@@ -412,6 +419,7 @@
           <span class="admin-row-actions">
             <button class="button button-secondary" type="submit">Simpan peran</button>
             <button class="button button-secondary" type="button" data-toggle-admin data-next-active="${admin.is_active ? "false" : "true"}"${isSelf && admin.is_active ? " disabled title=\"Akun sendiri tidak dapat dinonaktifkan\"" : ""}>${admin.is_active ? "Nonaktifkan" : "Aktifkan"}</button>
+            <button class="button button-secondary" type="button" data-send-recovery>Kirim ulang akses</button>
           </span>
         </form>
       `;
@@ -806,9 +814,30 @@
     return true;
   };
 
+  const readRecoverySession = () => {
+    if (!window.location.hash.startsWith("#")) return false;
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const type = (params.get("type") || "").toLowerCase();
+    if (!["recovery", "password_recovery"].includes(type)) return false;
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+    if (!accessToken || !refreshToken) return false;
+    saveSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      expires_in: Number(params.get("expires_in")) || 3600,
+      token_type: params.get("token_type") || "bearer",
+    });
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    showPasswordSetup(true);
+    return true;
+  };
+
   const updatePassword = async (password) => {
     const token = await validAccessToken();
-    if (!token) throw new Error("Tautan undangan sudah tidak berlaku. Minta Super Admin mengirim undangan baru.");
+    if (!token) throw new Error(passwordSetupRecovery
+      ? "Tautan pemulihan sudah tidak berlaku. Minta Super Admin mengirim ulang akses."
+      : "Tautan undangan sudah tidak berlaku. Minta Super Admin mengirim undangan baru.");
     const response = await fetch(`${CONFIG.supabaseUrl}/auth/v1/user`, {
       method: "PUT",
       headers: {
@@ -963,6 +992,23 @@
   });
 
   adminsList.addEventListener("click", async (event) => {
+    const recoveryButton = event.target.closest("[data-send-recovery]");
+    if (recoveryButton) {
+      const row = recoveryButton.closest("[data-admin-id]");
+      const selected = admins.find((admin) => admin.user_id === row?.dataset.adminId);
+      if (!selected || !window.confirm(`Kirim ulang akses ke ${selected.email}?`)) return;
+      recoveryButton.disabled = true;
+      setFeedback($("#admins-feedback"));
+      try {
+        await adminUsersRequest("PATCH", { action: "send_access_recovery", user_id: selected.user_id });
+        setFeedback($("#admins-feedback"), "Email akses baru sudah dikirim.", "success");
+      } catch (error) {
+        setFeedback($("#admins-feedback"), error.message, "error");
+      } finally {
+        recoveryButton.disabled = false;
+      }
+      return;
+    }
     const button = event.target.closest("[data-toggle-admin]");
     if (!button || button.disabled) return;
     const row = button.closest("[data-admin-id]");
@@ -997,8 +1043,14 @@
     try {
       await updatePassword(password);
       passwordSetupForm.reset();
-      showAdmin();
-      await loadEvents();
+      if (passwordSetupRecovery) {
+        clearSession();
+        showLogin();
+        setFeedback($("#login-feedback"), "Kata sandi berhasil diatur. Silakan masuk kembali.", "success");
+      } else {
+        showAdmin();
+        await loadEvents();
+      }
     } catch (error) {
       setFeedback($("#password-setup-feedback"), error.message, "error");
     } finally {
@@ -1180,7 +1232,7 @@
   $("#mobile-logout-button").addEventListener("click", logout);
 
   (async () => {
-    if (readInviteSession()) return;
+    if (readRecoverySession() || readInviteSession()) return;
     const token = await validAccessToken();
     if (!token) return showLogin();
     showAdmin();

@@ -73,6 +73,15 @@ const getAuthUser = async (supabaseUrl: string, serviceKey: string, userId: stri
   return await response.json().catch(() => null) as AuthUser | null;
 };
 
+const sendPasswordRecovery = async (supabaseUrl: string, serviceKey: string, email: string) => {
+  const response = await fetch(`${supabaseUrl}/auth/v1/recover`, {
+    method: "POST",
+    headers: serviceHeaders(serviceKey),
+    body: JSON.stringify({ email, redirect_to: "https://websitekb.netlify.app/admin/" }),
+  });
+  return response.ok;
+};
+
 const findAuthUserByEmail = async (supabaseUrl: string, serviceKey: string, email: string) => {
   for (let page = 1; page <= 10; page += 1) {
     const response = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=${page}&per_page=1000`, {
@@ -146,6 +155,29 @@ Deno.serve(async (request) => {
 
   const payload = await request.json().catch(() => null) as Record<string, unknown> | null;
   if (!payload || Array.isArray(payload)) return fail(400, "INVALID_REQUEST", "Data admin tidak valid.");
+
+  if (request.method === "PATCH" && payload.action === "send_access_recovery") {
+    const unknown = Object.keys(payload).filter((key) => !["action", "user_id"].includes(key));
+    const userId = typeof payload.user_id === "string" ? payload.user_id.trim() : "";
+    if (unknown.length || !uuidPattern.test(userId)) return fail(400, "INVALID_ADMIN", "Admin yang akan diubah tidak valid.");
+
+    const targetQuery = new URLSearchParams({ select: adminProjection, user_id: `eq.${userId}`, limit: "1" });
+    const targetResponse = await fetch(`${supabaseUrl}/rest/v1/admin_users?${targetQuery}`, { headers: serviceHeaders(serviceKey) });
+    const targetRows = await targetResponse.json().catch(() => null) as AdminRow[] | null;
+    if (!targetResponse.ok || !Array.isArray(targetRows)) return fail(500, "SERVER_ERROR", "Status admin belum dapat diperiksa.");
+    if (targetRows.length !== 1) return fail(404, "ADMIN_NOT_FOUND", "Admin tidak ditemukan.");
+
+    const targetUser = await getAuthUser(supabaseUrl, serviceKey, userId);
+    if (!targetUser?.email) return fail(404, "ADMIN_NOT_FOUND", "Admin tidak ditemukan.");
+    try {
+      if (!await sendPasswordRecovery(supabaseUrl, serviceKey, targetUser.email)) {
+        return fail(500, "RECOVERY_FAILED", "Email akses baru belum dapat dikirim.");
+      }
+    } catch {
+      return fail(500, "RECOVERY_FAILED", "Email akses baru belum dapat dikirim.");
+    }
+    return json(200, { message: "Email akses baru sudah dikirim." });
+  }
 
   if (request.method === "POST") {
     const unknown = Object.keys(payload).filter((key) => !["email", "role", "redirect_to"].includes(key));
