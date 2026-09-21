@@ -5429,7 +5429,7 @@ html.home-document { overflow-x: hidden; }
 .registration-page .registration-review-heading h2 { margin-top: 8px; }
 .registration-page .registration-form-heading {
   display: grid;
-  grid-template-columns: 66px max-content minmax(50px, 1fr);
+  grid-template-columns: minmax(76px, 1fr) max-content minmax(76px, 1fr);
   align-items: center;
   justify-content: initial;
   gap: 16px;
@@ -5442,6 +5442,7 @@ html.home-document { overflow-x: hidden; }
 .registration-page .registration-form-heading > span {
   min-width: 0;
   line-height: 1.45;
+  white-space: nowrap;
 }
 .registration-page .registration-form-heading p {
   max-width: 11ch;
@@ -5522,7 +5523,7 @@ html.home-document { overflow-x: hidden; }
 
 @media (max-width: 430px) {
   .registration-page .registration-form-heading {
-    grid-template-columns: 64px max-content minmax(42px, 1fr);
-    gap: 10px;
+    grid-template-columns: minmax(64px, 1fr) max-content minmax(64px, 1fr);
+    gap: 8px;
   }
 }
