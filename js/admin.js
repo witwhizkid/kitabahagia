@@ -138,6 +138,11 @@
     return data;
   };
 
+  const resetPasswordForEmail = (email) => authRequest("recover", {
+    email,
+    redirect_to: `${window.location.origin}/admin/`,
+  });
+
   const validAccessToken = async () => {
     let session = readSession();
     if (!session?.access_token || !session?.refresh_token) return null;
@@ -1130,10 +1135,7 @@
     button.disabled = true;
     setFeedback($("#login-feedback"));
     try {
-      await authRequest("recover", {
-        email,
-        redirect_to: "https://websitekb.netlify.app/admin/",
-      });
+      await resetPasswordForEmail(email);
     } catch {
       // Keep recovery responses neutral so arbitrary emails are not disclosed.
     } finally {
