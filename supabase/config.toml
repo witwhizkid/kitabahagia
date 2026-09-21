@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.admin-users]
 verify_jwt = false
+
+[functions.public-stories]
+verify_jwt = false
+
+[functions.admin-stories]
+verify_jwt = false

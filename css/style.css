@@ -4024,6 +4024,12 @@ html.home-document { overflow-x: hidden; }
 .kisah-entry > p { max-width: 52ch; margin: 0 0 12px; color: var(--muted); font-size: 15px; line-height: 1.65; }
 .kisah-text-link { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--maroon); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 5px; text-decoration-color: rgba(122,31,43,.35); }
 .kisah-text-link:hover { text-decoration-color: currentColor; }
+.kisah-data-state { margin: 34px 0 0; color: var(--muted); font-size: 15px; line-height: 1.65; }
+.kisah-preview-grid.has-single-story { grid-template-columns: minmax(0,1fr); max-width: 760px; }
+.kisah-entry.has-no-cover,
+.kisah-latest-story.has-no-cover { display: block; }
+.kisah-entry.has-no-cover { padding-top: 24px; border-top: 1px solid var(--line); }
+.kisah-latest-story.has-no-cover .kisah-latest-copy { max-width: 720px; }
 .kisah-text-link:focus-visible,
 .kisah-page a:focus-visible,
 .about-page .footer-nav a:focus-visible,
@@ -4048,6 +4054,16 @@ html.home-document { overflow-x: hidden; }
 .kisah-archive-heading h2 { margin: 0; font-size: 21px; font-weight: 600; }
 .kisah-archive-heading > span { color: var(--muted); font-size: 13px; }
 .kisah-archive-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 48px 28px; }
+.story-detail-main { min-height: 60vh; padding: 58px 0 96px; }
+.story-detail-shell { max-width: 980px; }
+.story-detail-back { margin-bottom: 38px; }
+.story-detail-header { max-width: 820px; padding-top: 30px; border-top: 1px solid var(--line); }
+.story-detail-header h1 { margin: 14px 0 20px; font-size: clamp(46px,6.4vw,82px); font-weight: 650; line-height: 1.01; letter-spacing: -.045em; text-wrap: balance; }
+.story-detail-header time { color: var(--muted); font-size: 14px; }
+.story-detail-cover { margin: 50px 0 56px; }
+.story-detail-cover img { display: block; width: 100%; max-height: 620px; object-fit: cover; border-radius: 6px; }
+.story-detail-body { max-width: 720px; margin-inline: auto; color: var(--ink); font-size: clamp(17px,1.5vw,19px); line-height: 1.85; }
+.story-detail-body p { margin: 0 0 1.5em; white-space: pre-line; }
 .home-page .home-testimonial-compact { padding-block: 40px; }
 .home-testimonial-compact > .container { display: grid; grid-template-columns: minmax(0,.65fr) minmax(0,1.35fr); gap: 60px; align-items: start; }
 .home-testimonial-compact h2 { margin: 0 0 12px; color: inherit; font-size: 28px; line-height: 1.2; }
@@ -4090,6 +4106,7 @@ html.home-document { overflow-x: hidden; }
   .kisah-preview > .container { display: flex; flex-direction: column; }
   .kisah-preview .kisah-section-heading { display: contents; }
   .kisah-preview .kisah-section-heading > div { order: 1; }
+  .kisah-preview [data-home-stories-state] { order: 2; }
   .kisah-preview .kisah-preview-grid { order: 2; }
   .kisah-preview .kisah-section-heading > a { order: 3; align-self: flex-start; }
   .kisah-section-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
@@ -4111,6 +4128,12 @@ html.home-document { overflow-x: hidden; }
   .kisah-latest-copy h2 { font-size: 32px; }
   .kisah-archive { padding-bottom: 52px; }
   .kisah-archive-heading { padding-top: 20px; }
+  .story-detail-main { padding: 38px 0 64px; }
+  .story-detail-back { margin-bottom: 28px; }
+  .story-detail-header { padding-top: 24px; }
+  .story-detail-header h1 { font-size: clamp(38px,10vw,58px); line-height: 1.04; }
+  .story-detail-cover { margin: 34px 0 38px; }
+  .story-detail-body { font-size: 17px; line-height: 1.78; }
   .home-testimonial-compact > .container { grid-template-columns: 1fr; gap: 20px; }
   .home-page .home-testimonial-compact { padding-block: 32px; }
   .home-testimonial-compact blockquote { font-size: 21px; }

@@ -9,6 +9,7 @@
   const adminEventsUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-events`;
   const adminRegistrationsUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-registrations`;
   const adminUsersUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-users`;
+  const adminStoriesUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-stories`;
 
   const $ = (selector) => document.querySelector(selector);
   const loginView = $("#login-view");
@@ -18,19 +19,27 @@
   const eventsView = $("#events-view");
   const formView = $("#form-view");
   const registrationsView = $("#registrations-view");
+  const storiesView = $("#stories-view");
+  const storyFormView = $("#story-form-view");
   const adminsView = $("#admins-view");
   const loginForm = $("#login-form");
   const passwordSetupForm = $("#password-setup-form");
   const eventForm = $("#event-form");
+  const storyForm = $("#story-form");
   const inviteAdminForm = $("#invite-admin-form");
   const eventsList = $("#events-list");
   const registrationsList = $("#registrations-list");
+  const storiesList = $("#stories-list");
   const adminsList = $("#admins-list");
+  const eventArchiveFilter = $("#event-archive-filter");
+  const storyArchiveFilter = $("#story-archive-filter");
   let events = [];
   let registrations = [];
+  let stories = [];
   let admins = [];
   let currentRole = "";
   let imageUploading = false;
+  let storyImageUploading = false;
 
   const statusLabels = {
     draft: "Draf",
@@ -60,6 +69,11 @@
   const adminRoleLabels = {
     admin: "Admin",
     super_admin: "Super Admin",
+  };
+
+  const storyStatusLabels = {
+    draft: "Draf",
+    published: "Terbit",
   };
 
   const statusTone = (status) => ({
@@ -143,9 +157,10 @@
     return data;
   };
 
-  const adminRequest = (method = "GET", slug = "", body) => {
+  const adminRequest = (method = "GET", slug = "", body, action = "") => {
     const url = new URL(adminEventsUrl);
     if (slug) url.searchParams.set("slug", slug);
+    if (action) url.searchParams.set("action", action);
     return authorizedRequest(url, {
       method,
       headers: { "Content-Type": "application/json" },
@@ -164,6 +179,17 @@
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
+
+  const adminStoriesRequest = (method = "GET", slug = "", body, action = "") => {
+    const url = new URL(adminStoriesUrl);
+    if (slug) url.searchParams.set("slug", slug);
+    if (action) url.searchParams.set("action", action);
+    return authorizedRequest(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  };
 
   const sessionUserId = () => {
     try {
@@ -214,10 +240,12 @@
   const renderEvents = () => {
     const loading = $("#events-loading");
     const empty = $("#events-empty");
+    const visibleEvents = events.filter((event) => eventArchiveFilter.value === "archived" ? event.archived_at : !event.archived_at);
     loading.hidden = true;
-    empty.hidden = events.length > 0;
-    eventsList.hidden = events.length === 0;
-    eventsList.innerHTML = events.map((event) => `
+    empty.hidden = visibleEvents.length > 0;
+    empty.textContent = visibleEvents.length ? "" : eventArchiveFilter.value === "archived" ? "Belum ada kegiatan di arsip." : "Belum ada kegiatan aktif.";
+    eventsList.hidden = visibleEvents.length === 0;
+    eventsList.innerHTML = visibleEvents.map((event) => `
       <article class="event-row">
         <div>
           <h2>${escapeHtml(event.title)}</h2>
@@ -231,7 +259,10 @@
           <span class="data-group"><span class="data-label">Status</span><strong class="status-token ${statusTone(event.status)}">${escapeHtml(statusLabels[event.status] || event.status)}</strong></span>
           <span class="data-group"><span class="data-label">Publikasi</span><span class="state-label${event.is_public ? " is-public" : ""}">${event.is_public ? "Tampil di website" : "Tidak ditampilkan"}</span></span>
         </div>
-        <button class="edit-button" type="button" data-edit-slug="${escapeHtml(event.slug)}" aria-label="Edit ${escapeHtml(event.title)}">Edit</button>
+        <div class="row-actions">
+          <button class="edit-button" type="button" data-edit-slug="${escapeHtml(event.slug)}" aria-label="Edit ${escapeHtml(event.title)}">Edit</button>
+          <button class="edit-button archive-button" type="button" data-event-archive="${escapeHtml(event.slug)}">${event.archived_at ? "Pulihkan" : "Arsipkan"}</button>
+        </div>
       </article>
     `).join("");
   };
@@ -364,6 +395,50 @@
     }
   };
 
+  const renderStories = () => {
+    const visibleStories = stories.filter((story) => storyArchiveFilter.value === "archived" ? story.archived_at : !story.archived_at);
+    $("#stories-loading").hidden = true;
+    $("#stories-empty").hidden = visibleStories.length > 0;
+    $("#stories-empty").textContent = visibleStories.length ? "" : storyArchiveFilter.value === "archived" ? "Belum ada kisah di arsip." : "Belum ada kisah aktif.";
+    storiesList.hidden = visibleStories.length === 0;
+    storiesList.innerHTML = visibleStories.map((story) => `
+      <article class="story-row">
+        <div class="story-row-copy">
+          <span class="data-label">Judul</span>
+          <h2>${escapeHtml(story.title)}</h2>
+          <span>${escapeHtml(story.slug)}</span>
+        </div>
+        <span class="data-group">
+          <span class="data-label">Status</span>
+          <span class="status-token ${story.status === "published" ? "is-positive" : "is-neutral"}">${escapeHtml(storyStatusLabels[story.status] || story.status)}</span>
+        </span>
+        <span class="story-row-meta">
+          <span class="data-label">Tanggal terbit</span>
+          <time${story.published_at ? ` datetime="${escapeHtml(story.published_at)}"` : ""}>${escapeHtml(story.published_at ? formatDateTime(story.published_at) : "Belum diterbitkan")}</time>
+        </span>
+        <div class="row-actions">
+          <button class="edit-button" type="button" data-edit-story="${escapeHtml(story.slug)}" aria-label="Edit kisah ${escapeHtml(story.title)}">Edit</button>
+          <button class="edit-button archive-button" type="button" data-story-archive="${escapeHtml(story.slug)}">${story.archived_at ? "Pulihkan" : "Arsipkan"}</button>
+        </div>
+      </article>
+    `).join("");
+  };
+
+  const loadStories = async () => {
+    $("#stories-loading").hidden = false;
+    $("#stories-empty").hidden = true;
+    storiesList.hidden = true;
+    setFeedback($("#stories-feedback"));
+    try {
+      const data = await adminStoriesRequest();
+      stories = Array.isArray(data.stories) ? data.stories : [];
+      renderStories();
+    } catch (error) {
+      $("#stories-loading").hidden = true;
+      setFeedback($("#stories-feedback"), error.message, "error");
+    }
+  };
+
   const toLocalDateTime = (iso) => {
     if (!iso) return "";
     const parts = new Intl.DateTimeFormat("sv-SE", {
@@ -423,6 +498,53 @@
     return `${CONFIG.supabaseUrl}/storage/v1/object/public/event-images/${publicPath}`;
   };
 
+  const setStoryImagePreview = (url = "") => {
+    const preview = $("#story-image-preview");
+    const image = $("#story-image-preview-img");
+    const status = $("#story-image-upload-status");
+    status.classList.remove("is-error");
+    $("#story-image-file").removeAttribute("aria-invalid");
+    if (!url) {
+      preview.hidden = true;
+      image.removeAttribute("src");
+      status.textContent = "Belum ada foto dipilih.";
+      return;
+    }
+    image.src = url;
+    preview.hidden = false;
+    status.textContent = "Foto siap digunakan.";
+  };
+
+  const uploadStoryImage = async (file) => {
+    const allowedTypes = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+    const extension = allowedTypes[file.type];
+    if (!extension) throw new Error("Gunakan file JPG, PNG, atau WebP.");
+    if (file.size > 5 * 1024 * 1024) throw new Error("Ukuran foto maksimal 5 MB.");
+
+    const token = await validAccessToken();
+    if (!token) throw new Error("Sesi berakhir. Silakan masuk kembali.");
+    const slug = $("#story-slug").value.trim().toLowerCase();
+    const folder = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? slug : "draft";
+    const objectPath = `${folder}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+    const response = await fetch(`${CONFIG.supabaseUrl}/storage/v1/object/story-images/${objectPath}`, {
+      method: "POST",
+      headers: {
+        apikey: CONFIG.publishableKey,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": file.type,
+        "x-upsert": "false",
+      },
+      body: file,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 401 || response.status === 403) {
+      throw new Error("Akun ini tidak memiliki izin upload foto.");
+    }
+    if (!response.ok) throw new Error(data.message || data.error || "Foto belum dapat diunggah.");
+    const publicPath = objectPath.split("/").map(encodeURIComponent).join("/");
+    return `${CONFIG.supabaseUrl}/storage/v1/object/public/story-images/${publicPath}`;
+  };
+
   const fillForm = (event = null) => {
     eventForm.reset();
     $("#form-title").textContent = event ? "Edit Kegiatan" : "Tambah Kegiatan";
@@ -457,6 +579,8 @@
     eventsView.hidden = true;
     registrationsView.hidden = true;
     adminsView.hidden = true;
+    storiesView.hidden = true;
+    storyFormView.hidden = true;
     formView.hidden = false;
     window.scrollTo({ top: 0, behavior: "instant" });
     $("#event-title").focus();
@@ -466,6 +590,8 @@
     formView.hidden = true;
     registrationsView.hidden = true;
     adminsView.hidden = true;
+    storiesView.hidden = true;
+    storyFormView.hidden = true;
     eventsView.hidden = false;
     setActiveNavigation("events");
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -485,6 +611,8 @@
     formView.hidden = true;
     eventsView.hidden = true;
     adminsView.hidden = true;
+    storiesView.hidden = true;
+    storyFormView.hidden = true;
     registrationsView.hidden = false;
     setActiveNavigation("registrations");
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -497,10 +625,66 @@
     formView.hidden = true;
     eventsView.hidden = true;
     registrationsView.hidden = true;
+    storiesView.hidden = true;
+    storyFormView.hidden = true;
     adminsView.hidden = false;
     setActiveNavigation("admins");
     window.scrollTo({ top: 0, behavior: "instant" });
     await loadAdmins();
+  };
+
+  const fillStoryForm = (story = null) => {
+    storyForm.reset();
+    storySlugManuallyEdited = !!story; // editing = slug already set; new = allow auto-gen
+    $("#story-form-title").textContent = story ? "Edit Kisah" : "Tambah Kisah";
+    $("#original-story-slug").value = story?.slug || "";
+    $("#story-title").value = story?.title || "";
+    $("#story-slug").value = story?.slug || "";
+    $("#story-excerpt").value = story?.excerpt || "";
+    $("#story-body").value = story?.body || "";
+    $("#story-image-url").value = story?.cover_image_url || "";
+    $("#story-image-file").value = "";
+    setStoryImagePreview(story?.cover_image_url || "");
+    $("#story-image-alt").value = story?.cover_image_alt || "";
+    $("#story-status").value = story?.status || "draft";
+    $("#story-published-at").value = toLocalDateTime(story?.published_at);
+    setFeedback($("#story-form-feedback"));
+
+    // Slug help — warn when editing an already-published story
+    const slugHelp = $("#story-slug-help");
+    if (slugHelp) {
+      if (story?.status === "published") {
+        slugHelp.classList.add("field-help-warning");
+        slugHelp.textContent = "Mengubah alamat artikel dapat membuat tautan lama tidak berfungsi.";
+      } else {
+        slugHelp.classList.remove("field-help-warning");
+        slugHelp.textContent = "Dibuat dari judul dan digunakan sebagai alamat unik artikel di website.";
+      }
+    }
+  };
+
+  const showStoryForm = (story = null) => {
+    fillStoryForm(story);
+    eventsView.hidden = true;
+    formView.hidden = true;
+    registrationsView.hidden = true;
+    adminsView.hidden = true;
+    storiesView.hidden = true;
+    storyFormView.hidden = false;
+    window.scrollTo({ top: 0, behavior: "instant" });
+    $("#story-title").focus();
+  };
+
+  const showStories = async () => {
+    eventsView.hidden = true;
+    formView.hidden = true;
+    registrationsView.hidden = true;
+    adminsView.hidden = true;
+    storyFormView.hidden = true;
+    storiesView.hidden = false;
+    setActiveNavigation("stories");
+    window.scrollTo({ top: 0, behavior: "instant" });
+    await loadStories();
   };
 
   const formPayload = () => ({
@@ -525,6 +709,17 @@
     image_alt: $("#event-image-alt").value.trim() || null,
     whatsapp_group_url: $("#event-whatsapp").value.trim() || null,
     is_public: $("#event-public").checked,
+  });
+
+  const storyFormPayload = () => ({
+    title: $("#story-title").value.trim(),
+    slug: $("#story-slug").value.trim().toLowerCase(),
+    excerpt: $("#story-excerpt").value.trim() || null,
+    body: $("#story-body").value.trim(),
+    cover_image_url: $("#story-image-url").value.trim() || null,
+    cover_image_alt: $("#story-image-alt").value.trim() || null,
+    status: $("#story-status").value,
+    published_at: toIso($("#story-published-at").value),
   });
 
   const readInviteSession = () => {
@@ -586,10 +781,47 @@
     }
   });
 
+  $("#story-image-file").addEventListener("change", async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const button = $("#save-story-button");
+    const status = $("#story-image-upload-status");
+    storyImageUploading = true;
+    button.disabled = true;
+    status.classList.remove("is-error");
+    event.target.removeAttribute("aria-invalid");
+    status.textContent = "Mengunggah foto…";
+    try {
+      const publicUrl = await uploadStoryImage(file);
+      $("#story-image-url").value = publicUrl;
+      setStoryImagePreview(publicUrl);
+    } catch (error) {
+      event.target.value = "";
+      event.target.setAttribute("aria-invalid", "true");
+      status.classList.add("is-error");
+      status.textContent = error.message;
+    } finally {
+      storyImageUploading = false;
+      button.disabled = false;
+    }
+  });
+
+  // Auto-generate slug from title for new stories (skip if user has typed a manual slug)
+  $("#story-title").addEventListener("input", () => {
+    if (storySlugManuallyEdited) return;
+    $("#story-slug").value = slugifyStoryTitle($("#story-title").value);
+  });
+
+  // Once the user touches the slug field, stop overwriting it
+  $("#story-slug").addEventListener("input", () => {
+    storySlugManuallyEdited = true;
+  });
+
   document.querySelectorAll("[data-admin-view]").forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
       if (link.dataset.adminView === "registrations") showRegistrations();
+      else if (link.dataset.adminView === "stories") showStories();
       else if (link.dataset.adminView === "admins") showAdmins();
       else showEvents();
     });
@@ -760,12 +992,94 @@
     }
   });
 
+  storyForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (storyImageUploading) {
+      setFeedback($("#story-form-feedback"), "Tunggu sampai upload foto selesai.", "error");
+      return;
+    }
+    const payload = storyFormPayload();
+    const originalSlug = $("#original-story-slug").value;
+    const original = stories.find((item) => item.slug === originalSlug);
+    if (payload.status === "published" && original?.status !== "published"
+      && !window.confirm("Kisah akan diterbitkan dan tampil melalui API publik. Lanjutkan?")) return;
+
+    const button = $("#save-story-button");
+    button.disabled = true;
+    button.textContent = "Menyimpan…";
+    setFeedback($("#story-form-feedback"));
+    try {
+      await adminStoriesRequest(originalSlug ? "PATCH" : "POST", originalSlug, payload);
+      await showStories();
+      setFeedback($("#stories-feedback"), "Kisah berhasil disimpan.", "success");
+    } catch (error) {
+      setFeedback($("#story-form-feedback"), error.message, "error");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Simpan Kisah";
+    }
+  });
+
   eventsList.addEventListener("click", (event) => {
     const button = event.target.closest("[data-edit-slug]");
     if (!button) return;
     const selected = events.find((item) => item.slug === button.dataset.editSlug);
     if (selected) showForm(selected);
   });
+
+  storiesList.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-edit-story]");
+    if (!button) return;
+    const selected = stories.find((item) => item.slug === button.dataset.editStory);
+    if (selected) showStoryForm(selected);
+  });
+
+  eventsList.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-event-archive]");
+    if (!button) return;
+    const slug = button.dataset.eventArchive;
+    const selected = events.find((item) => item.slug === slug);
+    if (!selected) return;
+    const archived = Boolean(selected.archived_at);
+    const message = archived
+      ? "Pulihkan kegiatan ini agar dapat tampil kembali sesuai pengaturan publikasinya?"
+      : "Kegiatan ini akan disembunyikan dari website, tetapi data pendaftar tetap tersimpan.";
+    if (!window.confirm(message)) return;
+    button.disabled = true;
+    try {
+      await adminRequest("PATCH", slug, undefined, archived ? "restore" : "archive");
+      await loadEvents();
+      setFeedback($("#events-feedback"), `Kegiatan berhasil ${archived ? "dipulihkan" : "diarsipkan"}.`, "success");
+    } catch (error) {
+      setFeedback($("#events-feedback"), error.message, "error");
+      button.disabled = false;
+    }
+  });
+
+  storiesList.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-story-archive]");
+    if (!button) return;
+    const slug = button.dataset.storyArchive;
+    const selected = stories.find((item) => item.slug === slug);
+    if (!selected) return;
+    const archived = Boolean(selected.archived_at);
+    const message = archived
+      ? "Pulihkan kisah ini agar dapat tampil kembali sesuai statusnya?"
+      : "Kisah ini akan disembunyikan dari website dan dapat dipulihkan kembali.";
+    if (!window.confirm(message)) return;
+    button.disabled = true;
+    try {
+      await adminStoriesRequest("PATCH", slug, undefined, archived ? "restore" : "archive");
+      await loadStories();
+      setFeedback($("#stories-feedback"), `Kisah berhasil ${archived ? "dipulihkan" : "diarsipkan"}.`, "success");
+    } catch (error) {
+      setFeedback($("#stories-feedback"), error.message, "error");
+      button.disabled = false;
+    }
+  });
+
+  eventArchiveFilter.addEventListener("change", renderEvents);
+  storyArchiveFilter.addEventListener("change", renderStories);
 
   const logout = async () => {
     const session = readSession();
@@ -775,6 +1089,7 @@
     events = [];
     registrations = [];
     admins = [];
+    stories = [];
     currentRole = "";
     loginForm.reset();
     passwordSetupForm.reset();
@@ -784,6 +1099,9 @@
   $("#add-event-button").addEventListener("click", () => showForm());
   $("#back-button").addEventListener("click", showEvents);
   $("#cancel-button").addEventListener("click", showEvents);
+  $("#add-story-button").addEventListener("click", () => showStoryForm());
+  $("#story-back-button").addEventListener("click", showStories);
+  $("#story-cancel-button").addEventListener("click", showStories);
   $("#logout-button").addEventListener("click", logout);
   $("#mobile-logout-button").addEventListener("click", logout);
 

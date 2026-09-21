@@ -167,6 +167,7 @@ Deno.serve(async (request) => {
   const query = new URLSearchParams({
     select: eventProjection,
     is_public: "eq.true",
+    archived_at: "is.null",
     is_demo: demo ? "eq.true" : "eq.false",
     "registrations.registration_status": "in.(pending_payment,confirmed)",
     order: "event_date.asc,start_time.asc,slug.asc",

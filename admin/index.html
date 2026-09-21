@@ -61,6 +61,7 @@
         <nav aria-label="Navigasi admin">
           <a class="nav-link is-active" href="#events" data-admin-view="events" aria-current="page">Kegiatan</a>
           <a class="nav-link" href="#registrations" data-admin-view="registrations">Pendaftar</a>
+          <a class="nav-link" href="#stories" data-admin-view="stories">Kisah</a>
           <a class="nav-link" href="#admins" data-admin-view="admins" data-super-admin-only hidden>Kelola Admin</a>
         </nav>
         <button id="logout-button" class="logout-button" type="button">Keluar</button>
@@ -74,6 +75,7 @@
         <nav class="mobile-nav" aria-label="Navigasi admin seluler">
           <a class="is-active" href="#events" data-admin-view="events" aria-current="page">Kegiatan</a>
           <a href="#registrations" data-admin-view="registrations">Pendaftar</a>
+          <a href="#stories" data-admin-view="stories">Kisah</a>
           <a href="#admins" data-admin-view="admins" data-super-admin-only hidden>Kelola Admin</a>
         </nav>
 
@@ -85,6 +87,13 @@
               <p>Atur informasi kegiatan dan tentukan kapan kegiatan tampil di website.</p>
             </div>
             <button id="add-event-button" class="button button-primary" type="button">Tambah Kegiatan</button>
+          </div>
+          <div class="content-filter">
+            <label for="event-archive-filter">Tampilan</label>
+            <select id="event-archive-filter">
+              <option value="active">Aktif</option>
+              <option value="archived">Arsip</option>
+            </select>
           </div>
           <p id="events-feedback" class="feedback" role="status" aria-live="polite"></p>
           <div id="events-loading" class="state-panel" role="status">Memuat kegiatan…</div>
@@ -242,6 +251,97 @@
           <div id="registrations-loading" class="state-panel" role="status" hidden>Memuat pendaftar…</div>
           <div id="registrations-empty" class="state-panel" hidden>Tidak ada pendaftar yang cocok dengan filter ini.</div>
           <div id="registrations-list" class="registration-list" hidden></div>
+        </section>
+
+        <section id="stories-view" class="content-view" aria-labelledby="stories-title" hidden>
+          <div class="view-heading">
+            <div>
+              <p class="eyebrow">Jurnal kegiatan</p>
+              <h1 id="stories-title">Kisah</h1>
+              <p>Tulis, simpan sebagai draf, dan terbitkan catatan kegiatan Kita Bahagia.</p>
+            </div>
+            <button id="add-story-button" class="button button-primary" type="button">Tambah Kisah</button>
+          </div>
+          <div class="content-filter">
+            <label for="story-archive-filter">Tampilan</label>
+            <select id="story-archive-filter">
+              <option value="active">Aktif</option>
+              <option value="archived">Arsip</option>
+            </select>
+          </div>
+          <p id="stories-feedback" class="feedback" role="status" aria-live="polite"></p>
+          <div id="stories-loading" class="state-panel" role="status" hidden>Memuat kisah…</div>
+          <div id="stories-empty" class="state-panel" hidden>Belum ada kisah. Tambahkan kisah pertama untuk memulai.</div>
+          <div id="stories-list" class="story-list" hidden></div>
+        </section>
+
+        <section id="story-form-view" class="content-view" aria-labelledby="story-form-title" hidden>
+          <div class="form-heading">
+            <button id="story-back-button" class="text-button" type="button">← Kembali ke Kisah</button>
+            <p class="eyebrow">Konten editorial</p>
+            <h1 id="story-form-title">Tambah Kisah</h1>
+          </div>
+
+          <form id="story-form" class="event-form">
+            <input id="original-story-slug" type="hidden" />
+            <section class="form-section" aria-labelledby="story-content-heading">
+              <div class="section-heading">
+                <h2 id="story-content-heading">Isi Kisah</h2>
+                <p>Gunakan teks biasa. Pisahkan paragraf dengan satu baris kosong.</p>
+              </div>
+              <div class="form-grid">
+                <label class="span-2">Judul<input id="story-title" name="title" required maxlength="220" /></label>
+                <label>Slug<input id="story-slug" name="slug" required maxlength="140" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" aria-describedby="story-slug-help" /></label>
+                <p id="story-slug-help" class="field-help">Huruf kecil, angka, dan tanda hubung.</p>
+                <label class="span-2">Ringkasan<textarea id="story-excerpt" name="excerpt" rows="3" maxlength="1200"></textarea></label>
+                <label class="span-2 story-body-field">Isi Kisah<textarea id="story-body" name="body" rows="16" required maxlength="100000"></textarea></label>
+              </div>
+            </section>
+
+            <section class="form-section" aria-labelledby="story-media-heading">
+              <div class="section-heading">
+                <h2 id="story-media-heading">Foto utama</h2>
+                <p>Gunakan JPG, PNG, atau WebP dengan ukuran maksimal 5 MB.</p>
+              </div>
+              <div class="form-grid">
+                <div class="span-2 image-upload-field">
+                  <span class="field-label">Foto utama</span>
+                  <div id="story-image-preview" class="image-preview" hidden>
+                    <img id="story-image-preview-img" alt="Pratinjau foto utama kisah" />
+                  </div>
+                  <input id="story-image-url" name="cover_image_url" type="hidden" />
+                  <input id="story-image-file" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" />
+                  <div class="image-upload-actions">
+                    <label class="button button-secondary upload-button" for="story-image-file">Upload foto</label>
+                    <span id="story-image-upload-status" class="field-help-inline" role="status" aria-live="polite">Belum ada foto dipilih.</span>
+                  </div>
+                </div>
+                <label class="span-2">Teks alternatif foto<input id="story-image-alt" name="cover_image_alt" maxlength="500" /></label>
+              </div>
+            </section>
+
+            <section class="form-section" aria-labelledby="story-publish-heading">
+              <div class="section-heading">
+                <h2 id="story-publish-heading">Publikasi</h2>
+                <p>Draf tidak terlihat di website. Tanggal terbit akan diisi otomatis saat pertama kali diterbitkan bila dikosongkan.</p>
+              </div>
+              <div class="form-grid">
+                <label>Status
+                  <select id="story-status" name="status" required>
+                    <option value="draft">Draf</option>
+                    <option value="published">Terbit</option>
+                  </select>
+                </label>
+                <label>Tanggal terbit<input id="story-published-at" name="published_at" type="datetime-local" /></label>
+              </div>
+            </section>
+
+            <p id="story-form-feedback" class="feedback" role="status" aria-live="polite"></p>
+            <div class="form-actions">
+              <button id="story-cancel-button" class="button button-secondary" type="button">Batal</button>
+              <button id="save-story-button" class="button button-primary" type="submit">Simpan Kisah</button>
+            </div>
+          </form>
         </section>
 
         <section id="admins-view" class="content-view" aria-labelledby="admins-title" hidden>

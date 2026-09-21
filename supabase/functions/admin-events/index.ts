@@ -22,6 +22,7 @@ const eventProjection = [
   "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "is_demo",
+  "archived_at",
 ].join(",");
 
 const writableFields = new Set([
@@ -168,7 +169,11 @@ Deno.serve(async (request) => {
 
   const url = new URL(request.url);
   const requestedSlug = url.searchParams.get("slug")?.trim().toLowerCase() || null;
+  const action = url.searchParams.get("action")?.trim().toLowerCase() || null;
   if (requestedSlug && !slugPattern.test(requestedSlug)) return fail(400, "INVALID_SLUG", "Slug kegiatan tidak valid.");
+  if (action && (!requestedSlug || request.method !== "PATCH" || !["archive", "restore"].includes(action))) {
+    return fail(400, "INVALID_ACTION", "Aksi arsip kegiatan tidak valid.");
+  }
 
   if (request.method === "GET") {
     const query = new URLSearchParams({ select: eventProjection, order: "event_date.desc,start_time.desc,slug.asc" });
@@ -176,6 +181,19 @@ Deno.serve(async (request) => {
     const response = await fetch(`${supabaseUrl}/rest/v1/events?${query}`, { headers: serviceHeaders(serviceKey) });
     const rows = await response.json().catch(() => null) as EventRow[] | null;
     if (!response.ok || !Array.isArray(rows)) return fail(500, "SERVER_ERROR", "Data kegiatan belum dapat dimuat.");
+    return json(200, { events: rows.map(presentEvent), role: admin.role });
+  }
+
+  if (action) {
+    const endpoint = `${supabaseUrl}/rest/v1/events?slug=eq.${encodeURIComponent(requestedSlug!)}&select=${encodeURIComponent(eventProjection)}`;
+    const response = await fetch(endpoint, {
+      method: "PATCH",
+      headers: serviceHeaders(serviceKey, "return=representation"),
+      body: JSON.stringify({ archived_at: action === "archive" ? new Date().toISOString() : null }),
+    });
+    const rows = await response.json().catch(() => null) as EventRow[] | null;
+    if (!response.ok || !Array.isArray(rows)) return fail(500, "SERVER_ERROR", "Arsip kegiatan belum dapat diperbarui.");
+    if (rows.length === 0) return fail(404, "EVENT_NOT_FOUND", "Kegiatan tidak ditemukan.");
     return json(200, { events: rows.map(presentEvent), role: admin.role });
   }
 
