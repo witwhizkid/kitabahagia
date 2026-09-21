@@ -957,11 +957,9 @@
     setFeedback($("#invite-admin-feedback"));
     try {
       if ($("#invite-admin-role").value === "super_admin" && !window.confirm("Undangan ini memberi akses Super Admin. Lanjutkan?")) return;
-      const redirectTo = new URL("./", window.location.href).href;
       await adminUsersRequest("POST", {
         email: $("#invite-admin-email").value.trim(),
         role: $("#invite-admin-role").value,
-        redirect_to: redirectTo,
       });
       inviteAdminForm.reset();
       invalidateAdminsCache();

@@ -73,11 +73,11 @@ const getAuthUser = async (supabaseUrl: string, serviceKey: string, userId: stri
   return await response.json().catch(() => null) as AuthUser | null;
 };
 
-const sendPasswordRecovery = async (supabaseUrl: string, serviceKey: string, email: string) => {
+const sendPasswordRecovery = async (supabaseUrl: string, serviceKey: string, email: string, redirectTo: string) => {
   const response = await fetch(`${supabaseUrl}/auth/v1/recover`, {
     method: "POST",
     headers: serviceHeaders(serviceKey),
-    body: JSON.stringify({ email, redirect_to: "https://websitekb.netlify.app/admin/" }),
+    body: JSON.stringify({ email, redirect_to: redirectTo }),
   });
   if (!response.ok) {
     const details = await response.json().catch(() => null) as {
@@ -97,14 +97,14 @@ const sendPasswordRecovery = async (supabaseUrl: string, serviceKey: string, ema
   return response.ok;
 };
 
-const generateAccessLink = async (supabaseUrl: string, serviceKey: string, email: string) => {
+const generateAccessLink = async (supabaseUrl: string, serviceKey: string, email: string, redirectTo: string) => {
   const response = await fetch(`${supabaseUrl}/auth/v1/admin/generate_link`, {
     method: "POST",
     headers: serviceHeaders(serviceKey),
     body: JSON.stringify({
       type: "recovery",
       email,
-      redirect_to: "https://websitekb.netlify.app/admin/",
+      redirect_to: redirectTo,
     }),
   });
   const data = await response.json().catch(() => null) as {
@@ -144,17 +144,25 @@ const presentAdmin = (row: AdminRow, email: string) => ({
   created_at: row.created_at,
 });
 
-const safeRedirect = (value: unknown, requestOrigin: string | null) => {
-  if (typeof value !== "string" || !requestOrigin || requestOrigin === "null") return null;
+const adminRedirectForOrigin = (requestOrigin: string | null) => {
+  if (!requestOrigin || requestOrigin === "null") return null;
   try {
-    const redirect = new URL(value);
     const origin = new URL(requestOrigin);
-    const localHttp = redirect.protocol === "http:" && ["localhost", "127.0.0.1"].includes(redirect.hostname);
-    if (redirect.origin !== origin.origin || (redirect.protocol !== "https:" && !localHttp)) return null;
-    if (!/^\/admin\/(?:index\.html)?$/.test(redirect.pathname)) return null;
-    redirect.hash = "";
-    redirect.search = "";
-    return redirect.toString();
+    const localHttp = origin.protocol === "http:" && ["localhost", "127.0.0.1"].includes(origin.hostname);
+    if (origin.protocol !== "https:" && !localHttp) return null;
+    return `${origin.origin}/admin/`;
+  } catch {
+    return null;
+  }
+};
+
+const adminInviteRedirect = (configuredOrigin: string | undefined) => {
+  if (!configuredOrigin) return null;
+  try {
+    const origin = new URL(configuredOrigin.trim());
+    const localHttp = origin.protocol === "http:" && ["localhost", "127.0.0.1"].includes(origin.hostname);
+    if ((origin.protocol !== "https:" && !localHttp) || origin.username || origin.password) return null;
+    return `${origin.origin}/admin/`;
   } catch {
     return null;
   }
@@ -207,8 +215,10 @@ Deno.serve(async (request) => {
 
     const targetUser = await getAuthUser(supabaseUrl, serviceKey, userId);
     if (!targetUser?.email) return fail(404, "ADMIN_NOT_FOUND", "Admin tidak ditemukan.");
+    const redirectTo = adminRedirectForOrigin(request.headers.get("origin"));
+    if (!redirectTo) return fail(400, "INVALID_REDIRECT", "Tujuan akses admin tidak valid.");
     try {
-      if (!await sendPasswordRecovery(supabaseUrl, serviceKey, targetUser.email)) {
+      if (!await sendPasswordRecovery(supabaseUrl, serviceKey, targetUser.email, redirectTo)) {
         return fail(500, "RECOVERY_FAILED", "Email akses baru belum dapat dikirim.");
       }
     } catch (error) {
@@ -237,8 +247,10 @@ Deno.serve(async (request) => {
 
     const targetUser = await getAuthUser(supabaseUrl, serviceKey, userId);
     if (!targetUser?.email) return fail(404, "ADMIN_NOT_FOUND", "Admin tidak ditemukan.");
+    const redirectTo = adminRedirectForOrigin(request.headers.get("origin"));
+    if (!redirectTo) return fail(400, "INVALID_REDIRECT", "Tujuan akses admin tidak valid.");
     try {
-      const actionLink = await generateAccessLink(supabaseUrl, serviceKey, targetUser.email);
+      const actionLink = await generateAccessLink(supabaseUrl, serviceKey, targetUser.email, redirectTo);
       return json(200, { action_link: actionLink });
     } catch {
       return fail(500, "RECOVERY_FAILED", "Tautan akses belum dapat dibuat.");
@@ -246,13 +258,13 @@ Deno.serve(async (request) => {
   }
 
   if (request.method === "POST") {
-    const unknown = Object.keys(payload).filter((key) => !["email", "role", "redirect_to"].includes(key));
+    const unknown = Object.keys(payload).filter((key) => !["email", "role"].includes(key));
     const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
     const role = payload.role;
-    const redirectTo = safeRedirect(payload.redirect_to, request.headers.get("origin"));
+    const redirectTo = adminInviteRedirect(Deno.env.get("ADMIN_SITE_ORIGIN"));
     if (unknown.length || !emailPattern.test(email) || email.length > 254) return fail(400, "INVALID_EMAIL", "Email admin tidak valid.");
     if (typeof role !== "string" || !roles.has(role)) return fail(400, "INVALID_ROLE", "Peran admin tidak valid.");
-    if (!redirectTo) return fail(400, "INVALID_REDIRECT", "Tujuan undangan admin tidak valid.");
+    if (!redirectTo) return fail(500, "SERVER_CONFIG", "Tujuan undangan admin belum dikonfigurasi.");
 
     let existingUser: AuthUser | null;
     try { existingUser = await findAuthUserByEmail(supabaseUrl, serviceKey, email); }
@@ -267,7 +279,9 @@ Deno.serve(async (request) => {
       return fail(409, "AUTH_USER_EXISTS", "Email ini sudah memiliki akun. Hubungi pengelola sistem sebelum memberikan akses admin.");
     }
 
-    const inviteResponse = await fetch(`${supabaseUrl}/auth/v1/invite?redirect_to=${encodeURIComponent(redirectTo)}`, {
+    const inviteUrl = new URL(`${supabaseUrl}/auth/v1/invite`);
+    inviteUrl.searchParams.set("redirect_to", redirectTo);
+    const inviteResponse = await fetch(inviteUrl, {
       method: "POST",
       headers: serviceHeaders(serviceKey),
       body: JSON.stringify({ email }),
