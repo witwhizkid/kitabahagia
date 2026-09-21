@@ -834,6 +834,17 @@
     return true;
   };
 
+  const readAuthError = () => {
+    if (!window.location.hash.startsWith("#")) return false;
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    if (!params.has("error") && !params.has("error_code") && !params.has("error_description")) return false;
+    clearSession();
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    showLogin();
+    setFeedback($("#login-feedback"), "Tautan akses sudah tidak berlaku. Minta tautan baru melalui Lupa kata sandi.", "error");
+    return true;
+  };
+
   const updatePassword = async (password) => {
     const token = await validAccessToken();
     if (!token) throw new Error(passwordSetupRecovery
@@ -1055,6 +1066,8 @@
     event.preventDefault();
     const password = $("#new-password").value;
     const confirmation = $("#confirm-password").value;
+    if (!password || !confirmation) return setFeedback($("#password-setup-feedback"), "Isi kedua kata sandi terlebih dahulu.", "error");
+    if (password.length < 8) return setFeedback($("#password-setup-feedback"), "Kata sandi minimal 8 karakter.", "error");
     if (password !== confirmation) return setFeedback($("#password-setup-feedback"), "Kedua kata sandi belum sama.", "error");
     const button = $("#password-setup-button");
     button.disabled = true;
@@ -1097,6 +1110,35 @@
     } finally {
       button.disabled = false;
       button.textContent = "Masuk";
+    }
+  });
+
+  $("#forgot-password-button").addEventListener("click", async () => {
+    const emailInput = $("#login-email");
+    const email = emailInput.value.trim().toLowerCase();
+    if (!email) {
+      setFeedback($("#login-feedback"), "Masukkan email terlebih dahulu.", "error");
+      emailInput.focus();
+      return;
+    }
+    if (!emailInput.validity.valid) {
+      setFeedback($("#login-feedback"), "Masukkan alamat email yang valid.", "error");
+      emailInput.focus();
+      return;
+    }
+    const button = $("#forgot-password-button");
+    button.disabled = true;
+    setFeedback($("#login-feedback"));
+    try {
+      await authRequest("recover", {
+        email,
+        redirect_to: "https://websitekb.netlify.app/admin/",
+      });
+    } catch {
+      // Keep recovery responses neutral so arbitrary emails are not disclosed.
+    } finally {
+      button.disabled = false;
+      setFeedback($("#login-feedback"), "Jika email terdaftar, tautan untuk mengatur ulang kata sandi telah dikirim.", "success");
     }
   });
 
@@ -1252,7 +1294,7 @@
   $("#mobile-logout-button").addEventListener("click", logout);
 
   (async () => {
-    if (readRecoverySession() || readInviteSession()) return;
+    if (readAuthError() || readRecoverySession() || readInviteSession()) return;
     const token = await validAccessToken();
     if (!token) return showLogin();
     showAdmin();
