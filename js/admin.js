@@ -8,19 +8,28 @@
   });
   const adminEventsUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-events`;
   const adminRegistrationsUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-registrations`;
+  const adminUsersUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-users`;
 
   const $ = (selector) => document.querySelector(selector);
   const loginView = $("#login-view");
+  const loginPanel = $("#login-view .login-panel:not(#password-setup-panel)");
+  const passwordSetupPanel = $("#password-setup-panel");
   const adminView = $("#admin-view");
   const eventsView = $("#events-view");
   const formView = $("#form-view");
   const registrationsView = $("#registrations-view");
+  const adminsView = $("#admins-view");
   const loginForm = $("#login-form");
+  const passwordSetupForm = $("#password-setup-form");
   const eventForm = $("#event-form");
+  const inviteAdminForm = $("#invite-admin-form");
   const eventsList = $("#events-list");
   const registrationsList = $("#registrations-list");
+  const adminsList = $("#admins-list");
   let events = [];
   let registrations = [];
+  let admins = [];
+  let currentRole = "";
   let imageUploading = false;
 
   const statusLabels = {
@@ -47,6 +56,29 @@
     expired: "Kedaluwarsa",
     refunded: "Dikembalikan",
   };
+
+  const adminRoleLabels = {
+    admin: "Admin",
+    super_admin: "Super Admin",
+  };
+
+  const statusTone = (status) => ({
+    open: "is-positive",
+    confirmed: "is-positive",
+    paid: "is-positive",
+    not_required: "is-positive",
+    pending_payment: "is-pending",
+    unpaid: "is-pending",
+    pending: "is-pending",
+    full: "is-neutral",
+    closed: "is-neutral",
+    completed: "is-neutral",
+    draft: "is-neutral",
+    cancelled: "is-negative",
+    failed: "is-negative",
+    expired: "is-negative",
+    refunded: "is-neutral",
+  }[status] || "is-neutral");
 
   const setFeedback = (element, message = "", type = "") => {
     element.textContent = message;
@@ -127,10 +159,44 @@
     return authorizedRequest(url, { method: "GET" });
   };
 
+  const adminUsersRequest = (method = "GET", body) => authorizedRequest(adminUsersUrl, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  const sessionUserId = () => {
+    try {
+      const token = readSession()?.access_token?.split(".")[1];
+      if (!token) return "";
+      const normalized = token.replace(/-/g, "+").replace(/_/g, "/");
+      const payload = JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=")));
+      return typeof payload.sub === "string" ? payload.sub : "";
+    } catch { return ""; }
+  };
+
+  const applyRole = (role) => {
+    currentRole = role === "super_admin" ? "super_admin" : "admin";
+    document.querySelectorAll("[data-super-admin-only]").forEach((element) => {
+      element.hidden = currentRole !== "super_admin";
+    });
+    if (currentRole !== "super_admin" && !adminsView.hidden) showEvents();
+  };
+
   const showLogin = (message = "") => {
     loginView.hidden = false;
     adminView.hidden = true;
+    loginPanel.hidden = false;
+    passwordSetupPanel.hidden = true;
     if (message) setFeedback($("#login-feedback"), message, "error");
+  };
+
+  const showPasswordSetup = () => {
+    loginView.hidden = false;
+    adminView.hidden = true;
+    loginPanel.hidden = true;
+    passwordSetupPanel.hidden = false;
+    $("#new-password").focus();
   };
 
   const showAdmin = () => {
@@ -158,12 +224,12 @@
           <span class="environment-label">${event.environment === "development" ? "Data pengembangan" : "Data produksi"}</span>
         </div>
         <div class="event-meta">
-          <span>${escapeHtml(formatDate(event.event_date))}</span>
-          <span>${escapeHtml(event.location || "Lokasi belum diatur")}</span>
+          <span class="data-group"><span class="data-label">Jadwal</span><span>${escapeHtml(formatDate(event.event_date))}</span></span>
+          <span class="data-group"><span class="data-label">Lokasi</span><span>${escapeHtml(event.location || "Lokasi belum diatur")}</span></span>
         </div>
         <div class="event-state">
-          <strong>${escapeHtml(statusLabels[event.status] || event.status)}</strong>
-          <span class="state-label${event.is_public ? " is-public" : ""}">${event.is_public ? "Tampil di website" : "Tidak ditampilkan"}</span>
+          <span class="data-group"><span class="data-label">Status</span><strong class="status-token ${statusTone(event.status)}">${escapeHtml(statusLabels[event.status] || event.status)}</strong></span>
+          <span class="data-group"><span class="data-label">Publikasi</span><span class="state-label${event.is_public ? " is-public" : ""}">${event.is_public ? "Tampil di website" : "Tidak ditampilkan"}</span></span>
         </div>
         <button class="edit-button" type="button" data-edit-slug="${escapeHtml(event.slug)}" aria-label="Edit ${escapeHtml(event.title)}">Edit</button>
       </article>
@@ -177,6 +243,7 @@
     setFeedback($("#events-feedback"));
     try {
       const data = await adminRequest();
+      applyRole(data.role);
       events = Array.isArray(data.events) ? data.events : [];
       renderEvents();
       const eventFilter = $("#registration-event-filter");
@@ -207,20 +274,22 @@
       const linkedEvent = registration.events || {};
       return `
         <article class="registration-row">
-          <div class="registration-person">
+          <div class="registration-person registration-cell">
+            <span class="data-label">Pendaftar</span>
             <strong>${escapeHtml(registration.name)}</strong>
             <span>${escapeHtml(registration.email)}</span>
             <span>${escapeHtml(registration.phone)}</span>
           </div>
-          <div class="registration-event">
+          <div class="registration-event registration-cell">
+            <span class="data-label">Kegiatan</span>
             <strong>${escapeHtml(linkedEvent.title || "Kegiatan tidak ditemukan")}</strong>
-            <span>${escapeHtml(registration.registration_code)}</span>
+            <span class="registration-code"><span class="data-label">Kode</span>${escapeHtml(registration.registration_code)}</span>
           </div>
           <div class="registration-statuses">
-            <span>${escapeHtml(registrationStatusLabels[registration.registration_status] || registration.registration_status)}</span>
-            <span>${escapeHtml(paymentStatusLabels[registration.payment_status] || registration.payment_status)}</span>
+            <span class="data-group"><span class="data-label">Pendaftaran</span><span class="status-token ${statusTone(registration.registration_status)}">${escapeHtml(registrationStatusLabels[registration.registration_status] || registration.registration_status)}</span></span>
+            <span class="data-group"><span class="data-label">Pembayaran</span><span class="status-token ${statusTone(registration.payment_status)}">${escapeHtml(paymentStatusLabels[registration.payment_status] || registration.payment_status)}</span></span>
           </div>
-          <time datetime="${escapeHtml(registration.created_at)}">${escapeHtml(formatDateTime(registration.created_at))}</time>
+          <span class="registration-date"><span class="data-label">Terdaftar</span><time datetime="${escapeHtml(registration.created_at)}">${escapeHtml(formatDateTime(registration.created_at))}</time></span>
         </article>
       `;
     }).join("");
@@ -246,6 +315,55 @@
     }
   };
 
+  const renderAdmins = () => {
+    const currentUserId = sessionUserId();
+    $("#admins-loading").hidden = true;
+    $("#admins-empty").hidden = admins.length > 0;
+    adminsList.hidden = admins.length === 0;
+    adminsList.innerHTML = admins.map((admin) => {
+      const isSelf = admin.user_id === currentUserId;
+      const activeLabel = admin.is_active ? "Aktif" : "Dinonaktifkan";
+      return `
+        <form class="admin-row" data-admin-id="${escapeHtml(admin.user_id)}">
+          <div class="admin-identity">
+            <span class="data-label">Admin</span>
+            <strong>${escapeHtml(admin.email)}</strong>
+            <span>Ditambahkan ${escapeHtml(formatDateTime(admin.created_at))}${isSelf ? " · Akun kamu" : ""}</span>
+          </div>
+          <label>Peran
+            <select name="role" aria-label="Peran ${escapeHtml(admin.email)}">
+              <option value="admin"${admin.role === "admin" ? " selected" : ""}>Admin</option>
+              <option value="super_admin"${admin.role === "super_admin" ? " selected" : ""}>Super Admin</option>
+            </select>
+          </label>
+          <span class="admin-access-state">
+            <span class="data-label">Status akses</span>
+            <span class="status-token ${admin.is_active ? "is-positive" : "is-neutral"}">${activeLabel}</span>
+          </span>
+          <span class="admin-row-actions">
+            <button class="button button-secondary" type="submit">Simpan peran</button>
+            <button class="button button-secondary" type="button" data-toggle-admin data-next-active="${admin.is_active ? "false" : "true"}"${isSelf && admin.is_active ? " disabled title=\"Akun sendiri tidak dapat dinonaktifkan\"" : ""}>${admin.is_active ? "Nonaktifkan" : "Aktifkan"}</button>
+          </span>
+        </form>
+      `;
+    }).join("");
+  };
+
+  const loadAdmins = async () => {
+    $("#admins-loading").hidden = false;
+    $("#admins-empty").hidden = true;
+    adminsList.hidden = true;
+    setFeedback($("#admins-feedback"));
+    try {
+      const data = await adminUsersRequest();
+      admins = Array.isArray(data.admins) ? data.admins : [];
+      renderAdmins();
+    } catch (error) {
+      $("#admins-loading").hidden = true;
+      setFeedback($("#admins-feedback"), error.message, "error");
+    }
+  };
+
   const toLocalDateTime = (iso) => {
     if (!iso) return "";
     const parts = new Intl.DateTimeFormat("sv-SE", {
@@ -261,15 +379,18 @@
   const setImagePreview = (url = "") => {
     const preview = $("#event-image-preview");
     const image = $("#event-image-preview-img");
+    const status = $("#image-upload-status");
+    status.classList.remove("is-error");
+    $("#event-image-file").removeAttribute("aria-invalid");
     if (!url) {
       preview.hidden = true;
       image.removeAttribute("src");
-      $("#image-upload-status").textContent = "Belum ada foto dipilih.";
+      status.textContent = "Belum ada foto dipilih.";
       return;
     }
     image.src = url;
     preview.hidden = false;
-    $("#image-upload-status").textContent = "Foto siap digunakan.";
+    status.textContent = "Foto siap digunakan.";
   };
 
   const uploadEventImage = async (file) => {
@@ -335,6 +456,7 @@
     fillForm(event);
     eventsView.hidden = true;
     registrationsView.hidden = true;
+    adminsView.hidden = true;
     formView.hidden = false;
     window.scrollTo({ top: 0, behavior: "instant" });
     $("#event-title").focus();
@@ -343,6 +465,7 @@
   const showEvents = () => {
     formView.hidden = true;
     registrationsView.hidden = true;
+    adminsView.hidden = true;
     eventsView.hidden = false;
     setActiveNavigation("events");
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -361,11 +484,23 @@
   const showRegistrations = async () => {
     formView.hidden = true;
     eventsView.hidden = true;
+    adminsView.hidden = true;
     registrationsView.hidden = false;
     setActiveNavigation("registrations");
     window.scrollTo({ top: 0, behavior: "instant" });
     if (!events.length) await loadEvents();
     await loadRegistrations();
+  };
+
+  const showAdmins = async () => {
+    if (currentRole !== "super_admin") return showEvents();
+    formView.hidden = true;
+    eventsView.hidden = true;
+    registrationsView.hidden = true;
+    adminsView.hidden = false;
+    setActiveNavigation("admins");
+    window.scrollTo({ top: 0, behavior: "instant" });
+    await loadAdmins();
   };
 
   const formPayload = () => ({
@@ -392,6 +527,40 @@
     is_public: $("#event-public").checked,
   });
 
+  const readInviteSession = () => {
+    if (!window.location.hash.startsWith("#")) return false;
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    if (params.get("type") !== "invite") return false;
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+    if (!accessToken || !refreshToken) return false;
+    saveSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      expires_in: Number(params.get("expires_in")) || 3600,
+      token_type: params.get("token_type") || "bearer",
+    });
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    showPasswordSetup();
+    return true;
+  };
+
+  const updatePassword = async (password) => {
+    const token = await validAccessToken();
+    if (!token) throw new Error("Tautan undangan sudah tidak berlaku. Minta Super Admin mengirim undangan baru.");
+    const response = await fetch(`${CONFIG.supabaseUrl}/auth/v1/user`, {
+      method: "PUT",
+      headers: {
+        apikey: CONFIG.publishableKey,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.msg || data.message || "Kata sandi belum dapat disimpan.");
+  };
+
   $("#event-image-file").addEventListener("change", async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -399,6 +568,8 @@
     const status = $("#image-upload-status");
     imageUploading = true;
     button.disabled = true;
+    status.classList.remove("is-error");
+    event.target.removeAttribute("aria-invalid");
     status.textContent = "Mengunggah foto…";
     try {
       const publicUrl = await uploadEventImage(file);
@@ -406,6 +577,8 @@
       setImagePreview(publicUrl);
     } catch (error) {
       event.target.value = "";
+      event.target.setAttribute("aria-invalid", "true");
+      status.classList.add("is-error");
       status.textContent = error.message;
     } finally {
       imageUploading = false;
@@ -417,6 +590,7 @@
     link.addEventListener("click", (event) => {
       event.preventDefault();
       if (link.dataset.adminView === "registrations") showRegistrations();
+      else if (link.dataset.adminView === "admins") showAdmins();
       else showEvents();
     });
   });
@@ -429,6 +603,107 @@
   $("#reset-registration-filters").addEventListener("click", () => {
     $("#registration-filters").reset();
     loadRegistrations();
+  });
+
+  inviteAdminForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = $("#invite-admin-button");
+    button.disabled = true;
+    button.textContent = "Mengirim…";
+    setFeedback($("#invite-admin-feedback"));
+    try {
+      if ($("#invite-admin-role").value === "super_admin" && !window.confirm("Undangan ini memberi akses Super Admin. Lanjutkan?")) return;
+      const redirectTo = new URL("./", window.location.href).href;
+      await adminUsersRequest("POST", {
+        email: $("#invite-admin-email").value.trim(),
+        role: $("#invite-admin-role").value,
+        redirect_to: redirectTo,
+      });
+      inviteAdminForm.reset();
+      setFeedback($("#invite-admin-feedback"), "Undangan admin berhasil dikirim.", "success");
+      await loadAdmins();
+    } catch (error) {
+      setFeedback($("#invite-admin-feedback"), error.message, "error");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Kirim undangan";
+    }
+  });
+
+  adminsList.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const row = event.target.closest("[data-admin-id]");
+    if (!row) return;
+    const selected = admins.find((admin) => admin.user_id === row.dataset.adminId);
+    const role = row.querySelector("select[name='role']").value;
+    if (!selected || role === selected.role) return setFeedback($("#admins-feedback"), "Tidak ada perubahan peran.");
+    if (!window.confirm(`Ubah peran ${selected.email} menjadi ${adminRoleLabels[role]}?`)) {
+      row.querySelector("select[name='role']").value = selected.role;
+      return;
+    }
+    const button = row.querySelector("button[type='submit']");
+    button.disabled = true;
+    setFeedback($("#admins-feedback"));
+    try {
+      await adminUsersRequest("PATCH", { user_id: selected.user_id, role });
+      if (selected.user_id === sessionUserId() && role !== "super_admin") {
+        applyRole(role);
+        showEvents();
+        setFeedback($("#events-feedback"), "Peran akun kamu berhasil diperbarui.", "success");
+      } else {
+        await loadAdmins();
+        setFeedback($("#admins-feedback"), "Peran admin berhasil diperbarui.", "success");
+      }
+    } catch (error) {
+      row.querySelector("select[name='role']").value = selected.role;
+      setFeedback($("#admins-feedback"), error.message, "error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  adminsList.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-toggle-admin]");
+    if (!button || button.disabled) return;
+    const row = button.closest("[data-admin-id]");
+    const selected = admins.find((admin) => admin.user_id === row?.dataset.adminId);
+    if (!selected) return;
+    const nextActive = button.dataset.nextActive === "true";
+    const action = nextActive ? "aktifkan kembali" : "nonaktifkan";
+    if (!window.confirm(`${action[0].toUpperCase()}${action.slice(1)} akses ${selected.email}?`)) return;
+    button.disabled = true;
+    setFeedback($("#admins-feedback"));
+    try {
+      await adminUsersRequest("PATCH", { user_id: selected.user_id, is_active: nextActive });
+      await loadAdmins();
+      setFeedback($("#admins-feedback"), `Akses admin berhasil ${nextActive ? "diaktifkan" : "dinonaktifkan"}.`, "success");
+    } catch (error) {
+      setFeedback($("#admins-feedback"), error.message, "error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  passwordSetupForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const password = $("#new-password").value;
+    const confirmation = $("#confirm-password").value;
+    if (password !== confirmation) return setFeedback($("#password-setup-feedback"), "Kedua kata sandi belum sama.", "error");
+    const button = $("#password-setup-button");
+    button.disabled = true;
+    button.textContent = "Menyimpan…";
+    setFeedback($("#password-setup-feedback"));
+    try {
+      await updatePassword(password);
+      passwordSetupForm.reset();
+      showAdmin();
+      await loadEvents();
+    } catch (error) {
+      setFeedback($("#password-setup-feedback"), error.message, "error");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Simpan kata sandi";
+    }
   });
 
   loginForm.addEventListener("submit", async (event) => {
@@ -499,7 +774,10 @@
     clearSession();
     events = [];
     registrations = [];
+    admins = [];
+    currentRole = "";
     loginForm.reset();
+    passwordSetupForm.reset();
     showLogin();
   };
 
@@ -510,6 +788,7 @@
   $("#mobile-logout-button").addEventListener("click", logout);
 
   (async () => {
+    if (readInviteSession()) return;
     const token = await validAccessToken();
     if (!token) return showLogin();
     showAdmin();
