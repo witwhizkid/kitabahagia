@@ -25,7 +25,7 @@ const registrationProjection = [
   "registration_status",
   "payment_status",
   "created_at",
-  "events!inner(slug,title)",
+  "events!inner(slug,title,event_date,start_time,end_at)",
 ].join(",");
 
 const registrationStatuses = new Set(["pending_payment", "confirmed", "cancelled"]);
@@ -72,6 +72,23 @@ const safeSearch = (value: string | null) => {
   return cleaned;
 };
 
+const eventFinishedAt = (event: { end_at?: string | null; event_date?: string | null; start_time?: string | null }) => {
+  if (event.end_at) {
+    const endAt = new Date(event.end_at);
+    if (!Number.isNaN(endAt.getTime())) return endAt;
+  }
+  if (!event.event_date) return null;
+  const endOfEventDay = new Date(`${event.event_date}T23:59:59+07:00`);
+  return Number.isNaN(endOfEventDay.getTime()) ? null : endOfEventDay;
+};
+
+const isActiveRegistration = (event: { end_at?: string | null; event_date?: string | null; start_time?: string | null }, now: Date) => {
+  const finishedAt = eventFinishedAt(event);
+  if (!finishedAt) return true;
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  return finishedAt >= thirtyDaysAgo;
+};
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: responseHeaders });
   if (request.method !== "GET") return fail(405, "METHOD_NOT_ALLOWED", "Pendaftar hanya dapat dilihat.");
@@ -88,11 +105,13 @@ Deno.serve(async (request) => {
   const eventSlug = url.searchParams.get("event")?.trim().toLowerCase() || null;
   const registrationStatus = url.searchParams.get("registration_status")?.trim() || null;
   const paymentStatus = url.searchParams.get("payment_status")?.trim() || null;
+  const lifecycle = url.searchParams.get("lifecycle")?.trim().toLowerCase() || "active";
   const search = safeSearch(url.searchParams.get("search"));
 
   if (eventSlug && !slugPattern.test(eventSlug)) return fail(400, "INVALID_EVENT", "Filter kegiatan tidak valid.");
   if (registrationStatus && !registrationStatuses.has(registrationStatus)) return fail(400, "INVALID_STATUS", "Status pendaftaran tidak valid.");
   if (paymentStatus && !paymentStatuses.has(paymentStatus)) return fail(400, "INVALID_STATUS", "Status pembayaran tidak valid.");
+  if (!["active", "history"].includes(lifecycle)) return fail(400, "INVALID_LIFECYCLE", "Tampilan pendaftar tidak valid.");
   if (search === false) return fail(400, "INVALID_SEARCH", "Pencarian tidak valid.");
 
   const query = new URLSearchParams({
@@ -109,10 +128,14 @@ Deno.serve(async (request) => {
   const response = await fetch(`${supabaseUrl}/rest/v1/registrations?${query}`, {
     headers: serviceHeaders(serviceKey),
   });
-  const rows = await response.json().catch(() => null);
+  const rows = await response.json().catch(() => null) as Array<Record<string, unknown>> | null;
   if (!response.ok || !Array.isArray(rows)) return fail(500, "SERVER_ERROR", "Data pendaftar belum dapat dimuat.");
 
-  const contentRange = response.headers.get("content-range")?.split("/")[1];
-  const total = contentRange && contentRange !== "*" ? Number(contentRange) : rows.length;
-  return json(200, { registrations: rows, total: Number.isSafeInteger(total) ? total : rows.length });
+  const now = new Date();
+  const lifecycleRows = rows.filter((registration) => {
+    const event = (registration.events || {}) as { end_at?: string | null; event_date?: string | null; start_time?: string | null };
+    return lifecycle === "active" ? isActiveRegistration(event, now) : !isActiveRegistration(event, now);
+  });
+
+  return json(200, { registrations: lifecycleRows, total: lifecycleRows.length });
 });

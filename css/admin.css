@@ -186,6 +186,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .registrations-heading { align-items: center; }
 .registrant-total { min-width: 120px; display: grid; justify-items: end; margin: 0; color: var(--muted); }
 .registrant-total strong { color: var(--maroon); font: 700 clamp(2.2rem, 4vw, 3.4rem)/1 "Instrument Sans", sans-serif; }
+.registration-lifecycle-tabs { display: flex; gap: 0; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+.registration-lifecycle-tabs button { min-height: 42px; padding: 8px 18px; color: var(--muted); background: transparent; border: 0; border-bottom: 2px solid transparent; font-weight: 700; cursor: pointer; }
+.registration-lifecycle-tabs button.is-active { color: var(--maroon); border-bottom-color: var(--maroon); }
+.registration-lifecycle-tabs span { margin-left: 5px; color: inherit; font-size: .8em; font-variant-numeric: tabular-nums; }
 .registration-filters { display: grid; grid-template-columns: minmax(180px, 1.35fr) repeat(3, minmax(130px, .85fr)) auto auto; gap: 10px; align-items: end; padding: 20px 0 24px; border-top: 1px solid var(--line); }
 .registration-filters > * { min-width: 0; }
 .registration-filters .button { min-width: 88px; padding-inline: 14px; }
@@ -202,6 +206,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .story-row-copy, .story-row-meta { min-width: 0; display: grid; justify-items: start; gap: 5px; }
 .story-row-copy > span:not(.data-label), .story-row-meta time { color: var(--muted); font-size: .82rem; overflow-wrap: anywhere; }
 .archive-button { color: var(--muted); border-color: var(--line); }
+.delete-button { color: var(--error); border-color: #c79797; }
+.delete-button:hover { background: #f8eaea; }
 .story-body-field textarea { min-height: 360px; }
 
 .admin-invite-section, .admin-directory { padding: 28px 0; border-top: 1px solid var(--line); }
@@ -237,6 +243,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
   .row-actions .edit-button { grid-column: auto; grid-row: auto; }
   .form-section { grid-template-columns: 1fr; gap: 22px; }
   .registration-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .registration-lifecycle-tabs button { flex: 1; }
   .registration-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .story-row { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
   .story-row-meta { grid-column: 1; }

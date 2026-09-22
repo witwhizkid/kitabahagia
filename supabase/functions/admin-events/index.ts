@@ -1,7 +1,7 @@
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -157,7 +157,7 @@ const presentEvent = (row: EventRow) => {
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: responseHeaders });
-  if (!["GET", "POST", "PATCH"].includes(request.method)) return fail(405, "METHOD_NOT_ALLOWED", "Metode tidak didukung.");
+  if (!["GET", "POST", "PATCH", "DELETE"].includes(request.method)) return fail(405, "METHOD_NOT_ALLOWED", "Metode tidak didukung.");
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
@@ -195,6 +195,36 @@ Deno.serve(async (request) => {
     if (!response.ok || !Array.isArray(rows)) return fail(500, "SERVER_ERROR", "Arsip kegiatan belum dapat diperbarui.");
     if (rows.length === 0) return fail(404, "EVENT_NOT_FOUND", "Kegiatan tidak ditemukan.");
     return json(200, { events: rows.map(presentEvent), role: admin.role });
+  }
+
+  if (request.method === "DELETE") {
+    if (!requestedSlug) return fail(400, "INVALID_SLUG", "Slug kegiatan yang akan dihapus wajib disertakan.");
+    const currentResponse = await fetch(
+      `${supabaseUrl}/rest/v1/events?slug=eq.${encodeURIComponent(requestedSlug)}&select=id,archived_at&limit=1`,
+      { headers: serviceHeaders(serviceKey) },
+    );
+    const currentRows = await currentResponse.json().catch(() => null) as Array<{ id: string; archived_at: string | null }> | null;
+    if (!currentResponse.ok || !Array.isArray(currentRows)) return fail(500, "SERVER_ERROR", "Kegiatan belum dapat diperiksa.");
+    if (currentRows.length !== 1) return fail(404, "EVENT_NOT_FOUND", "Kegiatan tidak ditemukan.");
+    if (!currentRows[0].archived_at) return fail(409, "EVENT_NOT_ARCHIVED", "Kegiatan aktif tidak dapat dihapus permanen. Arsipkan kegiatan terlebih dahulu.");
+
+    const registrationResponse = await fetch(
+      `${supabaseUrl}/rest/v1/registrations?event_id=eq.${encodeURIComponent(currentRows[0].id)}&select=id&limit=1`,
+      { headers: serviceHeaders(serviceKey) },
+    );
+    const registrationRows = await registrationResponse.json().catch(() => null) as Array<{ id: string }> | null;
+    if (!registrationResponse.ok || !Array.isArray(registrationRows)) return fail(500, "SERVER_ERROR", "Data pendaftar belum dapat diperiksa.");
+    if (registrationRows.length > 0) return fail(409, "EVENT_HAS_HISTORY", "Kegiatan ini memiliki data pendaftar atau transaksi dan tidak dapat dihapus permanen.");
+
+    const deleteResponse = await fetch(
+      `${supabaseUrl}/rest/v1/events?slug=eq.${encodeURIComponent(requestedSlug)}&archived_at=not.is.null`,
+      { method: "DELETE", headers: serviceHeaders(serviceKey, "return=representation") },
+    );
+    const deletedRows = await deleteResponse.json().catch(() => null) as EventRow[] | null;
+    if (deleteResponse.status === 409) return fail(409, "EVENT_HAS_HISTORY", "Kegiatan ini memiliki data pendaftar atau transaksi dan tidak dapat dihapus permanen.");
+    if (!deleteResponse.ok || !Array.isArray(deletedRows)) return fail(500, "SERVER_ERROR", "Kegiatan belum dapat dihapus permanen.");
+    if (deletedRows.length === 0) return fail(404, "EVENT_NOT_FOUND", "Kegiatan tidak ditemukan atau sudah tidak diarsipkan.");
+    return json(200, { events: deletedRows.map(presentEvent), role: admin.role });
   }
 
   if (request.method === "PATCH" && !requestedSlug) return fail(400, "INVALID_SLUG", "Slug kegiatan yang akan diubah wajib disertakan.");

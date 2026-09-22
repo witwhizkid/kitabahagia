@@ -1,7 +1,7 @@
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -139,7 +139,7 @@ const validatePayload = (input: unknown, creating: boolean) => {
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: responseHeaders });
-  if (!["GET", "POST", "PATCH"].includes(request.method)) return fail(405, "METHOD_NOT_ALLOWED", "Metode tidak didukung.");
+  if (!["GET", "POST", "PATCH", "DELETE"].includes(request.method)) return fail(405, "METHOD_NOT_ALLOWED", "Metode tidak didukung.");
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
@@ -176,6 +176,18 @@ Deno.serve(async (request) => {
     const stories = await response.json().catch(() => null) as StoryRow[] | null;
     if (!response.ok || !Array.isArray(stories)) return fail(500, "SERVER_ERROR", "Arsip kisah belum dapat diperbarui.");
     if (stories.length === 0) return fail(404, "STORY_NOT_FOUND", "Kisah tidak ditemukan.");
+    return json(200, { stories });
+  }
+
+  if (request.method === "DELETE") {
+    if (!requestedSlug) return fail(400, "INVALID_SLUG", "Slug kisah yang akan dihapus wajib disertakan.");
+    const deleteResponse = await fetch(
+      `${supabaseUrl}/rest/v1/stories?slug=eq.${encodeURIComponent(requestedSlug)}&archived_at=not.is.null`,
+      { method: "DELETE", headers: serviceHeaders(serviceKey, "return=representation") },
+    );
+    const stories = await deleteResponse.json().catch(() => null) as StoryRow[] | null;
+    if (!deleteResponse.ok || !Array.isArray(stories)) return fail(500, "SERVER_ERROR", "Kisah belum dapat dihapus permanen.");
+    if (stories.length === 0) return fail(409, "STORY_NOT_ARCHIVED", "Kisah aktif tidak dapat dihapus permanen. Arsipkan kisah terlebih dahulu.");
     return json(200, { stories });
   }
 

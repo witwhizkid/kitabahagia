@@ -38,6 +38,7 @@
   let stories = [];
   let admins = [];
   let currentRole = "";
+  let registrationLifecycle = "active";
   let imageUploading = false;
   let storyImageUploading = false;
   let storySlugManuallyEdited = false;
@@ -298,6 +299,7 @@
         <div class="row-actions">
           <button class="edit-button" type="button" data-edit-slug="${escapeHtml(event.slug)}" aria-label="Edit ${escapeHtml(event.title)}">Edit</button>
           <button class="edit-button archive-button" type="button" data-event-archive="${escapeHtml(event.slug)}">${event.archived_at ? "Pulihkan" : "Arsipkan"}</button>
+          ${event.archived_at ? `<button class="edit-button delete-button" type="button" data-event-delete="${escapeHtml(event.slug)}">Hapus permanen</button>` : ""}
         </div>
       </article>
     `).join("");
@@ -351,6 +353,7 @@
     $("#registrations-empty").hidden = registrations.length > 0;
     registrationsList.hidden = registrations.length === 0;
     $("#registrations-total").textContent = String(total);
+    $(registrationLifecycle === "active" ? "#active-registrations-total" : "#history-registrations-total").textContent = String(total);
     registrationsList.innerHTML = registrations.map((registration) => {
       const linkedEvent = registration.events || {};
       return `
@@ -379,6 +382,7 @@
   const loadRegistrations = async () => {
     const params = {
       event: $("#registration-event-filter").value,
+      lifecycle: registrationLifecycle,
       search: $("#registration-search").value.trim(),
       registration_status: $("#registration-status-filter").value,
       payment_status: $("#payment-status-filter").value,
@@ -403,6 +407,11 @@
         const total = Number(data.total) || 0;
         tabCache.registrations.set(cacheKey, { registrations, total, loadedAt: Date.now() });
         renderRegistrations(total);
+        const otherLifecycle = registrationLifecycle === "active" ? "history" : "active";
+        const otherParams = { ...params, lifecycle: otherLifecycle };
+        return registrationRequest(otherParams).then((otherData) => {
+          $(`#${otherLifecycle}-registrations-total`).textContent = String(Number(otherData.total) || 0);
+        }).catch(() => undefined);
       })
       .catch((error) => {
         if (!cached) {
@@ -504,6 +513,7 @@
         <div class="row-actions">
           <button class="edit-button" type="button" data-edit-story="${escapeHtml(story.slug)}" aria-label="Edit kisah ${escapeHtml(story.title)}">Edit</button>
           <button class="edit-button archive-button" type="button" data-story-archive="${escapeHtml(story.slug)}">${story.archived_at ? "Pulihkan" : "Arsipkan"}</button>
+          ${story.archived_at ? `<button class="edit-button delete-button" type="button" data-story-delete="${escapeHtml(story.slug)}">Hapus permanen</button>` : ""}
         </div>
       </article>
     `).join("");
@@ -1001,6 +1011,18 @@
     loadRegistrations();
   });
 
+  document.querySelectorAll("[data-registration-lifecycle]").forEach((button) => {
+    button.addEventListener("click", () => {
+      registrationLifecycle = button.dataset.registrationLifecycle;
+      document.querySelectorAll("[data-registration-lifecycle]").forEach((tab) => {
+        const active = tab === button;
+        tab.classList.toggle("is-active", active);
+        tab.setAttribute("aria-selected", String(active));
+      });
+      loadRegistrations();
+    });
+  });
+
   inviteAdminForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = $("#invite-admin-button");
@@ -1296,6 +1318,28 @@
     }
   });
 
+  eventsList.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-event-delete]");
+    if (!button) return;
+    const selected = events.find((item) => item.slug === button.dataset.eventDelete);
+    if (!selected?.archived_at) return;
+    const confirmation = window.prompt(`Ketik judul kegiatan untuk menghapus permanen:\n${selected.title}`);
+    if (confirmation !== selected.title) {
+      if (confirmation !== null) setFeedback($("#events-feedback"), "Judul kegiatan belum cocok. Kegiatan tidak dihapus.", "error");
+      return;
+    }
+    button.disabled = true;
+    try {
+      await adminRequest("DELETE", selected.slug);
+      invalidateEventsCache();
+      await loadEvents();
+      setFeedback($("#events-feedback"), "Kegiatan berhasil dihapus permanen.", "success");
+    } catch (error) {
+      setFeedback($("#events-feedback"), error.message, "error");
+      button.disabled = false;
+    }
+  });
+
   storiesList.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-story-archive]");
     if (!button) return;
@@ -1313,6 +1357,28 @@
       invalidateStoriesCache();
       await loadStories();
       setFeedback($("#stories-feedback"), `Kisah berhasil ${archived ? "dipulihkan" : "diarsipkan"}.`, "success");
+    } catch (error) {
+      setFeedback($("#stories-feedback"), error.message, "error");
+      button.disabled = false;
+    }
+  });
+
+  storiesList.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-story-delete]");
+    if (!button) return;
+    const selected = stories.find((item) => item.slug === button.dataset.storyDelete);
+    if (!selected?.archived_at) return;
+    const confirmation = window.prompt(`Ketik judul kisah untuk menghapus permanen:\n${selected.title}`);
+    if (confirmation !== selected.title) {
+      if (confirmation !== null) setFeedback($("#stories-feedback"), "Judul kisah belum cocok. Kisah tidak dihapus.", "error");
+      return;
+    }
+    button.disabled = true;
+    try {
+      await adminStoriesRequest("DELETE", selected.slug);
+      invalidateStoriesCache();
+      await loadStories();
+      setFeedback($("#stories-feedback"), "Kisah berhasil dihapus permanen.", "success");
     } catch (error) {
       setFeedback($("#stories-feedback"), error.message, "error");
       button.disabled = false;

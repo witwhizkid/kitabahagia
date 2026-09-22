@@ -215,6 +215,11 @@
             <p class="registrant-total"><strong id="registrations-total">0</strong><span>pendaftar</span></p>
           </div>
 
+          <div class="registration-lifecycle-tabs" role="tablist" aria-label="Tampilan pendaftar">
+            <button class="is-active" type="button" role="tab" aria-selected="true" data-registration-lifecycle="active">Pendaftar aktif <span id="active-registrations-total">0</span></button>
+            <button type="button" role="tab" aria-selected="false" data-registration-lifecycle="history">Riwayat <span id="history-registrations-total">0</span></button>
+          </div>
+
           <form id="registration-filters" class="registration-filters" role="search">
             <label>Cari pendaftar
               <input id="registration-search" type="search" placeholder="Nama, email, atau kode" autocomplete="off" />
