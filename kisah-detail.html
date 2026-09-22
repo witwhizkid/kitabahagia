@@ -7,6 +7,7 @@
   <title>Kisah — Kita Bahagia</title>
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
+  <link crossorigin href="https://cmrdapfuqtjlmpepfwfq.supabase.co" rel="preconnect">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Instrument+Sans:wght@500;600;700&amp;display=swap" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="assets/logo/favicon.ico">
@@ -34,7 +35,7 @@
   <main id="main-content" class="story-detail-main">
     <div class="container story-detail-shell">
       <a class="kisah-text-link story-detail-back" href="kisah.html"><span aria-hidden="true">←</span> Kembali ke Kisah</a>
-      <p class="kisah-data-state" data-story-detail-state role="status" aria-live="polite">Memuat kisah…</p>
+      <p class="kisah-data-state is-loading" data-story-detail-state data-skeleton="detail" role="status" aria-live="polite" aria-busy="true"><span>Kisah sedang dimuat</span></p>
       <article class="story-detail" data-story-detail hidden>
         <header class="story-detail-header">
           <span class="eyebrow">Kisah</span>

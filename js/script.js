@@ -127,6 +127,14 @@ const eventRegistrationLink = (event, className, label) => `<a class="${classNam
   data-registration-link data-event-slug="${escapeHTML(event.slug)}"
   href="pendaftaran.html?event=${encodeURIComponent(event.slug)}">${label}</a>`;
 
+const skeletonLine = (size = '') => `<span class="loading-line${size ? ` loading-line-${size}` : ''}"></span>`;
+const eventCardSkeleton = (className = 'schedule-card') => `<article class="${className} loading-card" aria-hidden="true">
+  <div class="loading-media"></div>
+  <div class="loading-card-copy">${skeletonLine('short')}${skeletonLine('title')}${skeletonLine('title-short')}
+    <div class="loading-meta">${skeletonLine('meta')}${skeletonLine('meta')}${skeletonLine('meta-short')}</div>
+  </div>
+</article>`;
+
 const renderHomepageEvents = async () => {
   const list = document.querySelector('[data-upcoming-list]');
   const empty = document.querySelector('[data-upcoming-empty]');
@@ -139,7 +147,10 @@ const renderHomepageEvents = async () => {
     empty.hidden = false;
   };
 
-  setState('Memuat kegiatan terdekat\u2026', 'Mengambil agenda terbaru untuk kamu.');
+  list.innerHTML = `${eventCardSkeleton('home-upcoming-event featured')}<div class="home-upcoming-supporting">${eventCardSkeleton('home-upcoming-event')}${eventCardSkeleton('home-upcoming-event')}</div>`;
+  list.hidden = false;
+  list.setAttribute('aria-busy', 'true');
+  empty.hidden = true;
 
   let events;
   try {
@@ -150,11 +161,13 @@ const renderHomepageEvents = async () => {
       .slice(0, 3);
   } catch (error) {
     console.error('Kegiatan terdekat gagal dimuat', error);
+    list.removeAttribute('aria-busy');
     setState('Kegiatan belum dapat dimuat.', 'Periksa koneksi lalu muat ulang halaman ini.');
     return;
   }
 
   if (!events.length) {
+    list.removeAttribute('aria-busy');
     setState('Belum ada kegiatan dalam waktu dekat.', 'Jadwal kegiatan berikutnya akan segera hadir. Pantau halaman jadwal untuk informasi terbaru.');
     return;
   }
@@ -176,6 +189,7 @@ const renderHomepageEvents = async () => {
   list.innerHTML = `${eventMarkup(events[0], true)}<div class="home-upcoming-supporting">
     ${events.slice(1).map((event) => eventMarkup(event)).join('')}</div>`;
   list.hidden = false;
+  list.removeAttribute('aria-busy');
   empty.hidden = true;
 };
 
@@ -196,8 +210,14 @@ const renderScheduleEvents = async () => {
     }
   };
 
-  if (count) count.textContent = 'Memuat kegiatan\u2026';
-  setMessage('Memuat jadwal kegiatan\u2026', 'Mohon tunggu sebentar.');
+  if (count) {
+    count.textContent = 'Jadwal kegiatan sedang dimuat';
+    count.classList.add('visually-hidden');
+  }
+  featuredSection.hidden = true;
+  empty?.classList.add('hidden');
+  grid.innerHTML = `${eventCardSkeleton()}${eventCardSkeleton()}${eventCardSkeleton()}${eventCardSkeleton()}`;
+  grid.setAttribute('aria-busy', 'true');
 
   let scheduleEvents;
   try {
@@ -207,13 +227,21 @@ const renderScheduleEvents = async () => {
       .sort((a, b) => new Date(a.start) - new Date(b.start));
   } catch (error) {
     console.error('Jadwal kegiatan gagal dimuat', error);
-    if (count) count.textContent = 'Jadwal gagal dimuat';
+    grid.removeAttribute('aria-busy');
+    if (count) {
+      count.classList.remove('visually-hidden');
+      count.textContent = 'Jadwal gagal dimuat';
+    }
     setMessage('Jadwal belum dapat dimuat.', 'Periksa koneksi lalu muat ulang halaman ini.');
     return;
   }
 
   if (!scheduleEvents.length) {
-    if (count) count.textContent = 'Menampilkan 0 kegiatan';
+    grid.removeAttribute('aria-busy');
+    if (count) {
+      count.classList.remove('visually-hidden');
+      count.textContent = 'Menampilkan 0 kegiatan';
+    }
     setMessage('Belum ada kegiatan yang tersedia.', 'Silakan cek kembali untuk agenda berikutnya.');
     return;
   }
@@ -269,7 +297,11 @@ const renderScheduleEvents = async () => {
     <div class="schedule-card-footer"><strong>${escapeHTML(event.capacity)}</strong>${eventRegistrationLink(event, 'schedule-register', 'Lihat kegiatan <span aria-hidden="true">→</span>')}</div>
     </div>
   </article>`).join('');
-  if (count) count.textContent = `Menampilkan ${scheduleEvents.length} kegiatan`;
+  grid.removeAttribute('aria-busy');
+  if (count) {
+    count.classList.remove('visually-hidden');
+    count.textContent = `Menampilkan ${scheduleEvents.length} kegiatan`;
+  }
   empty?.classList.add('hidden');
 
   const filterContainer = document.querySelector('.schedule-filters');
@@ -927,11 +959,36 @@ if (registrationForm) {
     registrationContent?.classList.add('hidden');
     registrationProgress?.classList.add('hidden');
     if (selectedEventIntro) selectedEventIntro.textContent = intro;
+    selectedEventIntro?.classList.remove('loading-inline');
+    selectedEventIntro?.removeAttribute('aria-hidden');
+    if (eventFallback && !eventFallback.querySelector('h2')) {
+      eventFallback.innerHTML = '<h2></h2><p></p><a class="text-link" href="jadwal.html">Lihat jadwal kegiatan &rarr;</a>';
+    }
     const heading = eventFallback?.querySelector('h2');
     const paragraph = eventFallback?.querySelector('p');
     if (heading) heading.textContent = title;
     if (paragraph) paragraph.textContent = message;
-    eventFallback?.classList.remove('hidden');
+    if (eventFallback) eventFallback.className = 'registration-fallback';
+    eventFallback?.removeAttribute('aria-busy');
+    eventFallback?.removeAttribute('aria-label');
+  };
+
+  const showEventSkeleton = () => {
+    registrationContent?.classList.add('hidden');
+    registrationProgress?.classList.add('hidden');
+    if (selectedEventIntro) {
+      selectedEventIntro.textContent = '';
+      selectedEventIntro.classList.add('loading-inline');
+      selectedEventIntro.setAttribute('aria-hidden', 'true');
+    }
+    if (!eventFallback) return;
+    eventFallback.className = 'registration-loading';
+    eventFallback.setAttribute('aria-busy', 'true');
+    eventFallback.setAttribute('aria-label', 'Detail kegiatan sedang dimuat');
+    eventFallback.innerHTML = `<div class="registration-loading-layout" aria-hidden="true">
+      <div class="registration-loading-main"><div class="loading-media"></div><div class="registration-loading-copy">${skeletonLine('short')}${skeletonLine('title')}${skeletonLine()}${skeletonLine('long')}${skeletonLine('medium')}</div></div>
+      <aside class="registration-loading-summary">${skeletonLine('short')}${skeletonLine('title')}${skeletonLine('title-short')}<div class="loading-meta">${skeletonLine('meta')}${skeletonLine('meta')}${skeletonLine('meta')}</div></aside>
+    </div>`;
   };
 
   const renderSelectedEvent = () => {
@@ -941,7 +998,11 @@ if (registrationForm) {
       if (element) element.textContent = value;
     };
 
-    if (selectedEventIntro) selectedEventIntro.textContent = selectedEvent.name;
+    if (selectedEventIntro) {
+      selectedEventIntro.classList.remove('loading-inline');
+      selectedEventIntro.removeAttribute('aria-hidden');
+      selectedEventIntro.textContent = selectedEvent.name;
+    }
     setText('eventName', selectedEvent.name);
     setText('eventCategory', selectedEvent.category);
     setText('eventDate', selectedEvent.date);
@@ -1005,6 +1066,7 @@ if (registrationForm) {
     setDataText('[data-checkout-event-price]', eventPrice);
 
     eventFallback?.classList.add('hidden');
+    eventFallback?.removeAttribute('aria-busy');
     registrationContent?.classList.remove('hidden');
     setRegistrationStep('data');
     const submitButton = registrationForm.querySelector('[type="submit"]');
@@ -1035,7 +1097,7 @@ if (registrationForm) {
       return;
     }
 
-    showEventFallback('Memuat kegiatan\u2026', 'Mengambil detail kegiatan yang dipilih.', 'Memuat kegiatan\u2026');
+    showEventSkeleton();
     try {
       const events = await fetchPublicEvents({ slug: eventSlug });
       if (!events.length) {
