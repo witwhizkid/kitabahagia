@@ -8,15 +8,69 @@
     day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Jakarta",
   });
 
+  const storyCachePrefix = "kb:public-stories:v1:";
+  const storyCacheTtl = 5 * 60 * 1000;
+  const storyRequests = new Map();
+
+  const readStoryCache = (key) => {
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(`${storyCachePrefix}${key}`) || "null");
+      if (!cached || !Array.isArray(cached.stories) || Date.now() - cached.savedAt > storyCacheTtl) return null;
+      return cached.stories;
+    } catch {
+      return null;
+    }
+  };
+
+  const writeStoryCache = (key, stories) => {
+    try {
+      sessionStorage.setItem(`${storyCachePrefix}${key}`, JSON.stringify({ savedAt: Date.now(), stories }));
+    } catch {
+      // Storage can be unavailable; the request result remains usable for this render.
+    }
+  };
+
+  const selectCachedStories = ({ slug, limit }) => {
+    const exactKey = slug ? `slug:${slug}` : limit !== null ? `limit:${limit}` : "all";
+    const exact = readStoryCache(exactKey);
+    if (exact) return exact;
+
+    if (slug) {
+      for (const key of ["all", "limit:3"]) {
+        const story = readStoryCache(key)?.find((item) => item.slug === slug);
+        if (story) return [story];
+      }
+    } else if (limit !== null) {
+      const all = readStoryCache("all");
+      if (all) return all.slice(0, limit);
+    }
+    return null;
+  };
+
   const fetchPublicStories = async ({ slug = "", limit = null } = {}) => {
+    const cached = selectCachedStories({ slug, limit });
+    if (cached) return cached;
+
     const url = new URL(`${functionsBase}/public-stories`);
     if (slug) url.searchParams.set("slug", slug);
     if (limit !== null) url.searchParams.set("limit", String(limit));
-    const response = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!response.ok) throw new Error(`Public stories request failed with status ${response.status}`);
-    const payload = await response.json();
-    if (!payload || !Array.isArray(payload.stories)) throw new Error("Public stories response is invalid");
-    return payload.stories;
+    const cacheKey = slug ? `slug:${slug}` : limit !== null ? `limit:${limit}` : "all";
+    if (storyRequests.has(cacheKey)) return storyRequests.get(cacheKey);
+
+    const request = (async () => {
+      const response = await fetch(url, { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(`Public stories request failed with status ${response.status}`);
+      const payload = await response.json();
+      if (!payload || !Array.isArray(payload.stories)) throw new Error("Public stories response is invalid");
+      writeStoryCache(cacheKey, payload.stories);
+      return payload.stories;
+    })();
+    storyRequests.set(cacheKey, request);
+    try {
+      return await request;
+    } finally {
+      storyRequests.delete(cacheKey);
+    }
   };
 
   const publishedDate = (story) => {
@@ -25,10 +79,37 @@
   };
   const detailHref = (slug) => `kisah-detail.html?slug=${encodeURIComponent(slug)}`;
 
+  const transformedStoryImage = (source, width) => {
+    try {
+      const url = new URL(source);
+      const publicObjectPath = "/storage/v1/object/public/";
+      if (url.hostname !== "cmrdapfuqtjlmpepfwfq.supabase.co" || !url.pathname.startsWith(publicObjectPath)) {
+        return source;
+      }
+      url.pathname = url.pathname.replace(publicObjectPath, "/storage/v1/render/image/public/");
+      url.searchParams.set("width", String(width));
+      url.searchParams.set("quality", "78");
+      url.searchParams.set("resize", "contain");
+      return url.toString();
+    } catch {
+      return source;
+    }
+  };
+
+  const configureStoryImage = (image, source) => {
+    const transformedSource = transformedStoryImage(source, 1200);
+    image.src = transformedSource;
+    if (transformedSource === source) return;
+    image.srcset = [640, 1200, 1800]
+      .map((width) => `${transformedStoryImage(source, width)} ${width}w`)
+      .join(", ");
+    image.sizes = "(max-width: 720px) 100vw, (max-width: 1100px) 60vw, 920px";
+  };
+
   const makeImage = (story) => {
     if (!story.cover_image_url) return null;
     const image = document.createElement("img");
-    image.src = story.cover_image_url;
+    configureStoryImage(image, story.cover_image_url);
     image.alt = story.cover_image_alt || "";
     image.loading = "lazy";
     image.decoding = "async";
@@ -102,10 +183,19 @@
     if (!state) return;
     state.hidden = false;
     state.className = `kisah-data-state is-${type}`;
+    if (type === "loading") state.setAttribute("aria-busy", "true");
+    else state.removeAttribute("aria-busy");
     state.replaceChildren();
     const copy = document.createElement("span");
     copy.textContent = message;
     state.append(copy);
+    if (type === "loading") {
+      state.dataset.skeleton = state.hasAttribute("data-story-detail-state")
+        ? "detail"
+        : state.hasAttribute("data-stories-state") ? "archive" : "preview";
+    } else {
+      delete state.dataset.skeleton;
+    }
     if (type === "empty") {
       const link = document.createElement("a");
       link.href = "jadwal.html";
@@ -146,6 +236,7 @@
         container.append(secondary);
       }
       state.hidden = true;
+      state.removeAttribute("aria-busy");
       container.hidden = false;
     } catch {
       setState(state, "error", "Kisah belum dapat dimuat.", renderHomepageStories);
@@ -198,6 +289,7 @@
       const count = document.querySelector("[data-story-archive-count]");
       if (count) count.textContent = `${remaining.length} kisah`;
       state.hidden = true;
+      state.removeAttribute("aria-busy");
       latestContainer.hidden = false;
       archiveContainer.hidden = remaining.length === 0;
     } catch {
@@ -237,7 +329,7 @@
       const cover = document.querySelector("[data-story-detail-cover]");
       const coverFigure = cover.closest("figure");
       if (story.cover_image_url) {
-        cover.src = story.cover_image_url;
+        configureStoryImage(cover, story.cover_image_url);
         cover.alt = story.cover_image_alt || "";
         coverFigure.hidden = false;
       } else {
@@ -251,6 +343,7 @@
         body.append(element);
       });
       state.hidden = true;
+      state.removeAttribute("aria-busy");
       article.hidden = false;
     } catch {
       setState(state, "error", "Kisah belum dapat dimuat.", renderStoryDetail);
