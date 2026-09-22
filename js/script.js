@@ -123,9 +123,23 @@ const normalizeRegistrationEvent = (event) => {
   };
 };
 
-const eventRegistrationLink = (event, className, label) => `<a class="${className}"
+const eventRegistrationAvailability = (event) => {
+  const availabilityEnd = new Date(event.end || event.start).getTime();
+  if (event.statusKey === 'full') return { available: false, reason: 'full' };
+  if (event.statusKey === 'closed') return { available: false, reason: 'closed' };
+  if (event.statusKey === 'completed' || (!Number.isNaN(availabilityEnd) && availabilityEnd < Date.now())) {
+    return { available: false, reason: 'past' };
+  }
+  if (Number.isNaN(availabilityEnd) || event.statusKey !== 'open') {
+    return { available: false, reason: 'unavailable' };
+  }
+  return { available: true, reason: null };
+};
+
+const eventRegistrationLink = (event, className, eligibleLabel, unavailableLabel = 'Lihat detail') => `<a class="${className}"
   data-registration-link data-event-slug="${escapeHTML(event.slug)}"
-  href="pendaftaran.html?event=${encodeURIComponent(event.slug)}">${label}</a>`;
+  href="pendaftaran.html?event=${encodeURIComponent(event.slug)}">${eventRegistrationAvailability(event).available
+    ? eligibleLabel : unavailableLabel}</a>`;
 
 const skeletonLine = (size = '') => `<span class="loading-line${size ? ` loading-line-${size}` : ''}"></span>`;
 const eventCardSkeleton = (className = 'schedule-card') => `<article class="${className} loading-card" aria-hidden="true">
@@ -182,7 +196,7 @@ const renderHomepageEvents = async () => {
         <div><dt>Lokasi</dt><dd>${escapeHTML(event.location)}</dd></div>
         <div><dt>Harga</dt><dd>${formatEventPrice(event.price)}</dd></div>
       </dl>
-      ${eventRegistrationLink(event, 'home-upcoming-register', 'Daftar sekarang &rarr;')}
+      ${eventRegistrationLink(event, 'home-upcoming-register', 'Daftar sekarang &rarr;', 'Lihat detail &rarr;')}
     </div>
   </article>`;
 
@@ -276,7 +290,7 @@ const renderScheduleEvents = async () => {
         <p>${escapeHTML(event.description)}</p>
         <p class="schedule-deadline"><span>Batas pendaftaran</span><strong>${escapeHTML(event.deadlineLabel)}</strong></p>
         ${eventMeta(event)}
-        ${eventRegistrationLink(event, 'schedule-register', 'Lihat kegiatan <span aria-hidden="true">→</span>')}
+        ${eventRegistrationLink(event, 'schedule-register', 'Lihat kegiatan <span aria-hidden="true">→</span>', 'Lihat detail <span aria-hidden="true">→</span>')}
       </div>
     </article>`).join('');
     featuredSection.hidden = false;
@@ -294,7 +308,7 @@ const renderScheduleEvents = async () => {
       <p>${escapeHTML(event.description)}</p>
     </div>
     ${eventMeta(event)}
-    <div class="schedule-card-footer"><strong>${escapeHTML(event.capacity)}</strong>${eventRegistrationLink(event, 'schedule-register', 'Lihat kegiatan <span aria-hidden="true">→</span>')}</div>
+    <div class="schedule-card-footer"><strong>${escapeHTML(event.capacity)}</strong>${eventRegistrationLink(event, 'schedule-register', 'Lihat kegiatan <span aria-hidden="true">→</span>', 'Lihat detail <span aria-hidden="true">→</span>')}</div>
     </div>
   </article>`).join('');
   grid.removeAttribute('aria-busy');
@@ -734,6 +748,7 @@ if (registrationForm) {
   const registrationProgress = document.getElementById('registrationProgress');
   const registrationFormPanel = document.getElementById('registrationFormPanel');
   const registrationReview = document.getElementById('registrationReview');
+  const registrationUnavailable = document.getElementById('registrationUnavailable');
   const editRegistrationButton = document.getElementById('editRegistrationButton');
   const confirmRegistrationButton = document.getElementById('confirmRegistrationButton');
   const paymentStates = {
@@ -1149,14 +1164,27 @@ if (registrationForm) {
     eventFallback?.classList.add('hidden');
     eventFallback?.removeAttribute('aria-busy');
     registrationContent?.classList.remove('hidden');
-    setRegistrationStep('data');
     const submitButton = registrationForm.querySelector('[type="submit"]');
     const availabilityNote = document.getElementById('registrationAvailabilityNote');
-    const availabilityEnd = new Date(selectedEvent.end || selectedEvent.start).getTime();
+    const availability = eventRegistrationAvailability(selectedEvent);
     registrationAvailable = Boolean(REGISTRATION_CONFIG.registrationEndpoint)
-      && !Number.isNaN(availabilityEnd)
-      && availabilityEnd >= Date.now()
-      && !['closed', 'cancelled', 'completed', 'full'].includes(selectedEvent.statusKey);
+      && availability.available;
+    document.querySelector('.registration-summary-cta')?.toggleAttribute('hidden', !registrationAvailable);
+    registrationFormPanel?.classList.toggle('hidden', !registrationAvailable);
+    registrationUnavailable?.classList.toggle('hidden', registrationAvailable);
+    if (registrationAvailable) {
+      setRegistrationStep('data');
+    } else {
+      registrationProgress?.classList.add('hidden');
+      const unavailableCopy = {
+        full: ['Kuota kegiatan telah terpenuhi', 'Seluruh tempat untuk kegiatan ini sudah terisi. Kamu masih dapat melihat detail kegiatan atau memilih agenda lainnya.'],
+        closed: ['Pendaftaran telah ditutup', 'Waktu pendaftaran untuk kegiatan ini sudah berakhir. Kamu masih dapat melihat detail kegiatan atau memilih agenda lainnya.'],
+        past: ['Kegiatan ini telah selesai', 'Kegiatan ini sudah berlangsung. Lihat detailnya atau temukan kegiatan lain yang masih tersedia.'],
+        unavailable: ['Pendaftaran belum tersedia', 'Pendaftaran untuk kegiatan ini belum dapat dilakukan. Lihat detailnya atau pilih kegiatan lainnya.']
+      }[availability.reason || 'unavailable'];
+      setText('registrationUnavailableTitle', unavailableCopy[0]);
+      setText('registrationUnavailableMessage', unavailableCopy[1]);
+    }
     if (submitButton) {
       submitButton.disabled = !registrationAvailable;
       submitButton.textContent = 'Lanjutkan';
