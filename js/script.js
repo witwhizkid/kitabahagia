@@ -149,18 +149,36 @@ const eventCardSkeleton = (className = 'schedule-card') => `<article class="${cl
   </div>
 </article>`;
 
+let homepageEventsLoading = false;
+let scheduleEventsLoading = false;
+const scheduleEmptyDefaultMarkup = document.getElementById('scheduleEmpty')?.innerHTML;
+
 const renderHomepageEvents = async () => {
   const list = document.querySelector('[data-upcoming-list]');
   const empty = document.querySelector('[data-upcoming-empty]');
   if (!list || !empty) return;
+  if (homepageEventsLoading) return;
 
-  const setState = (title, message) => {
+  const setState = (title, message, retry = null) => {
     list.hidden = true;
     empty.querySelector('h3')?.replaceChildren(document.createTextNode(title));
-    empty.querySelector('p')?.replaceChildren(document.createTextNode(message));
+    const messageContainer = empty.querySelector('div');
+    const paragraph = messageContainer?.querySelector('p');
+    paragraph?.replaceChildren(document.createTextNode(message));
+    empty.querySelector('[data-event-retry]')?.remove();
+    if (retry && messageContainer) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'kisah-state-action';
+      button.dataset.eventRetry = '';
+      button.textContent = 'Coba lagi';
+      button.addEventListener('click', retry, { once: true });
+      messageContainer.append(button);
+    }
     empty.hidden = false;
   };
 
+  homepageEventsLoading = true;
   list.innerHTML = `${eventCardSkeleton('home-upcoming-event featured')}<div class="home-upcoming-supporting">${eventCardSkeleton('home-upcoming-event')}${eventCardSkeleton('home-upcoming-event')}</div>`;
   list.hidden = false;
   list.setAttribute('aria-busy', 'true');
@@ -176,9 +194,11 @@ const renderHomepageEvents = async () => {
   } catch (error) {
     console.error('Kegiatan terdekat gagal dimuat', error);
     list.removeAttribute('aria-busy');
-    setState('Kegiatan belum dapat dimuat.', 'Periksa koneksi lalu muat ulang halaman ini.');
+    homepageEventsLoading = false;
+    setState('Kegiatan belum dapat dimuat.', 'Periksa koneksi internet, lalu coba lagi.', renderHomepageEvents);
     return;
   }
+  homepageEventsLoading = false;
 
   if (!events.length) {
     list.removeAttribute('aria-busy');
@@ -214,16 +234,32 @@ const renderScheduleEvents = async () => {
   const empty = document.getElementById('scheduleEmpty');
   const count = document.getElementById('scheduleCount');
   if (!grid || !featuredSection || !featured) return;
+  if (scheduleEventsLoading) return;
 
-  const setMessage = (title, detail) => {
+  const setMessage = (title, detail, retry = null) => {
     featuredSection.hidden = true;
     grid.replaceChildren();
     if (empty) {
-      empty.innerHTML = `<strong>${escapeHTML(title)}</strong><span>${escapeHTML(detail)}</span>`;
+      empty.replaceChildren();
+      const heading = document.createElement('strong');
+      const message = document.createElement('span');
+      heading.textContent = title;
+      message.textContent = detail;
+      empty.append(heading, message);
+      if (retry) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'kisah-state-action';
+        button.dataset.eventRetry = '';
+        button.textContent = 'Coba lagi';
+        button.addEventListener('click', retry, { once: true });
+        empty.append(button);
+      }
       empty.classList.remove('hidden');
     }
   };
 
+  scheduleEventsLoading = true;
   if (count) {
     count.textContent = 'Jadwal kegiatan sedang dimuat';
     count.classList.add('visually-hidden');
@@ -246,9 +282,11 @@ const renderScheduleEvents = async () => {
       count.classList.remove('visually-hidden');
       count.textContent = 'Jadwal gagal dimuat';
     }
-    setMessage('Jadwal belum dapat dimuat.', 'Periksa koneksi lalu muat ulang halaman ini.');
+    scheduleEventsLoading = false;
+    setMessage('Jadwal belum dapat dimuat.', 'Periksa koneksi internet, lalu coba lagi.', renderScheduleEvents);
     return;
   }
+  scheduleEventsLoading = false;
 
   if (!scheduleEvents.length) {
     grid.removeAttribute('aria-busy');
@@ -317,6 +355,7 @@ const renderScheduleEvents = async () => {
     count.textContent = `Menampilkan ${scheduleEvents.length} kegiatan`;
   }
   empty?.classList.add('hidden');
+  if (empty && scheduleEmptyDefaultMarkup !== undefined) empty.innerHTML = scheduleEmptyDefaultMarkup;
 
   const filterContainer = document.querySelector('.schedule-filters');
   const knownFilters = new Set([...document.querySelectorAll('[data-schedule-filter]')]
@@ -1196,7 +1235,10 @@ if (registrationForm) {
     }
   };
 
+  let registrationEventLoading = false;
+
   const initializeRegistrationEvent = async () => {
+    if (registrationEventLoading) return;
     if (!eventSlug) {
       showEventFallback(
         'Kegiatan tidak ditemukan',
@@ -1206,10 +1248,12 @@ if (registrationForm) {
       return;
     }
 
+    registrationEventLoading = true;
     showEventSkeleton();
     try {
       const events = await fetchPublicEvents({ slug: eventSlug });
       if (!events.length) {
+        registrationEventLoading = false;
         showEventFallback(
           'Kegiatan tidak ditemukan',
           'Kegiatan ini tidak tersedia. Silakan kembali ke jadwal dan pilih kegiatan lain.'
@@ -1223,10 +1267,13 @@ if (registrationForm) {
       await recoverRegistration();
     } catch (error) {
       console.error('Detail kegiatan gagal dimuat', error);
-      showEventFallback(
+      showRecoveryNotice(
         'Kegiatan belum dapat dimuat',
-        'Periksa koneksi lalu muat ulang halaman ini, atau kembali ke jadwal kegiatan.'
+        'Periksa koneksi internet, lalu coba lagi.',
+        initializeRegistrationEvent
       );
+    } finally {
+      registrationEventLoading = false;
     }
   };
 
