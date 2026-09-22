@@ -756,10 +756,50 @@ if (registrationForm) {
     ? params.get('payment_demo') : null;
   const paymentDemoStates = ['pending', 'processing', 'paid', 'expired', 'failed'];
   const paymentDemo = paymentDemoStates.includes(requestedDemo) ? requestedDemo : null;
+  const recoveryStorageKey = `kb:registration-recovery:v1:${eventSlug}`;
 
   let countdownTimer = null;
   let paymentPollTimer = null;
   let paymentPollStopped = false;
+
+  const readRegistrationRecovery = () => {
+    try {
+      const value = JSON.parse(localStorage.getItem(recoveryStorageKey) || 'null');
+      const valid = value?.event_slug === eventSlug
+        && /^KB-[A-Z0-9-]{6,40}$/.test(value.registration_code)
+        && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email);
+      if (valid) return value;
+      localStorage.removeItem(recoveryStorageKey);
+    } catch {
+      try {
+        localStorage.removeItem(recoveryStorageKey);
+      } catch {
+        // Storage can be unavailable; the registration form remains usable.
+      }
+      return null;
+    }
+    return null;
+  };
+
+  const persistRegistrationRecovery = (registration, email) => {
+    try {
+      localStorage.setItem(recoveryStorageKey, JSON.stringify({
+        event_slug: eventSlug,
+        registration_code: String(registration.registration_code || '').trim().toUpperCase(),
+        email: String(email || '').trim().toLowerCase()
+      }));
+    } catch {
+      // Recovery is best-effort when browser storage is unavailable.
+    }
+  };
+
+  const clearRegistrationRecovery = () => {
+    try {
+      localStorage.removeItem(recoveryStorageKey);
+    } catch {
+      // Storage can be unavailable without blocking a fresh registration.
+    }
+  };
 
   const setRegistrationStep = (step) => {
     const order = ['data', 'confirmation', 'payment'];
@@ -814,7 +854,7 @@ if (registrationForm) {
   const renderPaymentState = (state, data) => {
     const stage = document.getElementById('paymentStage');
     if (!stage || !Object.hasOwn(paymentStates, state)) return;
-    if (['paid', 'expired', 'failed'].includes(state)) stopPaymentMonitoring();
+    if (['paid', 'expired', 'failed', 'refunded'].includes(state)) stopPaymentMonitoring();
     const [heading, body] = paymentStates[state];
     Object.keys(paymentStates).forEach((key) => stage.classList.toggle(`payment_${key}`, key === state));
     stage.querySelectorAll('[data-payment-state]').forEach((container) => {
@@ -846,6 +886,8 @@ if (registrationForm) {
       qrImage.alt = `QRIS pembayaran ${formatEventPrice(data.amount)} untuk ${data.event_title || selectedEvent?.name || 'kegiatan Kita Bahagia'}`;
     }
     qr.setAttribute('aria-label', hasQr ? 'QRIS pembayaran' : 'QRIS belum tersedia');
+    const retryPaymentButton = stage.querySelector('[data-payment-retry]');
+    if (retryPaymentButton) retryPaymentButton.hidden = !['expired', 'failed'].includes(state);
     stage.querySelector('.payment-countdown').hidden = true;
     if (paymentDemo && state === 'pending') {
       stage.querySelector('#paymentHeading').textContent = 'Simulasi pembayaran';
@@ -904,12 +946,14 @@ if (registrationForm) {
       signal: AbortSignal.timeout(10000)
     });
     const result = await response.json().catch(() => null);
-    if (!response.ok || !result?.payment_status) throw new Error('STATUS_ERROR');
+    if (!response.ok || !result?.payment_status) {
+      throw { code: result?.error?.code || 'STATUS_ERROR' };
+    }
     return result;
   };
 
-  const createPayment = async (registration) => {
-    const email = String(new FormData(registrationForm).get('email') || '').trim().toLowerCase();
+  const createPayment = async (registration, recoveryEmail = '') => {
+    const email = String(recoveryEmail || new FormData(registrationForm).get('email') || '').trim().toLowerCase();
     const response = await fetch(REGISTRATION_CONFIG.paymentEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -929,6 +973,20 @@ if (registrationForm) {
     renderPaymentState('paid', data);
     renderOnboarding(document.querySelector('#paymentStage [data-registration-onboarding]'), data);
     document.getElementById('paymentStage')?.focus();
+  };
+
+  const showFreeRegistrationConfirmation = (data) => {
+    const resultStage = document.getElementById('freeRegistrationConfirmation');
+    if (!resultStage) return;
+    document.getElementById('paymentStage').hidden = true;
+    registrationContent?.classList.add('hidden');
+    registrationProgress?.classList.add('hidden');
+    resultStage.querySelector('[data-result-code]').textContent = data.registration_code;
+    resultStage.querySelector('[data-result-title]').textContent = data.event_title || selectedEvent?.name || '';
+    renderOnboarding(resultStage.querySelector('[data-registration-onboarding]'), data);
+    resultStage.hidden = false;
+    document.getElementById('registrationStatus')?.classList.add('hidden');
+    resultStage.focus();
   };
 
   const pollPaymentStatus = (registration, email) => {
@@ -989,6 +1047,29 @@ if (registrationForm) {
       <div class="registration-loading-main"><div class="loading-media"></div><div class="registration-loading-copy">${skeletonLine('short')}${skeletonLine('title')}${skeletonLine()}${skeletonLine('long')}${skeletonLine('medium')}</div></div>
       <aside class="registration-loading-summary">${skeletonLine('short')}${skeletonLine('title')}${skeletonLine('title-short')}<div class="loading-meta">${skeletonLine('meta')}${skeletonLine('meta')}${skeletonLine('meta')}</div></aside>
     </div>`;
+  };
+
+  const showRecoveryNotice = (title, message, retry = null) => {
+    registrationContent?.classList.add('hidden');
+    registrationProgress?.classList.add('hidden');
+    if (!eventFallback) return;
+    eventFallback.className = 'registration-fallback';
+    eventFallback.replaceChildren();
+    const heading = document.createElement('h2');
+    const paragraph = document.createElement('p');
+    heading.textContent = title;
+    paragraph.textContent = message;
+    eventFallback.append(heading, paragraph);
+    if (retry) {
+      const button = document.createElement('button');
+      button.className = 'btn btn-primary';
+      button.type = 'button';
+      button.textContent = 'Coba lagi';
+      button.addEventListener('click', retry, { once: true });
+      eventFallback.append(button);
+    }
+    eventFallback.removeAttribute('aria-busy');
+    eventFallback.removeAttribute('aria-label');
   };
 
   const renderSelectedEvent = () => {
@@ -1111,6 +1192,7 @@ if (registrationForm) {
       if (!event || event.slug !== eventSlug) throw new Error('Public event response does not match requested slug');
       selectedEvent = event;
       renderSelectedEvent();
+      await recoverRegistration();
     } catch (error) {
       console.error('Detail kegiatan gagal dimuat', error);
       showEventFallback(
@@ -1160,8 +1242,8 @@ if (registrationForm) {
     EVENT_NOT_OPEN: 'Pendaftaran untuk kegiatan ini sedang tidak dibuka.',
     REGISTRATION_CLOSED: 'Batas waktu pendaftaran kegiatan ini sudah berakhir.',
     EVENT_FULL: 'Kapasitas kegiatan ini sudah penuh.',
-    PAYMENT_IN_PROGRESS: 'Pembayaran sedang disiapkan. Muat ulang halaman ini beberapa saat lagi untuk melanjutkan.',
-    PAYMENT_AWAITING_CONFIRMATION: 'Pembayaran sedang menunggu konfirmasi. Muat ulang halaman ini untuk melihat status terbaru.',
+    PAYMENT_IN_PROGRESS: 'Pembayaran sedang disiapkan. Status akan diperbarui otomatis.',
+    PAYMENT_AWAITING_CONFIRMATION: 'Pembayaran sedang menunggu konfirmasi. Status akan diperbarui otomatis.',
     PAYMENT_ALREADY_PAID: 'Pembayaran untuk pendaftaran ini sudah selesai.',
     PAYMENT_PROVIDER_ERROR: 'Layanan pembayaran sedang bermasalah. Pendaftaranmu tetap tercatat.',
     PAYMENT_ERROR: 'QRIS belum dapat dibuat. Pendaftaranmu tetap tercatat. Silakan coba lagi beberapa saat lagi.',
@@ -1170,6 +1252,106 @@ if (registrationForm) {
 
   let isSubmitting = false;
   let registrationCompleted = false;
+
+  const recoveryPaymentData = (recovery, status = {}) => ({
+    registration_code: recovery.registration_code,
+    event_title: selectedEvent?.name || '',
+    amount: selectedEvent?.price,
+    ...status
+  });
+
+  const recoverRegistration = async () => {
+    const recovery = readRegistrationRecovery();
+    if (!recovery) return false;
+    showRecoveryNotice('Memeriksa pendaftaran', 'Kami sedang memulihkan status pendaftaranmu.');
+    let status;
+    try {
+      status = await fetchRegistrationStatus(recovery, recovery.email);
+    } catch (error) {
+      if (['REGISTRATION_NOT_FOUND', 'INVALID_REQUEST'].includes(error?.code)) {
+        clearRegistrationRecovery();
+        renderSelectedEvent();
+        showRegistrationMessage('Pendaftaran sebelumnya tidak ditemukan. Silakan isi kembali data peserta.', 'error');
+        return false;
+      }
+      showRecoveryNotice(
+        'Pendaftaran belum dapat dipulihkan',
+        'Periksa koneksi, lalu coba lagi. Data pemulihanmu tetap tersimpan.',
+        recoverRegistration
+      );
+      return true;
+    }
+
+    const restored = recoveryPaymentData(recovery, status);
+    if (status.registration_status === 'confirmed' && status.payment_status === 'paid') {
+      showConfirmedRegistration(restored);
+      return true;
+    }
+    if (status.registration_status === 'confirmed' && status.payment_status === 'not_required') {
+      showFreeRegistrationConfirmation(restored);
+      return true;
+    }
+    if (status.registration_status !== 'pending_payment') {
+      clearRegistrationRecovery();
+      renderSelectedEvent();
+      showRegistrationMessage('Pendaftaran sebelumnya sudah tidak aktif. Kamu dapat mendaftar kembali.', 'error');
+      return false;
+    }
+    if (['expired', 'failed'].includes(status.payment_status)) {
+      renderPaymentState(status.payment_status, restored);
+      return true;
+    }
+    if (status.payment_status === 'refunded') {
+      renderPaymentState('refunded', restored);
+      clearRegistrationRecovery();
+      return true;
+    }
+
+    try {
+      const payment = await createPayment(restored, recovery.email);
+      renderPaymentState('pending', payment);
+      pollPaymentStatus(payment, recovery.email);
+    } catch (error) {
+      if (['PAYMENT_IN_PROGRESS', 'PAYMENT_AWAITING_CONFIRMATION', 'PAYMENT_ALREADY_PAID'].includes(error?.code)) {
+        renderPaymentState('processing', restored);
+        pollPaymentStatus(restored, recovery.email);
+      } else {
+        showRecoveryNotice(
+          'Pembayaran belum dapat dipulihkan',
+          'Data pendaftaranmu tetap tersimpan. Coba lagi untuk memeriksa pembayaran.',
+          recoverRegistration
+        );
+      }
+    }
+    return true;
+  };
+
+  document.querySelector('[data-payment-retry]')?.addEventListener('click', async (event) => {
+    const recovery = readRegistrationRecovery();
+    if (!recovery || !selectedEvent) return;
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.textContent = 'Menyiapkan QRIS...';
+    try {
+      const payment = await createPayment(recoveryPaymentData(recovery), recovery.email);
+      renderPaymentState('pending', payment);
+      pollPaymentStatus(payment, recovery.email);
+    } catch (error) {
+      if (['PAYMENT_IN_PROGRESS', 'PAYMENT_AWAITING_CONFIRMATION'].includes(error?.code)) {
+        renderPaymentState('processing', recoveryPaymentData(recovery));
+        pollPaymentStatus(recoveryPaymentData(recovery), recovery.email);
+      } else {
+        showRecoveryNotice(
+          'QRIS belum dapat dibuat',
+          'Data pendaftaranmu tetap tersimpan. Silakan coba lagi.',
+          recoverRegistration
+        );
+      }
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Buat QRIS baru';
+    }
+  });
 
   if (paymentDemo) {
     registrationContent?.classList.add('hidden');
@@ -1239,6 +1421,7 @@ if (registrationForm) {
 
     try {
       const registration = await submitRegistration(registrationForm, selectedEvent.slug);
+      const registrationEmail = String(new FormData(registrationForm).get('email') || '').trim().toLowerCase();
       const code = String(registration.registration_code || '');
       const title = String(registration.event_title || selectedEvent.name);
       if (!code || typeof registration.amount !== 'number'
@@ -1248,15 +1431,16 @@ if (registrationForm) {
         && registration.payment_status === 'not_required';
       const isPaidPending = registration.registration_status === 'pending_payment'
         && registration.payment_status === 'unpaid' && registration.amount > 0;
+      persistRegistrationRecovery(registration, registrationEmail);
 
       if (isFreeConfirmed) {
         showRegistrationMessage(`Pendaftaran ${title} sudah tercatat. Kode pendaftaran kamu: ${code}.`, 'success');
       } else if (isPaidPending) {
-        const payment = await createPayment(registration);
+        const payment = await createPayment(registration, registrationEmail);
         showRegistrationMessage(`Pendaftaran ${title} sudah tercatat dengan kode ${code}.`, 'success');
         renderPaymentState('pending', payment);
         document.getElementById('registrationStatus')?.classList.add('hidden');
-        pollPaymentStatus(payment, String(new FormData(registrationForm).get('email') || '').trim().toLowerCase());
+        pollPaymentStatus(payment, registrationEmail);
       } else {
         throw { code: 'SERVER_ERROR' };
       }
@@ -1264,19 +1448,15 @@ if (registrationForm) {
       confirmRegistrationButton.textContent = 'Pendaftaran tercatat';
       const resultStage = isFreeConfirmed ? document.getElementById('freeRegistrationConfirmation') : null;
       if (resultStage) {
-        document.getElementById('paymentStage').hidden = true;
-        registrationContent?.classList.add('hidden');
-        registrationProgress?.classList.add('hidden');
-        resultStage.querySelector('[data-result-code]').textContent = code;
-        resultStage.querySelector('[data-result-title]').textContent = title;
-        renderOnboarding(resultStage.querySelector('[data-registration-onboarding]'), { whatsapp_group_url: null });
-        resultStage.hidden = false;
-        document.getElementById('registrationStatus')?.classList.add('hidden');
-        resultStage.focus();
+        showFreeRegistrationConfirmation({
+          ...registration,
+          event_title: title,
+          whatsapp_group_url: null
+        });
         try {
           const status = await fetchRegistrationStatus(
             registration,
-            String(new FormData(registrationForm).get('email') || '').trim().toLowerCase(),
+            registrationEmail,
           );
           if (status.registration_status === 'confirmed' && status.payment_status === 'not_required') {
             renderOnboarding(resultStage.querySelector('[data-registration-onboarding]'), status);
