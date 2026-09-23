@@ -109,7 +109,9 @@ Migration `20260925010000_event_seat_hold_rules.sql` builds on the payment deadl
   `normalize_phone(phone)` that is `confirmed`, or `pending_payment` whose
   `payment_deadline` is still in the future. Lapsed and cancelled registrations
   do not block, except a lapsed one whose QRIS was still payable in the last
-  5 minutes (its late settlement could otherwise charge the person twice). The check runs after the event row is locked `FOR UPDATE`, so
+  5 minutes (its late settlement could otherwise charge the person twice). The check runs after the event row is locked `FOR UPDATE`
+  and after the capacity check (a full event answers `EVENT_FULL` without
+  revealing whether the email or number is registered), so
   two concurrent sign-ups for the same event are serialised and the second one
   sees the first one's committed row. The message does not reveal which field
   matched.

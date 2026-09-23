@@ -19,6 +19,7 @@ declare
   v_paid uuid;
   v_capped uuid;
   v_free uuid;
+  v_full uuid;
   v_result jsonb;
   v_code text;
   v_deadline timestamptz;
@@ -34,6 +35,9 @@ begin
   insert into public.events (slug, title, event_date, status, price, capacity, registration_deadline, is_public, is_demo)
   values ('zz-seathold-test-free', 'Uji gratis', current_date + 40, 'open', 0, 10, now() + interval '30 days', false, true)
   returning id into v_free;
+  insert into public.events (slug, title, event_date, status, price, capacity, registration_deadline, is_public, is_demo)
+  values ('zz-seathold-test-full', 'Uji penuh', current_date + 40, 'open', 35000, 1, now() + interval '30 days', false, true)
+  returning id into v_full;
 
   -- 1. Default 15-minute window ---------------------------------------------
   v_result := public.create_registration('zz-seathold-test-paid', 'Uji A', '0812-3456-7890', 'Uji.A@Example.com', 'uji', null, true);
@@ -143,11 +147,20 @@ begin
   end;
   insert into kb_seathold_test values ('10b', 'payment_window_minutes = 5 ditolak', 'check_violation', v_error, v_error = 'check_violation');
 
+  -- 10c. Full event + duplicate email: EVENT_FULL (capacity is checked first) ----
+  perform public.create_registration('zz-seathold-test-full', 'Uji F', '081344445555', 'uji-f@example.com', 'uji', null, true);
+  begin
+    perform public.create_registration('zz-seathold-test-full', 'Uji F2', '081366667777', 'uji-f@example.com', 'uji', null, true);
+    v_error := 'ok';
+  exception when others then v_error := sqlerrm;
+  end;
+  insert into kb_seathold_test values ('10c', 'Kegiatan penuh + email duplikat', 'EVENT_FULL', v_error, v_error = 'EVENT_FULL');
+
   -- Cleanup (test rows only) --------------------------------------------------
   delete from public.payment_attempts where registration_id in (
-    select id from public.registrations where event_id in (v_paid, v_capped, v_free));
-  delete from public.registrations where event_id in (v_paid, v_capped, v_free);
-  delete from public.events where id in (v_paid, v_capped, v_free);
+    select id from public.registrations where event_id in (v_paid, v_capped, v_free, v_full));
+  delete from public.registrations where event_id in (v_paid, v_capped, v_free, v_full);
+  delete from public.events where id in (v_paid, v_capped, v_free, v_full);
 end;
 $$;
 

@@ -116,9 +116,27 @@ begin
     raise exception using errcode = 'P0001', message = 'REGISTRATION_CLOSED';
   end if;
 
+  if v_event.capacity is not null then
+    select count(*)::integer into v_reserved
+      from public.registrations as registration
+     where registration.event_id = v_event.id
+       and (
+         registration.registration_status = 'confirmed'
+         -- Unpaid registrations stop holding a seat once their payment window ends.
+         or (registration.registration_status = 'pending_payment'
+             and (registration.payment_deadline is null
+                  or registration.payment_deadline > pg_catalog.now()))
+       );
+    if v_reserved >= v_event.capacity then
+      raise exception using errcode = 'P0001', message = 'EVENT_FULL';
+    end if;
+  end if;
+
   -- One active registration per person per event (free and paid). The event row
   -- is locked FOR UPDATE above, so concurrent calls for the same event run this
   -- check-then-insert one at a time and each sees the previous caller's commit.
+  -- It runs after the capacity check so a full event answers EVENT_FULL to
+  -- everyone and does not reveal whether an email or number is registered.
   -- Lapsed (deadline passed) and cancelled registrations do not block, except a
   -- lapsed one whose QRIS was still payable in the last 5 minutes: its
   -- settlement may still arrive (the webhook accepts it), and letting the same
@@ -145,22 +163,6 @@ begin
        )
   ) then
     raise exception using errcode = 'P0001', message = 'ALREADY_REGISTERED';
-  end if;
-
-  if v_event.capacity is not null then
-    select count(*)::integer into v_reserved
-      from public.registrations as registration
-     where registration.event_id = v_event.id
-       and (
-         registration.registration_status = 'confirmed'
-         -- Unpaid registrations stop holding a seat once their payment window ends.
-         or (registration.registration_status = 'pending_payment'
-             and (registration.payment_deadline is null
-                  or registration.payment_deadline > pg_catalog.now()))
-       );
-    if v_reserved >= v_event.capacity then
-      raise exception using errcode = 'P0001', message = 'EVENT_FULL';
-    end if;
   end if;
 
   if v_event.price = 0 then

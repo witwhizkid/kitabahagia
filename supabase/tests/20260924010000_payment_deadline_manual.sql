@@ -33,17 +33,17 @@ declare
   v_error text;
 begin
   -- Fixtures ---------------------------------------------------------------
-  insert into public.events (slug, title, event_date, status, price, capacity, registration_deadline, is_public, is_demo)
-  values ('zz-deadline-test-paid', 'Uji batas bayar', current_date + 40, 'open', 35000, 1, now() + interval '30 days', false, true)
+  insert into public.events (slug, title, event_date, status, price, capacity, registration_deadline, is_public, is_demo, payment_window_minutes)
+  values ('zz-deadline-test-paid', 'Uji batas bayar', current_date + 40, 'open', 35000, 1, now() + interval '30 days', false, true, 180)
   returning id into v_paid_event;
-  insert into public.events (slug, title, event_date, status, price, capacity, registration_deadline, is_public, is_demo)
-  values ('zz-deadline-test-short', 'Uji deadline pendek', current_date + 40, 'open', 35000, 5, now() + interval '1 hour', false, true)
+  insert into public.events (slug, title, event_date, status, price, capacity, registration_deadline, is_public, is_demo, payment_window_minutes)
+  values ('zz-deadline-test-short', 'Uji deadline pendek', current_date + 40, 'open', 35000, 5, now() + interval '1 hour', false, true, 180)
   returning id into v_short_event;
-  insert into public.events (slug, title, event_date, status, price, capacity, registration_deadline, is_public, is_demo)
-  values ('zz-deadline-test-closing', 'Uji hampir tutup', current_date + 40, 'open', 35000, 5, now() + interval '3 minutes', false, true)
+  insert into public.events (slug, title, event_date, status, price, capacity, registration_deadline, is_public, is_demo, payment_window_minutes)
+  values ('zz-deadline-test-closing', 'Uji hampir tutup', current_date + 40, 'open', 35000, 5, now() + interval '3 minutes', false, true, 180)
   returning id into v_closing_event;
-  insert into public.events (slug, title, event_date, status, price, capacity, registration_deadline, is_public, is_demo)
-  values ('zz-deadline-test-free', 'Uji gratis', current_date + 40, 'open', 0, 5, now() + interval '30 days', false, true)
+  insert into public.events (slug, title, event_date, status, price, capacity, registration_deadline, is_public, is_demo, payment_window_minutes)
+  values ('zz-deadline-test-free', 'Uji gratis', current_date + 40, 'open', 0, 5, now() + interval '30 days', false, true, 180)
   returning id into v_free_event;
 
   -- 1. Paid registration gets now() + 3 hours ------------------------------
