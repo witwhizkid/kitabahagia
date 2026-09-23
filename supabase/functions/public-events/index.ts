@@ -37,6 +37,7 @@ type EventRow = {
   capacity: number | null;
   registration_deadline: string | null;
   price: number;
+  payment_window_minutes: number | null;
   image_url: string | null;
   image_alt: string | null;
   registrations: RegistrationCount[];
@@ -60,6 +61,7 @@ const eventProjection = [
   "capacity",
   "registration_deadline",
   "price",
+  "payment_window_minutes",
   "image_url",
   "image_alt",
   "registrations(count)",
@@ -218,6 +220,7 @@ Deno.serve(async (request) => {
         remaining_capacity: event.capacity === null ? null : Math.max(event.capacity - used, 0),
         registration_deadline: event.registration_deadline,
         price: event.price,
+        payment_window_minutes: event.payment_window_minutes ?? null,
         image_url: event.image_url,
         image_alt: event.image_alt,
       };

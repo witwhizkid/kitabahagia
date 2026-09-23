@@ -18,8 +18,10 @@ const errorMessages: Record<string, string> = {
   EVENT_NOT_OPEN: "Kegiatan tidak sedang menerima pendaftaran.",
   REGISTRATION_CLOSED: "Batas waktu pendaftaran telah berakhir.",
   EVENT_FULL: "Kapasitas kegiatan sudah penuh.",
+  // Deliberately does not say whether the email or the phone number matched.
+  ALREADY_REGISTERED: "Email atau nomor WhatsApp ini sudah terdaftar di kegiatan ini. Jika belum membayar, lanjutkan pembayaran dari perangkat yang sama atau hubungi admin dengan kode pendaftaranmu.",
 };
-const conflictErrors = new Set(["EVENT_NOT_OPEN", "REGISTRATION_CLOSED", "EVENT_FULL"]);
+const conflictErrors = new Set(["EVENT_NOT_OPEN", "REGISTRATION_CLOSED", "EVENT_FULL", "ALREADY_REGISTERED"]);
 const allowedFields = new Set(["event_slug", "name", "phone", "email", "domicile", "institution", "reason", "notes", "consent"]);
 
 type RegistrationInput = {

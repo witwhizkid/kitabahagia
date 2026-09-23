@@ -21,7 +21,7 @@ const eventProjection = [
   "slug", "title", "description", "registration_description", "activities", "benefits",
   "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
-  "whatsapp_group_url", "is_public", "is_demo",
+  "whatsapp_group_url", "is_public", "is_demo", "payment_window_minutes",
   "archived_at",
 ].join(",");
 
@@ -29,7 +29,7 @@ const writableFields = new Set([
   "title", "slug", "description", "registration_description", "activities", "benefits",
   "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
-  "whatsapp_group_url", "is_public",
+  "whatsapp_group_url", "is_public", "payment_window_minutes",
 ]);
 const requiredCreateFields = ["title", "slug", "event_date", "status"];
 const statuses = new Set(["draft", "open", "full", "closed", "completed", "cancelled"]);
@@ -109,6 +109,11 @@ const validatePayload = (input: unknown, creating: boolean) => {
         else if (!Number.isInteger(value) || Number(value) < (field === "capacity" ? 1 : 0)) {
           return { error: field === "price" ? "Harga tidak valid." : "Kapasitas harus bilangan bulat positif." } as const;
         } else data[field] = value;
+      } else if (field === "payment_window_minutes") {
+        if (!Number.isInteger(value) || Number(value) < 10 || Number(value) > 1440) {
+          return { error: "Batas waktu bayar harus 10 sampai 1440 menit." } as const;
+        }
+        data[field] = value;
       } else if (field === "is_public") {
         if (typeof value !== "boolean") return { error: "Status tampil di website tidak valid." } as const;
         data[field] = value;
