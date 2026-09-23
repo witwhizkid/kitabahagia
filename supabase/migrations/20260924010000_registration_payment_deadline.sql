@@ -286,11 +286,11 @@ begin
     );
   end if;
 
-  -- No new QRIS once the payment window has (nearly) ended. Existing pending or
+  -- No new QRIS in the last 30 seconds of the payment window. Existing pending or
   -- creating attempts above are still returned so the caller can reconcile a
   -- payment that settled right before the deadline.
   if v_registration.payment_deadline is not null
-     and v_registration.payment_deadline <= pg_catalog.now() + interval '1 minute' then
+     and v_registration.payment_deadline <= pg_catalog.now() + interval '30 seconds' then
     raise exception using errcode = 'P0001', message = 'PAYMENT_DEADLINE_PASSED';
   end if;
 

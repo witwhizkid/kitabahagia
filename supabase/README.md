@@ -60,11 +60,12 @@ registration a payment window:
   `NULL`, the pre-migration behaviour). No job is needed for the quota to come
   back; unpaid rows simply stop counting. They stay `pending_payment` in the
   database until a cleanup job exists.
-- `prepare_payment_attempt` refuses to create a new attempt within 1 minute of
+- `prepare_payment_attempt` refuses to create a new attempt within 30 seconds of
   the deadline (`PAYMENT_DEADLINE_PASSED`, HTTP `409` from `create-payment`).
   Existing `pending`/`creating` attempts are still returned so `create-payment`
   can reconcile a payment that settled at the last moment.
-- QRIS lifetime is `min(60 minutes, payment_deadline)`. Midtrans allows 20
+- QRIS lifetime is `min(60 minutes, payment_deadline)`, sent to Midtrans in
+  seconds so the last QRIS ends exactly at the deadline. Midtrans allows 20
   seconds to 7 days for GoPay/Dynamic QRIS expiry
   (https://docs.midtrans.com/reference/gopay). The site creates the next QRIS
   automatically when one expires before the deadline.
@@ -74,7 +75,9 @@ registration a payment window:
   that arrives after the deadline (the QR itself expired no later than the
   deadline, so the payment was made in time). If the released seat was taken in
   the meantime, the event can end up one confirmed registration over capacity;
-  admins should review events whose confirmed count exceeds capacity.
+  admins should review events whose confirmed count exceeds capacity. The
+  payment page checks the status three more times (15 s, 1 min, 3 min) after
+  showing the deadline screen, so such a payer still sees the confirmation.
 - Backfill: existing `pending_payment` rows get
   `greatest(created_at + 3 hours, latest pending QR expiry)`. The event deadline
   is not applied retroactively.

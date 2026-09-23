@@ -161,14 +161,15 @@ const finalize = async (
   return result?.response.ok && result.result && typeof result.result === "object" ? result.result : null;
 };
 
-// QRIS lifetime: 60 minutes, never past the registration payment_deadline.
-// Midtrans allows 20 seconds to 7 days for GoPay/Dynamic QRIS expiry
-// (https://docs.midtrans.com/reference/gopay).
-const QR_MAX_MINUTES = 60;
-const qrMinutes = (attempt: Attempt, createdAt: Date) => {
+// QRIS lifetime: 60 minutes, never past the registration payment_deadline, so the
+// last QRIS ends exactly at the deadline. Midtrans allows 20 seconds to 7 days for
+// GoPay/Dynamic QRIS expiry (https://docs.midtrans.com/reference/gopay).
+const QR_MAX_SECONDS = 60 * 60;
+const QR_MIN_SECONDS = 30;
+const qrSeconds = (attempt: Attempt, createdAt: Date) => {
   const deadline = parseTime(attempt.payment_deadline);
-  if (!deadline) return QR_MAX_MINUTES;
-  return Math.min(QR_MAX_MINUTES, Math.floor((deadline.getTime() - createdAt.getTime()) / 60000));
+  if (!deadline) return QR_MAX_SECONDS;
+  return Math.min(QR_MAX_SECONDS, Math.floor((deadline.getTime() - createdAt.getTime()) / 1000));
 };
 
 const chargeAttempt = async (attempt: Attempt, midtransKey: string) => {
@@ -183,7 +184,7 @@ const chargeAttempt = async (attempt: Attempt, midtransKey: string) => {
         transaction_details: { order_id: attempt.order_id, gross_amount: attempt.amount },
         qris: { acquirer: "gopay" },
         item_details: [{ id: "event-registration", price: attempt.amount, quantity: 1, name: attempt.event_title.slice(0, 50) }],
-        custom_expiry: { order_time: orderTime(createdAt), expiry_duration: qrMinutes(attempt, createdAt), unit: "minute" },
+        custom_expiry: { order_time: orderTime(createdAt), expiry_duration: qrSeconds(attempt, createdAt), unit: "second" },
       }),
     });
     return { response, provider: await readProvider(response) };
@@ -197,7 +198,7 @@ const resolveCharge = async (
   successStatus: 200 | 201,
 ) => {
   const attemptCreatedAt = parseTime(attempt.created_at);
-  if (attemptCreatedAt && qrMinutes(attempt, attemptCreatedAt) < 1) {
+  if (attemptCreatedAt && qrSeconds(attempt, attemptCreatedAt) < QR_MIN_SECONDS) {
     await setTerminal(url, serviceKey, attempt.attempt_id, "cancelled", "payment_deadline_passed");
     return errorResponse(409, "PAYMENT_DEADLINE_PASSED");
   }
@@ -237,7 +238,7 @@ const resolveCharge = async (
   const providerCreatedAt = parseTime(provider.transaction_time) ?? parseTime(attempt.created_at);
   if (!providerCreatedAt) return errorResponse(409, "PAYMENT_IN_PROGRESS");
   const expiresAt = (parseTime(provider.expiry_time)
-    ?? new Date(providerCreatedAt.getTime() + qrMinutes(attempt, providerCreatedAt) * 60000)).toISOString();
+    ?? new Date((attemptCreatedAt ?? providerCreatedAt).getTime() + qrSeconds(attempt, attemptCreatedAt ?? providerCreatedAt) * 1000)).toISOString();
   const finalized = await finalize(url, serviceKey, attempt, provider, qrUrl, expiresAt);
   if (!finalized) {
     console.error("Payment attempt finalization failed", { order_id: attempt.order_id, attempt_id: attempt.attempt_id });

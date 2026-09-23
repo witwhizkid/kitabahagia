@@ -826,6 +826,8 @@ if (registrationForm) {
   let paymentPollTimer = null;
   let qrRenewTimer = null;
   let qrRenewalActive = false;
+  let qrRenewalRetryAt = 0;
+  let lateSettlementTimer = null;
   let paymentPollStopped = false;
   let paymentPollActive = false;
   let paymentStatusRequest = null;
@@ -932,6 +934,17 @@ if (registrationForm) {
     }
   };
 
+  // The deadline screen is shown once per registration (plus refreshes); later
+  // visits start a fresh registration instead of repeating it.
+  const markRecoveryDeadlineShown = () => {
+    try {
+      const value = JSON.parse(localStorage.getItem(recoveryStorageKey) || 'null');
+      if (value && !value.deadline_shown) localStorage.setItem(recoveryStorageKey, JSON.stringify({ ...value, deadline_shown: true }));
+    } catch {
+      // Best-effort; without storage the screen is simply shown again.
+    }
+  };
+
   const clearRegistrationRecovery = () => {
     paymentContact = null;
     clearTerminalRecoveryRefreshMarker();
@@ -975,6 +988,8 @@ if (registrationForm) {
     window.clearTimeout(paymentPollTimer);
     window.clearTimeout(qrRenewTimer);
     qrRenewTimer = null;
+    window.clearTimeout(lateSettlementTimer);
+    lateSettlementTimer = null;
     countdownTimer = null;
     paymentPollTimer = null;
     paymentPollStopped = true;
@@ -1091,6 +1106,7 @@ if (registrationForm) {
     stage.querySelector('.payment-countdown').hidden = state !== 'pending' || !(data.payment_deadline || data.expires_at);
     const scheduleLink = stage.querySelector('[data-payment-schedule]');
     if (scheduleLink) scheduleLink.hidden = state !== 'deadline_passed';
+    if (state === 'deadline_passed') markRecoveryDeadlineShown();
     stage.querySelector('.payment-guide').hidden = !['pending', 'processing'].includes(state);
     stage.querySelector('.payment-recovery-error').hidden = true;
     stage.querySelector('.payment-amount').hidden = !['pending', 'processing', 'expired', 'failed'].includes(state);
@@ -1110,6 +1126,7 @@ if (registrationForm) {
     stage.hidden = false;
     if (stateChanged) stage.focus();
     else stage.focus({ preventScroll: true });
+    if (state === 'deadline_passed') scheduleLateSettlementChecks(data);
     if (state === 'pending') {
       // Count down to the registration deadline; a QRIS that lapses earlier is renewed automatically.
       if (data.payment_deadline) {
@@ -1217,6 +1234,8 @@ if (registrationForm) {
       return true;
     }
     if (result.payment_status === 'expired' && Number.isFinite(paymentDeadlineTime({ ...base, ...result }))) {
+      // Back off after a refused renewal so polling does not call create-payment every 5 seconds.
+      if (Date.now() < qrRenewalRetryAt) return false;
       void renewExpiredQr({ ...base, ...result });
       return true;
     }
@@ -1234,7 +1253,7 @@ if (registrationForm) {
   const renewExpiredQr = async (data) => {
     if (qrRenewalActive) return;
     if (paymentDeadlinePassed(data)) {
-      renderPaymentState('deadline_passed', data);
+      void handlePaymentDeadlineReached(data);
       return;
     }
     const contact = paymentContactFor(data);
@@ -1248,8 +1267,9 @@ if (registrationForm) {
       renderPaymentState('pending', payment);
       pollPaymentStatus(payment, contact.email);
     } catch (error) {
+      qrRenewalRetryAt = Date.now() + 60000;
       if (error?.code === 'PAYMENT_DEADLINE_PASSED') {
-        renderPaymentState('deadline_passed', data);
+        void handlePaymentDeadlineReached(data);
       } else if (['PAYMENT_IN_PROGRESS', 'PAYMENT_AWAITING_CONFIRMATION', 'PAYMENT_ALREADY_PAID'].includes(error?.code)) {
         renderPaymentState('processing', data);
         pollPaymentStatus(data, contact.email);
@@ -1282,6 +1302,31 @@ if (registrationForm) {
       }
     }
     renderPaymentState('deadline_passed', data);
+  };
+
+  // The webhook still confirms a payment made just before the deadline, so check
+  // a few more times after showing the deadline screen (not an open-ended poll).
+  const scheduleLateSettlementChecks = (data) => {
+    const contact = paymentContactFor(data);
+    if (!contact) return;
+    const delays = [15000, 45000, 120000];
+    const next = () => {
+      const delay = delays.shift();
+      if (delay === undefined) return;
+      lateSettlementTimer = window.setTimeout(async () => {
+        try {
+          const result = await fetchRegistrationStatus(contact, contact.email);
+          if (result.payment_status === 'paid' && result.registration_status === 'confirmed') {
+            showConfirmedRegistration({ ...data, ...result });
+            return;
+          }
+        } catch {
+          // Try again at the next delay.
+        }
+        next();
+      }, delay);
+    };
+    next();
   };
 
   const pollPaymentStatus = (registration, email) => {
@@ -1700,6 +1745,11 @@ if (registrationForm) {
       return false;
     }
     if (paymentDeadlinePassed(status)) {
+      if (recovery.deadline_shown && !resumeFromDetail && !canRestoreTerminalRecovery(recovery)) {
+        clearRegistrationRecovery();
+        renderSelectedEvent();
+        return false;
+      }
       renderPaymentState('deadline_passed', restored);
       return true;
     }
@@ -1736,7 +1786,7 @@ if (registrationForm) {
       pollPaymentStatus(payment, recovery.email);
     } catch (error) {
       if (error?.code === 'PAYMENT_DEADLINE_PASSED') {
-        renderPaymentState('deadline_passed', restored);
+        void handlePaymentDeadlineReached(restored);
       } else if (['PAYMENT_IN_PROGRESS', 'PAYMENT_AWAITING_CONFIRMATION', 'PAYMENT_ALREADY_PAID'].includes(error?.code)) {
         renderPaymentState('processing', restored);
         pollPaymentStatus(restored, recovery.email);
@@ -1749,8 +1799,7 @@ if (registrationForm) {
 
   const checkPaymentStatus = async () => {
     if (manualPaymentCheckActive) return;
-    const recovery = readRegistrationRecovery()
-      || (paymentContact?.email && paymentContact.registration_code === activePayment?.registration_code ? paymentContact : null);
+    const recovery = paymentContactFor(activePayment);
     if (!recovery) {
       showPaymentCheckNote('Status belum dapat diperiksa di perangkat ini. Muat ulang halaman atau hubungi admin dengan kode pendaftaranmu.');
       return;
@@ -1840,7 +1889,7 @@ if (registrationForm) {
         return;
       }
       if (error?.code === 'PAYMENT_DEADLINE_PASSED') {
-        renderPaymentState('deadline_passed', recoveryPaymentData(recovery));
+        void handlePaymentDeadlineReached(recoveryPaymentData(recovery));
         return;
       }
       button.disabled = false;
