@@ -657,6 +657,20 @@
     return `${CONFIG.supabaseUrl}/storage/v1/object/public/story-images/${publicPath}`;
   };
 
+  // Seat-hold window only matters for paid events; values set outside the preset
+  // list (e.g. via SQL) are kept as an extra option instead of being lost.
+  const setPaymentWindow = (minutes) => {
+    const select = $("#event-payment-window");
+    const value = String(minutes);
+    if (![...select.options].some((option) => option.value === value)) {
+      select.append(new Option(`${value} menit`, value));
+    }
+    select.value = value;
+  };
+  const togglePaymentWindowField = () => {
+    $("#event-payment-window-field").hidden = Number($("#event-price").value) <= 0;
+  };
+
   const fillForm = (event = null) => {
     eventForm.reset();
     $("#form-title").textContent = event ? "Edit Kegiatan" : "Tambah Kegiatan";
@@ -674,6 +688,8 @@
     $("#event-location").value = event?.location || "";
     $("#event-price").value = event?.price ?? 0;
     $("#event-capacity").value = event?.capacity ?? "";
+    setPaymentWindow(event?.payment_window_minutes ?? 15);
+    togglePaymentWindowField();
     $("#event-activities").value = event?.activities?.join("\n") || "";
     $("#event-benefits").value = event?.benefits?.join("\n") || "";
     $("#event-image-url").value = event?.image_url || "";
@@ -823,6 +839,7 @@
     location: $("#event-location").value.trim() || null,
     price: Number($("#event-price").value),
     capacity: $("#event-capacity").value ? Number($("#event-capacity").value) : null,
+    payment_window_minutes: Number($("#event-payment-window").value),
     registration_deadline: toIso($("#event-deadline").value),
     status: $("#event-status").value,
     image_url: $("#event-image-url").value.trim() || null,
@@ -978,6 +995,8 @@
   });
 
   // Auto-generate slug from title for new stories (skip if user has typed a manual slug)
+  $("#event-price").addEventListener("input", togglePaymentWindowField);
+
   $("#story-title").addEventListener("input", () => {
     if (storySlugManuallyEdited) return;
     $("#story-slug").value = slugifyStoryTitle($("#story-title").value);

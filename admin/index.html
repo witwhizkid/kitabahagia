@@ -149,6 +149,16 @@
               <div class="form-grid">
                 <label>Harga<input id="event-price" name="price" type="number" min="0" step="1" value="0" required /></label>
                 <label>Kapasitas peserta<input id="event-capacity" name="capacity" type="number" min="1" step="1" /></label>
+                <label id="event-payment-window-field">Batas waktu bayar <span class="label-note">Kursi dilepas jika belum dibayar dalam waktu ini</span>
+                  <select id="event-payment-window" name="payment_window_minutes">
+                    <option value="10">10 menit</option>
+                    <option value="15" selected>15 menit</option>
+                    <option value="30">30 menit</option>
+                    <option value="60">1 jam</option>
+                    <option value="180">3 jam</option>
+                    <option value="1440">24 jam</option>
+                  </select>
+                </label>
                 <label class="span-2">Yang akan dilakukan <span class="label-note">Satu item per baris</span><textarea id="event-activities" name="activities" rows="5"></textarea></label>
                 <label class="span-2">Yang dibawa pulang <span class="label-note">Satu item per baris</span><textarea id="event-benefits" name="benefits" rows="5"></textarea></label>
               </div>
