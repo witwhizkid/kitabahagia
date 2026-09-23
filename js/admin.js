@@ -365,6 +365,7 @@
             <span>${escapeHtml(registration.phone)}</span>
             <span><span class="data-label">Domisili</span> ${escapeHtml(registration.domicile || "-")}</span>
             <span><span class="data-label">Asal instansi</span> ${escapeHtml(registration.institution || "-")}</span>
+            <span><span class="data-label">DEFINISI BAHAGIA</span> ${escapeHtml(registration.reason || "-")}</span>
           </div>
           <div class="registration-event registration-cell">
             <span class="data-label">Kegiatan</span>

@@ -24,6 +24,7 @@ const registrationProjection = [
   "email",
   "domicile",
   "institution",
+  "reason",
   "registration_status",
   "payment_status",
   "created_at",
