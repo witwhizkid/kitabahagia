@@ -113,14 +113,40 @@ const qrFrom = (provider: Record<string, unknown>) => {
     ?? actions.find((item) => item.name === "generate-qr-code");
   return typeof action?.url === "string" && /^https:\/\//.test(action.url) ? action.url : null;
 };
+// Raw QRIS payload from Midtrans, so the site can draw its own QR instead of the
+// Midtrans poster image. Printable ASCII only, starting with the EMV "000201" header.
+const qrStringFrom = (provider: Record<string, unknown>) =>
+  typeof provider.qr_string === "string" && /^000201[\x20-\x7E]{14,1018}$/.test(provider.qr_string)
+    ? provider.qr_string : null;
+const storeQrString = async (url: string, key: string, attemptId: string, qrString: string) => {
+  const response = await fetch(`${url}/rest/v1/payment_attempts?id=eq.${encodeURIComponent(attemptId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", "apikey": key, "Authorization": `Bearer ${key}`, "Prefer": "return=minimal" },
+    body: JSON.stringify({ qr_string: qrString }),
+  }).catch(() => null);
+  if (!response?.ok) console.error("Storing qr_string failed", { attempt_id: attemptId, status: response?.status ?? null });
+};
+// Missing qr_string is not an error: the site falls back to the Midtrans QR image.
+const readQrString = async (url: string, key: string, attemptId: string) => {
+  const response = await fetch(
+    `${url}/rest/v1/payment_attempts?select=qr_string&id=eq.${encodeURIComponent(attemptId)}&limit=1`,
+    { headers: { "apikey": key, "Authorization": `Bearer ${key}` } },
+  ).catch(() => null);
+  const rows = response?.ok ? await response.json().catch(() => null) : null;
+  const value = Array.isArray(rows) ? rows[0]?.qr_string : null;
+  return typeof value === "string" ? value : null;
+};
 const identityMatches = (provider: Record<string, unknown>, attempt: Attempt) =>
   provider.order_id === attempt.order_id && Number(provider.gross_amount) === attempt.amount;
-const pendingResponse = (attempt: Attempt, qrUrl: string, expiresAt: string, status = 200) =>
+const pendingResponse = (
+  attempt: Attempt, qrUrl: string, expiresAt: string, qrString: string | null, status = 200,
+) =>
   jsonResponse(status, {
     registration_code: attempt.registration_code,
     amount: attempt.amount,
     payment_status: "pending",
     qr_url: qrUrl,
+    qr_string: qrString,
     expires_at: expiresAt,
     payment_deadline: attempt.payment_deadline ?? null,
     order_id: attempt.order_id,
@@ -257,7 +283,13 @@ const resolveCharge = async (
     console.error("Payment attempt finalization failed", { order_id: attempt.order_id, attempt_id: attempt.attempt_id });
     return errorResponse(500, "SERVER_ERROR");
   }
-  return jsonResponse(successStatus, { ...finalized, payment_deadline: attempt.payment_deadline ?? null });
+  const qrString = qrStringFrom(provider);
+  if (qrString) await storeQrString(url, serviceKey, attempt.attempt_id, qrString);
+  return jsonResponse(successStatus, {
+    ...finalized,
+    qr_string: qrString,
+    payment_deadline: attempt.payment_deadline ?? null,
+  });
 };
 
 Deno.serve(async (request) => {
@@ -285,7 +317,9 @@ Deno.serve(async (request) => {
   let attempt = prepared;
   if (attempt.is_reused) {
     return attempt.qr_url && attempt.expires_at
-      ? pendingResponse(attempt, attempt.qr_url, attempt.expires_at)
+      ? pendingResponse(
+        attempt, attempt.qr_url, attempt.expires_at, await readQrString(url, serviceKey, attempt.attempt_id),
+      )
       : errorResponse(500, "SERVER_ERROR");
   }
 
@@ -332,7 +366,9 @@ Deno.serve(async (request) => {
             return await resolveCharge(url, serviceKey, midtransKey, midtransBase, attempt, 200);
           }
           return attempt.qr_url
-            ? pendingResponse(attempt, attempt.qr_url, expiry.toISOString())
+            ? pendingResponse(
+              attempt, attempt.qr_url, expiry.toISOString(), await readQrString(url, serviceKey, attempt.attempt_id),
+            )
             : errorResponse(409, "PAYMENT_IN_PROGRESS");
         }
 

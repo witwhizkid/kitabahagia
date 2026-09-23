@@ -148,6 +148,16 @@ supabase db push
 
 `--no-verify-jwt` allows registration without Supabase Auth; validation and database access remain server-side. Public event fixtures do not contain WhatsApp invite URLs.
 
+## QRIS display
+
+`create-payment` returns `qr_string`, the raw QRIS payload from the Midtrans charge
+response, next to `qr_url`. The site draws its own QR code from `qr_string`
+(js/vendor/qrcode-generator.min.js, MIT) and builds the "Unduh QRIS" image locally,
+so it no longer shows the Midtrans poster image. `qr_string` is stored in
+`payment_attempts.qr_string` (migration 20260926010000) so a reused attempt can return
+it again. Attempts without `qr_string` (created before that migration, or if storing
+it failed) fall back to the `qr_url` image.
+
 ## Midtrans webhook
 
 Set the Payment Notification URL in the Midtrans dashboard (Sandbox and Production each have their own setting) to:
