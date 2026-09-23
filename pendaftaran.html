@@ -110,6 +110,7 @@
                   <div><dt>Lokasi</dt><dd id="eventLocation"></dd></div>
                   <div class="hidden" id="eventPriceRow"><dt>Biaya</dt><dd id="eventPrice"></dd></div>
                 </dl>
+                <p class="registration-payment-window" id="eventPaymentWindow" hidden></p>
                 <a class="btn btn-primary registration-summary-cta" href="#registrationFormPanel">Daftar kegiatan</a>
               </div>
             </aside>
@@ -178,6 +179,7 @@
             </div>
           </section>
           <p class="registration-message hidden" id="registrationStatus" role="status" aria-live="polite" tabindex="-1"></p>
+          <button class="btn btn-primary registration-resume" id="registrationResumeButton" type="button" hidden>Lanjutkan pembayaran</button>
         </div>
         <section class="payment-stage payment_pending" id="paymentStage" aria-labelledby="paymentHeading" tabindex="-1" hidden>
           <header class="payment-header">

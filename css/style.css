@@ -2610,6 +2610,9 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .payment-back-link[hidden] { display:none; }
 .payment-retry-error { max-width:48ch; margin:10px 0 0; color:var(--maroon-deep); font-size:13px; font-weight:600; line-height:1.5; }
 .payment-retry-error[hidden] { display:none; }
+.registration-payment-window { margin:14px 0 0; color:var(--muted); font-size:13px; line-height:1.55; }
+.registration-payment-window[hidden], .registration-resume[hidden] { display:none; }
+.registration-resume { margin-top:12px; }
 .registration-onboarding { margin-top:28px; padding-top:24px; border-top:1px solid var(--line); }
 .registration-onboarding h3 { margin:0 0 8px; font-size:20px; }
 .registration-onboarding p { max-width:48ch; margin:0 0 18px; color:var(--muted); font-size:14px; line-height:1.65; }

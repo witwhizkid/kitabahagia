@@ -127,7 +127,8 @@ const normalizeRegistrationEvent = (event) => {
     activities: Array.isArray(event.activities) ? event.activities.filter(Boolean) : [],
     benefits: Array.isArray(event.benefits) ? event.benefits.filter(Boolean) : [],
     remainingCapacity: event.remaining_capacity,
-    registrationDeadline: event.registration_deadline || null
+    registrationDeadline: event.registration_deadline || null,
+    paymentWindowMinutes: Number.isInteger(event.payment_window_minutes) ? event.payment_window_minutes : null
   };
 };
 
@@ -1515,6 +1516,17 @@ if (registrationForm) {
     setDataText('[data-checkout-event-location]', selectedEvent.location);
     setDataText('[data-checkout-event-price]', eventPrice);
 
+    const paymentWindowNote = document.getElementById('eventPaymentWindow');
+    if (paymentWindowNote) {
+      const minutes = selectedEvent.paymentWindowMinutes;
+      const showWindow = selectedEvent.price > 0 && Number.isInteger(minutes) && minutes > 0;
+      paymentWindowNote.hidden = !showWindow;
+      if (showWindow) {
+        const duration = minutes % 60 === 0 ? `${minutes / 60} jam` : `${minutes} menit`;
+        paymentWindowNote.textContent = `Selesaikan pembayaran dalam ${duration} setelah mendaftar agar tempatmu tidak dilepas.`;
+      }
+    }
+
     eventFallback?.classList.add('hidden');
     eventFallback?.removeAttribute('aria-busy');
     registrationContent?.classList.remove('hidden');
@@ -1673,6 +1685,7 @@ if (registrationForm) {
     EVENT_NOT_OPEN: 'Pendaftaran untuk kegiatan ini sedang tidak dibuka.',
     REGISTRATION_CLOSED: 'Batas waktu pendaftaran kegiatan ini sudah berakhir.',
     EVENT_FULL: 'Kapasitas kegiatan ini sudah penuh.',
+    ALREADY_REGISTERED: 'Email atau nomor WhatsApp ini sudah terdaftar di kegiatan ini. Jika belum membayar, lanjutkan pembayaran dari perangkat yang sama atau hubungi admin dengan kode pendaftaranmu.',
     PAYMENT_IN_PROGRESS: 'Pembayaran sedang disiapkan. Status akan diperbarui otomatis.',
     PAYMENT_AWAITING_CONFIRMATION: 'Pembayaran sedang menunggu konfirmasi. Status akan diperbarui otomatis.',
     PAYMENT_ALREADY_PAID: 'Pembayaran untuk pendaftaran ini sudah selesai.',
@@ -1996,8 +2009,16 @@ if (registrationForm) {
     focusRegistrationStep(registrationFormPanel?.querySelector('.registration-form-heading'));
   });
 
+  const registrationResumeButton = document.getElementById('registrationResumeButton');
+  registrationResumeButton?.addEventListener('click', () => {
+    registrationResumeButton.hidden = true;
+    document.getElementById('registrationStatus')?.classList.add('hidden');
+    void recoverRegistration({ resumeFromDetail: true });
+  });
+
   confirmRegistrationButton?.addEventListener('click', async () => {
     if (!selectedEvent || !registrationAvailable || isSubmitting || registrationCompleted) return;
+    if (registrationResumeButton) registrationResumeButton.hidden = true;
 
     if (!REGISTRATION_CONFIG.registrationEndpoint) {
       showRegistrationMessage('Backend pendaftaran belum dikonfigurasi. Pendaftaran belum dapat dikirim.', 'error');
@@ -2061,6 +2082,10 @@ if (registrationForm) {
     } catch (error) {
       const code = typeof error?.code === 'string' ? error.code : 'SERVER_ERROR';
       showRegistrationMessage(registrationErrorMessages[code] || registrationErrorMessages.SERVER_ERROR, 'error');
+      // This device still has the earlier registration for this event: offer the existing recovery flow.
+      if (code === 'ALREADY_REGISTERED' && registrationResumeButton && readRegistrationRecovery()) {
+        registrationResumeButton.hidden = false;
+      }
     } finally {
       isSubmitting = false;
       registrationForm.removeAttribute('aria-busy');
