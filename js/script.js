@@ -1077,6 +1077,11 @@ if (registrationForm) {
     const stateChanged = stage.hidden || lastRenderedPaymentState !== state;
     lastRenderedPaymentState = state;
     hidePaymentCheckNote();
+    const downloadNote = stage.querySelector('[data-payment-download-note]');
+    if (downloadNote) {
+      downloadNote.hidden = true;
+      downloadNote.textContent = '';
+    }
     if (['paid', 'expired', 'failed', 'refunded', 'deadline_passed'].includes(state)) stopPaymentMonitoring();
     if (['expired', 'failed', 'deadline_passed'].includes(state)) markTerminalRecoveryForRefresh(data);
     const [heading, body] = paymentStates[state];
@@ -1144,8 +1149,16 @@ if (registrationForm) {
       if (eventSlug) backLink.href = `pendaftaran.html?event=${encodeURIComponent(eventSlug)}&view=detail`;
     }
     stage.querySelector('.payment-countdown').hidden = state !== 'pending' || !(data.payment_deadline || data.expires_at);
+    // Next steps sit right under the message, so nobody has to scroll back up for them.
     const scheduleLink = stage.querySelector('[data-payment-schedule]');
-    if (scheduleLink) scheduleLink.hidden = state !== 'deadline_passed';
+    if (scheduleLink) scheduleLink.hidden = true;
+    const nextActions = stage.querySelector('[data-payment-next]');
+    if (nextActions) nextActions.hidden = state !== 'deadline_passed';
+    const registerAgain = stage.querySelector('[data-payment-register-again]');
+    if (registerAgain) {
+      registerAgain.hidden = !eventSlug;
+      if (eventSlug) registerAgain.href = `pendaftaran.html?event=${encodeURIComponent(eventSlug)}`;
+    }
     if (state === 'deadline_passed') markRecoveryDeadlineShown();
     stage.querySelector('.payment-guide').hidden = !['pending', 'processing'].includes(state);
     stage.querySelector('.payment-recovery-error').hidden = true;
@@ -1164,7 +1177,8 @@ if (registrationForm) {
     const orderRow = stage.querySelector('[data-result-order]');
     if (orderRow) orderRow.textContent = data.order_id || 'Menunggu dibuat';
     stage.hidden = false;
-    if (stateChanged) stage.focus();
+    // A new state can be much shorter than the last one (QR -> result), so bring the card's top into view.
+    if (stateChanged) focusRegistrationStep(stage);
     else stage.focus({ preventScroll: true });
     if (state === 'deadline_passed') scheduleLateSettlementChecks(data);
     if (state === 'pending') {

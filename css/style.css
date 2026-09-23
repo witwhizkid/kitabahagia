@@ -6040,3 +6040,11 @@ html.home-document { overflow-x: hidden; }
   .registration-page .payment-details { padding:6px 14px 0; }
   .registration-page .payment-details dl { grid-template-columns:1fr; }
 }
+.registration-page .payment-next-actions { display:grid; justify-items:center; gap:12px; width:100%; margin-top:20px; }
+.registration-page .payment-next-actions[hidden] { display:none; }
+.registration-page .payment-next-actions .btn { width:100%; min-height:52px; border-radius:999px; }
+.registration-page .payment-next-actions .btn[hidden] { display:none; }
+.registration-page .payment-secondary-link { padding:6px 10px; color:var(--maroon); font-size:14px; font-weight:700; }
+.registration-page .payment-secondary-link:hover { text-decoration:underline; }
+/* The sticky header only helps while paying (countdown); on result screens it would cover the short card. */
+.registration-page .payment-stage:not(.payment_pending):not(.payment_processing) .payment-header { position:relative; top:auto; }
