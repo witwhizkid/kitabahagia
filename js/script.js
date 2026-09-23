@@ -804,7 +804,8 @@ if (registrationForm) {
     paid: ['Pembayaran berhasil', 'Tempatmu sudah dikonfirmasi.'],
     expired: ['Waktu pembayaran habis', 'QRIS sebelumnya sudah kedaluwarsa. Pendaftaranmu masih tersimpan. Kamu bisa membuat QRIS baru untuk melanjutkan pembayaran.'],
     failed: ['Pembayaran belum berhasil', 'Pembayaran tidak berhasil diselesaikan. Pendaftaranmu tetap tercatat.'],
-    refunded: ['Pembayaran dikembalikan', 'Pembayaran ini sudah dikembalikan. Hubungi tim Kita Bahagia bila perlu bantuan.']
+    refunded: ['Pembayaran dikembalikan', 'Pembayaran ini sudah dikembalikan. Hubungi tim Kita Bahagia bila perlu bantuan.'],
+    deadline_passed: ['Waktu pembayaran habis, pendaftaran dibatalkan', 'Batas waktu pembayaran sudah lewat, jadi kuota untuk pendaftaran ini sudah dilepas. Kamu bisa mendaftar lagi jika kuota masih tersedia.']
   };
   const paymentStatusCopy = {
     pending: ['Menunggu pembayaran', 'Selesaikan pembayaran melalui QRIS sebelum waktu pembayaran habis.'],
@@ -823,6 +824,8 @@ if (registrationForm) {
 
   let countdownTimer = null;
   let paymentPollTimer = null;
+  let qrRenewTimer = null;
+  let qrRenewalActive = false;
   let paymentPollStopped = false;
   let paymentPollActive = false;
   let paymentStatusRequest = null;
@@ -970,10 +973,19 @@ if (registrationForm) {
   const stopPaymentMonitoring = () => {
     window.clearInterval(countdownTimer);
     window.clearTimeout(paymentPollTimer);
+    window.clearTimeout(qrRenewTimer);
+    qrRenewTimer = null;
     countdownTimer = null;
     paymentPollTimer = null;
     paymentPollStopped = true;
     paymentPollActive = false;
+  };
+
+  // payment_deadline is the registration's whole payment window; expires_at is one QRIS.
+  const paymentDeadlineTime = (data) => Date.parse(data?.payment_deadline || '');
+  const paymentDeadlinePassed = (data) => {
+    const deadline = paymentDeadlineTime(data);
+    return Number.isFinite(deadline) && deadline <= Date.now();
   };
 
   const formatPaymentCountdown = (milliseconds) => {
@@ -1021,8 +1033,8 @@ if (registrationForm) {
     const stateChanged = stage.hidden || lastRenderedPaymentState !== state;
     lastRenderedPaymentState = state;
     hidePaymentCheckNote();
-    if (['paid', 'expired', 'failed', 'refunded'].includes(state)) stopPaymentMonitoring();
-    if (['expired', 'failed'].includes(state)) markTerminalRecoveryForRefresh(data);
+    if (['paid', 'expired', 'failed', 'refunded', 'deadline_passed'].includes(state)) stopPaymentMonitoring();
+    if (['expired', 'failed', 'deadline_passed'].includes(state)) markTerminalRecoveryForRefresh(data);
     const [heading, body] = paymentStates[state];
     eventFallback?.classList.add('hidden');
     Object.keys(paymentStates).forEach((key) => stage.classList.toggle(`payment_${key}`, key === state));
@@ -1076,7 +1088,9 @@ if (registrationForm) {
       backLink.hidden = !['pending', 'expired'].includes(state) || !eventSlug;
       if (eventSlug) backLink.href = `pendaftaran.html?event=${encodeURIComponent(eventSlug)}&view=detail`;
     }
-    stage.querySelector('.payment-countdown').hidden = state !== 'pending' || !data.expires_at;
+    stage.querySelector('.payment-countdown').hidden = state !== 'pending' || !(data.payment_deadline || data.expires_at);
+    const scheduleLink = stage.querySelector('[data-payment-schedule]');
+    if (scheduleLink) scheduleLink.hidden = state !== 'deadline_passed';
     stage.querySelector('.payment-guide').hidden = !['pending', 'processing'].includes(state);
     stage.querySelector('.payment-recovery-error').hidden = true;
     stage.querySelector('.payment-amount').hidden = !['pending', 'processing', 'expired', 'failed'].includes(state);
@@ -1096,8 +1110,14 @@ if (registrationForm) {
     stage.hidden = false;
     if (stateChanged) stage.focus();
     else stage.focus({ preventScroll: true });
-    if (state === 'pending' && data.expires_at) {
-      updatePaymentCountdown(data.expires_at, () => renderPaymentState('expired', { ...data, payment_status: 'expired' }));
+    if (state === 'pending') {
+      // Count down to the registration deadline; a QRIS that lapses earlier is renewed automatically.
+      if (data.payment_deadline) {
+        updatePaymentCountdown(data.payment_deadline, () => handlePaymentDeadlineReached(activePayment));
+        scheduleQrRenewal(data);
+      } else if (data.expires_at) {
+        updatePaymentCountdown(data.expires_at, () => renderPaymentState('expired', { ...data, payment_status: 'expired' }));
+      }
     }
   };
 
@@ -1192,11 +1212,76 @@ if (registrationForm) {
       showConfirmedRegistration({ ...base, ...result });
       return true;
     }
+    if (result.registration_status === 'pending_payment' && paymentDeadlinePassed({ ...base, ...result })) {
+      renderPaymentState('deadline_passed', { ...base, ...result });
+      return true;
+    }
+    if (result.payment_status === 'expired' && Number.isFinite(paymentDeadlineTime({ ...base, ...result }))) {
+      void renewExpiredQr({ ...base, ...result });
+      return true;
+    }
     if (['expired', 'failed', 'refunded'].includes(result.payment_status)) {
       renderPaymentState(result.payment_status, { ...base, ...result });
       return true;
     }
     return false;
+  };
+
+  const paymentContactFor = (data) => readRegistrationRecovery()
+    || (paymentContact?.email && paymentContact.registration_code === data?.registration_code ? paymentContact : null);
+
+  // A QRIS expired while the payment window is still open: create the next one for the same registration.
+  const renewExpiredQr = async (data) => {
+    if (qrRenewalActive) return;
+    if (paymentDeadlinePassed(data)) {
+      renderPaymentState('deadline_passed', data);
+      return;
+    }
+    const contact = paymentContactFor(data);
+    if (!contact) {
+      renderPaymentState('expired', { ...data, payment_status: 'expired' });
+      return;
+    }
+    qrRenewalActive = true;
+    try {
+      const payment = await createPayment({ ...data, registration_code: contact.registration_code }, contact.email);
+      renderPaymentState('pending', payment);
+      pollPaymentStatus(payment, contact.email);
+    } catch (error) {
+      if (error?.code === 'PAYMENT_DEADLINE_PASSED') {
+        renderPaymentState('deadline_passed', data);
+      } else if (['PAYMENT_IN_PROGRESS', 'PAYMENT_AWAITING_CONFIRMATION', 'PAYMENT_ALREADY_PAID'].includes(error?.code)) {
+        renderPaymentState('processing', data);
+        pollPaymentStatus(data, contact.email);
+      } else {
+        renderPaymentState('expired', { ...data, payment_status: 'expired' });
+      }
+    } finally {
+      qrRenewalActive = false;
+    }
+  };
+
+  const scheduleQrRenewal = (data) => {
+    window.clearTimeout(qrRenewTimer);
+    const qrExpiry = Date.parse(data?.expires_at || '');
+    const deadline = paymentDeadlineTime(data);
+    if (!Number.isFinite(qrExpiry) || !Number.isFinite(deadline) || qrExpiry >= deadline) return;
+    qrRenewTimer = window.setTimeout(() => renewExpiredQr(activePayment), Math.max(0, qrExpiry - Date.now()) + 1000);
+  };
+
+  // Check once more before closing, so a payment that settled at the last second is still confirmed.
+  const handlePaymentDeadlineReached = async (data) => {
+    window.clearTimeout(qrRenewTimer);
+    const contact = paymentContactFor(data);
+    if (contact) {
+      try {
+        const result = await fetchRegistrationStatus(contact, contact.email);
+        if (applyPaymentStatusResult(result, data)) return;
+      } catch {
+        // Fall through: the deadline itself is known locally.
+      }
+    }
+    renderPaymentState('deadline_passed', data);
   };
 
   const pollPaymentStatus = (registration, email) => {
@@ -1614,7 +1699,12 @@ if (registrationForm) {
       showRegistrationMessage('Pendaftaran sebelumnya sudah tidak aktif. Kamu dapat mendaftar kembali.', 'error');
       return false;
     }
-    if (['expired', 'failed'].includes(status.payment_status)) {
+    if (paymentDeadlinePassed(status)) {
+      renderPaymentState('deadline_passed', restored);
+      return true;
+    }
+    const withinPaymentWindow = Number.isFinite(paymentDeadlineTime(status));
+    if (status.payment_status === 'failed' || (status.payment_status === 'expired' && !withinPaymentWindow)) {
       if (!resumeFromDetail && !canRestoreTerminalRecovery(recovery)) {
         clearRegistrationRecovery();
         renderSelectedEvent();
@@ -1630,7 +1720,7 @@ if (registrationForm) {
     }
 
     const attemptExpiry = Date.parse(status.expires_at || '');
-    if (status.order_id && Number.isFinite(attemptExpiry) && attemptExpiry <= Date.now()) {
+    if (!withinPaymentWindow && status.order_id && Number.isFinite(attemptExpiry) && attemptExpiry <= Date.now()) {
       if (!resumeFromDetail && !canRestoreTerminalRecovery(recovery)) {
         clearRegistrationRecovery();
         renderSelectedEvent();
@@ -1645,7 +1735,9 @@ if (registrationForm) {
       renderPaymentState('pending', payment);
       pollPaymentStatus(payment, recovery.email);
     } catch (error) {
-      if (['PAYMENT_IN_PROGRESS', 'PAYMENT_AWAITING_CONFIRMATION', 'PAYMENT_ALREADY_PAID'].includes(error?.code)) {
+      if (error?.code === 'PAYMENT_DEADLINE_PASSED') {
+        renderPaymentState('deadline_passed', restored);
+      } else if (['PAYMENT_IN_PROGRESS', 'PAYMENT_AWAITING_CONFIRMATION', 'PAYMENT_ALREADY_PAID'].includes(error?.code)) {
         renderPaymentState('processing', restored);
         pollPaymentStatus(restored, recovery.email);
       } else {
@@ -1745,6 +1837,10 @@ if (registrationForm) {
       if (['PAYMENT_IN_PROGRESS', 'PAYMENT_AWAITING_CONFIRMATION', 'PAYMENT_ALREADY_PAID'].includes(error?.code)) {
         renderPaymentState('processing', recoveryPaymentData(recovery));
         pollPaymentStatus(recoveryPaymentData(recovery), recovery.email);
+        return;
+      }
+      if (error?.code === 'PAYMENT_DEADLINE_PASSED') {
+        renderPaymentState('deadline_passed', recoveryPaymentData(recovery));
         return;
       }
       button.disabled = false;
