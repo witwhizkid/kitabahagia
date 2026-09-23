@@ -2620,6 +2620,66 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .payment-details dl > div, .registration-confirmation dl > div { padding:16px 0; border-bottom:1px solid var(--line); }
 .payment-details dt, .registration-confirmation dt { font-size:12px; color:var(--muted); }
 .payment-details dd, .registration-confirmation dd { margin:6px 0 0; overflow-wrap:anywhere; font-weight:600; }
+.registration-page .payment-stage { grid-template-columns:minmax(0, 720px); justify-content:center; gap:0; max-width:760px; margin:32px auto 0; padding:0 0 36px; border:1px solid var(--line); background:var(--cream); }
+.registration-page .payment-header { position:relative; padding:20px 28px 22px; background:var(--maroon); color:var(--white); }
+.registration-page .payment-header-row { display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.registration-page .payment-header-row > div:first-child { min-width:0; }
+.registration-page .payment-header h2 { max-width:13ch; margin:5px 0 0; color:var(--white); font-size:clamp(27px, 4vw, 36px); letter-spacing:-.035em; line-height:1.04; }
+.registration-page .payment-eyebrow { color:inherit; font-size:10px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; }
+.registration-page .payment-back-link { min-height:36px; margin:0 0 15px; color:rgba(255,255,255,.9); font-size:13px; }
+.registration-page .payment-back-link:hover { color:var(--white); }
+.registration-page .payment-countdown { display:grid; gap:3px; width:auto; min-width:128px; margin:0; padding:10px 13px; border:1px solid rgba(255,255,255,.24); background:rgba(255,255,255,.07); text-align:right; }
+.registration-page .payment-countdown span, .registration-page .payment-countdown small { color:rgba(255,255,255,.78); font-size:10px; }
+.registration-page .payment-countdown strong { color:var(--white); font-size:21px; font-variant-numeric:tabular-nums; letter-spacing:.02em; line-height:1.1; }
+.registration-page .payment-primary { display:grid; justify-items:center; padding:24px 28px 0; }
+.registration-page .payment-intro { display:none; }
+.registration-page .payment-status-row { width:100%; }
+.registration-page .payment-status-row .payment-state { padding:0 0 14px; border:0; text-align:center; }
+.registration-page .payment-state > strong { display:none; }
+.registration-page .payment-state p { margin:0; font-size:13px; }
+.registration-page .payment-amount { justify-items:center; gap:2px; margin:0 0 16px; }
+.registration-page .payment-amount span { font-size:11px; text-transform:uppercase; letter-spacing:.09em; }
+.registration-page .payment-amount strong { font-size:clamp(28px, 6vw, 40px); }
+.registration-page .payment-qr-section { display:grid; justify-items:center; width:100%; }
+.registration-page .payment-qr-heading { display:flex; align-items:baseline; justify-content:center; gap:10px; margin-bottom:12px; }
+.registration-page .payment-qr-heading .payment-eyebrow { color:var(--maroon); }
+.registration-page .payment-qr-heading p { margin:0; color:var(--muted); font-size:12px; text-align:center; }
+.registration-page .payment-qr-placeholder { width:min(100%, 340px); padding:12px; border-color:#e5ded8; border-radius:2px; }
+.registration-page .payment-download, .registration-page .payment-copy { min-height:44px; margin-top:12px; padding:8px 16px; border:1px solid var(--line); background:transparent; color:var(--maroon); font:600 13px "DM Sans", sans-serif; cursor:pointer; }
+.registration-page .payment-download:hover, .registration-page .payment-copy:hover { border-color:var(--maroon); }
+.registration-page .payment-download-note { max-width:44ch; margin:8px 0 0; color:var(--muted); font-size:12px; text-align:center; }
+.registration-page .payment-check, .registration-page .payment-retry { width:min(100%, 420px); min-height:48px; margin-top:18px; }
+.registration-page .payment-retry[hidden], .registration-page .payment-check[hidden] { display:none; }
+.registration-page .payment-retry-error { width:100%; text-align:center; }
+.registration-page .payment-guide { width:100%; margin-top:24px; padding-top:17px; border-top:1px solid var(--line); }
+.registration-page .payment-guide h3 { margin:0 0 8px; font-size:15px; }
+.registration-page .payment-guide ol { display:grid; gap:5px; margin:0; padding-left:20px; color:var(--muted); font-size:12px; line-height:1.5; }
+.registration-page .payment-guide[hidden], .registration-page .payment-amount[hidden] { display:none; }
+.registration-page .payment-details { width:100%; margin-top:18px; padding:14px 28px 0; border:0; border-top:1px solid var(--line); }
+.registration-page .payment-details dl { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:0 18px; }
+.registration-page .payment-details dl > div { padding:8px 0; }
+.registration-page .payment-details dd { display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:13px; }
+.registration-page .payment-details .payment-copy { flex:none; min-height:36px; margin:0; padding:5px 12px; }
+.registration-page .payment-recovery-error { grid-column:1; width:calc(100% - 56px); margin:20px 28px 0; padding:18px; border:1px solid var(--line); }
+.registration-page .payment-recovery-error strong { color:var(--maroon); }
+.registration-page .payment-recovery-error p { color:var(--muted); font-size:13px; }
+.registration-page .payment-recovery-error[hidden] { display:none; }
+.registration-page .payment-stage.is-recovery-error .payment-primary,
+.registration-page .payment-stage.is-recovery-error .payment-details { display:none; }
+.registration-page .payment-check:focus-visible, .registration-page .payment-download:focus-visible, .registration-page .payment-copy:focus-visible, .registration-page .payment-back-link:focus-visible { outline:3px solid var(--maroon); outline-offset:3px; }
+.registration-page .payment-check:disabled { opacity:.7; cursor:wait; }
+.registration-page .payment-stage.payment_paid .payment-qr-heading,
+.registration-page .payment-stage.payment_paid .payment-amount { display:none; }
+.registration-page .payment-stage.payment_paid .payment-qr-section,
+.registration-page .payment-stage.payment_expired .payment-qr-section,
+.registration-page .payment-stage.payment_failed .payment-qr-section,
+.registration-page .payment-stage.payment_refunded .payment-qr-section { display:none; }
+.registration-page .payment-stage.payment_paid .payment-primary { padding-top:26px; }
+.registration-page .payment-stage.payment_paid .payment-state p { font-size:15px; }
+.registration-page .payment-stage.payment_paid .payment-intro,
+.registration-page .payment-stage.payment_expired .payment-intro,
+.registration-page .payment-stage.payment_failed .payment-intro { display:block; margin:0; text-align:center; }
+.registration-page .payment-back-link:focus-visible { outline-color:var(--white); }
 .registration-confirmation { margin-top:48px; padding:32px 0; border-top:1px solid var(--line); max-width:680px; }
 @media (max-width:640px) {
   .registration-page .payment-stage { grid-template-columns:1fr; gap:32px; margin-top:40px; padding:28px 6px; }
@@ -2636,7 +2696,23 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   .payment-qr-placeholder, .payment-countdown { width:min(100%,280px); margin-left:auto; margin-right:auto; }
   .payment-details { padding:24px 0 0; border-left:0; border-top:1px solid var(--line); }
 }
-.registration-fallback { max-width:720px; padding:42px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+@media (max-width:640px) {
+  .registration-page .payment-stage { grid-template-columns:minmax(0,1fr); gap:0; margin:24px 0 0; padding:0 0 24px; }
+  .registration-page .payment-header { padding:16px 16px 18px; }
+  .registration-page .payment-back-link { margin-bottom:12px; }
+  .registration-page .payment-header-row { align-items:center; gap:12px; }
+  .registration-page .payment-header h2 { max-width:12ch; font-size:clamp(24px, 7vw, 29px); }
+  .registration-page .payment-countdown { min-width:112px; padding:8px 10px; }
+  .registration-page .payment-countdown strong { font-size:19px; }
+  .registration-page .payment-countdown small { max-width:130px; font-size:10px; }
+  .registration-page .payment-primary { padding:20px 16px 0; }
+  .registration-page .payment-qr-placeholder { width:min(100%, 320px); }
+  .registration-page .payment-qr-heading { display:grid; justify-items:center; gap:3px; }
+  .registration-page .payment-details { margin-top:16px; padding:12px 16px 0; }
+  .registration-page .payment-details dl { grid-template-columns:1fr; }
+  .registration-page .payment-recovery-error { width:calc(100% - 32px); margin:16px; }
+}
+ .registration-fallback { max-width:720px; padding:42px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 .registration-fallback h2 { margin:0 0 12px; font-size:32px; }
 .registration-fallback p { max-width:590px; margin:0 0 20px; color:var(--muted); }
 @media (max-width:960px) {
@@ -5744,4 +5820,146 @@ html.home-document { overflow-x: hidden; }
   .home-program-section .program-image,
   .home-program-section .program-card.featured .program-image,
   .home-program-section .program-card:not(.featured) .program-image { aspect-ratio: 1.6 / 1; }
+}
+
+/* Compact participant and confirmation steps, matched to the payment shell. */
+.registration-page .registration-intro {
+  padding: calc(var(--site-header-height) + 20px) 0 16px;
+  border: 0;
+  background: var(--white);
+}
+.registration-page .registration-intro .registration-back { margin-bottom: 8px; }
+.registration-page .registration-intro h1 { font-size: clamp(28px, 3vw, 36px); line-height: 1.1; }
+.registration-page .registration-intro p,
+.registration-page .registration-intro .container > span { display: none; }
+.registration-page .registration-section { padding: 12px 0 72px; }
+.registration-page .registration-progress,
+.registration-page .registration-event-layout,
+.registration-page .registration-card,
+.registration-page .registration-review,
+.registration-page #registrationStatus { width: min(100%, 760px); max-width: 760px; margin-right: auto; margin-left: auto; }
+.registration-page .registration-progress { margin-bottom: 18px; }
+.registration-page .registration-event-layout {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "summary" "content";
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.registration-page .registration-event-back,
+.registration-page .registration-event-image { display: none; }
+.registration-page .summary-card { grid-area: summary; }
+.registration-page .registration-event-disclosure { grid-area: content; border-bottom: 1px solid var(--line); }
+.registration-page .registration-event-disclosure > summary { min-height: 44px; padding: 12px 0; color: var(--maroon); font-size: 13px; font-weight: 600; cursor: pointer; }
+.registration-page .registration-event-content { display: none; }
+.registration-page .registration-event-disclosure[open] .registration-event-content { display: block; }
+.registration-page .registration-shell:has(#registrationReview:not(.hidden)) .registration-event-layout { display: none; }
+.registration-page .summary-card { min-width: 0; }
+.registration-page .registration-summary-sticky {
+  position: static;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  background: var(--cream);
+}
+.registration-page .registration-summary-topline { margin-bottom: 6px; }
+.registration-page .registration-summary-title-row { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.registration-page .registration-summary-image { flex: 0 0 80px; width: 80px; height: 60px; margin: 0; overflow: hidden; background: var(--sand); }
+.registration-page .registration-summary-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.registration-page .registration-summary-title-row h2 { min-width: 0; margin: 0; font-size: clamp(21px, 2.5vw, 26px); line-height: 1.2; overflow-wrap: anywhere; }
+.registration-page .event-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; margin: 10px 0 8px; }
+.registration-page .event-summary div { grid-template-columns: 1fr; gap: 2px; padding: 7px 0; }
+.registration-page .event-summary dt { font-size: 11px; }
+.registration-page .event-summary dd { font-size: 13px; }
+.registration-page .registration-summary-cta { width: auto; min-height: 40px; padding: 8px 14px; }
+.registration-page .registration-shell:has(#registrationFormPanel:not(.hidden)) .registration-summary-cta { display: none; }
+.registration-page .registration-card {
+  margin-top: 0;
+  padding: 24px 28px 26px;
+  border: 1px solid var(--line);
+  background: var(--cream);
+}
+.registration-page .registration-checkout-layout { display: block; }
+.registration-page .registration-data-panel { min-width: 0; }
+.registration-page .registration-form-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.registration-page .registration-form-heading,
+.registration-page #registrationReview { scroll-margin-top: calc(var(--site-header-height) + 20px); }
+.registration-page .registration-form-heading h2,
+.registration-page .registration-review-heading h2 { margin: 0; font-size: 26px; line-height: 1.2; }
+.registration-page .registration-form-heading p { max-width: none; margin: 0; color: var(--muted); font-size: 12px; }
+.registration-page .form-grid { gap: 16px 18px; }
+.registration-page .field { gap: 6px; }
+.registration-page .field label { font-size: 13px; }
+.registration-page .field input,
+.registration-page .field textarea {
+  min-height: 48px;
+  padding: 11px 13px;
+  border-color: #cfc4c5;
+  border-radius: 3px;
+  background: var(--white);
+  font-size: 16px;
+}
+.registration-page .field textarea { min-height: 104px; line-height: 1.5; }
+.registration-page .field input:focus,
+.registration-page .field textarea:focus { outline: 3px solid rgba(122,31,43,.14); outline-offset: 1px; border-color: var(--maroon); }
+.registration-page .field-error { display: block; margin-top: 1px; line-height: 1.4; }
+.registration-page .check-row { min-height: 44px; align-items: center; padding: 4px 0; }
+.registration-page .check-row input { width: 20px; height: 20px; min-height: 20px; }
+.registration-page .form-actions { align-items: center; gap: 14px; margin-top: 18px; }
+.registration-page .form-actions .btn { min-height: 48px; }
+.registration-page .form-actions p { font-size: 11px; }
+.registration-page .registration-review {
+  margin-top: 0;
+  padding: 24px 28px 26px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--cream);
+}
+.registration-page .registration-review-heading { margin-bottom: 16px; }
+.registration-page .registration-review-heading p { margin: 6px 0 0; font-size: 13px; }
+.registration-page .registration-review-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.registration-page .registration-review-participant,
+.registration-page .registration-review-event { min-width: 0; }
+.registration-page .registration-review-participant h3 { margin: 0 0 8px; font-size: 16px; }
+.registration-page .registration-review-participant dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 20px; }
+.registration-page .registration-review-participant dl div { display: grid; grid-template-columns: 1fr; gap: 3px; padding: 9px 0; }
+.registration-page .registration-review-participant dl div:last-child { grid-column: 1 / -1; }
+.registration-page .registration-review-participant dd,
+.registration-page .registration-review-event dd { line-height: 1.5; overflow-wrap: anywhere; }
+.registration-page .registration-review-event { position: static; padding: 15px 0 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: transparent; }
+.registration-page .registration-review-event h3 { margin: 5px 0 8px; font-size: 18px; }
+.registration-page .registration-review-event dl div { grid-template-columns: 82px minmax(0,1fr); gap: 12px; padding: 7px 0; }
+.registration-page .registration-review-actions { margin-top: 18px; padding-top: 16px; }
+.registration-page .registration-review-actions .btn { min-height: 46px; }
+.registration-page #registrationStatus { margin-top: 16px; }
+
+@media (max-width: 640px) {
+  .registration-page .registration-intro { padding: calc(var(--site-header-height) + 14px) 0 12px; }
+  .registration-page .registration-section { padding: 8px 0 52px; }
+  .registration-page .registration-progress { margin-bottom: 14px; }
+  .registration-page .registration-summary-sticky { padding: 14px 15px; }
+  .registration-page .registration-summary-title-row { gap: 11px; }
+  .registration-page .registration-summary-image { flex-basis: 72px; width: 72px; height: 54px; }
+  .registration-page .event-summary { gap: 0 12px; }
+  .registration-page .event-summary div { grid-template-columns: 1fr; gap: 2px; }
+  .registration-page .registration-card,
+  .registration-page .registration-review { padding: 20px 16px; }
+  .registration-page .registration-form-heading { display: block; margin-bottom: 16px; }
+  .registration-page .registration-form-heading h2,
+  .registration-page .registration-review-heading h2 { font-size: 24px; }
+  .registration-page .registration-form-heading p { margin-top: 4px; }
+  .registration-page .form-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .registration-page .field.full { grid-column: auto; }
+  .registration-page .form-actions { align-items: stretch; flex-direction: column; gap: 8px; }
+  .registration-page .form-actions .btn { width: 100%; }
+  .registration-page .registration-review-grid { gap: 12px; }
+  .registration-page .registration-review-participant dl { grid-template-columns: minmax(0, 1fr); }
+  .registration-page .registration-review-participant dl div:last-child { grid-column: auto; }
+  .registration-page .registration-review-actions { display: grid; gap: 9px; }
+  .registration-page .registration-review-actions .btn-primary { grid-row: 1; }
+  .registration-page .registration-review-actions .btn { width: 100%; }
 }

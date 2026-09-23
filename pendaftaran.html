@@ -71,9 +71,8 @@
         <div class="registration-shell hidden" id="registrationContent">
           <div class="registration-event-layout">
             <a class="registration-event-back text-link" href="jadwal.html">Pilih kegiatan lain &rarr;</a>
-            <figure class="registration-event-image" id="eventImageWrap" hidden>
-              <img id="eventImage" alt="" decoding="async">
-            </figure>
+            <details class="registration-event-disclosure">
+              <summary>Detail kegiatan</summary>
             <article class="registration-event-content reveal" aria-label="Detail kegiatan">
               <nav class="registration-content-nav" aria-label="Bagian detail kegiatan">
                 <a href="#eventDescriptionSection">Tentang kegiatan</a>
@@ -94,11 +93,17 @@
               </section>
               <p class="registration-detail-note"></p>
             </article>
+            </details>
 
             <aside class="summary-card reveal" aria-labelledby="eventName">
               <div class="registration-summary-sticky">
                 <div class="registration-summary-topline"><span class="registration-event-category" id="eventCategory"></span><span id="eventStatus"></span></div>
-                <h2 id="eventName"></h2>
+                <div class="registration-summary-title-row">
+                  <figure class="registration-summary-image" id="eventImageWrap" hidden>
+                    <img id="eventImage" alt="" loading="lazy" decoding="async">
+                  </figure>
+                  <h2 id="eventName"></h2>
+                </div>
                 <dl class="event-summary">
                   <div><dt>Tanggal</dt><dd id="eventDate"></dd></div>
                   <div><dt>Waktu</dt><dd id="eventTime"></dd></div>
@@ -122,7 +127,7 @@
           <div class="registration-card reveal" id="registrationFormPanel">
             <div class="registration-checkout-layout">
               <div class="registration-data-panel">
-                <div class="registration-form-heading"><span>Langkah 1</span><h2>Data peserta</h2><p>Kolom bertanda * wajib diisi.</p></div>
+                <div class="registration-form-heading" tabindex="-1"><h2>Data peserta</h2><p>Kolom bertanda * wajib diisi.</p></div>
                 <form data-registration-form novalidate>
                   <input id="kegiatan" name="kegiatan" type="hidden" value="">
                   <input id="eventSlug" name="event_slug" type="hidden" value="">
@@ -130,8 +135,8 @@
                     <div class="field"><label for="nama">Nama lengkap *</label><input id="nama" name="nama" type="text" autocomplete="name" placeholder="Masukkan nama lengkap" required></div>
                     <div class="field"><label for="telepon">Nomor WhatsApp *</label><input id="telepon" name="telepon" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" required aria-describedby="teleponError"><span id="teleponError" class="field-error" role="alert" hidden></span></div>
                     <div class="field full"><label for="email">Email *</label><input id="email" name="email" type="email" autocomplete="email" placeholder="nama@email.com" required></div>
-                    <div class="field full"><label for="domicile">Domisili *</label><input id="domicile" name="domicile" type="text" autocomplete="address" placeholder="Tempat Tinggal kamu sekarang" maxlength="200" required></div>
-                    <div class="field full"><label for="institution">Asal Instansi *</label><input id="institution" name="institution" type="text" autocomplete="organization" placeholder="Nama instansi tempat kamu bekerja atau kuliah" maxlength="200" required></div>
+                    <div class="field"><label for="domicile">Domisili *</label><input id="domicile" name="domicile" type="text" autocomplete="address" placeholder="Tempat Tinggal kamu sekarang" maxlength="200" required></div>
+                    <div class="field"><label for="institution">Asal Instansi *</label><input id="institution" name="institution" type="text" autocomplete="organization" placeholder="Nama instansi tempat kamu bekerja atau kuliah" maxlength="200" required></div>
                     <div class="field full"><label for="bahagia">Apa definisi bahagia menurut kamu? *</label><textarea id="bahagia" name="bahagia" placeholder="Tulis definisi bahagia menurutmu..." required></textarea></div>
                     <div class="field full"><label class="check-row" for="consent"><input id="consent" name="consent" type="checkbox" value="setuju" required><span>Saya setuju untuk dihubungi oleh tim Kita Bahagia terkait pendaftaran ini.</span></label></div>
                   </div>
@@ -141,20 +146,11 @@
                   </div>
                 </form>
               </div>
-              <aside class="registration-checkout-summary" aria-label="Ringkasan kegiatan">
-                <span>Ringkasan kegiatan</span>
-                <h3 data-checkout-event-title></h3>
-                <dl>
-                  <div><dt>Tanggal</dt><dd data-checkout-event-date></dd></div>
-                  <div><dt>Lokasi</dt><dd data-checkout-event-location></dd></div>
-                  <div><dt>Total</dt><dd data-checkout-event-price></dd></div>
-                </dl>
-              </aside>
             </div>
           </div>
 
           <section class="registration-review hidden" id="registrationReview" aria-labelledby="registrationReviewHeading" tabindex="-1">
-            <div class="registration-review-heading"><span>Langkah 2</span><h2 id="registrationReviewHeading">Konfirmasi pendaftaran</h2><p>Pastikan data berikut sudah benar sebelum melanjutkan.</p></div>
+            <div class="registration-review-heading"><h2 id="registrationReviewHeading">Konfirmasi pendaftaran</h2><p>Pastikan data berikut sudah benar sebelum melanjutkan.</p></div>
             <div class="registration-review-grid">
               <div class="registration-review-participant">
                 <h3>Data peserta</h3>
@@ -172,7 +168,7 @@
                 <dl>
                   <div><dt>Tanggal</dt><dd data-review-event-date></dd></div>
                   <div><dt>Lokasi</dt><dd data-review-event-location></dd></div>
-                  <div><dt>Total</dt><dd data-review-event-price></dd></div>
+                  <div><dt>Biaya</dt><dd data-review-event-price></dd></div>
                 </dl>
               </aside>
             </div>
@@ -184,24 +180,30 @@
           <p class="registration-message hidden" id="registrationStatus" role="status" aria-live="polite" tabindex="-1"></p>
         </div>
         <section class="payment-stage payment_pending" id="paymentStage" aria-labelledby="paymentHeading" tabindex="-1" hidden>
+          <header class="payment-header">
+            <a class="payment-back-link" data-payment-back hidden><span aria-hidden="true">&larr;</span> Kembali ke detail kegiatan</a>
+            <div class="payment-header-row"><div><span class="payment-eyebrow">Pembayaran kegiatan</span><h2 id="paymentHeading">Selesaikan pembayaran</h2></div><div class="payment-countdown" aria-live="polite" aria-label="Waktu tersisa untuk pembayaran"><span>Bayar sebelum</span><strong>15:00</strong><small></small></div></div>
+          </header>
           <div class="payment-primary">
-            <h2 id="paymentHeading">Selesaikan pembayaran</h2>
-            <p>Pendaftaranmu sudah tercatat. Selesaikan pembayaran untuk mengamankan tempatmu.</p>
+            <p class="payment-intro">Pendaftaranmu sudah tercatat. Selesaikan pembayaran untuk mengamankan tempatmu.</p>
             <div class="payment-amount"><span>Total pembayaran</span><strong data-payment-amount></strong></div>
-            <div class="payment-qr-placeholder" aria-label="QRIS belum tersedia" hidden>
-              <img data-payment-qr alt="" decoding="async">
-            </div>
-            <div class="payment-countdown" aria-live="polite" aria-label="Waktu tersisa untuk pembayaran">
-              <span>QR berlaku selama</span><strong>15:00</strong><small></small>
+            <div class="payment-qr-section">
+              <div class="payment-qr-heading"><span class="payment-eyebrow">QRIS</span><p>Scan atau unggah QRIS melalui aplikasi pembayaran yang mendukung QRIS.</p></div>
+              <div class="payment-qr-placeholder" aria-label="QRIS belum tersedia" hidden><img data-payment-qr alt="" decoding="async"></div>
             </div>
             <div class="payment-state payment_pending" data-payment-state="payment_pending" role="status" aria-live="polite"><strong>Menunggu pembayaran</strong><p>Menunggu status pembayaran.</p></div>
             <div class="payment-state payment_processing" data-payment-state="payment_processing" role="status" aria-live="polite" hidden><strong>Pembayaran sedang diverifikasi</strong></div>
             <div class="payment-state payment_paid" data-payment-state="payment_paid" role="status" aria-live="polite" hidden><strong>Pembayaran berhasil</strong><p>Tempatmu sudah dikonfirmasi.</p></div>
             <div class="payment-state payment_expired" data-payment-state="payment_expired" role="status" aria-live="polite" hidden><strong>Waktu pembayaran habis.</strong></div>
             <div class="payment-state payment_failed" data-payment-state="payment_failed" role="status" aria-live="polite" hidden><strong>Pembayaran belum berhasil.</strong></div>
+            <div class="payment-state payment_refunded" data-payment-state="payment_refunded" role="status" aria-live="polite" hidden><strong>Pembayaran dikembalikan</strong><p>Pembayaran ini sudah dikembalikan.</p></div>
             <button class="btn btn-primary" type="button" data-payment-retry hidden>Buat QRIS baru</button>
             <p class="payment-retry-error" data-payment-retry-error role="alert" hidden></p>
-            <a class="text-link payment-back-link" data-payment-back hidden><span aria-hidden="true">&larr;</span> Kembali ke detail kegiatan</a>
+            <button class="btn btn-primary payment-check" type="button" data-payment-check>Cek status pembayaran</button>
+            <p class="payment-download-note" data-payment-check-note aria-live="polite" hidden></p>
+            <button class="payment-download" type="button" data-payment-download hidden>Unduh QRIS</button>
+            <p class="payment-download-note" data-payment-download-note aria-live="polite" hidden></p>
+            <section class="payment-guide" aria-labelledby="paymentGuideHeading"><h3 id="paymentGuideHeading">Panduan cara pembayaran</h3><ol><li>Simpan QRIS atau screenshot QR di atas.</li><li>Buka aplikasi pembayaran atau mobile banking yang mendukung QRIS.</li><li>Pilih scan atau unggah QRIS dari galeri jika tersedia.</li><li>Periksa nominal lalu konfirmasi pembayaran.</li><li>Kembali ke halaman ini; status akan diperiksa otomatis.</li></ol></section>
             <section class="registration-onboarding" data-registration-onboarding aria-labelledby="paymentOnboardingHeading" hidden>
               <h3 id="paymentOnboardingHeading">Langkah berikutnya</h3>
               <p data-onboarding-copy>Gabung ke grup kegiatan untuk menerima informasi dan koordinasi dari tim Kita Bahagia.</p>
@@ -209,10 +211,10 @@
             </section>
           </div>
           <aside class="payment-details" aria-label="Ringkasan pendaftaran">
-            <h3>Ringkasan pendaftaran</h3>
-            <dl><div><dt>Kode pendaftaran</dt><dd data-result-code></dd></div><div><dt>Kegiatan</dt><dd data-result-title></dd></div><div><dt>Order pembayaran</dt><dd data-result-order>Menunggu dibuat</dd></div><div><dt>Transaksi</dt><dd>Pendaftaran kegiatan · pembayaran belum selesai</dd></div></dl>
-            <p>Simpan kode pendaftaranmu untuk menghubungi tim Kita Bahagia.</p>
+            <dl><div><dt>Kode pendaftaran</dt><dd><span data-result-code></span><button class="payment-copy" type="button" data-payment-copy>Salin</button></dd></div><div><dt>Kegiatan</dt><dd data-result-title></dd></div><div><dt>Order pembayaran</dt><dd data-result-order>Menunggu dibuat</dd></div><div><dt>Transaksi</dt><dd>Pendaftaran kegiatan · pembayaran belum selesai</dd></div></dl>
           </aside>
+          <div class="payment-recovery-error" data-payment-recovery-error role="status" aria-live="polite" hidden><strong>Status pembayaran belum dapat diperiksa</strong><p>Data pendaftaranmu tetap tersimpan. Coba lagi untuk memeriksa status pembayaran.</p><button class="btn btn-primary" type="button" data-payment-recovery-retry>Coba lagi</button></div>
+          <span class="visually-hidden" data-payment-copy-feedback aria-live="polite"></span>
         </section>
         <section class="registration-confirmation" id="freeRegistrationConfirmation" aria-labelledby="freeConfirmationHeading" tabindex="-1" hidden>
           <h2 id="freeConfirmationHeading">Kamu sudah terdaftar.</h2>

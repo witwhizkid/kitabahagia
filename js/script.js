@@ -816,6 +816,31 @@ if (registrationForm) {
   let countdownTimer = null;
   let paymentPollTimer = null;
   let paymentPollStopped = false;
+  let paymentPollActive = false;
+  let paymentStatusRequest = null;
+  let manualPaymentCheckActive = false;
+  // Last known payment attempt; status responses lack qr_url/amount, so renders merge onto this.
+  let activePayment = null;
+  let lastRenderedPaymentState = null;
+  let paymentCheckNoteTimer = null;
+
+  const hidePaymentCheckNote = () => {
+    window.clearTimeout(paymentCheckNoteTimer);
+    const note = document.querySelector('#paymentStage [data-payment-check-note]');
+    if (note) {
+      note.hidden = true;
+      note.textContent = '';
+    }
+  };
+
+  const showPaymentCheckNote = (message) => {
+    const note = document.querySelector('#paymentStage [data-payment-check-note]');
+    if (!note) return;
+    window.clearTimeout(paymentCheckNoteTimer);
+    note.textContent = message;
+    note.hidden = false;
+    paymentCheckNoteTimer = window.setTimeout(hidePaymentCheckNote, 8000);
+  };
 
   const clearTerminalRecoveryRefreshMarker = () => {
     try {
@@ -906,6 +931,17 @@ if (registrationForm) {
       if (index === activeIndex) item.setAttribute('aria-current', 'step');
       else item.removeAttribute('aria-current');
     });
+    const paymentStepLabel = registrationProgress?.querySelector('[data-registration-step="payment"] strong');
+    if (paymentStepLabel && selectedEvent) paymentStepLabel.textContent = selectedEvent.price > 0 ? 'Pembayaran' : 'Selesai';
+  };
+
+  const focusRegistrationStep = (target) => {
+    if (!target) return;
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block: 'start'
+    });
   };
 
   const setDataText = (selector, value, root = document) => {
@@ -919,11 +955,16 @@ if (registrationForm) {
     countdownTimer = null;
     paymentPollTimer = null;
     paymentPollStopped = true;
+    paymentPollActive = false;
   };
 
   const formatPaymentCountdown = (milliseconds) => {
     const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
-    return `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(totalSeconds % 60).padStart(2, '0')}`;
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return hours ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      : `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   };
 
   const updatePaymentCountdown = (expiresAt, onExpired) => {
@@ -932,6 +973,10 @@ if (registrationForm) {
     const expiry = new Date(expiresAt).getTime();
     if (!countdown || !countdownValue || Number.isNaN(expiry)) return;
     countdown.hidden = false;
+    const deadlineLabel = countdown.querySelector('small');
+    if (deadlineLabel) deadlineLabel.textContent = new Intl.DateTimeFormat('id-ID', {
+      weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
+    }).format(new Date(expiry)) + ' WIB';
     const update = () => {
       const remaining = expiry - Date.now();
       countdownValue.textContent = formatPaymentCountdown(remaining);
@@ -946,13 +991,24 @@ if (registrationForm) {
     if (expiry > Date.now()) countdownTimer = window.setInterval(update, 1000);
   };
 
-  const renderPaymentState = (state, data) => {
+  const renderPaymentState = (state, incoming) => {
     const stage = document.getElementById('paymentStage');
     if (!stage || !Object.hasOwn(paymentStates, state)) return;
+    const sameRegistration = activePayment?.registration_code === incoming?.registration_code;
+    const data = { ...(sameRegistration ? activePayment : {}) };
+    Object.entries(incoming || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') data[key] = value;
+    });
+    activePayment = data;
+    const stateChanged = stage.hidden || lastRenderedPaymentState !== state;
+    lastRenderedPaymentState = state;
+    hidePaymentCheckNote();
     if (['paid', 'expired', 'failed', 'refunded'].includes(state)) stopPaymentMonitoring();
+    if (['expired', 'failed'].includes(state)) markTerminalRecoveryForRefresh(data);
     const [heading, body] = paymentStates[state];
     eventFallback?.classList.add('hidden');
     Object.keys(paymentStates).forEach((key) => stage.classList.toggle(`payment_${key}`, key === state));
+    stage.classList.remove('is-recovery-error');
     stage.querySelectorAll('[data-payment-state]').forEach((container) => {
       const statusCopy = paymentStatusCopy[state];
       container.hidden = container.dataset.paymentState !== `payment_${state}` || !statusCopy;
@@ -970,13 +1026,17 @@ if (registrationForm) {
     stage.querySelector('[data-result-title]').textContent = data.event_title;
     stage.querySelector('[data-payment-amount]').textContent = typeof data.amount === 'number' ? formatEventPrice(data.amount) : 'Tidak tersedia';
     stage.querySelector('#paymentHeading').textContent = heading;
-    stage.querySelector('.payment-primary > p').textContent = body;
+    stage.querySelector('.payment-intro').textContent = body;
     stage.querySelector('.payment-details dl > div:last-child dd').textContent = state === 'paid'
       ? 'Pendaftaran kegiatan · pembayaran dikonfirmasi' : `Pendaftaran kegiatan · ${heading.toLowerCase()}`;
     const qr = stage.querySelector('.payment-qr-placeholder');
     const qrImage = qr?.querySelector('[data-payment-qr]');
     const hasQr = typeof data.qr_url === 'string' && /^https:\/\//.test(data.qr_url);
     qr.hidden = !hasQr || !['pending', 'processing'].includes(state);
+    const downloadButton = stage.querySelector('[data-payment-download]');
+    if (downloadButton) downloadButton.hidden = qr.hidden;
+    const checkButton = stage.querySelector('[data-payment-check]');
+    if (checkButton) checkButton.hidden = !['pending', 'processing'].includes(state);
     if (qrImage && hasQr) {
       qrImage.src = data.qr_url;
       qrImage.alt = `QRIS pembayaran ${formatEventPrice(data.amount)} untuk ${data.event_title || selectedEvent?.name || 'kegiatan Kita Bahagia'}`;
@@ -998,7 +1058,12 @@ if (registrationForm) {
       backLink.hidden = !['pending', 'expired'].includes(state) || !eventSlug;
       if (eventSlug) backLink.href = `pendaftaran.html?event=${encodeURIComponent(eventSlug)}&view=detail`;
     }
-    stage.querySelector('.payment-countdown').hidden = true;
+    stage.querySelector('.payment-countdown').hidden = state !== 'pending' || !data.expires_at;
+    stage.querySelector('.payment-guide').hidden = !['pending', 'processing'].includes(state);
+    stage.querySelector('.payment-recovery-error').hidden = true;
+    stage.querySelector('.payment-amount').hidden = !['pending', 'processing', 'expired', 'failed'].includes(state);
+    stage.querySelector('.payment-primary').hidden = false;
+    stage.querySelector('.payment-details').hidden = false;
     if (paymentDemo && state === 'pending') {
       stage.querySelector('#paymentHeading').textContent = 'Simulasi pembayaran';
       stage.querySelector('.payment-primary > p').textContent = 'Pendaftaran demo tercatat. Gunakan tombol simulasi di bawah untuk mencoba hasil pembayaran berhasil. Tidak ada uang yang ditagih.';
@@ -1011,7 +1076,8 @@ if (registrationForm) {
     const orderRow = stage.querySelector('[data-result-order]');
     if (orderRow) orderRow.textContent = data.order_id || 'Menunggu dibuat';
     stage.hidden = false;
-    stage.focus();
+    if (stateChanged) stage.focus();
+    else stage.focus({ preventScroll: true });
     if (state === 'pending' && data.expires_at) {
       updatePaymentCountdown(data.expires_at, () => renderPaymentState('expired', { ...data, payment_status: 'expired' }));
     }
@@ -1049,17 +1115,18 @@ if (registrationForm) {
   };
 
   const fetchRegistrationStatus = async (registration, email) => {
-    const response = await fetch(REGISTRATION_CONFIG.paymentStatusEndpoint, {
+    if (paymentStatusRequest) return paymentStatusRequest;
+    paymentStatusRequest = fetch(REGISTRATION_CONFIG.paymentStatusEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ registration_code: registration.registration_code, email }),
       signal: AbortSignal.timeout(10000)
-    });
-    const result = await response.json().catch(() => null);
-    if (!response.ok || !result?.payment_status) {
-      throw { code: result?.error?.code || 'STATUS_ERROR' };
-    }
-    return result;
+    }).then(async (response) => ({ response, result: await response.json().catch(() => null) }))
+      .then(({ response, result }) => {
+        if (!response.ok || !result?.payment_status) throw { code: result?.error?.code || 'STATUS_ERROR' };
+        return result;
+      }).finally(() => { paymentStatusRequest = null; });
+    return paymentStatusRequest;
   };
 
   const createPayment = async (registration, recoveryEmail = '') => {
@@ -1101,20 +1168,28 @@ if (registrationForm) {
     resultStage.focus();
   };
 
+  // Shared by polling and the manual check: renders terminal outcomes, returns false while still pending.
+  const applyPaymentStatusResult = (result, base) => {
+    if (result.payment_status === 'paid' && result.registration_status === 'confirmed') {
+      showConfirmedRegistration({ ...base, ...result });
+      return true;
+    }
+    if (['expired', 'failed', 'refunded'].includes(result.payment_status)) {
+      renderPaymentState(result.payment_status, { ...base, ...result });
+      return true;
+    }
+    return false;
+  };
+
   const pollPaymentStatus = (registration, email) => {
     paymentPollStopped = false;
+    paymentPollActive = true;
+    window.clearTimeout(paymentPollTimer);
     const poll = async () => {
       if (paymentPollStopped) return;
       try {
         const result = await fetchRegistrationStatus(registration, email);
-        if (result.payment_status === 'paid' && result.registration_status === 'confirmed') {
-          showConfirmedRegistration({ ...registration, ...result });
-          return;
-        }
-        if (['expired', 'failed', 'refunded'].includes(result.payment_status)) {
-          renderPaymentState(result.payment_status, { ...registration, ...result });
-          return;
-        }
+        if (applyPaymentStatusResult(result, registration)) return;
       } catch {
         // A transient polling error should not interrupt the payment attempt.
       }
@@ -1187,6 +1262,35 @@ if (registrationForm) {
     }
     eventFallback.removeAttribute('aria-busy');
     eventFallback.removeAttribute('aria-label');
+  };
+
+  const showPaymentRecoveryError = (registration, retry) => {
+    const stage = document.getElementById('paymentStage');
+    if (!stage) return;
+    stopPaymentMonitoring();
+    stage.classList.add('is-recovery-error');
+    lastRenderedPaymentState = null;
+    eventFallback?.classList.add('hidden');
+    registrationContent?.classList.add('hidden');
+    registrationProgress?.classList.add('hidden');
+    stage.querySelectorAll('[data-payment-state]').forEach((item) => { item.hidden = true; });
+    stage.querySelector('.payment-recovery-error').hidden = false;
+    stage.querySelector('[data-payment-recovery-retry]').onclick = retry;
+    stage.querySelector('#paymentHeading').textContent = 'Status pembayaran belum dapat diperiksa';
+    stage.querySelector('.payment-intro').textContent = 'Data pendaftaranmu tetap tersimpan. Coba lagi untuk memeriksa status pembayaran.';
+    stage.querySelector('.payment-amount').hidden = true;
+    stage.querySelector('.payment-qr-placeholder').hidden = true;
+    stage.querySelector('[data-payment-download]').hidden = true;
+    stage.querySelector('[data-payment-check]').hidden = true;
+    stage.querySelector('.payment-guide').hidden = true;
+    stage.querySelector('[data-payment-retry]').hidden = true;
+    stage.querySelector('.payment-countdown').hidden = true;
+    const backLink = stage.querySelector('[data-payment-back]');
+    backLink.hidden = !eventSlug;
+    if (eventSlug) backLink.href = `pendaftaran.html?event=${encodeURIComponent(eventSlug)}&view=detail`;
+    if (registration?.registration_code) stage.querySelector('[data-result-code]').textContent = registration.registration_code;
+    stage.hidden = false;
+    stage.focus();
   };
 
   const renderSelectedEvent = () => {
@@ -1446,7 +1550,8 @@ if (registrationForm) {
     const retryRecovery = () => recoverRegistration(options);
     const recovery = readRegistrationRecovery();
     if (!recovery) return false;
-    if (hasTerminalRecoveryRefreshMarker(recovery) && !isDocumentReload()) {
+    if (hasTerminalRecoveryRefreshMarker(recovery) && !isDocumentReload()
+      && !detailViewRequested && !resumeFromDetail) {
       clearRegistrationRecovery();
       renderSelectedEvent();
       return false;
@@ -1462,11 +1567,7 @@ if (registrationForm) {
         showRegistrationMessage('Pendaftaran sebelumnya tidak ditemukan. Silakan isi kembali data peserta.', 'error');
         return false;
       }
-      showRecoveryNotice(
-        'Status pembayaran belum dapat diperiksa',
-        'Data pendaftaranmu tetap tersimpan. Coba lagi untuk memeriksa status pembayaran.',
-        retryRecovery
-      );
+      showPaymentRecoveryError(recovery, retryRecovery);
       return true;
     }
 
@@ -1496,6 +1597,11 @@ if (registrationForm) {
       return false;
     }
     if (['expired', 'failed'].includes(status.payment_status)) {
+      if (!resumeFromDetail && !canRestoreTerminalRecovery(recovery)) {
+        clearRegistrationRecovery();
+        renderSelectedEvent();
+        return false;
+      }
       renderPaymentState(status.payment_status, restored);
       return true;
     }
@@ -1507,6 +1613,11 @@ if (registrationForm) {
 
     const attemptExpiry = Date.parse(status.expires_at || '');
     if (status.order_id && Number.isFinite(attemptExpiry) && attemptExpiry <= Date.now()) {
+      if (!resumeFromDetail && !canRestoreTerminalRecovery(recovery)) {
+        clearRegistrationRecovery();
+        renderSelectedEvent();
+        return false;
+      }
       renderPaymentState('expired', restored);
       return true;
     }
@@ -1520,15 +1631,81 @@ if (registrationForm) {
         renderPaymentState('processing', restored);
         pollPaymentStatus(restored, recovery.email);
       } else {
-        showRecoveryNotice(
-          'Status pembayaran belum dapat diperiksa',
-          'Data pendaftaranmu tetap tersimpan. Coba lagi untuk memeriksa status pembayaran.',
-          retryRecovery
-        );
+        showPaymentRecoveryError(restored, retryRecovery);
       }
     }
     return true;
   };
+
+  const checkPaymentStatus = async () => {
+    if (manualPaymentCheckActive) return;
+    const recovery = readRegistrationRecovery();
+    if (!recovery) return;
+    const button = document.querySelector('#paymentStage [data-payment-check]');
+    if (!button) return;
+    manualPaymentCheckActive = true;
+    button.disabled = true;
+    button.textContent = 'Mengecek...';
+    hidePaymentCheckNote();
+    try {
+      const result = await fetchRegistrationStatus(recovery, recovery.email);
+      const restored = recoveryPaymentData(recovery, result);
+      if (!applyPaymentStatusResult(result, restored)) {
+        showPaymentCheckNote('Pembayaran belum kami terima. Jika sudah membayar, tunggu sebentar lalu cek lagi.');
+        if (!paymentPollActive) pollPaymentStatus(restored, recovery.email);
+      }
+    } catch {
+      showPaymentCheckNote('Status belum dapat diperiksa. Coba lagi sebentar.');
+    } finally {
+      manualPaymentCheckActive = false;
+      button.disabled = false;
+      button.textContent = 'Cek status pembayaran';
+    }
+  };
+
+  document.querySelector('#paymentStage [data-payment-check]')?.addEventListener('click', checkPaymentStatus);
+
+  document.querySelectorAll('#paymentStage [data-payment-copy]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const code = document.querySelector('#paymentStage [data-result-code]')?.textContent?.trim();
+      const feedback = document.querySelector('#paymentStage [data-payment-copy-feedback]');
+      if (!code) return;
+      try {
+        await navigator.clipboard.writeText(code);
+        const original = button.textContent;
+        button.textContent = 'Tersalin';
+        if (feedback) feedback.textContent = 'Kode pendaftaran tersalin.';
+        window.setTimeout(() => { button.textContent = original; }, 1800);
+      } catch {
+        if (feedback) feedback.textContent = 'Kode belum dapat disalin. Silakan salin kode secara manual.';
+      }
+    });
+  });
+
+  document.querySelector('#paymentStage [data-payment-download]')?.addEventListener('click', async () => {
+    const image = document.querySelector('#paymentStage [data-payment-qr]');
+    const note = document.querySelector('#paymentStage [data-payment-download-note]');
+    if (!image?.src) return;
+    if (note) { note.hidden = true; note.textContent = ''; }
+    try {
+      const response = await fetch(image.src);
+      if (!response.ok) throw new Error('QR download failed');
+      const objectUrl = URL.createObjectURL(await response.blob());
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = 'qris-pembayaran-kita-bahagia.png';
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch {
+      window.open(image.src, '_blank', 'noopener,noreferrer');
+      if (note) {
+        note.textContent = 'Jika unduhan tidak dimulai, buka QR lalu simpan gambar dari perangkatmu.';
+        note.hidden = false;
+      }
+    }
+  });
 
   document.querySelector('[data-payment-retry]')?.addEventListener('click', async (event) => {
     const recovery = readRegistrationRecovery();
@@ -1590,7 +1767,7 @@ if (registrationForm) {
     registrationFormPanel?.classList.add('hidden');
     registrationReview?.classList.remove('hidden');
     setRegistrationStep('confirmation');
-    registrationReview?.focus();
+    focusRegistrationStep(registrationReview);
   };
 
   const telephoneInput = document.getElementById('telepon');
@@ -1649,7 +1826,7 @@ if (registrationForm) {
     registrationReview?.classList.add('hidden');
     registrationFormPanel?.classList.remove('hidden');
     setRegistrationStep('data');
-    registrationForm.querySelector('input:not([type="hidden"])')?.focus();
+    focusRegistrationStep(registrationFormPanel?.querySelector('.registration-form-heading'));
   });
 
   confirmRegistrationButton?.addEventListener('click', async () => {

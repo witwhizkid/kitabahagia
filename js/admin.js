@@ -286,7 +286,6 @@
       <article class="event-row">
         <div>
           <h2>${escapeHtml(event.title)}</h2>
-          <span class="environment-label">${event.environment === "development" ? "Data pengembangan" : "Data produksi"}</span>
         </div>
         <div class="event-meta">
           <span class="data-group"><span class="data-label">Jadwal</span><span>${escapeHtml(formatDate(event.event_date))}</span></span>
