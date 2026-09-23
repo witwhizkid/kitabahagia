@@ -9,7 +9,15 @@ const SITE_CONFIG = {
 };
 
 const SUPABASE_FUNCTIONS_BASE_URL = "https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1";
-const PUBLIC_EVENTS_CONFIG = Object.freeze({ demo: true });
+// Demo events show on local development only; ?demo=1 / ?demo=0 override per visit.
+const PUBLIC_EVENTS_CONFIG = Object.freeze({
+  demo: (() => {
+    const override = new URLSearchParams(window.location.search).get('demo');
+    if (override === '1') return true;
+    if (override === '0') return false;
+    return ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  })()
+});
 
 const escapeHTML = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'

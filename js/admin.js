@@ -286,6 +286,7 @@
       <article class="event-row">
         <div>
           <h2>${escapeHtml(event.title)}</h2>
+          ${event.environment === "development" ? '<span class="status-token is-pending">Demo</span>' : ""}
         </div>
         <div class="event-meta">
           <span class="data-group"><span class="data-label">Jadwal</span><span>${escapeHtml(formatDate(event.event_date))}</span></span>
