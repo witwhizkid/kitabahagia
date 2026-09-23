@@ -1461,11 +1461,48 @@ if (registrationForm) {
     registrationReview?.focus();
   };
 
+  const telephoneInput = document.getElementById('telepon');
+  const telephoneError = document.getElementById('teleponError');
+
+  const getPhoneError = (rawValue) => {
+    const raw = String(rawValue || '').trim();
+    if (!raw) return 'Nomor WhatsApp wajib diisi.';
+    if (!/^\+?[0-9\s().-]+$/.test(raw)) return 'Format nomor WhatsApp tidak valid.';
+    const normalized = raw.replace(/[\s().-]/g, '');
+    if (!/^\+?\d{8,20}$/.test(normalized)) return 'Nomor WhatsApp harus 8-20 digit angka.';
+    return '';
+  };
+
+  const setPhoneError = (message) => {
+    if (!telephoneInput || !telephoneError) return;
+    telephoneError.textContent = message;
+    telephoneError.hidden = !message;
+    telephoneInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+  };
+
+  const validatePhoneField = ({ focus = false } = {}) => {
+    if (!telephoneInput) return true;
+    const message = getPhoneError(telephoneInput.value);
+    setPhoneError(message);
+    if (message && focus) telephoneInput.focus();
+    return !message;
+  };
+
+  telephoneInput?.addEventListener('input', () => {
+    if (telephoneError && !telephoneError.hidden) validatePhoneField();
+  });
+
   registrationForm.addEventListener('submit', (event) => {
     event.preventDefault();
     if (paymentDemo) return;
-    if (!selectedEvent || !registrationAvailable || !registrationForm.checkValidity()) {
+    if (!selectedEvent || !registrationAvailable) return;
+    const phoneValid = validatePhoneField();
+    if (!registrationForm.checkValidity()) {
       registrationForm.reportValidity();
+      return;
+    }
+    if (!phoneValid) {
+      telephoneInput?.focus();
       return;
     }
     showRegistrationReview();

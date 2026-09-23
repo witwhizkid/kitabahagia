@@ -128,7 +128,7 @@
                   <input id="eventSlug" name="event_slug" type="hidden" value="">
                   <div class="form-grid">
                     <div class="field"><label for="nama">Nama lengkap *</label><input id="nama" name="nama" type="text" autocomplete="name" placeholder="Masukkan nama lengkap" required></div>
-                    <div class="field"><label for="telepon">Nomor WhatsApp *</label><input id="telepon" name="telepon" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" required></div>
+                    <div class="field"><label for="telepon">Nomor WhatsApp *</label><input id="telepon" name="telepon" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" required aria-describedby="teleponError"><span id="teleponError" class="field-error" role="alert" hidden></span></div>
                     <div class="field full"><label for="email">Email *</label><input id="email" name="email" type="email" autocomplete="email" placeholder="nama@email.com" required></div>
                     <div class="field full"><label for="bahagia">Apa definisi bahagia menurut kamu? *</label><textarea id="bahagia" name="bahagia" placeholder="Tulis definisi bahagia menurutmu..." required></textarea></div>
                     <div class="field full"><label class="check-row" for="consent"><input id="consent" name="consent" type="checkbox" value="setuju" required><span>Saya setuju untuk dihubungi oleh tim Kita Bahagia terkait pendaftaran ini.</span></label></div>
