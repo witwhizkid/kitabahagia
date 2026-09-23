@@ -6,3 +6,17 @@ node_modules/
 anti-slop/
 .vercel
 .env*
+
+# Local editor workspace settings
+.vscode/
+
+# Development/debug logs
+debug.log
+*.log
+
+# Ad-hoc/manual test payloads and outputs (not part of any test suite)
+/test-*.json
+/race-*.json
+
+# Supabase CLI local state
+supabase/.temp/
