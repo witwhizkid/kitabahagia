@@ -4819,7 +4819,7 @@ html.home-document { overflow-x: hidden; }
 }
 .home-page .testimonial-index {
   position: absolute;
-  top: -12px;
+  top: -34px;
   left: clamp(28px,4vw,60px);
   color: rgba(122,31,43,.14);
   font-family: "Instrument Sans", sans-serif;
@@ -4927,7 +4927,7 @@ html.home-document { overflow-x: hidden; }
     border-left: 0;
   }
   .home-page .testimonial-index {
-    top: -6px;
+    top: -24px;
     left: 0;
     font-size: 82px;
   }
