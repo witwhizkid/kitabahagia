@@ -3312,6 +3312,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .next-card h2 { font-size:28px; margin:2px 0 4px; }
 .next-card p { margin:0; color:rgba(255,255,255,.78); font-size:13px; }
 .countdown { display:grid; grid-template-columns:repeat(4, minmax(74px, 1fr)); gap:10px; flex-shrink:0; }
+.countdown-message { grid-column:1 / -1; }
 .countdown > div { min-width:74px; padding:11px 10px; border-radius:15px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.16); text-align:center; backdrop-filter:blur(10px); }
 .countdown strong { display:block; font-family:"Instrument Sans","DM Sans",sans-serif; font-size:28px; line-height:1; }
 .countdown span { display:block; margin-top:5px; font-size:10px; opacity:.78; text-transform:uppercase; letter-spacing:.08em; }

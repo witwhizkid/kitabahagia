@@ -746,7 +746,7 @@ function initScheduleCountdown() {
 
   const nextEvent = events[0];
   if (!nextEvent) {
-    timer.innerHTML = "<div style=\"grid-column:1/-1\"><strong>Belum ada agenda terdekat</strong><span>Silakan cek kembali jadwal berikutnya.</span></div>";
+    timer.innerHTML = "<div class=\"countdown-message\"><strong>Belum ada agenda terdekat</strong><span>Silakan cek kembali jadwal berikutnya.</span></div>";
     return;
   }
 
@@ -758,7 +758,7 @@ function initScheduleCountdown() {
   const update = () => {
     const diff = nextEvent.date.getTime() - Date.now();
     if (diff <= 0) {
-      timer.innerHTML = "<div style=\"grid-column:1/-1\"><strong>Kegiatan sedang berlangsung 🎉</strong><span>Semoga harinya berjalan menyenangkan.</span></div>";
+      timer.innerHTML = "<div class=\"countdown-message\"><strong>Kegiatan sedang berlangsung 🎉</strong><span>Semoga harinya berjalan menyenangkan.</span></div>";
       return;
     }
     const days = Math.floor(diff / 86400000);
