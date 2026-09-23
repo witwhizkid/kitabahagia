@@ -169,7 +169,8 @@ Deno.serve(async (request) => {
     is_public: "eq.true",
     archived_at: "is.null",
     is_demo: demo ? "eq.true" : "eq.false",
-    "registrations.registration_status": "in.(pending_payment,confirmed)",
+    // Same rule as create_registration: unpaid registrations hold a seat only until payment_deadline.
+    "registrations.or": `(registration_status.eq.confirmed,and(registration_status.eq.pending_payment,or(payment_deadline.is.null,payment_deadline.gt."${new Date().toISOString()}")))`,
     order: "event_date.asc,start_time.asc,slug.asc",
     limit: String(slug ? 1 : limit),
   });

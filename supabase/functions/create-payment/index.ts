@@ -18,6 +18,7 @@ const messages: Record<string, string> = {
   PAYMENT_NOT_ELIGIBLE: "Pendaftaran ini belum dapat diproses untuk pembayaran.",
   PAYMENT_IN_PROGRESS: "Pembayaran sedang diproses. Silakan coba lagi sebentar.",
   PAYMENT_AWAITING_CONFIRMATION: "Pembayaran sedang menunggu konfirmasi.",
+  PAYMENT_DEADLINE_PASSED: "Batas waktu pembayaran sudah lewat. Pendaftaran ini tidak lagi menahan kuota.",
   PAYMENT_PROVIDER_ERROR: "Layanan pembayaran sedang bermasalah. Silakan coba lagi.",
   SERVER_ERROR: "Terjadi kesalahan pada server.",
 };
@@ -25,7 +26,7 @@ const errorResponse = (status: number, code: string) =>
   jsonResponse(status, { success: false, error: { code, message: messages[code] } });
 const conflictErrors = new Set([
   "PAYMENT_NOT_REQUIRED", "PAYMENT_ALREADY_PAID", "PAYMENT_NOT_ELIGIBLE",
-  "PAYMENT_IN_PROGRESS", "PAYMENT_AWAITING_CONFIRMATION",
+  "PAYMENT_IN_PROGRESS", "PAYMENT_AWAITING_CONFIRMATION", "PAYMENT_DEADLINE_PASSED",
 ]);
 
 type PaymentRequest = { registration_code: string; email: string };
@@ -41,6 +42,7 @@ type Attempt = {
   local_status?: "creating" | "pending";
   qr_url?: string;
   expires_at?: string;
+  payment_deadline?: string | null;
 };
 
 const validateRequest = (value: unknown): PaymentRequest | null => {
@@ -107,6 +109,7 @@ const pendingResponse = (attempt: Attempt, qrUrl: string, expiresAt: string, sta
     payment_status: "pending",
     qr_url: qrUrl,
     expires_at: expiresAt,
+    payment_deadline: attempt.payment_deadline ?? null,
     order_id: attempt.order_id,
   });
 
@@ -158,6 +161,16 @@ const finalize = async (
   return result?.response.ok && result.result && typeof result.result === "object" ? result.result : null;
 };
 
+// QRIS lifetime: 60 minutes, never past the registration payment_deadline.
+// Midtrans allows 20 seconds to 7 days for GoPay/Dynamic QRIS expiry
+// (https://docs.midtrans.com/reference/gopay).
+const QR_MAX_MINUTES = 60;
+const qrMinutes = (attempt: Attempt, createdAt: Date) => {
+  const deadline = parseTime(attempt.payment_deadline);
+  if (!deadline) return QR_MAX_MINUTES;
+  return Math.min(QR_MAX_MINUTES, Math.floor((deadline.getTime() - createdAt.getTime()) / 60000));
+};
+
 const chargeAttempt = async (attempt: Attempt, midtransKey: string) => {
   const createdAt = parseTime(attempt.created_at);
   if (!createdAt) return null;
@@ -170,7 +183,7 @@ const chargeAttempt = async (attempt: Attempt, midtransKey: string) => {
         transaction_details: { order_id: attempt.order_id, gross_amount: attempt.amount },
         qris: { acquirer: "gopay" },
         item_details: [{ id: "event-registration", price: attempt.amount, quantity: 1, name: attempt.event_title.slice(0, 50) }],
-        custom_expiry: { order_time: orderTime(createdAt), expiry_duration: 15, unit: "minute" },
+        custom_expiry: { order_time: orderTime(createdAt), expiry_duration: qrMinutes(attempt, createdAt), unit: "minute" },
       }),
     });
     return { response, provider: await readProvider(response) };
@@ -183,6 +196,11 @@ const resolveCharge = async (
   url: string, serviceKey: string, midtransKey: string, attempt: Attempt,
   successStatus: 200 | 201,
 ) => {
+  const attemptCreatedAt = parseTime(attempt.created_at);
+  if (attemptCreatedAt && qrMinutes(attempt, attemptCreatedAt) < 1) {
+    await setTerminal(url, serviceKey, attempt.attempt_id, "cancelled", "payment_deadline_passed");
+    return errorResponse(409, "PAYMENT_DEADLINE_PASSED");
+  }
   const charged = await chargeAttempt(attempt, midtransKey);
   if (!charged) return errorResponse(409, "PAYMENT_IN_PROGRESS");
   const { response, provider } = charged;
@@ -219,13 +237,13 @@ const resolveCharge = async (
   const providerCreatedAt = parseTime(provider.transaction_time) ?? parseTime(attempt.created_at);
   if (!providerCreatedAt) return errorResponse(409, "PAYMENT_IN_PROGRESS");
   const expiresAt = (parseTime(provider.expiry_time)
-    ?? new Date(providerCreatedAt.getTime() + 900000)).toISOString();
+    ?? new Date(providerCreatedAt.getTime() + qrMinutes(attempt, providerCreatedAt) * 60000)).toISOString();
   const finalized = await finalize(url, serviceKey, attempt, provider, qrUrl, expiresAt);
   if (!finalized) {
     console.error("Payment attempt finalization failed", { order_id: attempt.order_id, attempt_id: attempt.attempt_id });
     return errorResponse(500, "SERVER_ERROR");
   }
-  return jsonResponse(successStatus, finalized);
+  return jsonResponse(successStatus, { ...finalized, payment_deadline: attempt.payment_deadline ?? null });
 };
 
 Deno.serve(async (request) => {
