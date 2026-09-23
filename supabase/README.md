@@ -89,6 +89,39 @@ Deploy order: `supabase db push` (migration) → deploy `public-events`,
 `payment-status`, `create-payment` → deploy the frontend. The frontend falls
 back to the old QR-expiry countdown when `payment_deadline` is absent.
 
+## Seat-hold rules
+
+Migration `20260925010000_event_seat_hold_rules.sql` builds on the payment deadline:
+
+- **Per-event window.** `events.payment_window_minutes` (default 15, allowed
+  10–1440) replaces the fixed 3 hours:
+  `payment_deadline = least(now() + payment_window_minutes, registration_deadline)`.
+  Admins choose it in the event form ("Batas waktu bayar": 10/15/30 menit,
+  1/3/24 jam); `admin-events` validates the integer range. `public-events`
+  returns it so the registration page can say how long a seat is held.
+  Existing registrations keep their stored `payment_deadline`. The 5-minute
+  `REGISTRATION_CLOSED` rule now only triggers when the event's own
+  registration deadline is less than 5 minutes away (the window is at least 10).
+- **One active registration per person per event** (free events too).
+  `create_registration` refuses `ALREADY_REGISTERED` (HTTP `409`) when the same
+  event already has a registration with the same `lower(email)` **or** the same
+  `normalize_phone(phone)` that is `confirmed`, or `pending_payment` whose
+  `payment_deadline` is still in the future. Lapsed and cancelled registrations
+  do not block. The check runs after the event row is locked `FOR UPDATE`, so
+  two concurrent sign-ups for the same event are serialised and the second one
+  sees the first one's committed row. The message does not reveal which field
+  matched.
+- `public.normalize_phone(text)` keeps digits only and maps `08…`, `8…`, `62…`
+  and `+62…` to `62…`; stored phone values are unchanged. Lookup indexes on
+  `(event_id, lower(email))` and `(event_id, normalize_phone(phone))` are not
+  unique, because older data may already contain duplicates.
+- Rollback: `supabase/rollback/20260925010000_event_seat_hold_rules.down.sql`.
+  Manual checks: `supabase/tests/20260925010000_seat_hold_rules_manual.sql`.
+
+Deploy order: `supabase db push` → deploy `create-registration`, `admin-events`,
+`public-events` → deploy the frontend (the page hides the seat-hold note when
+the field is missing).
+
 ## Confirmed registration onboarding
 
 `POST /functions/v1/payment-status` requires `registration_code` and the matching
