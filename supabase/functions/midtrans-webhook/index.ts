@@ -77,7 +77,11 @@ Deno.serve(async (request) => {
   const url = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
-  if (!url || !serviceKey || !serverKey || Deno.env.get("MIDTRANS_ENV") !== "sandbox") {
+  // Same rule as create-payment: sandbox or production, and never a sandbox key in production.
+  const midtransEnv = Deno.env.get("MIDTRANS_ENV");
+  const validEnv = midtransEnv === "sandbox"
+    || (midtransEnv === "production" && !serverKey?.startsWith("SB-"));
+  if (!url || !serviceKey || !serverKey || !validEnv) {
     console.error("Webhook payment configuration unavailable");
     return response(503, "UNAVAILABLE");
   }

@@ -148,10 +148,30 @@ supabase db push
 
 `--no-verify-jwt` allows registration without Supabase Auth; validation and database access remain server-side. Public event fixtures do not contain WhatsApp invite URLs.
 
-## Midtrans Sandbox webhook
+## Midtrans webhook
 
-Set the Payment Notification URL in the Midtrans Sandbox dashboard to:
+Set the Payment Notification URL in the Midtrans dashboard (Sandbox and Production each have their own setting) to:
 
 `https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1/midtrans-webhook`
 
-The webhook accepts POST JSON notifications, checks Midtrans SHA-512 signatures with the server-only `MIDTRANS_SERVER_KEY`, and applies payment state through the service-role-only `apply_midtrans_notification` RPC. It rejects unknown orders, identity/amount mismatches, and stale status downgrades. Configure `MIDTRANS_ENV=sandbox` and `MIDTRANS_SERVER_KEY` as Supabase function secrets. Test with a new Sandbox payment and the Midtrans simulator; do not mark payment paid from the browser or by editing database rows.
+The webhook accepts POST JSON notifications, checks Midtrans SHA-512 signatures with the server-only `MIDTRANS_SERVER_KEY`, and applies payment state through the service-role-only `apply_midtrans_notification` RPC. It rejects unknown orders, identity/amount mismatches, and stale status downgrades. Do not mark payment paid from the browser or by editing database rows.
+
+## Midtrans environment
+
+`create-payment` and `midtrans-webhook` read two function secrets:
+
+- `MIDTRANS_ENV`: `sandbox` (https://api.sandbox.midtrans.com) or `production` (https://api.midtrans.com). Any other value makes both functions refuse to run.
+- `MIDTRANS_SERVER_KEY`: the server key for that environment. A sandbox key (`SB-` prefix) is refused when `MIDTRANS_ENV=production`.
+
+No code change or redeploy is needed to switch; secrets apply to the next request.
+
+### Switching to production
+
+1. Upgrade the Supabase project to a plan with daily backups before real money flows.
+2. In the Midtrans **Production** dashboard: enable QRIS/GoPay, copy the production server key, and set the Payment Notification URL above.
+3. Set the secrets (both in one command so the functions never see a mixed pair):
+   `supabase secrets set MIDTRANS_ENV=production MIDTRANS_SERVER_KEY=<production server key>`
+4. Make a real payment with a small-priced test event, confirm the registration becomes `confirmed`/`paid`, then refund it from the Midtrans dashboard and archive the test event.
+5. Registrations and payment attempts created in sandbox stay in the database; their order IDs do not exist in production, so do not try to re-check them.
+
+Rollback: `supabase secrets set MIDTRANS_ENV=sandbox MIDTRANS_SERVER_KEY=<sandbox server key>`.

@@ -86,6 +86,19 @@ const orderTime = (date: Date) => {
   return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} +0700`;
 };
 
+// MIDTRANS_ENV picks the Midtrans API. A sandbox server key (SB- prefix) is refused in
+// production so a half-finished switch fails loudly instead of charging nothing.
+const MIDTRANS_API_BASE: Record<string, string> = {
+  sandbox: "https://api.sandbox.midtrans.com",
+  production: "https://api.midtrans.com",
+};
+const midtransApiBase = (serverKey: string) => {
+  const env = Deno.env.get("MIDTRANS_ENV") ?? "";
+  const base = MIDTRANS_API_BASE[env];
+  if (!base || (env === "production" && serverKey.startsWith("SB-"))) return null;
+  return base;
+};
+
 const midtransHeaders = (key: string, idempotencyKey?: string) => ({
   "Accept": "application/json",
   "Content-Type": "application/json",
@@ -172,11 +185,11 @@ const qrSeconds = (attempt: Attempt, createdAt: Date) => {
   return Math.min(QR_MAX_SECONDS, Math.floor((deadline.getTime() - createdAt.getTime()) / 1000));
 };
 
-const chargeAttempt = async (attempt: Attempt, midtransKey: string) => {
+const chargeAttempt = async (attempt: Attempt, midtransKey: string, midtransBase: string) => {
   const createdAt = parseTime(attempt.created_at);
   if (!createdAt) return null;
   try {
-    const response = await fetch("https://api.sandbox.midtrans.com/v2/charge", {
+    const response = await fetch(`${midtransBase}/v2/charge`, {
       method: "POST",
       headers: midtransHeaders(midtransKey, `charge-${attempt.attempt_id}`),
       body: JSON.stringify({
@@ -194,7 +207,7 @@ const chargeAttempt = async (attempt: Attempt, midtransKey: string) => {
 };
 
 const resolveCharge = async (
-  url: string, serviceKey: string, midtransKey: string, attempt: Attempt,
+  url: string, serviceKey: string, midtransKey: string, midtransBase: string, attempt: Attempt,
   successStatus: 200 | 201,
 ) => {
   const attemptCreatedAt = parseTime(attempt.created_at);
@@ -202,7 +215,7 @@ const resolveCharge = async (
     await setTerminal(url, serviceKey, attempt.attempt_id, "cancelled", "payment_deadline_passed");
     return errorResponse(409, "PAYMENT_DEADLINE_PASSED");
   }
-  const charged = await chargeAttempt(attempt, midtransKey);
+  const charged = await chargeAttempt(attempt, midtransKey, midtransBase);
   if (!charged) return errorResponse(409, "PAYMENT_IN_PROGRESS");
   const { response, provider } = charged;
   if (response.status === 202) return errorResponse(409, "PAYMENT_IN_PROGRESS");
@@ -261,7 +274,8 @@ Deno.serve(async (request) => {
   const url = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const midtransKey = Deno.env.get("MIDTRANS_SERVER_KEY");
-  if (!url || !serviceKey || !midtransKey || Deno.env.get("MIDTRANS_ENV") !== "sandbox") {
+  const midtransBase = midtransKey ? midtransApiBase(midtransKey) : null;
+  if (!url || !serviceKey || !midtransKey || !midtransBase) {
     console.error("Missing or invalid server payment configuration");
     return errorResponse(500, "SERVER_ERROR");
   }
@@ -280,7 +294,7 @@ Deno.serve(async (request) => {
     let provider: Record<string, unknown> | null;
     try {
       response = await fetch(
-        `https://api.sandbox.midtrans.com/v2/${encodeURIComponent(attempt.order_id)}/status`,
+        `${midtransBase}/v2/${encodeURIComponent(attempt.order_id)}/status`,
         { method: "GET", headers: midtransHeaders(midtransKey) },
       );
       provider = await readProvider(response);
@@ -291,7 +305,7 @@ Deno.serve(async (request) => {
     const notFound = response.status === 404 || provider?.status_code === "404";
     if (notFound) {
       return attempt.local_status === "creating"
-        ? await resolveCharge(url, serviceKey, midtransKey, attempt, 200)
+        ? await resolveCharge(url, serviceKey, midtransKey, midtransBase, attempt, 200)
         : errorResponse(409, "PAYMENT_IN_PROGRESS");
     } else {
       if (!response.ok || !provider) return errorResponse(502, "PAYMENT_PROVIDER_ERROR");
@@ -315,7 +329,7 @@ Deno.serve(async (request) => {
         if (!expiry) return errorResponse(409, "PAYMENT_IN_PROGRESS");
         if (expiry > new Date()) {
           if (attempt.local_status === "creating") {
-            return await resolveCharge(url, serviceKey, midtransKey, attempt, 200);
+            return await resolveCharge(url, serviceKey, midtransKey, midtransBase, attempt, 200);
           }
           return attempt.qr_url
             ? pendingResponse(attempt, attempt.qr_url, expiry.toISOString())
@@ -326,7 +340,7 @@ Deno.serve(async (request) => {
         let expiredProvider: Record<string, unknown> | null;
         try {
           expireResponse = await fetch(
-            `https://api.sandbox.midtrans.com/v2/${encodeURIComponent(attempt.order_id)}/expire`,
+            `${midtransBase}/v2/${encodeURIComponent(attempt.order_id)}/expire`,
             { method: "POST", headers: midtransHeaders(midtransKey, `expire-${attempt.attempt_id}`) },
           );
           expiredProvider = await readProvider(expireResponse);
@@ -353,5 +367,5 @@ Deno.serve(async (request) => {
   }
 
   if (attempt.needs_recovery || attempt.is_reused) return errorResponse(409, "PAYMENT_IN_PROGRESS");
-  return await resolveCharge(url, serviceKey, midtransKey, attempt, 201);
+  return await resolveCharge(url, serviceKey, midtransKey, midtransBase, attempt, 201);
 });
