@@ -794,27 +794,66 @@ if (registrationForm) {
     pending: ['Selesaikan pembayaran', 'Pendaftaranmu sudah tercatat. Selesaikan pembayaran untuk mengamankan tempatmu.'],
     processing: ['Pembayaran sedang diverifikasi', 'Kami sedang memastikan pembayaranmu. Halaman ini akan diperbarui setelah statusnya terkonfirmasi.'],
     paid: ['Pembayaran berhasil', 'Tempatmu sudah dikonfirmasi.'],
-    expired: ['Waktu pembayaran habis', 'QRIS sebelumnya sudah tidak dapat digunakan. Pendaftaranmu tetap tercatat.'],
+    expired: ['Waktu pembayaran habis', 'QRIS sebelumnya sudah kedaluwarsa. Pendaftaranmu masih tersimpan. Kamu bisa membuat QRIS baru untuk melanjutkan pembayaran.'],
     failed: ['Pembayaran belum berhasil', 'Pembayaran tidak berhasil diselesaikan. Pendaftaranmu tetap tercatat.'],
     refunded: ['Pembayaran dikembalikan', 'Pembayaran ini sudah dikembalikan. Hubungi tim Kita Bahagia bila perlu bantuan.']
   };
   const paymentStatusCopy = {
     pending: ['Menunggu pembayaran', 'Selesaikan pembayaran melalui QRIS sebelum waktu pembayaran habis.'],
     processing: ['Pembayaran sedang diperiksa', 'Pembayaranmu sedang diperiksa. Tidak perlu melakukan pembayaran ulang.'],
-    paid: ['Pembayaran berhasil', 'Pendaftaranmu sudah dikonfirmasi.'],
-    expired: ['Waktu pembayaran habis', 'QRIS sebelumnya sudah tidak dapat digunakan.'],
-    failed: ['Pembayaran belum berhasil', 'Pembayaran tidak berhasil diselesaikan.'],
     refunded: ['Pembayaran dikembalikan', 'Pembayaran ini sudah dikembalikan.']
   };
   const requestedDemo = ['localhost', '127.0.0.1'].includes(window.location.hostname)
     ? params.get('payment_demo') : null;
   const paymentDemoStates = ['pending', 'processing', 'paid', 'expired', 'failed'];
   const paymentDemo = paymentDemoStates.includes(requestedDemo) ? requestedDemo : null;
+  // Set by the pending-payment "Kembali ke detail kegiatan" link: show the event
+  // without auto-resuming payment, while keeping the stored recovery intact.
+  let detailViewRequested = params.get('view') === 'detail';
   const recoveryStorageKey = `kb:registration-recovery:v1:${eventSlug}`;
+  const terminalRecoveryRefreshKey = `kb:registration-terminal-refresh:v1:${eventSlug}`;
 
   let countdownTimer = null;
   let paymentPollTimer = null;
   let paymentPollStopped = false;
+
+  const clearTerminalRecoveryRefreshMarker = () => {
+    try {
+      window.sessionStorage.removeItem(terminalRecoveryRefreshKey);
+    } catch {
+      // Session storage is optional; a fresh registration remains available.
+    }
+  };
+
+  const markTerminalRecoveryForRefresh = (registration) => {
+    const code = String(registration?.registration_code || '').trim().toUpperCase();
+    if (!code) return;
+    try {
+      window.sessionStorage.setItem(terminalRecoveryRefreshKey, code);
+    } catch {
+      // Immediate success recovery is best-effort when session storage is unavailable.
+    }
+  };
+
+  const isDocumentReload = () => {
+    try {
+      const navigation = window.performance?.getEntriesByType('navigation')?.[0];
+      return navigation?.type === 'reload';
+    } catch {
+      return false;
+    }
+  };
+
+  const hasTerminalRecoveryRefreshMarker = (recovery) => {
+    try {
+      return window.sessionStorage.getItem(terminalRecoveryRefreshKey) === recovery.registration_code;
+    } catch {
+      return false;
+    }
+  };
+
+  const canRestoreTerminalRecovery = (recovery) => isDocumentReload()
+    && hasTerminalRecoveryRefreshMarker(recovery);
 
   const readRegistrationRecovery = () => {
     try {
@@ -836,6 +875,7 @@ if (registrationForm) {
   };
 
   const persistRegistrationRecovery = (registration, email) => {
+    clearTerminalRecoveryRefreshMarker();
     try {
       localStorage.setItem(recoveryStorageKey, JSON.stringify({
         event_slug: eventSlug,
@@ -848,6 +888,7 @@ if (registrationForm) {
   };
 
   const clearRegistrationRecovery = () => {
+    clearTerminalRecoveryRefreshMarker();
     try {
       localStorage.removeItem(recoveryStorageKey);
     } catch {
@@ -910,6 +951,7 @@ if (registrationForm) {
     if (!stage || !Object.hasOwn(paymentStates, state)) return;
     if (['paid', 'expired', 'failed', 'refunded'].includes(state)) stopPaymentMonitoring();
     const [heading, body] = paymentStates[state];
+    eventFallback?.classList.add('hidden');
     Object.keys(paymentStates).forEach((key) => stage.classList.toggle(`payment_${key}`, key === state));
     stage.querySelectorAll('[data-payment-state]').forEach((container) => {
       const statusCopy = paymentStatusCopy[state];
@@ -941,7 +983,21 @@ if (registrationForm) {
     }
     qr.setAttribute('aria-label', hasQr ? 'QRIS pembayaran' : 'QRIS belum tersedia');
     const retryPaymentButton = stage.querySelector('[data-payment-retry]');
-    if (retryPaymentButton) retryPaymentButton.hidden = !['expired', 'failed'].includes(state);
+    if (retryPaymentButton) {
+      retryPaymentButton.hidden = !['expired', 'failed'].includes(state);
+      retryPaymentButton.disabled = false;
+      retryPaymentButton.textContent = 'Buat QRIS baru';
+    }
+    const retryError = stage.querySelector('[data-payment-retry-error]');
+    if (retryError) {
+      retryError.hidden = true;
+      retryError.textContent = '';
+    }
+    const backLink = stage.querySelector('[data-payment-back]');
+    if (backLink) {
+      backLink.hidden = !['pending', 'expired'].includes(state) || !eventSlug;
+      if (eventSlug) backLink.href = `pendaftaran.html?event=${encodeURIComponent(eventSlug)}&view=detail`;
+    }
     stage.querySelector('.payment-countdown').hidden = true;
     if (paymentDemo && state === 'pending') {
       stage.querySelector('#paymentHeading').textContent = 'Simulasi pembayaran';
@@ -1026,6 +1082,7 @@ if (registrationForm) {
     stopPaymentMonitoring();
     renderPaymentState('paid', data);
     renderOnboarding(document.querySelector('#paymentStage [data-registration-onboarding]'), data);
+    markTerminalRecoveryForRefresh(data);
     document.getElementById('paymentStage')?.focus();
   };
 
@@ -1040,6 +1097,7 @@ if (registrationForm) {
     renderOnboarding(resultStage.querySelector('[data-registration-onboarding]'), data);
     resultStage.hidden = false;
     document.getElementById('registrationStatus')?.classList.add('hidden');
+    markTerminalRecoveryForRefresh(data);
     resultStage.focus();
   };
 
@@ -1104,6 +1162,11 @@ if (registrationForm) {
   };
 
   const showRecoveryNotice = (title, message, retry = null) => {
+    stopPaymentMonitoring();
+    const paymentStage = document.getElementById('paymentStage');
+    if (paymentStage) paymentStage.hidden = true;
+    const freeConfirmation = document.getElementById('freeRegistrationConfirmation');
+    if (freeConfirmation) freeConfirmation.hidden = true;
     registrationContent?.classList.add('hidden');
     registrationProgress?.classList.add('hidden');
     if (!eventFallback) return;
@@ -1237,6 +1300,40 @@ if (registrationForm) {
 
   let registrationEventLoading = false;
 
+  // Returning to registration from the detail view resumes the stored pending
+  // registration instead of creating a new one.
+  const resumePendingRegistration = async () => {
+    detailViewRequested = false;
+    const summaryCta = document.querySelector('.registration-summary-cta');
+    if (summaryCta) summaryCta.textContent = 'Daftar kegiatan';
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('view');
+      url.hash = '';
+      window.history.replaceState(null, '', url);
+    } catch {
+      // Without history support a refresh simply shows the detail view again.
+    }
+    await recoverRegistration({ resumeFromDetail: true });
+  };
+
+  const showPendingRegistrationDetail = () => {
+    registrationFormPanel?.classList.add('hidden');
+    registrationUnavailable?.classList.add('hidden');
+    registrationProgress?.classList.add('hidden');
+    const summaryCta = document.querySelector('.registration-summary-cta');
+    if (summaryCta) {
+      summaryCta.hidden = false;
+      summaryCta.textContent = 'Lanjutkan pembayaran';
+    }
+  };
+
+  document.querySelector('.registration-summary-cta')?.addEventListener('click', (event) => {
+    if (!detailViewRequested) return;
+    event.preventDefault();
+    void resumePendingRegistration();
+  });
+
   const initializeRegistrationEvent = async () => {
     if (registrationEventLoading) return;
     if (!eventSlug) {
@@ -1264,6 +1361,11 @@ if (registrationForm) {
       if (!event || event.slug !== eventSlug) throw new Error('Public event response does not match requested slug');
       selectedEvent = event;
       renderSelectedEvent();
+      if (detailViewRequested && readRegistrationRecovery()) {
+        showPendingRegistrationDetail();
+        return;
+      }
+      detailViewRequested = false;
       await recoverRegistration();
     } catch (error) {
       console.error('Detail kegiatan gagal dimuat', error);
@@ -1292,6 +1394,8 @@ if (registrationForm) {
       name: String(formData.get('nama') || '').trim(),
       phone: String(formData.get('telepon') || '').trim(),
       email: String(formData.get('email') || '').trim().toLowerCase(),
+      domicile: String(formData.get('domicile') || '').trim(),
+      institution: String(formData.get('institution') || '').trim(),
       reason: String(formData.get('alasan') || formData.get('bahagia') || '').trim(),
       notes: String(formData.get('catatan') || '').trim() || null,
       consent: formData.get('consent') !== null
@@ -1335,9 +1439,18 @@ if (registrationForm) {
     ...status
   });
 
-  const recoverRegistration = async () => {
+  // resumeFromDetail: the visitor pressed "Lanjutkan pembayaran" on ?view=detail, so a
+  // registration that completed meanwhile is shown as confirmed instead of starting over.
+  const recoverRegistration = async (options) => {
+    const resumeFromDetail = options?.resumeFromDetail === true;
+    const retryRecovery = () => recoverRegistration(options);
     const recovery = readRegistrationRecovery();
     if (!recovery) return false;
+    if (hasTerminalRecoveryRefreshMarker(recovery) && !isDocumentReload()) {
+      clearRegistrationRecovery();
+      renderSelectedEvent();
+      return false;
+    }
     showRecoveryNotice('Memeriksa pendaftaran', 'Kami sedang memulihkan status pendaftaranmu.');
     let status;
     try {
@@ -1350,19 +1463,29 @@ if (registrationForm) {
         return false;
       }
       showRecoveryNotice(
-        'Pendaftaran belum dapat dipulihkan',
-        'Periksa koneksi, lalu coba lagi. Data pemulihanmu tetap tersimpan.',
-        recoverRegistration
+        'Status pembayaran belum dapat diperiksa',
+        'Data pendaftaranmu tetap tersimpan. Coba lagi untuk memeriksa status pembayaran.',
+        retryRecovery
       );
       return true;
     }
 
     const restored = recoveryPaymentData(recovery, status);
     if (status.registration_status === 'confirmed' && status.payment_status === 'paid') {
+      if (!resumeFromDetail && !canRestoreTerminalRecovery(recovery)) {
+        clearRegistrationRecovery();
+        renderSelectedEvent();
+        return false;
+      }
       showConfirmedRegistration(restored);
       return true;
     }
     if (status.registration_status === 'confirmed' && status.payment_status === 'not_required') {
+      if (!resumeFromDetail && !canRestoreTerminalRecovery(recovery)) {
+        clearRegistrationRecovery();
+        renderSelectedEvent();
+        return false;
+      }
       showFreeRegistrationConfirmation(restored);
       return true;
     }
@@ -1382,6 +1505,12 @@ if (registrationForm) {
       return true;
     }
 
+    const attemptExpiry = Date.parse(status.expires_at || '');
+    if (status.order_id && Number.isFinite(attemptExpiry) && attemptExpiry <= Date.now()) {
+      renderPaymentState('expired', restored);
+      return true;
+    }
+
     try {
       const payment = await createPayment(restored, recovery.email);
       renderPaymentState('pending', payment);
@@ -1392,9 +1521,9 @@ if (registrationForm) {
         pollPaymentStatus(restored, recovery.email);
       } else {
         showRecoveryNotice(
-          'Pembayaran belum dapat dipulihkan',
-          'Data pendaftaranmu tetap tersimpan. Coba lagi untuk memeriksa pembayaran.',
-          recoverRegistration
+          'Status pembayaran belum dapat diperiksa',
+          'Data pendaftaranmu tetap tersimpan. Coba lagi untuk memeriksa status pembayaran.',
+          retryRecovery
         );
       }
     }
@@ -1407,24 +1536,25 @@ if (registrationForm) {
     const button = event.currentTarget;
     button.disabled = true;
     button.textContent = 'Menyiapkan QRIS...';
+    const staleRetryError = document.querySelector('#paymentStage [data-payment-retry-error]');
+    if (staleRetryError) staleRetryError.hidden = true;
     try {
       const payment = await createPayment(recoveryPaymentData(recovery), recovery.email);
       renderPaymentState('pending', payment);
       pollPaymentStatus(payment, recovery.email);
     } catch (error) {
-      if (['PAYMENT_IN_PROGRESS', 'PAYMENT_AWAITING_CONFIRMATION'].includes(error?.code)) {
+      if (['PAYMENT_IN_PROGRESS', 'PAYMENT_AWAITING_CONFIRMATION', 'PAYMENT_ALREADY_PAID'].includes(error?.code)) {
         renderPaymentState('processing', recoveryPaymentData(recovery));
         pollPaymentStatus(recoveryPaymentData(recovery), recovery.email);
-      } else {
-        showRecoveryNotice(
-          'QRIS belum dapat dibuat',
-          'Data pendaftaranmu tetap tersimpan. Silakan coba lagi.',
-          recoverRegistration
-        );
+        return;
       }
-    } finally {
       button.disabled = false;
-      button.textContent = 'Buat QRIS baru';
+      button.textContent = 'Coba lagi';
+      const retryError = document.querySelector('#paymentStage [data-payment-retry-error]');
+      if (retryError) {
+        retryError.textContent = 'QRIS baru belum berhasil dibuat. Coba lagi beberapa saat lagi.';
+        retryError.hidden = false;
+      }
     }
   });
 
@@ -1445,6 +1575,8 @@ if (registrationForm) {
     setDataText('[data-review-name]', String(formData.get('nama') || '').trim(), registrationReview);
     setDataText('[data-review-phone]', String(formData.get('telepon') || '').trim(), registrationReview);
     setDataText('[data-review-email]', String(formData.get('email') || '').trim(), registrationReview);
+    setDataText('[data-review-domicile]', String(formData.get('domicile') || '').trim(), registrationReview);
+    setDataText('[data-review-institution]', String(formData.get('institution') || '').trim(), registrationReview);
     setDataText('[data-review-happiness]', String(formData.get('bahagia') || '').trim(), registrationReview);
     setDataText('[data-review-event-title]', selectedEvent.name, registrationReview);
     setDataText('[data-review-event-date]', `${selectedEvent.date} · ${selectedEvent.time}`, registrationReview);
@@ -1495,6 +1627,10 @@ if (registrationForm) {
   registrationForm.addEventListener('submit', (event) => {
     event.preventDefault();
     if (paymentDemo) return;
+    if (detailViewRequested) {
+      void resumePendingRegistration();
+      return;
+    }
     if (!selectedEvent || !registrationAvailable) return;
     const phoneValid = validatePhoneField();
     if (!registrationForm.checkValidity()) {

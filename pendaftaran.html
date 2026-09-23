@@ -130,8 +130,8 @@
                     <div class="field"><label for="nama">Nama lengkap *</label><input id="nama" name="nama" type="text" autocomplete="name" placeholder="Masukkan nama lengkap" required></div>
                     <div class="field"><label for="telepon">Nomor WhatsApp *</label><input id="telepon" name="telepon" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" required aria-describedby="teleponError"><span id="teleponError" class="field-error" role="alert" hidden></span></div>
                     <div class="field full"><label for="email">Email *</label><input id="email" name="email" type="email" autocomplete="email" placeholder="nama@email.com" required></div>
-                    <div class="field full"><label for="Domisili">Domisili *</label><input id="Domisili" name="Domisili" type="text" autocomplete="address" placeholder="Tempat Tinggal kamu sekarang" required></div>
-                    <div class="field full"><label for="Asal Instansi">Asal Instansi *</label><input id="Asal Instansi" name="Asal Instansi" type="text" autocomplete="organization" placeholder="Nama instansi tempat kamu bekerja atau kuliah" required></div>
+                    <div class="field full"><label for="domicile">Domisili *</label><input id="domicile" name="domicile" type="text" autocomplete="address" placeholder="Tempat Tinggal kamu sekarang" maxlength="200" required></div>
+                    <div class="field full"><label for="institution">Asal Instansi *</label><input id="institution" name="institution" type="text" autocomplete="organization" placeholder="Nama instansi tempat kamu bekerja atau kuliah" maxlength="200" required></div>
                     <div class="field full"><label for="bahagia">Apa definisi bahagia menurut kamu? *</label><textarea id="bahagia" name="bahagia" placeholder="Tulis definisi bahagia menurutmu..." required></textarea></div>
                     <div class="field full"><label class="check-row" for="consent"><input id="consent" name="consent" type="checkbox" value="setuju" required><span>Saya setuju untuk dihubungi oleh tim Kita Bahagia terkait pendaftaran ini.</span></label></div>
                   </div>
@@ -162,6 +162,8 @@
                   <div><dt>Nama lengkap</dt><dd data-review-name></dd></div>
                   <div><dt>Nomor WhatsApp</dt><dd data-review-phone></dd></div>
                   <div><dt>Email</dt><dd data-review-email></dd></div>
+                  <div><dt>Domisili</dt><dd data-review-domicile></dd></div>
+                  <div><dt>Asal Instansi</dt><dd data-review-institution></dd></div>
                   <div><dt>Definisi bahagia</dt><dd data-review-happiness></dd></div>
                 </dl>
               </div>
@@ -190,7 +192,7 @@
               <img data-payment-qr alt="" decoding="async">
             </div>
             <div class="payment-countdown" aria-live="polite" aria-label="Waktu tersisa untuk pembayaran">
-              <span>QR berlaku selama</span><strong>15:00</strong><small>Timer akan aktif setelah QRIS tersedia.</small>
+              <span>QR berlaku selama</span><strong>15:00</strong><small></small>
             </div>
             <div class="payment-state payment_pending" data-payment-state="payment_pending" role="status" aria-live="polite"><strong>Menunggu pembayaran</strong><p>Menunggu status pembayaran.</p></div>
             <div class="payment-state payment_processing" data-payment-state="payment_processing" role="status" aria-live="polite" hidden><strong>Pembayaran sedang diverifikasi</strong></div>
@@ -198,6 +200,8 @@
             <div class="payment-state payment_expired" data-payment-state="payment_expired" role="status" aria-live="polite" hidden><strong>Waktu pembayaran habis.</strong></div>
             <div class="payment-state payment_failed" data-payment-state="payment_failed" role="status" aria-live="polite" hidden><strong>Pembayaran belum berhasil.</strong></div>
             <button class="btn btn-primary" type="button" data-payment-retry hidden>Buat QRIS baru</button>
+            <p class="payment-retry-error" data-payment-retry-error role="alert" hidden></p>
+            <a class="text-link payment-back-link" data-payment-back hidden><span aria-hidden="true">&larr;</span> Kembali ke detail kegiatan</a>
             <section class="registration-onboarding" data-registration-onboarding aria-labelledby="paymentOnboardingHeading" hidden>
               <h3 id="paymentOnboardingHeading">Langkah berikutnya</h3>
               <p data-onboarding-copy>Gabung ke grup kegiatan untuk menerima informasi dan koordinasi dari tim Kita Bahagia.</p>

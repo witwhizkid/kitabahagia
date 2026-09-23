@@ -2604,6 +2604,12 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .payment-countdown small { color:var(--muted); font-size:12px; }
 .payment-state { padding-top:20px; border-top:1px solid var(--line); }
 .payment-state > strong { color:var(--maroon); }
+.payment-back-link { display:inline-flex; align-items:center; gap:6px; min-height:44px; margin-top:12px; font-weight:600; color:var(--muted); }
+.payment-back-link:hover { color:var(--maroon); }
+.payment-back-link span { margin-left:0; }
+.payment-back-link[hidden] { display:none; }
+.payment-retry-error { max-width:48ch; margin:10px 0 0; color:var(--maroon-deep); font-size:13px; font-weight:600; line-height:1.5; }
+.payment-retry-error[hidden] { display:none; }
 .registration-onboarding { margin-top:28px; padding-top:24px; border-top:1px solid var(--line); }
 .registration-onboarding h3 { margin:0 0 8px; font-size:20px; }
 .registration-onboarding p { max-width:48ch; margin:0 0 18px; color:var(--muted); font-size:14px; line-height:1.65; }
