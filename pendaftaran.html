@@ -191,8 +191,12 @@
             <p class="payment-intro">Pendaftaranmu sudah tercatat. Selesaikan pembayaran untuk mengamankan tempatmu.</p>
             <div class="payment-amount"><span>Total pembayaran</span><strong data-payment-amount></strong></div>
             <div class="payment-qr-section">
-              <div class="payment-qr-heading"><span class="payment-eyebrow">QRIS</span><p>Scan atau unggah QRIS melalui aplikasi pembayaran yang mendukung QRIS.</p></div>
-              <div class="payment-qr-placeholder" aria-label="QRIS belum tersedia" hidden><img data-payment-qr alt="" decoding="async"></div>
+              <div class="payment-qr-card">
+                <div class="payment-qr-heading"><span class="payment-qris-badge">QRIS</span><p>GoPay · ShopeePay · OVO · DANA · LinkAja · Mobile banking</p></div>
+                <div class="payment-qr-placeholder" aria-label="QRIS belum tersedia" hidden><div class="payment-qr-code" data-payment-qr-code role="img" hidden></div><img data-payment-qr alt="" decoding="async"></div>
+                <button class="payment-download" type="button" data-payment-download hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Unduh QRIS</button>
+                <p class="payment-download-note" data-payment-download-note aria-live="polite" hidden></p>
+              </div>
             </div>
             <div class="payment-state payment_pending" data-payment-state="payment_pending" role="status" aria-live="polite"><strong>Menunggu pembayaran</strong><p>Menunggu status pembayaran.</p></div>
             <div class="payment-state payment_processing" data-payment-state="payment_processing" role="status" aria-live="polite" hidden><strong>Pembayaran sedang diverifikasi</strong></div>
@@ -204,8 +208,6 @@
             <p class="payment-retry-error" data-payment-retry-error role="alert" hidden></p>
             <button class="btn btn-primary payment-check" type="button" data-payment-check>Cek status pembayaran</button>
             <p class="payment-download-note" data-payment-check-note aria-live="polite" hidden></p>
-            <button class="payment-download" type="button" data-payment-download hidden>Unduh QRIS</button>
-            <p class="payment-download-note" data-payment-download-note aria-live="polite" hidden></p>
             <section class="payment-guide" aria-labelledby="paymentGuideHeading"><h3 id="paymentGuideHeading">Panduan cara pembayaran</h3><ol><li>Simpan QRIS atau screenshot QR di atas.</li><li>Buka aplikasi pembayaran atau mobile banking yang mendukung QRIS.</li><li>Pilih scan atau unggah QRIS dari galeri jika tersedia.</li><li>Periksa nominal lalu konfirmasi pembayaran.</li><li>Kembali ke halaman ini; status akan diperiksa otomatis.</li></ol></section>
             <section class="registration-onboarding" data-registration-onboarding aria-labelledby="paymentOnboardingHeading" hidden>
               <h3 id="paymentOnboardingHeading">Langkah berikutnya</h3>
@@ -285,6 +287,7 @@
       </div>
     </div>
   </footer>
+  <script src="js/vendor/qrcode-generator.min.js"></script>
   <script src="js/script.js"></script>
 </body>
 </html>

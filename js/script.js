@@ -1037,6 +1037,34 @@ if (registrationForm) {
     if (expiry > Date.now()) countdownTimer = window.setInterval(update, 1000);
   };
 
+  // QRIS payload from Midtrans, drawn as our own QR instead of the Midtrans poster image.
+  const validQrString = (value) => typeof value === 'string' && /^000201[\x20-\x7E]{14,1018}$/.test(value);
+  // The payload only counts for the QR image it arrived with, so a renewed QR never shows a stale code.
+  const qrStringFor = (data) => (data?.qr_payload?.url === data?.qr_url ? data.qr_payload.value : null);
+  const buildQr = (value) => {
+    if (typeof window.qrcode !== 'function' || !validQrString(value)) return null;
+    try {
+      const qr = window.qrcode(0, 'M');
+      qr.addData(value, 'Byte');
+      qr.make();
+      return qr;
+    } catch {
+      return null;
+    }
+  };
+  const QR_QUIET_ZONE = 4;
+  const qrSvgMarkup = (qr) => {
+    const count = qr.getModuleCount();
+    const size = count + QR_QUIET_ZONE * 2;
+    let path = '';
+    for (let row = 0; row < count; row += 1) {
+      for (let col = 0; col < count; col += 1) {
+        if (qr.isDark(row, col)) path += `M${col + QR_QUIET_ZONE} ${row + QR_QUIET_ZONE}h1v1h-1z`;
+      }
+    }
+    return `<svg viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" aria-hidden="true"><rect width="${size}" height="${size}" fill="#fff"/><path d="${path}" fill="#231f20"/></svg>`;
+  };
+
   const renderPaymentState = (state, incoming) => {
     const stage = document.getElementById('paymentStage');
     if (!stage || !Object.hasOwn(paymentStates, state)) return;
@@ -1079,14 +1107,25 @@ if (registrationForm) {
     const qrImage = qr?.querySelector('[data-payment-qr]');
     const hasQr = typeof data.qr_url === 'string' && /^https:\/\//.test(data.qr_url);
     qr.hidden = !hasQr || !['pending', 'processing'].includes(state);
+    const qrCode = qr?.querySelector('[data-payment-qr-code]');
+    const drawnQr = hasQr ? buildQr(qrStringFor(data)) : null;
+    if (qrCode) {
+      qrCode.hidden = !drawnQr;
+      qrCode.innerHTML = drawnQr ? qrSvgMarkup(drawnQr) : '';
+    }
     const downloadButton = stage.querySelector('[data-payment-download]');
     if (downloadButton) downloadButton.hidden = qr.hidden;
     const checkButton = stage.querySelector('[data-payment-check]');
     if (checkButton) checkButton.hidden = !['pending', 'processing'].includes(state);
-    if (qrImage && hasQr) {
-      qrImage.src = data.qr_url;
-      qrImage.alt = `QRIS pembayaran ${formatEventPrice(data.amount)} untuk ${data.event_title || selectedEvent?.name || 'kegiatan Kita Bahagia'}`;
+    const qrLabel = `QRIS pembayaran ${formatEventPrice(data.amount)} untuk ${data.event_title || selectedEvent?.name || 'kegiatan Kita Bahagia'}`;
+    if (qrImage) {
+      qrImage.hidden = Boolean(drawnQr) || !hasQr;
+      if (hasQr && !drawnQr) {
+        qrImage.src = data.qr_url;
+        qrImage.alt = qrLabel;
+      }
     }
+    if (qrCode && drawnQr) qrCode.setAttribute('aria-label', qrLabel);
     qr.setAttribute('aria-label', hasQr ? 'QRIS pembayaran' : 'QRIS belum tersedia');
     const retryPaymentButton = stage.querySelector('[data-payment-retry]');
     if (retryPaymentButton) {
@@ -1198,7 +1237,11 @@ if (registrationForm) {
       || typeof result.amount !== 'number' || typeof result.qr_url !== 'string' || typeof result.expires_at !== 'string') {
       throw { code: result?.error?.code || 'PAYMENT_ERROR' };
     }
-    return { ...registration, ...result, event_title: registration.event_title || selectedEvent.name };
+    return {
+      ...registration, ...result,
+      qr_payload: { url: result.qr_url, value: validQrString(result.qr_string) ? result.qr_string : null },
+      event_title: registration.event_title || selectedEvent.name
+    };
   };
 
   const showConfirmedRegistration = (data) => {
@@ -1867,22 +1910,127 @@ if (registrationForm) {
     });
   });
 
+  const saveBlob = (blob, filename) => {
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  };
+
+  // A branded, shareable QRIS image drawn locally, so saving it never depends on Midtrans CORS.
+  const drawQrisPoster = async (data, qr) => {
+    const width = 1080;
+    const height = 1480;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) return null;
+    await document.fonts?.ready?.catch?.(() => {});
+    const font = (weight, size) => `${weight} ${size}px "DM Sans", "Instrument Sans", Arial, sans-serif`;
+    const fitText = (text, maxWidth) => {
+      let value = String(text || '');
+      while (value.length > 1 && context.measureText(value).width > maxWidth) value = value.slice(0, -2);
+      return value === String(text || '') ? value : `${value.trimEnd()}…`;
+    };
+
+    context.fillStyle = '#fbf8f4';
+    context.fillRect(0, 0, width, height);
+    context.fillStyle = '#7a1f2b';
+    context.fillRect(0, 0, width, 260);
+    context.fillStyle = 'rgba(255,255,255,.08)';
+    context.beginPath(); context.arc(960, 40, 170, 0, Math.PI * 2); context.fill();
+    context.beginPath(); context.arc(90, 260, 110, 0, Math.PI * 2); context.fill();
+
+    const logo = new Image();
+    logo.src = 'assets/logo/2.%20Logo%20Gabungan/Logo%20Kita%20Bahagiaa.png';
+    const logoReady = await logo.decode().then(() => true).catch(() => false);
+    if (logoReady) {
+      // The logo file is maroon; tint it white for the maroon band (the site header does this with CSS).
+      const tinted = document.createElement('canvas');
+      tinted.width = 150;
+      tinted.height = 150;
+      const tint = tinted.getContext('2d');
+      tint.drawImage(logo, 0, 0, 150, 150);
+      tint.globalCompositeOperation = 'source-in';
+      tint.fillStyle = '#ffffff';
+      tint.fillRect(0, 0, 150, 150);
+      context.drawImage(tinted, 64, 44);
+    }
+    context.fillStyle = '#ffffff';
+    context.font = font(700, 30);
+    context.fillText('PEMBAYARAN QRIS', logoReady ? 240 : 72, 118);
+    context.font = font(700, 44);
+    context.fillText(fitText(data.event_title || 'Kegiatan Kita Bahagia', logoReady ? 770 : 930), logoReady ? 240 : 72, 172);
+
+    const cardX = 110;
+    const cardY = 310;
+    const cardSize = 860;
+    context.fillStyle = '#ffffff';
+    context.shadowColor = 'rgba(54,19,24,.12)';
+    context.shadowBlur = 40;
+    context.shadowOffsetY = 12;
+    context.beginPath();
+    if (typeof context.roundRect === 'function') context.roundRect(cardX, cardY, cardSize, cardSize, 48);
+    else context.rect(cardX, cardY, cardSize, cardSize);
+    context.fill();
+    context.shadowColor = 'transparent';
+
+    const count = qr.getModuleCount();
+    const cell = Math.floor((cardSize - 120) / (count + QR_QUIET_ZONE * 2));
+    const qrPixels = cell * count;
+    const qrX = cardX + Math.round((cardSize - qrPixels) / 2);
+    const qrY = cardY + Math.round((cardSize - qrPixels) / 2);
+    context.fillStyle = '#231f20';
+    for (let row = 0; row < count; row += 1) {
+      for (let col = 0; col < count; col += 1) {
+        if (qr.isDark(row, col)) context.fillRect(qrX + col * cell, qrY + row * cell, cell, cell);
+      }
+    }
+
+    context.textAlign = 'center';
+    context.fillStyle = '#6f6667';
+    context.font = font(500, 30);
+    context.fillText('Total pembayaran', width / 2, 1248);
+    context.fillStyle = '#7a1f2b';
+    context.font = font(700, 64);
+    context.fillText(typeof data.amount === 'number' ? formatEventPrice(data.amount) : '', width / 2, 1322);
+    const deadline = Date.parse(data.payment_deadline || data.expires_at || '');
+    context.fillStyle = '#231f20';
+    context.font = font(500, 28);
+    if (Number.isFinite(deadline)) {
+      context.fillText(`Bayar sebelum ${new Intl.DateTimeFormat('id-ID', {
+        weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
+      }).format(new Date(deadline))} WIB`, width / 2, 1382);
+    }
+    context.fillStyle = '#6f6667';
+    context.font = font(500, 24);
+    context.fillText(`Kode ${data.registration_code || ''} · GoPay · ShopeePay · OVO · DANA · LinkAja · Mobile banking`, width / 2, 1432);
+
+    return await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  };
+
   document.querySelector('#paymentStage [data-payment-download]')?.addEventListener('click', async () => {
     const image = document.querySelector('#paymentStage [data-payment-qr]');
     const note = document.querySelector('#paymentStage [data-payment-download-note]');
-    if (!image?.src) return;
     if (note) { note.hidden = true; note.textContent = ''; }
+    const drawnQr = buildQr(qrStringFor(activePayment));
+    if (drawnQr) {
+      const poster = await drawQrisPoster(activePayment, drawnQr).catch(() => null);
+      if (poster) {
+        saveBlob(poster, `qris-${activePayment.registration_code || 'kita-bahagia'}.png`);
+        return;
+      }
+    }
+    if (!image?.src) return;
     try {
       const response = await fetch(image.src);
       if (!response.ok) throw new Error('QR download failed');
-      const objectUrl = URL.createObjectURL(await response.blob());
-      const link = document.createElement('a');
-      link.href = objectUrl;
-      link.download = 'qris-pembayaran-kita-bahagia.png';
-      document.body.append(link);
-      link.click();
-      link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      saveBlob(await response.blob(), 'qris-pembayaran-kita-bahagia.png');
     } catch {
       window.open(image.src, '_blank', 'noopener,noreferrer');
       if (note) {
