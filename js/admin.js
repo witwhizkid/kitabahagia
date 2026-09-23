@@ -661,9 +661,12 @@
   // list (e.g. via SQL) are kept as an extra option instead of being lost.
   const setPaymentWindow = (minutes) => {
     const select = $("#event-payment-window");
+    select.querySelectorAll("option[data-custom]").forEach((option) => option.remove());
     const value = String(minutes);
     if (![...select.options].some((option) => option.value === value)) {
-      select.append(new Option(`${value} menit`, value));
+      const option = new Option(`${value} menit`, value);
+      option.dataset.custom = "true";
+      select.append(option);
     }
     select.value = value;
   };
@@ -944,6 +947,8 @@
     if (!response.ok) throw new Error(data.msg || data.message || "Kata sandi belum dapat disimpan.");
   };
 
+  $("#event-price").addEventListener("input", togglePaymentWindowField);
+
   $("#event-image-file").addEventListener("change", async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -995,8 +1000,6 @@
   });
 
   // Auto-generate slug from title for new stories (skip if user has typed a manual slug)
-  $("#event-price").addEventListener("input", togglePaymentWindowField);
-
   $("#story-title").addEventListener("input", () => {
     if (storySlugManuallyEdited) return;
     $("#story-slug").value = slugifyStoryTitle($("#story-title").value);

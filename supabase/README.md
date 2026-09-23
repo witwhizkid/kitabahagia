@@ -51,7 +51,8 @@ Migration `20260924010000_registration_payment_deadline.sql` gives every paid
 registration a payment window:
 
 - `registrations.payment_deadline = least(now() + 3 hours, events.registration_deadline)`,
-  set by `create_registration`. Free registrations keep `NULL`. A paid
+  set by `create_registration` (since `20260925010000` the 3 hours is the
+  per-event `payment_window_minutes`, default 15; see "Seat-hold rules"). Free registrations keep `NULL`. A paid
   registration with less than 5 minutes left to pay is refused as
   `REGISTRATION_CLOSED`.
 - **Lazy seat release.** Both `create_registration` and `public-events`
@@ -107,12 +108,14 @@ Migration `20260925010000_event_seat_hold_rules.sql` builds on the payment deadl
   event already has a registration with the same `lower(email)` **or** the same
   `normalize_phone(phone)` that is `confirmed`, or `pending_payment` whose
   `payment_deadline` is still in the future. Lapsed and cancelled registrations
-  do not block. The check runs after the event row is locked `FOR UPDATE`, so
+  do not block, except a lapsed one whose QRIS was still payable in the last
+  5 minutes (its late settlement could otherwise charge the person twice). The check runs after the event row is locked `FOR UPDATE`, so
   two concurrent sign-ups for the same event are serialised and the second one
   sees the first one's committed row. The message does not reveal which field
   matched.
-- `public.normalize_phone(text)` keeps digits only and maps `08…`, `8…`, `62…`
-  and `+62…` to `62…`; stored phone values are unchanged. Lookup indexes on
+- `public.normalize_phone(text)` keeps digits only and maps `08…`, `8…`, `62…`,
+  `+62…`, `+62 0…` and `0062…` to `62…`; other international numbers
+  (`+81…`, `+86…`) keep their own country code. Stored phone values are unchanged. Lookup indexes on
   `(event_id, lower(email))` and `(event_id, normalize_phone(phone))` are not
   unique, because older data may already contain duplicates.
 - Rollback: `supabase/rollback/20260925010000_event_seat_hold_rules.down.sql`.

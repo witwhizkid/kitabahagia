@@ -1522,8 +1522,17 @@ if (registrationForm) {
       const showWindow = selectedEvent.price > 0 && Number.isInteger(minutes) && minutes > 0;
       paymentWindowNote.hidden = !showWindow;
       if (showWindow) {
-        const duration = minutes % 60 === 0 ? `${minutes / 60} jam` : `${minutes} menit`;
-        paymentWindowNote.textContent = `Selesaikan pembayaran dalam ${duration} setelah mendaftar agar tempatmu tidak dilepas.`;
+        const registrationClose = Date.parse(selectedEvent.registrationDeadline || '');
+        if (Number.isFinite(registrationClose) && registrationClose < Date.now() + minutes * 60000) {
+          // The server caps the hold at the registration deadline; say so instead of the full window.
+          const closeLabel = new Intl.DateTimeFormat('id-ID', {
+            day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
+          }).format(new Date(registrationClose));
+          paymentWindowNote.textContent = `Selesaikan pembayaran sebelum pendaftaran ditutup (${closeLabel} WIB) agar tempatmu tidak dilepas.`;
+        } else {
+          const duration = minutes % 60 === 0 ? `${minutes / 60} jam` : `${minutes} menit`;
+          paymentWindowNote.textContent = `Selesaikan pembayaran dalam ${duration} setelah mendaftar agar tempatmu tidak dilepas.`;
+        }
       }
     }
 
@@ -2003,6 +2012,8 @@ if (registrationForm) {
 
   editRegistrationButton?.addEventListener('click', () => {
     if (isSubmitting || registrationCompleted) return;
+    const resumeButton = document.getElementById('registrationResumeButton');
+    if (resumeButton) resumeButton.hidden = true;
     registrationReview?.classList.add('hidden');
     registrationFormPanel?.classList.remove('hidden');
     setRegistrationStep('data');
@@ -2083,8 +2094,10 @@ if (registrationForm) {
       const code = typeof error?.code === 'string' ? error.code : 'SERVER_ERROR';
       showRegistrationMessage(registrationErrorMessages[code] || registrationErrorMessages.SERVER_ERROR, 'error');
       // This device still has the earlier registration for this event: offer the existing recovery flow.
-      if (code === 'ALREADY_REGISTERED' && registrationResumeButton && readRegistrationRecovery()) {
-        registrationResumeButton.hidden = false;
+      if (code === 'ALREADY_REGISTERED' && registrationResumeButton) {
+        const submittedEmail = String(new FormData(registrationForm).get('email') || '').trim().toLowerCase();
+        const stored = readRegistrationRecovery();
+        registrationResumeButton.hidden = !stored || stored.email !== submittedEmail;
       }
     } finally {
       isSubmitting = false;

@@ -10,16 +10,29 @@
 alter table public.events
   add column if not exists payment_window_minutes integer not null default 15;
 
-alter table public.events
-  add constraint events_payment_window_minutes_range
-  check (payment_window_minutes between 10 and 1440);
+do $guard$
+begin
+  if not exists (
+    select 1 from pg_catalog.pg_constraint
+     where conname = 'events_payment_window_minutes_range'
+       and conrelid = 'public.events'::regclass
+  ) then
+    alter table public.events
+      add constraint events_payment_window_minutes_range
+      check (payment_window_minutes between 10 and 1440);
+  end if;
+end
+$guard$;
 
 comment on column public.events.payment_window_minutes is
   'Minutes a paid registration holds its seat before payment; capped by registration_deadline.';
 
 -- Comparison key for WhatsApp numbers; the stored phone value is never changed.
--- Keeps digits only and maps 08..., 8..., 628..., +628... to 628...
--- Other country codes are left as their digits.
+-- Digits only, then:
+--   international (+... or 00...): kept as country code + number; a trunk 0
+--     after +62 is dropped (+62 0812... -> 62812...); other countries such as
+--     +81 or +86 are NOT turned into 62...;
+--   local: 08... and bare 8... -> 628...; 62... (and 620...) -> 62...
 create or replace function public.normalize_phone(p_phone text)
 returns text
 language sql
@@ -28,15 +41,28 @@ parallel safe
 set search_path = ''
 as $$
   select case
-    when digits = '' then null
-    when digits like '62%' then digits
-    when digits like '0%' then '62' || pg_catalog.substr(digits, 2)
-    when digits like '8%' then '62' || digits
-    else digits
+    when parts.digits = '' then null
+    when parts.international then
+      case when parts.intl like '620%' then '62' || pg_catalog.substr(parts.intl, 4) else parts.intl end
+    when parts.digits like '620%' then '62' || pg_catalog.substr(parts.digits, 4)
+    when parts.digits like '62%' then parts.digits
+    when parts.digits like '0%' then '62' || pg_catalog.substr(parts.digits, 2)
+    when parts.digits like '8%' then '62' || parts.digits
+    else parts.digits
   end
-  from (select pg_catalog.regexp_replace(coalesce(p_phone, ''), '[^0-9]', '', 'g') as digits) as source;
+  from (
+    select source.digits,
+           (source.raw like '+%' or source.digits like '00%') as international,
+           case when source.digits like '00%' then pg_catalog.substr(source.digits, 3) else source.digits end as intl
+      from (select pg_catalog.btrim(coalesce(p_phone, '')) as raw,
+                   pg_catalog.regexp_replace(coalesce(p_phone, ''), '[^0-9]', '', 'g') as digits) as source
+  ) as parts;
 $$;
 
+-- EXECUTE is limited to service_role. Index expressions are evaluated with the
+-- writer's privileges, so any future role that inserts into or updates
+-- registrations directly (instead of through the SECURITY DEFINER RPCs) needs
+-- EXECUTE on this function too.
 revoke all on function public.normalize_phone(text) from public, anon, authenticated;
 grant execute on function public.normalize_phone(text) to service_role;
 
@@ -93,7 +119,10 @@ begin
   -- One active registration per person per event (free and paid). The event row
   -- is locked FOR UPDATE above, so concurrent calls for the same event run this
   -- check-then-insert one at a time and each sees the previous caller's commit.
-  -- Lapsed (deadline passed) and cancelled registrations do not block.
+  -- Lapsed (deadline passed) and cancelled registrations do not block, except a
+  -- lapsed one whose QRIS was still payable in the last 5 minutes: its
+  -- settlement may still arrive (the webhook accepts it), and letting the same
+  -- person register and pay again would charge them twice.
   if exists (
     select 1
       from public.registrations as registration
@@ -104,7 +133,15 @@ begin
          registration.registration_status = 'confirmed'
          or (registration.registration_status = 'pending_payment'
              and (registration.payment_deadline is null
-                  or registration.payment_deadline > pg_catalog.now()))
+                  or registration.payment_deadline > pg_catalog.now()
+                  or exists (
+                    select 1
+                      from public.payment_attempts as attempt
+                     where attempt.registration_id = registration.id
+                       and attempt.status in ('creating', 'pending')
+                       and coalesce(attempt.expires_at, attempt.created_at + interval '2 minutes')
+                           > pg_catalog.now() - interval '5 minutes'
+                  )))
        )
   ) then
     raise exception using errcode = 'P0001', message = 'ALREADY_REGISTERED';

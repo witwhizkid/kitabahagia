@@ -77,6 +77,15 @@ begin
       and public.normalize_phone('62 812 3456 789') = '628123456789'
       and public.normalize_phone('8123456789') = '628123456789');
 
+  -- 7b. International formats ----------------------------------------------
+  insert into kb_seathold_test values ('7b', 'normalize_phone: +62 0812 / 0062 812 -> 628..., +81 812 tetap 81...',
+    '628123456789, 628123456789, 818123456789',
+    concat_ws(', ', public.normalize_phone('+62 0812 3456 789'), public.normalize_phone('0062 812 3456 789'),
+              public.normalize_phone('+81 812 3456 789')),
+    public.normalize_phone('+62 0812 3456 789') = '628123456789'
+      and public.normalize_phone('0062 812 3456 789') = '628123456789'
+      and public.normalize_phone('+81 812 3456 789') = '818123456789');
+
   -- 8. After the payment deadline the same person may register again ---------
   update public.registrations set payment_deadline = now() - interval '1 minute' where registration_code = v_code;
   begin
@@ -86,6 +95,18 @@ begin
   exception when others then v_error := sqlerrm;
   end;
   insert into kb_seathold_test values ('8', 'Deadline lewat -> boleh daftar lagi', 'ok', v_error, v_error = 'ok');
+
+  -- 8c. Lapsed, but its QRIS was payable a minute ago: still blocks ------------
+  update public.registrations set payment_deadline = now() - interval '1 minute' where registration_code = v_code;
+  insert into public.payment_attempts (registration_id, order_id, amount, status, expires_at)
+  select id, 'KBPAY-ZZ-SEATHOLD-' || registration_code, 35000, 'pending', now() - interval '1 minute'
+    from public.registrations where registration_code = v_code;
+  begin
+    perform public.create_registration('zz-seathold-test-paid', 'Uji A', '0812-3456-7890', 'uji.a@example.com', 'uji', null, true);
+    v_error := 'ok';
+  exception when others then v_error := sqlerrm;
+  end;
+  insert into kb_seathold_test values ('8c', 'Deadline lewat tapi QR masih bisa dibayar <5 menit lalu', 'ALREADY_REGISTERED', v_error, v_error = 'ALREADY_REGISTERED');
 
   -- 9. A confirmed registration keeps blocking --------------------------------
   update public.registrations set registration_status = 'confirmed', payment_status = 'paid' where registration_code = v_code;
