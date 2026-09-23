@@ -6048,3 +6048,83 @@ html.home-document { overflow-x: hidden; }
 .registration-page .payment-secondary-link:hover { text-decoration:underline; }
 /* The sticky header only helps while paying (countdown); on result screens it would cover the short card. */
 .registration-page .payment-stage:not(.payment_pending):not(.payment_processing) .payment-header { position:relative; top:auto; }
+
+/* Registration steps 1-2, same language as the payment stage: rounded cards, pills, soft shadows. */
+.registration-page .registration-progress li:not(:last-child)::after { top:16px; height:2px; border-radius:2px; }
+.registration-page .registration-progress li span { width:34px; height:34px; border:2px solid var(--line); background:var(--white); transition:background-color .2s ease, box-shadow .2s ease; }
+.registration-page .registration-progress li.is-active span { box-shadow:0 0 0 5px var(--maroon-soft); }
+
+/* Event summary as a "ticket" */
+.registration-page .registration-summary-sticky { position:relative; top:auto; padding:20px 24px 22px; border:0; border-radius:var(--radius-xl); background:linear-gradient(135deg, var(--maroon) 0%, var(--maroon-deep) 100%); color:var(--white); box-shadow:var(--shadow); overflow:hidden; }
+.registration-page .registration-summary-sticky::before,
+.registration-page .registration-summary-sticky::after { content:""; position:absolute; border-radius:50%; background:rgba(255,255,255,.07); pointer-events:none; }
+.registration-page .registration-summary-sticky::before { width:200px; height:200px; top:-110px; right:-50px; }
+.registration-page .registration-summary-sticky::after { width:110px; height:110px; bottom:-70px; left:42%; }
+.registration-page .registration-summary-sticky > * { position:relative; }
+.registration-page .registration-summary-topline { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.registration-page .registration-summary-topline > span { padding:4px 12px; border-radius:999px; background:rgba(255,255,255,.14); color:var(--white); font-size:11px; font-weight:700; letter-spacing:.04em; }
+.registration-page .registration-summary-topline > span:empty { display:none; }
+.registration-page .registration-summary-title-row h2 { color:var(--white); }
+.registration-page .registration-summary-image { border-radius:14px; }
+.registration-page .registration-summary-sticky .event-summary div { border-color:rgba(255,255,255,.16); }
+.registration-page .registration-summary-sticky .event-summary dt { color:rgba(255,255,255,.72); }
+.registration-page .registration-summary-sticky .event-summary dd { color:var(--white); font-weight:600; }
+.registration-page .registration-payment-window { display:flex; align-items:center; gap:8px; margin:6px 0 0; padding:10px 14px; border-radius:var(--radius-md); background:rgba(255,255,255,.12); color:var(--white); font-size:13px; }
+.registration-page .registration-payment-window::before { content:""; flex:none; width:14px; height:14px; border:2px solid currentColor; border-radius:50%; background:linear-gradient(currentColor, currentColor) 50% 30% / 2px 5px no-repeat; }
+.registration-page .registration-payment-window[hidden] { display:none; }
+.registration-page .registration-summary-cta { border-radius:999px; background:var(--white); color:var(--maroon); }
+.registration-page .registration-event-disclosure { border-bottom:0; }
+.registration-page .registration-event-disclosure > summary { display:inline-flex; align-items:center; min-height:40px; padding:8px 16px; border-radius:999px; background:var(--maroon-soft); }
+.registration-page .registration-event-disclosure[open] .registration-event-content { margin-top:12px; padding:20px 22px; border-radius:var(--radius-lg); background:var(--cream); }
+
+/* Participant form */
+.registration-page .registration-card,
+.registration-page .registration-review { border:0; border-radius:var(--radius-xl); background:var(--white); box-shadow:var(--shadow); }
+.registration-page .registration-card { padding:clamp(22px, 4vw, 36px); }
+.registration-page .field label:not(.check-row) { color:var(--ink); font-size:13px; font-weight:700; }
+.registration-page .field input:not([type="checkbox"]),
+.registration-page .field textarea { border:1.5px solid var(--line); border-radius:var(--radius-md); background:var(--cream); transition:border-color .15s ease, background-color .15s ease, box-shadow .15s ease; }
+.registration-page .field input:not([type="checkbox"]):hover,
+.registration-page .field textarea:hover { border-color:#d9c9ca; }
+.registration-page .field input:not([type="checkbox"]):focus,
+.registration-page .field textarea:focus { outline:none; border-color:var(--maroon); background:var(--white); box-shadow:0 0 0 4px rgba(122,31,43,.12); }
+.registration-page .field input[aria-invalid="true"] { border-color:var(--maroon-deep); background:var(--rose); }
+.registration-page .check-row { align-items:center; padding:14px 16px; border-radius:var(--radius-md); background:var(--maroon-soft); color:var(--ink); cursor:pointer; }
+.registration-page .check-row input { width:20px; min-height:20px; height:20px; margin:0; }
+.registration-page .check-row:has(input:focus-visible) { outline:3px solid var(--maroon); outline-offset:2px; }
+.registration-page .form-actions .btn,
+.registration-page .registration-review-actions .btn { min-height:52px; padding:12px 28px; border-radius:999px; }
+
+/* Review */
+.registration-page .registration-review { padding:clamp(22px, 4vw, 36px); }
+.registration-page .registration-review-grid { gap:14px; }
+.registration-page .registration-review-participant,
+.registration-page .registration-review-event { padding:18px 20px; border:0; border-radius:var(--radius-lg); background:var(--cream); }
+.registration-page .registration-review-event { position:static; background:var(--maroon-soft); }
+.registration-page .registration-review-participant h3 { margin:0 0 4px; }
+.registration-page .registration-review-participant dl div:first-child,
+.registration-page .registration-review-event dl div:first-child { border-top:0; }
+.registration-page .registration-review-participant dl div,
+.registration-page .registration-review-event dl div { border-top-color:rgba(122,31,43,.1); }
+.registration-page .registration-review-actions { gap:12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .registration-page .registration-progress li span,
+  .registration-page .field input,
+  .registration-page .field textarea { transition:none; }
+}
+@media (max-width:640px) {
+  .registration-page .registration-summary-sticky { padding:18px 18px 20px; border-radius:var(--radius-lg); }
+  .registration-page .registration-card,
+  .registration-page .registration-review { border-radius:var(--radius-lg); }
+  .registration-page .form-actions { flex-direction:column; align-items:stretch; }
+  .registration-page .form-actions .btn { width:100%; }
+  .registration-page .registration-review-actions { display:flex; flex-direction:column-reverse; align-items:stretch; justify-content:flex-start; }
+  .registration-page .registration-review-actions .btn { width:100%; }
+}
+.registration-page .registration-event-disclosure > summary { gap:8px; list-style:none; }
+.registration-page .registration-event-disclosure > summary::-webkit-details-marker { display:none; }
+.registration-page .registration-event-disclosure > summary::after { content:""; width:7px; height:7px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:translateY(-2px) rotate(45deg); transition:transform .2s ease; }
+.registration-page .registration-event-disclosure[open] > summary::after { transform:translateY(2px) rotate(-135deg); }
+.registration-page .registration-event-disclosure > summary:focus-visible { outline:3px solid var(--maroon); outline-offset:2px; }
+@media (prefers-reduced-motion: reduce) { .registration-page .registration-event-disclosure > summary::after { transition:none; } }

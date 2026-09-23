@@ -2111,8 +2111,9 @@ if (registrationForm) {
     setDataText('[data-review-event-location]', selectedEvent.location, registrationReview);
     setDataText('[data-review-event-price]', price, registrationReview);
     if (confirmRegistrationButton) {
+      // Naming the amount here avoids a surprise on the payment step.
       confirmRegistrationButton.textContent = selectedEvent.price > 0
-        ? 'Lanjut ke pembayaran' : 'Konfirmasi pendaftaran';
+        ? `Lanjut bayar ${formatEventPrice(selectedEvent.price)}` : 'Konfirmasi pendaftaran';
     }
     document.getElementById('registrationStatus')?.classList.add('hidden');
     registrationFormPanel?.classList.add('hidden');
