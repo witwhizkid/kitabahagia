@@ -45,6 +45,47 @@ Errors: `INVALID_REQUEST` (`400`), `EVENT_NOT_FOUND` (`404`), `EVENT_NOT_OPEN`, 
 
 Free events are confirmed with `not_required`; paid events become `pending_payment` with `unpaid`. Amount and statuses always come from the database. Paid registrations use the deployed Midtrans Sandbox `create-payment` integration.
 
+## Payment deadline and seat release
+
+Migration `20260924010000_registration_payment_deadline.sql` gives every paid
+registration a payment window:
+
+- `registrations.payment_deadline = least(now() + 3 hours, events.registration_deadline)`,
+  set by `create_registration`. Free registrations keep `NULL`. A paid
+  registration with less than 5 minutes left to pay is refused as
+  `REGISTRATION_CLOSED`.
+- **Lazy seat release.** Both `create_registration` and `public-events`
+  (`remaining_capacity`) count a registration as holding a seat when it is
+  `confirmed`, or `pending_payment` with `payment_deadline` in the future (or
+  `NULL`, the pre-migration behaviour). No job is needed for the quota to come
+  back; unpaid rows simply stop counting. They stay `pending_payment` in the
+  database until a cleanup job exists.
+- `prepare_payment_attempt` refuses to create a new attempt within 1 minute of
+  the deadline (`PAYMENT_DEADLINE_PASSED`, HTTP `409` from `create-payment`).
+  Existing `pending`/`creating` attempts are still returned so `create-payment`
+  can reconcile a payment that settled at the last moment.
+- QRIS lifetime is `min(60 minutes, payment_deadline)`. Midtrans allows 20
+  seconds to 7 days for GoPay/Dynamic QRIS expiry
+  (https://docs.midtrans.com/reference/gopay). The site creates the next QRIS
+  automatically when one expires before the deadline.
+- `create-payment` and `payment-status` return `payment_deadline`; the payment
+  page counts down to it.
+- **Late settlement.** `apply_midtrans_notification` still confirms a settlement
+  that arrives after the deadline (the QR itself expired no later than the
+  deadline, so the payment was made in time). If the released seat was taken in
+  the meantime, the event can end up one confirmed registration over capacity;
+  admins should review events whose confirmed count exceeds capacity.
+- Backfill: existing `pending_payment` rows get
+  `greatest(created_at + 3 hours, latest pending QR expiry)`. The event deadline
+  is not applied retroactively.
+- Rollback: `supabase/rollback/20260924010000_registration_payment_deadline.down.sql`
+  (redeploy the previous Edge Functions first). Manual checks:
+  `supabase/tests/20260924010000_payment_deadline_manual.sql`.
+
+Deploy order: `supabase db push` (migration) → deploy `public-events`,
+`payment-status`, `create-payment` → deploy the frontend. The frontend falls
+back to the old QR-expiry countdown when `payment_deadline` is absent.
+
 ## Confirmed registration onboarding
 
 `POST /functions/v1/payment-status` requires `registration_code` and the matching
