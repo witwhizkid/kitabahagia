@@ -831,6 +831,8 @@ if (registrationForm) {
   let activePayment = null;
   let lastRenderedPaymentState = null;
   let paymentCheckNoteTimer = null;
+  // In-memory copy of the recovery contact so the status check still works when storage is blocked or cleared.
+  let paymentContact = null;
 
   const hidePaymentCheckNote = () => {
     window.clearTimeout(paymentCheckNoteTimer);
@@ -894,7 +896,10 @@ if (registrationForm) {
       const valid = value?.event_slug === eventSlug
         && /^KB-[A-Z0-9-]{6,40}$/.test(value.registration_code)
         && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email);
-      if (valid) return value;
+      if (valid) {
+        paymentContact = { registration_code: value.registration_code, email: value.email };
+        return value;
+      }
       localStorage.removeItem(recoveryStorageKey);
     } catch {
       try {
@@ -909,6 +914,10 @@ if (registrationForm) {
 
   const persistRegistrationRecovery = (registration, email) => {
     clearTerminalRecoveryRefreshMarker();
+    paymentContact = {
+      registration_code: String(registration.registration_code || '').trim().toUpperCase(),
+      email: String(email || '').trim().toLowerCase()
+    };
     try {
       localStorage.setItem(recoveryStorageKey, JSON.stringify({
         event_slug: eventSlug,
@@ -921,6 +930,7 @@ if (registrationForm) {
   };
 
   const clearRegistrationRecovery = () => {
+    paymentContact = null;
     clearTerminalRecoveryRefreshMarker();
     try {
       localStorage.removeItem(recoveryStorageKey);
@@ -1647,8 +1657,12 @@ if (registrationForm) {
 
   const checkPaymentStatus = async () => {
     if (manualPaymentCheckActive) return;
-    const recovery = readRegistrationRecovery();
-    if (!recovery) return;
+    const recovery = readRegistrationRecovery()
+      || (paymentContact?.email && paymentContact.registration_code === activePayment?.registration_code ? paymentContact : null);
+    if (!recovery) {
+      showPaymentCheckNote('Status belum dapat diperiksa di perangkat ini. Muat ulang halaman atau hubungi admin dengan kode pendaftaranmu.');
+      return;
+    }
     const button = document.querySelector('#paymentStage [data-payment-check]');
     if (!button) return;
     manualPaymentCheckActive = true;
