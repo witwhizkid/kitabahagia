@@ -41,6 +41,7 @@
   let registrationLifecycle = "active";
   let selectionOverview = null;
   let applicantDialogIndex = -1;
+  let selectionDecisionPending = false;
   let imageUploading = false;
   let storyImageUploading = false;
   let storySlugManuallyEdited = false;
@@ -434,7 +435,8 @@
     renderSelectionTools();
     const selectAll = $("#selection-select-all");
     selectAll.checked = false;
-    selectAll.disabled = registrations.length === 0 || !selectionEnabled();
+    selectAll.disabled = selectionDecisionPending || registrations.length === 0 || !selectionEnabled();
+    document.querySelectorAll("[data-selection-bulk]").forEach((button) => { button.disabled = selectionDecisionPending; });
   };
 
   const loadRegistrations = async () => {
@@ -498,6 +500,18 @@
   };
 
   const currentDialogApplicant = () => registrations[applicantDialogIndex] || null;
+  const syncSelectionDecisionControls = () => {
+    const applicant = currentDialogApplicant();
+    const status = applicant?.payment_expired ? "expired" : applicant?.registration_status;
+    const isSelectionApplicant = applicant?.events?.registration_mode === "selection";
+    applicantDialog.querySelectorAll("[data-applicant-decision]").forEach((button) => {
+      button.disabled = selectionDecisionPending
+        || (isSelectionApplicant && button.dataset.applicantDecision === (status === "confirmed" ? "accepted" : status));
+    });
+    document.querySelectorAll("[data-selection-bulk]").forEach((button) => { button.disabled = selectionDecisionPending; });
+    const selectAll = $("#selection-select-all");
+    selectAll.disabled = selectionDecisionPending || registrations.length === 0 || !selectionEnabled();
+  };
   const renderApplicantDialog = () => {
     const applicant = currentDialogApplicant();
     if (!applicant) return;
@@ -536,9 +550,7 @@
     }
     const outcomes = isSelectionEvent && ["confirmed", "waitlisted", "rejected"].includes(status);
     applicantDialog.querySelector(".applicant-selection-actions").hidden = !isSelectionEvent;
-    applicantDialog.querySelectorAll("[data-applicant-decision]").forEach((button) => {
-      button.disabled = isSelectionEvent && button.dataset.applicantDecision === (status === "confirmed" ? "accepted" : status);
-    });
+    syncSelectionDecisionControls();
     const waButton = applicantDialog.querySelector("[data-applicant-whatsapp]");
     waButton.hidden = !outcomes;
     applicantDialog.querySelector('[data-applicant-nav="previous"]').disabled = applicantDialogIndex <= 0;
@@ -567,26 +579,42 @@
   };
 
   const decideApplicants = async (codes, decision, { advance = false } = {}) => {
-    if (!selectionEnabled()) return;
-    if (!codes.length) {
-      setFeedback(applicantDialog.open ? $("#applicant-dialog-feedback") : $("#registrations-feedback"), "Pilih setidaknya satu pendaftar.", "error");
+    const current = currentDialogApplicant();
+    const allowedContext = applicantDialog.open
+      ? current?.events?.registration_mode === "selection"
+      : selectionEnabled();
+    const feedback = applicantDialog.open ? $("#applicant-dialog-feedback") : $("#registrations-feedback");
+    if (!allowedContext) {
+      setFeedback(feedback, "Keputusan hanya tersedia untuk pendaftar kegiatan mode Seleksi.", "error");
       return;
     }
-    const current = currentDialogApplicant();
-    const nextCode = advance && applicantDialogIndex < registrations.length - 1
-      ? registrations[applicantDialogIndex + 1]?.registration_code : null;
+    if (!codes.length) {
+      setFeedback(feedback, "Pilih setidaknya satu pendaftar.", "error");
+      return;
+    }
+    const nextApplicant = advance
+      ? registrations.slice(applicantDialogIndex + 1).find((applicant) => applicant.events?.registration_mode === "selection")
+      : null;
+    const nextCode = nextApplicant?.registration_code || null;
     const decisionLabel = { accepted: "menerima", waitlisted: "memasukkan ke daftar cadangan", rejected: "menolak", applied: "mengembalikan ke status menunggu" }[decision];
     if (codes.length === 1 && !window.confirm(`Yakin ingin ${decisionLabel} pendaftar ini?`)) return;
-    const feedback = applicantDialog.open ? $("#applicant-dialog-feedback") : $("#registrations-feedback");
     setFeedback(feedback, "Menyimpan keputusan…");
+    selectionDecisionPending = true;
+    syncSelectionDecisionControls();
     try {
       const result = await selectionDecisionRequest(codes, decision);
       selectionOverview = result.selection || selectionOverview;
       $("#selection-select-all").checked = false;
-      await refreshRegistrations();
+      try {
+        await refreshRegistrations();
+      } catch (refreshError) {
+        setFeedback(feedback, `Keputusan tersimpan, tapi daftar belum bisa diperbarui: ${refreshError.message}`, "error");
+        return;
+      }
       setFeedback($("#registrations-feedback"), "Keputusan berhasil disimpan.", "success");
       if (advance && applicantDialog.open) {
         if (nextCode && registrations.some((item) => item.registration_code === nextCode)) showApplicant(nextCode);
+        else if (current && registrations.some((item) => item.registration_code === current.registration_code)) showApplicant(current.registration_code);
         else applicantDialog.close();
       } else if (applicantDialog.open && current) {
         const refreshed = registrations.find((item) => item.registration_code === current.registration_code);
@@ -597,6 +625,9 @@
         setFeedback(feedback, error.message, "error");
         try { await refreshRegistrations(); } catch { /* Keep the capacity error visible. */ }
       } else setFeedback(feedback, error.message, "error");
+    } finally {
+      selectionDecisionPending = false;
+      syncSelectionDecisionControls();
     }
   };
 
