@@ -71,6 +71,7 @@
     pending_payment: "Menunggu pembayaran",
     confirmed: "Terkonfirmasi",
     cancelled: "Dibatalkan",
+    expired: "Kedaluwarsa",
   };
 
   const paymentStatusLabels = {
@@ -356,6 +357,8 @@
     $(registrationLifecycle === "active" ? "#active-registrations-total" : "#history-registrations-total").textContent = String(total);
     registrationsList.innerHTML = registrations.map((registration) => {
       const linkedEvent = registration.events || {};
+      const registrationStatus = registration.payment_expired ? "expired" : registration.registration_status;
+      const paymentStatus = registration.payment_expired ? "expired" : registration.payment_status;
       return `
         <article class="registration-row">
           <div class="registration-person registration-cell">
@@ -373,10 +376,11 @@
             <span class="registration-code"><span class="data-label">Kode</span>${escapeHtml(registration.registration_code)}</span>
           </div>
           <div class="registration-statuses">
-            <span class="data-group"><span class="data-label">Pendaftaran</span><span class="status-token ${statusTone(registration.registration_status)}">${escapeHtml(registrationStatusLabels[registration.registration_status] || registration.registration_status)}</span></span>
-            <span class="data-group"><span class="data-label">Pembayaran</span><span class="status-token ${statusTone(registration.payment_status)}">${escapeHtml(paymentStatusLabels[registration.payment_status] || registration.payment_status)}</span></span>
+            <span class="data-group"><span class="data-label">Pendaftaran</span><span class="status-token ${statusTone(registrationStatus)}">${escapeHtml(registrationStatusLabels[registrationStatus] || registrationStatus)}</span></span>
+            <span class="data-group"><span class="data-label">Pembayaran</span><span class="status-token ${statusTone(paymentStatus)}">${escapeHtml(paymentStatusLabels[paymentStatus] || paymentStatus)}</span></span>
           </div>
-          <span class="registration-date"><span class="data-label">Terdaftar</span><time datetime="${escapeHtml(registration.created_at)}">${escapeHtml(formatDateTime(registration.created_at))}</time></span>
+          <span class="registration-date"><span class="data-label">Terdaftar</span><time datetime="${escapeHtml(registration.created_at)}">${escapeHtml(formatDateTime(registration.created_at))}</time>${registration.payment_expired && registration.payment_deadline ? `
+            <span class="data-label">Batas bayar</span><time datetime="${escapeHtml(registration.payment_deadline)}">${escapeHtml(formatDateTime(registration.payment_deadline))}</time>` : ""}</span>
         </article>
       `;
     }).join("");

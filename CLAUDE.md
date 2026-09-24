@@ -61,6 +61,9 @@ Lainnya:
   disimpan dan QR digambar sendiri (`js/vendor/qrcode-generator.min.js`).
 - Jendela pembayaran/seat-hold diatur per kegiatan dari admin
   (`payment_window_minutes`); lihat "Seat-hold rules" di `supabase/README.md`.
+- Status "Kedaluwarsa" di admin tidak disimpan di database: `admin-registrations`
+  menurunkannya (`payment_expired`) dari `pending_payment` + `payment_deadline`
+  yang sudah lewat, sama dengan aturan pelepasan kursi. "Lunas" selalu menang.
 
 ## Keamanan
 

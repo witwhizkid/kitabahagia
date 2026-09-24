@@ -27,11 +27,14 @@ const registrationProjection = [
   "reason",
   "registration_status",
   "payment_status",
+  "payment_deadline",
   "created_at",
   "events!inner(slug,title,event_date,start_time,end_at)",
 ].join(",");
 
-const registrationStatuses = new Set(["pending_payment", "confirmed", "cancelled"]);
+// "expired" is derived, not stored: a pending_payment row whose payment_deadline
+// has passed. It matches the lazy seat release rule, so the seat is already free.
+const registrationStatuses = new Set(["pending_payment", "confirmed", "cancelled", "expired"]);
 const paymentStatuses = new Set(["not_required", "unpaid", "pending", "paid", "failed", "expired", "refunded"]);
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -73,6 +76,12 @@ const safeSearch = (value: string | null) => {
   const cleaned = value.trim();
   if (!cleaned || cleaned.length > 100 || /[(),*\x00-\x1f\x7f]/.test(cleaned)) return false;
   return cleaned;
+};
+
+const isPaymentExpired = (registration: Record<string, unknown>, now: Date) => {
+  if (registration.registration_status !== "pending_payment" || registration.payment_status === "paid") return false;
+  const deadline = typeof registration.payment_deadline === "string" ? new Date(registration.payment_deadline) : null;
+  return Boolean(deadline && !Number.isNaN(deadline.getTime()) && deadline <= now);
 };
 
 const eventFinishedAt = (event: { end_at?: string | null; event_date?: string | null; start_time?: string | null }) => {
@@ -122,8 +131,12 @@ Deno.serve(async (request) => {
     order: "created_at.desc",
   });
   if (eventSlug) query.set("events.slug", `eq.${eventSlug}`);
-  if (registrationStatus) query.set("registration_status", `eq.${registrationStatus}`);
-  if (paymentStatus) query.set("payment_status", `eq.${paymentStatus}`);
+  if (registrationStatus) {
+    query.set("registration_status", `eq.${registrationStatus === "expired" ? "pending_payment" : registrationStatus}`);
+  }
+  if (paymentStatus) {
+    query.set("payment_status", paymentStatus === "expired" ? "in.(expired,unpaid,pending,failed)" : `eq.${paymentStatus}`);
+  }
   if (search) {
     query.set("or", `(name.ilike.*${search}*,email.ilike.*${search}*,registration_code.ilike.*${search}*)`);
   }
@@ -135,7 +148,15 @@ Deno.serve(async (request) => {
   if (!response.ok || !Array.isArray(rows)) return fail(500, "SERVER_ERROR", "Data pendaftar belum dapat dimuat.");
 
   const now = new Date();
-  const lifecycleRows = rows.filter((registration) => {
+  const lifecycleRows = rows.map((registration) => ({
+    ...registration,
+    payment_expired: isPaymentExpired(registration, now),
+  })).filter((registration) => {
+    const expired = registration.payment_expired;
+    if (registrationStatus === "expired" && !expired) return false;
+    if (registrationStatus === "pending_payment" && expired) return false;
+    if (paymentStatus === "expired" && !expired && registration.payment_status !== "expired") return false;
+    if (["unpaid", "pending", "failed"].includes(paymentStatus || "") && expired) return false;
     const event = (registration.events || {}) as { end_at?: string | null; event_date?: string | null; start_time?: string | null };
     return lifecycle === "active" ? isActiveRegistration(event, now) : !isActiveRegistration(event, now);
   });
