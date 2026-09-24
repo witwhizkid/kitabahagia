@@ -146,6 +146,7 @@ const normalizeRegistrationEvent = (event) => {
     registrationDescription: event.registration_description || event.description || '',
     activities: Array.isArray(event.activities) ? event.activities.filter(Boolean) : [],
     benefits: Array.isArray(event.benefits) ? event.benefits.filter(Boolean) : [],
+    selectionRequirements: Array.isArray(event.selection_requirements) ? event.selection_requirements.filter(Boolean) : [],
     remainingCapacity: event.remaining_capacity,
     registrationDeadline: event.registration_deadline || null,
     paymentWindowMinutes: Number.isInteger(event.payment_window_minutes) ? event.payment_window_minutes : null
@@ -1684,6 +1685,32 @@ if (registrationForm) {
       error.hidden = !message;
     }
   });
+  // Optional CV/portfolio PDF. Not compressed; the server checks type, size and signature again.
+  const selectionCvInput = document.getElementById('selectionCv');
+  const CV_MAX_BYTES = 5 * 1024 * 1024;
+  const cvFileError = (file) => {
+    if (!file || !file.size) return '';
+    if (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)) return 'Pilih file PDF.';
+    return file.size > CV_MAX_BYTES ? 'Ukuran PDF maksimal 5 MB.' : '';
+  };
+  selectionCvInput?.addEventListener('change', () => {
+    const message = cvFileError(selectionCvInput.files?.[0]);
+    const error = document.getElementById('selectionCvError');
+    selectionCvInput.setCustomValidity(message);
+    selectionCvInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+    if (error) {
+      error.textContent = message;
+      error.hidden = !message;
+    }
+  });
+  const prepareCv = async (file) => {
+    if (!(file instanceof File) || !file.size) return null;
+    if (cvFileError(file)) throw { code: 'INVALID_CV' };
+    const header = new Uint8Array(await file.slice(0, 5).arrayBuffer());
+    if (String.fromCharCode(...header) !== '%PDF-') throw { code: 'INVALID_CV' };
+    // Some systems report an empty type for PDFs; the server requires application/pdf.
+    return file.type === 'application/pdf' ? file : new File([file], file.name, { type: 'application/pdf' });
+  };
   const prepareInstagramProof = async (file) => {
     if (!(file instanceof File) || !allowedProofTypes.has(file.type) || !file.size) {
       throw { code: 'INVALID_INSTAGRAM_PROOF' };
@@ -1761,6 +1788,24 @@ if (registrationForm) {
       }
       if (!showProof) instagramProofInput.value = '';
     }
+    const cvField = document.getElementById('selectionCvField');
+    const portfolioField = document.getElementById('selectionPortfolioField');
+    if (cvField && portfolioField && selectionCvInput) {
+      const showCv = isFreeSelectionEvent();
+      cvField.hidden = !showCv;
+      portfolioField.hidden = !showCv;
+      selectionCvInput.setCustomValidity('');
+      selectionCvInput.removeAttribute('aria-invalid');
+      const cvError = document.getElementById('selectionCvError');
+      if (cvError) {
+        cvError.textContent = '';
+        cvError.hidden = true;
+      }
+      if (!showCv) {
+        selectionCvInput.value = '';
+        document.getElementById('portfolioUrl').value = '';
+      }
+    }
     if (answerField && selectionAnswerInput) {
       answerField.hidden = !showQuestion;
       selectionAnswerInput.required = showQuestion;
@@ -1820,7 +1865,17 @@ if (registrationForm) {
     if (descriptionSection) descriptionSection.hidden = !eventDescription;
     document.querySelector('.registration-content-nav a[href="#eventDescriptionSection"]')?.toggleAttribute('hidden', !eventDescription);
 
-    const renderEventList = (sectionId, listId, navId, items) => {
+    // "**teks**" in an admin-written line becomes bold; everything stays text (no HTML).
+    const appendEmphasis = (parent, text) => text.split(/\*\*(.+?)\*\*/).forEach((part, index) => {
+      if (!part) return;
+      if (index % 2 === 0) parent.append(part);
+      else {
+        const strong = document.createElement('strong');
+        strong.textContent = part;
+        parent.append(strong);
+      }
+    });
+    const renderEventList = (sectionId, listId, navId, items, emphasis = false) => {
       const section = document.getElementById(sectionId);
       const list = document.getElementById(listId);
       const navLink = document.getElementById(navId);
@@ -1828,7 +1883,8 @@ if (registrationForm) {
       const entries = Array.isArray(items) ? items.filter(Boolean) : [];
       list.replaceChildren(...entries.map((item) => {
         const entry = document.createElement('li');
-        entry.textContent = item;
+        if (emphasis) appendEmphasis(entry, item);
+        else entry.textContent = item;
         return entry;
       }));
       section.hidden = entries.length === 0;
@@ -1836,9 +1892,8 @@ if (registrationForm) {
     };
     renderEventList('eventActivitiesSection', 'eventActivities', 'eventActivitiesNav', selectedEvent.activities);
     renderEventList('eventBenefitsSection', 'eventBenefits', 'eventBenefitsNav', selectedEvent.benefits);
-    const showRequirements = isFreeSelectionEvent();
-    document.getElementById('eventRequirementsSection')?.toggleAttribute('hidden', !showRequirements);
-    document.getElementById('eventRequirementsNav')?.toggleAttribute('hidden', !showRequirements);
+    renderEventList('eventRequirementsSection', 'eventRequirements', 'eventRequirementsNav',
+      isFreeSelectionEvent() ? selectedEvent.selectionRequirements : [], true);
 
     const eventNameInput = document.getElementById('kegiatan');
     const eventSlugInput = document.getElementById('eventSlug');
@@ -2042,10 +2097,13 @@ if (registrationForm) {
     let requestBody = JSON.stringify(payload);
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
     if (isFreeSelectionEvent()) {
+      payload.portfolio_url = String(formData.get('portfolio_url') || '').trim() || null;
       const proof = await prepareInstagramProof(formData.get('instagram_proof'));
+      const cv = await prepareCv(formData.get('cv'));
       const multipart = new FormData();
       Object.entries(payload).forEach(([key, value]) => multipart.append(key, value === null ? '' : String(value)));
       multipart.append('instagram_proof', proof);
+      if (cv) multipart.append('cv', cv);
       requestBody = multipart;
       delete headers['Content-Type'];
     }
@@ -2065,6 +2123,9 @@ if (registrationForm) {
   };
 
   const registrationErrorMessages = {
+    INVALID_CV: 'CV/portofolio harus berupa file PDF dengan ukuran maksimal 5 MB.',
+    INVALID_PORTFOLIO_URL: 'Link portofolio harus diawali https:// dan maksimal 500 karakter.',
+    FILES_TOO_LARGE: 'Ukuran file terlalu besar. Bukti follow maksimal 2 MB dan CV/portofolio maksimal 5 MB.',
     INVALID_INSTAGRAM_PROOF: 'Bukti follow wajib berupa screenshot JPG, PNG, atau WebP. Ukuran maksimal 2 MB setelah diperkecil.',
     INVALID_REQUEST: 'Data pendaftaran belum valid. Periksa kembali isian kamu.',
     EVENT_NOT_FOUND: 'Kegiatan ini belum ditemukan di sistem pendaftaran.',
@@ -2443,6 +2504,13 @@ if (registrationForm) {
       selectionReview.hidden = !(isSelectionEvent() && Boolean(selectedEvent.selectionQuestion));
       setDataText('[data-review-selection-question]', selectedEvent.selectionQuestion || '', registrationReview);
       setDataText('[data-review-selection-answer]', String(formData.get('selection_answer') || '').trim(), registrationReview);
+    }
+    const portfolioReview = registrationReview?.querySelector('[data-review-portfolio]');
+    if (portfolioReview) {
+      const cvFile = formData.get('cv');
+      const items = [cvFile instanceof File && cvFile.size ? cvFile.name : '', String(formData.get('portfolio_url') || '').trim()].filter(Boolean);
+      portfolioReview.hidden = !isFreeSelectionEvent() || !items.length;
+      setDataText('[data-review-portfolio-value]', items.join(' · '), registrationReview);
     }
     setDataText('[data-review-event-title]', selectedEvent.name, registrationReview);
     setDataText('[data-review-event-date]', `${selectedEvent.date} · ${selectedEvent.time}`, registrationReview);

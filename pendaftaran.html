@@ -92,14 +92,9 @@
                 <h3 id="eventBenefitsTitle">Yang kamu bawa pulang</h3>
                 <ul id="eventBenefits"></ul>
               </section>
-              <!-- Placeholder for free selection events until admin can set requirements per event. -->
               <section class="registration-detail" id="eventRequirementsSection" aria-labelledby="eventRequirementsTitle" hidden>
                 <h3 id="eventRequirementsTitle">Persyaratan jika lolos</h3>
-                <ul>
-                  <li>Membawa donasi bahagia <strong>mulai dari Rp5.000</strong> sebagai dukungan untuk kegiatan volunteer gratis bersama Kita Bahagia.</li>
-                  <li>Membawa <strong>snack rencengan/kotakan</strong> berisi 10+ untuk dibagikan kepada adik-adik.</li>
-                  <li>Mengunggah momen kegiatan volunteer Kita Bahagia di <strong>Feeds/Reels</strong>. Sebagai bentuk apresiasi, peserta akan mendapatkan <strong>sertifikat</strong> kegiatan.</li>
-                </ul>
+                <ul id="eventRequirements"></ul>
               </section>
               <p class="registration-detail-note"></p>
             </article>
@@ -151,6 +146,17 @@
                     <div class="field full"><label for="bahagia">Apa definisi bahagia menurut kamu? *</label><textarea id="bahagia" name="bahagia" placeholder="Tulis definisi bahagia menurutmu..." required></textarea></div>
                     <div class="field full" id="selectionAnswerField" hidden><label for="selectionAnswer" id="selectionAnswerLabel"></label><textarea id="selectionAnswer" name="selection_answer" maxlength="2000" aria-describedby="selectionAnswerCount"></textarea><span id="selectionAnswerCount" class="field-counter" aria-live="polite"></span></div>
                     <div class="field full" id="selectionCommitmentField" hidden><label class="check-row" for="selectionCommitment"><input id="selectionCommitment" name="selection_commitment" type="checkbox" value="ya"><span id="selectionCommitmentText"></span></label></div>
+                    <div class="field full" id="selectionCvField" hidden>
+                      <label for="selectionCv">CV/portofolio (PDF, opsional)</label>
+                      <input id="selectionCv" name="cv" type="file" accept="application/pdf,.pdf" aria-describedby="selectionCvHint selectionCvError">
+                      <span id="selectionCvHint" class="field-counter">Maksimal 5 MB.</span>
+                      <span id="selectionCvError" class="field-error" role="alert" hidden></span>
+                    </div>
+                    <div class="field full" id="selectionPortfolioField" hidden>
+                      <label for="portfolioUrl">Link portofolio (opsional)</label>
+                      <input id="portfolioUrl" name="portfolio_url" type="url" inputmode="url" maxlength="500" pattern="https://.+" placeholder="https://" aria-describedby="portfolioUrlHint">
+                      <span id="portfolioUrlHint" class="field-counter">Mendaftar untuk divisi dokumentasi? Wajib lampirkan portofolio (PDF atau link). Pastikan link bisa dibuka tanpa minta akses.</span>
+                    </div>
                     <div class="field full selection-instagram-proof" id="selectionInstagramProofField" hidden>
                       <p class="eyebrow">Ikuti Kita Bahagia di Instagram</p>
                       <p>Sebelum mengirim pendaftaran, ikuti @kitabahagiaa_, lalu unggah screenshot sebagai bukti.</p>
@@ -184,6 +190,7 @@
                   <div><dt>Asal Instansi</dt><dd data-review-institution></dd></div>
                   <div><dt>Definisi bahagia</dt><dd data-review-happiness></dd></div>
                   <div data-review-selection hidden><dt data-review-selection-question></dt><dd data-review-selection-answer></dd></div>
+                  <div data-review-portfolio hidden><dt>CV/portofolio</dt><dd data-review-portfolio-value></dd></div>
                 </dl>
               </div>
               <aside class="registration-review-event">

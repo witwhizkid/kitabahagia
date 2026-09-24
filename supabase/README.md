@@ -187,6 +187,33 @@ Rollout order: apply the migration, deploy `create-registration`, deploy
 `admin-registrations`, then deploy the static site. No payment function changes
 are required. Do not expose `SUPABASE_SERVICE_ROLE_KEY` in the site.
 
+## Selection extras: requirements, CV and portfolio link
+
+Migration `20260930010000_selection_extras.sql` adds:
+
+- `events.selection_requirements text[]` ("Persyaratan jika lolos"). Admin writes
+  one item per line; `**teks**` renders bold on the public page (as DOM text, never
+  HTML). `public-events` sends it only for selection events. The migration fills
+  it for selection events that already existed with the text the page used to
+  show as a static placeholder.
+- Optional `registrations.cv_path` (private bucket `selection-cvs`, PDF only,
+  5 MiB) and `registrations.portfolio_url` (`https://`, max 500 chars). The RPC
+  accepts both only for selection events; the path must be
+  `<event-slug>/<uuid>.pdf`.
+
+`create-registration` takes the CV as an optional `cv` part of the same
+multipart request as the Instagram proof. It checks `application/pdf` plus the
+`%PDF-` signature, uploads it after the proof, and removes both objects if the
+RPC fails. `admin-registrations?proof=<code>` now returns `{ proof, cv }`, each a
+10-minute signed URL or null. The portfolio link is part of the normal list row
+and CSV export. Rollback:
+`supabase/rollback/20260930010000_selection_extras.down.sql` (stops while
+`selection-cvs` has files). Manual checks:
+`supabase/tests/20260930010000_selection_extras_manual.sql`.
+
+Rollout order: apply the migration, deploy `create-registration`,
+`admin-registrations`, `admin-events` and `public-events`, then the static site.
+
 ## Confirmed registration onboarding
 
 `POST /functions/v1/payment-status` requires `registration_code` and the matching

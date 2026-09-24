@@ -505,25 +505,60 @@
     applicantDialogContent.append(item);
   };
 
+  const externalLink = (href, text) => {
+    const link = document.createElement("a");
+    link.className = "text-button";
+    link.href = href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.referrerPolicy = "no-referrer";
+    link.textContent = text;
+    return link;
+  };
+  // Filled in two steps: the portfolio link is in the row; the CV link needs a signed URL.
+  const appendApplicantCvField = (applicant) => {
+    const item = document.createElement("section");
+    item.className = "applicant-detail-field applicant-cv-field";
+    const heading = document.createElement("h3");
+    heading.textContent = "CV / portofolio";
+    const links = document.createElement("p");
+    links.className = "applicant-file-links";
+    let portfolio = null;
+    try { portfolio = applicant.portfolio_url ? new URL(applicant.portfolio_url) : null; } catch { portfolio = null; }
+    if (portfolio?.protocol === "https:") links.append(externalLink(portfolio.href, "Buka link portofolio"));
+    else links.textContent = "-";
+    item.append(heading, links);
+    applicantDialogContent.append(item);
+  };
+
   const currentDialogApplicant = () => registrations[applicantDialogIndex] || null;
   const loadApplicantProof = async (registration) => {
     if (registration?.events?.registration_mode !== "selection") return;
     try {
       const result = await applicantProofRequest(registration.registration_code);
-      if (currentDialogApplicant()?.registration_code !== registration.registration_code || !result.proof?.signed_url) return;
-      const signedUrl = new URL(result.proof.signed_url);
-      if (signedUrl.origin !== new URL(CONFIG.supabaseUrl).origin) throw new Error("Bukti follow tidak dapat dibuka.");
+      if (currentDialogApplicant()?.registration_code !== registration.registration_code) return;
+      const signedHref = (file) => {
+        if (!file?.signed_url) return null;
+        const url = new URL(file.signed_url);
+        if (url.origin !== new URL(CONFIG.supabaseUrl).origin) throw new Error("Berkas pendaftar tidak dapat dibuka.");
+        return url.href;
+      };
+      const proofHref = signedHref(result.proof);
+      const cvHref = signedHref(result.cv);
+      const cvLinks = applicantDialogContent.querySelector(".applicant-cv-field .applicant-file-links");
+      if (cvHref && cvLinks && !cvLinks.querySelector("[data-cv-link]")) {
+        if (!cvLinks.querySelector("a")) cvLinks.textContent = "";
+        const cvLink = externalLink(cvHref, "Lihat CV (PDF)");
+        cvLink.dataset.cvLink = "";
+        cvLinks.prepend(cvLink);
+      }
+      if (!proofHref) return;
+      const signedUrl = new URL(proofHref);
       const section = document.createElement("section");
       section.className = "applicant-detail-field applicant-proof-field";
       const heading = document.createElement("h3");
       heading.textContent = "Bukti follow Instagram";
-      const previewLink = document.createElement("a");
-      previewLink.className = "text-button";
-      previewLink.href = signedUrl.href;
-      previewLink.target = "_blank";
-      previewLink.rel = "noopener noreferrer";
-      previewLink.referrerPolicy = "no-referrer";
-      previewLink.textContent = "Lihat bukti";
+      const previewLink = externalLink(signedUrl.href, "Lihat bukti");
       const image = document.createElement("img");
       image.className = "applicant-proof-preview";
       image.src = signedUrl.href;
@@ -535,7 +570,7 @@
       applicantDialogContent.append(section);
     } catch (error) {
       if (currentDialogApplicant()?.registration_code === registration.registration_code) {
-        setFeedback($("#applicant-dialog-feedback"), error.message || "Bukti follow belum dapat dibuka.", "error");
+        setFeedback($("#applicant-dialog-feedback"), error.message || "Berkas pendaftar belum dapat dibuka.", "error");
       }
     }
   };
@@ -582,6 +617,7 @@
       appendApplicantField("Pertanyaan seleksi", applicant.selection_question);
       appendApplicantField("Jawaban seleksi", applicant.selection_answer);
       appendApplicantField("Komitmen", applicant.commitment_text);
+      appendApplicantCvField(applicant);
       appendApplicantField("Riwayat seleksi", Number(selectionOverview?.history?.[applicant.registration_code])
         ? `Pernah ikut ${selectionOverview.history[applicant.registration_code]}×` : "Peserta baru");
       appendApplicantField("Keputusan seleksi", applicant.selection_decided_at
@@ -673,10 +709,10 @@
 
   const csvCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
   const exportRegistrationsCsv = () => {
-    const columns = ["Kode", "Nama", "Email", "WhatsApp", "Domisili", "Instansi", "Definisi bahagia", "Jawaban seleksi", "Status", "Terdaftar"];
+    const columns = ["Kode", "Nama", "Email", "WhatsApp", "Domisili", "Instansi", "Definisi bahagia", "Jawaban seleksi", "Link portofolio", "Status", "Terdaftar"];
     const rows = registrations.map((applicant) => [
       applicant.registration_code, applicant.name, applicant.email, applicant.phone, applicant.domicile,
-      applicant.institution, applicant.reason, applicant.selection_answer,
+      applicant.institution, applicant.reason, applicant.selection_answer, applicant.portfolio_url,
       selectionEnabled() && applicant.registration_status === "confirmed"
         ? "Diterima" : registrationStatusLabels[applicant.registration_status] || applicant.registration_status,
       formatDateTime(applicant.created_at),
@@ -1030,6 +1066,11 @@
     question: "Kenapa kamu ingin ikut kegiatan ini?",
     minChars: 150,
     commitment: "Saya bersedia hadir penuh sesuai jadwal kegiatan.",
+    requirements: [
+      "Membawa donasi bahagia **mulai dari Rp5.000** sebagai dukungan untuk kegiatan volunteer gratis bersama Kita Bahagia.",
+      "Membawa **snack rencengan/kotakan** berisi 10+ untuk dibagikan kepada adik-adik.",
+      "Mengunggah momen kegiatan volunteer Kita Bahagia di **Feeds/Reels**. Sebagai bentuk apresiasi, peserta akan mendapatkan **sertifikat** kegiatan.",
+    ],
     applicantsPerSeat: 4,
     waAccepted: "Halo {nama}, selamat! Kamu diterima di kegiatan {kegiatan} pada {tanggal}. Kode pendaftaran: {kode}. Gabung grup peserta: {link_grup}. Cek hasil: {link_status}",
     waWaitlisted: "Halo {nama}, saat ini kamu masuk daftar cadangan kegiatan {kegiatan} pada {tanggal}. Kode pendaftaran: {kode}. Kami akan menghubungi jika ada perubahan. Cek hasil: {link_status}",
@@ -1081,6 +1122,7 @@
     $("#event-selection-question").value = event?.selection_question || "";
     $("#event-selection-min").value = event?.registration_mode === "selection" ? event.selection_min_chars ?? "" : "";
     $("#event-commitment").value = event?.commitment_text || "";
+    $("#event-requirements").value = event?.selection_requirements?.join("\n") || "";
     $("#event-wa-accepted").value = event?.wa_message_accepted || "";
     $("#event-wa-waitlisted").value = event?.wa_message_waitlisted || "";
     $("#event-wa-rejected").value = event?.wa_message_rejected || "";
@@ -1249,6 +1291,7 @@
     selection_question: $("#event-selection-question").value.trim() || null,
     selection_min_chars: Number($("#event-selection-min").value) || 0,
     commitment_text: $("#event-commitment").value.trim() || null,
+    selection_requirements: splitLines($("#event-requirements").value),
     wa_message_accepted: $("#event-wa-accepted").value.trim() || null,
     wa_message_waitlisted: $("#event-wa-waitlisted").value.trim() || null,
     wa_message_rejected: $("#event-wa-rejected").value.trim() || null,
@@ -1353,6 +1396,10 @@
   $("#event-price").addEventListener("input", togglePaymentWindowField);
   $("#event-registration-mode").addEventListener("change", () => {
     applySelectionDefaults();
+    // Only on switching to Seleksi, so an owner can still save an empty list.
+    if ($("#event-registration-mode").value === "selection" && !$("#event-requirements").value.trim()) {
+      $("#event-requirements").value = SELECTION_DEFAULTS.requirements.join("\n");
+    }
     toggleSelectionFields();
   });
 

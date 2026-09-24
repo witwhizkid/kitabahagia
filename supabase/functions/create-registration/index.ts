@@ -6,7 +6,8 @@ const corsHeaders = {
 };
 
 const MAX_PROOF_BYTES = 2 * 1024 * 1024;
-const MAX_MULTIPART_BYTES = MAX_PROOF_BYTES + 64 * 1024;
+const MAX_CV_BYTES = 5 * 1024 * 1024;
+const MAX_MULTIPART_BYTES = MAX_PROOF_BYTES + MAX_CV_BYTES + 64 * 1024;
 const proofMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 const jsonResponse = (status: number, body: Record<string, unknown>) => new Response(
@@ -19,6 +20,9 @@ const errorResponse = (status: number, code: string, message: string) =>
 const errorMessages: Record<string, string> = {
   INVALID_REQUEST: "Data pendaftaran tidak valid.",
   INVALID_INSTAGRAM_PROOF: "Unggah screenshot follow Instagram dalam format JPG, PNG, atau WebP dengan ukuran maksimal 2 MB.",
+  INVALID_CV: "CV/portofolio harus berupa file PDF dengan ukuran maksimal 5 MB.",
+  INVALID_PORTFOLIO_URL: "Link portofolio harus diawali https:// dan maksimal 500 karakter.",
+  FILES_TOO_LARGE: "Ukuran file terlalu besar. Bukti follow maksimal 2 MB dan CV/portofolio maksimal 5 MB.",
   EVENT_NOT_FOUND: "Kegiatan tidak ditemukan.",
   EVENT_NOT_OPEN: "Kegiatan tidak sedang menerima pendaftaran.",
   REGISTRATION_CLOSED: "Batas waktu pendaftaran telah berakhir.",
@@ -33,14 +37,14 @@ const errorMessages: Record<string, string> = {
 const conflictErrors = new Set(["EVENT_NOT_OPEN", "REGISTRATION_CLOSED", "EVENT_FULL", "ALREADY_REGISTERED", "REGISTRATION_NOT_OPEN", "APPLICANTS_FULL"]);
 const allowedFields = new Set([
   "event_slug", "name", "phone", "email", "domicile", "institution", "reason", "notes", "consent",
-  "selection_answer", "commitment",
+  "selection_answer", "commitment", "portfolio_url",
 ]);
 
 type RegistrationInput = {
   event_slug: string; name: string; phone: string; email: string;
   domicile: string | null; institution: string | null;
   reason: string; notes: string | null; consent: true;
-  selection_answer: string | null; commitment: boolean | null;
+  selection_answer: string | null; commitment: boolean | null; portfolio_url: string | null;
 };
 type ProofFile = { bytes: Uint8Array; contentType: string; extension: string };
 
@@ -57,7 +61,8 @@ const validateInput = (value: unknown): RegistrationInput | null => {
     || (body.institution !== undefined && body.institution !== null && typeof body.institution !== "string")
     || (body.notes !== undefined && body.notes !== null && typeof body.notes !== "string")
     || (body.selection_answer !== undefined && body.selection_answer !== null && typeof body.selection_answer !== "string")
-    || (body.commitment !== undefined && body.commitment !== null && typeof body.commitment !== "boolean")) return null;
+    || (body.commitment !== undefined && body.commitment !== null && typeof body.commitment !== "boolean")
+    || (body.portfolio_url !== undefined && body.portfolio_url !== null && typeof body.portfolio_url !== "string")) return null;
 
   const eventSlug = body.event_slug.trim().toLowerCase();
   const name = body.name.trim();
@@ -72,6 +77,8 @@ const validateInput = (value: unknown): RegistrationInput | null => {
   const selectionAnswer = typeof body.selection_answer === "string"
     ? body.selection_answer.replace(/\r\n?/g, "\n").trim() || null : null;
   const commitment = typeof body.commitment === "boolean" ? body.commitment : null;
+  // Format is checked by the database (INVALID_PORTFOLIO_URL), which owns the rule.
+  const portfolioUrl = typeof body.portfolio_url === "string" ? body.portfolio_url.trim() || null : null;
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(eventSlug) || eventSlug.length > 120
     || name.length < 2 || name.length > 150 || !/^\+?\d{8,20}$/.test(phone)
     || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -82,7 +89,7 @@ const validateInput = (value: unknown): RegistrationInput | null => {
     || (selectionAnswer !== null && [...selectionAnswer].length > 2000)) return null;
   return {
     event_slug: eventSlug, name, phone, email, domicile, institution, reason, notes, consent: true,
-    selection_answer: selectionAnswer, commitment,
+    selection_answer: selectionAnswer, commitment, portfolio_url: portfolioUrl,
   };
 };
 
@@ -126,11 +133,11 @@ const parseMultipart = async (request: Request, contentType: string) => {
     return null;
   }
   const fields: Record<string, unknown> = {};
-  let proof: File | null = null;
+  const files: Record<string, File> = {};
   for (const [key, value] of form.entries()) {
-    if (key === "instagram_proof") {
-      if (proof || typeof value === "string") return null;
-      proof = value;
+    if (key === "instagram_proof" || key === "cv") {
+      if (files[key] || typeof value === "string") return null;
+      files[key] = value;
       continue;
     }
     if (!allowedFields.has(key) || Object.hasOwn(fields, key) || typeof value !== "string") return null;
@@ -138,7 +145,7 @@ const parseMultipart = async (request: Request, contentType: string) => {
   }
   fields.consent = fields.consent === "true";
   if (fields.commitment !== undefined) fields.commitment = fields.commitment === "true";
-  return { fields, proof, tooLarge: false as const };
+  return { fields, proof: files.instagram_proof ?? null, cv: files.cv ?? null, tooLarge: false as const };
 };
 
 const validateProof = async (file: File | null): Promise<ProofFile | null> => {
@@ -155,8 +162,15 @@ const validateProof = async (file: File | null): Promise<ProofFile | null> => {
   return null;
 };
 
-const storagePathUrl = (base: string, path: string) =>
-  `${base}/storage/v1/object/instagram-proofs/${path.split("/").map(encodeURIComponent).join("/")}`;
+const validateCv = async (file: File): Promise<ProofFile | null> => {
+  if (file.size < 5 || file.size > MAX_CV_BYTES || file.type !== "application/pdf") return null;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (String.fromCharCode(...bytes.subarray(0, 5)) !== "%PDF-") return null;
+  return { bytes, contentType: file.type, extension: "pdf" };
+};
+
+const storagePathUrl = (base: string, bucket: string, path: string) =>
+  `${base}/storage/v1/object/${bucket}/${path.split("/").map(encodeURIComponent).join("/")}`;
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
@@ -167,12 +181,14 @@ Deno.serve(async (request) => {
   const isMultipart = contentType.toLowerCase().startsWith("multipart/form-data;");
   let body: unknown;
   let proofFile: File | null = null;
+  let cvFile: File | null = null;
   if (isMultipart) {
     const parsed = await parseMultipart(request, contentType);
     if (!parsed) return errorResponse(400, "INVALID_REQUEST", errorMessages.INVALID_REQUEST);
-    if (parsed.tooLarge) return errorResponse(413, "INVALID_INSTAGRAM_PROOF", errorMessages.INVALID_INSTAGRAM_PROOF);
+    if (parsed.tooLarge) return errorResponse(413, "FILES_TOO_LARGE", errorMessages.FILES_TOO_LARGE);
     body = parsed.fields;
     proofFile = parsed.proof;
+    cvFile = parsed.cv;
   } else if (contentType.toLowerCase().includes("application/json")) {
     try { body = await request.json(); }
     catch { return errorResponse(400, "INVALID_REQUEST", errorMessages.INVALID_REQUEST); }
@@ -190,20 +206,35 @@ Deno.serve(async (request) => {
   }
 
   let uploadedPath: string | null = null;
-  const removeUploadedProof = async () => {
-    if (!uploadedPath) return;
+  let uploadedCvPath: string | null = null;
+  const removeObject = async (bucket: string, path: string) => {
     try {
-      const response = await fetch(`${supabaseUrl}/storage/v1/object/instagram-proofs`, {
+      const response = await fetch(`${supabaseUrl}/storage/v1/object/${bucket}`, {
         method: "DELETE",
         headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ prefixes: [uploadedPath] }),
+        body: JSON.stringify({ prefixes: [path] }),
       });
-      if (!response.ok) console.error("Instagram proof cleanup failed", { status: response.status });
+      if (!response.ok) console.error("Upload cleanup failed", { bucket, status: response.status });
     } catch {
-      console.error("Instagram proof cleanup request failed");
+      console.error("Upload cleanup request failed", { bucket });
     }
-    uploadedPath = null;
   };
+  const removeUploadedProof = async () => {
+    if (uploadedPath) await removeObject("instagram-proofs", uploadedPath);
+    if (uploadedCvPath) await removeObject("selection-cvs", uploadedCvPath);
+    uploadedPath = null;
+    uploadedCvPath = null;
+  };
+  const uploadObject = (bucket: string, path: string, file: ProofFile) => fetch(storagePathUrl(supabaseUrl, bucket, path), {
+    method: "POST",
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      "Content-Type": file.contentType,
+      "x-upsert": "false",
+    },
+    body: file.bytes,
+  });
 
   try {
     // Multipart is accepted only for events the database defines as free + selection.
@@ -221,21 +252,26 @@ Deno.serve(async (request) => {
 
       const proof = await validateProof(proofFile);
       if (!proof) return errorResponse(400, "INVALID_INSTAGRAM_PROOF", errorMessages.INVALID_INSTAGRAM_PROOF);
+      const cv = cvFile ? await validateCv(cvFile) : null;
+      if (cvFile && !cv) return errorResponse(400, "INVALID_CV", errorMessages.INVALID_CV);
+
+      // Paths are recorded before each upload: if the request dies after Storage kept
+      // the file, the catch below still knows what to remove (deleting a missing object is a no-op).
       uploadedPath = `${input.event_slug}/${crypto.randomUUID()}.${proof.extension}`;
-      const uploadResponse = await fetch(storagePathUrl(supabaseUrl, uploadedPath), {
-        method: "POST",
-        headers: {
-          apikey: serviceRoleKey,
-          Authorization: `Bearer ${serviceRoleKey}`,
-          "Content-Type": proof.contentType,
-          "x-upsert": "false",
-        },
-        body: proof.bytes,
-      });
+      const uploadResponse = await uploadObject("instagram-proofs", uploadedPath, proof);
       if (!uploadResponse.ok) {
         console.error("Instagram proof upload failed", { status: uploadResponse.status });
-        uploadedPath = null;
+        await removeUploadedProof();
         return errorResponse(500, "SERVER_ERROR", "Bukti follow belum dapat disimpan. Silakan coba lagi.");
+      }
+      if (cv) {
+        uploadedCvPath = `${input.event_slug}/${crypto.randomUUID()}.pdf`;
+        const cvResponse = await uploadObject("selection-cvs", uploadedCvPath, cv);
+        if (!cvResponse.ok) {
+          console.error("CV upload failed", { status: cvResponse.status });
+          await removeUploadedProof();
+          return errorResponse(500, "SERVER_ERROR", "CV/portofolio belum dapat disimpan. Silakan coba lagi.");
+        }
       }
     }
 
@@ -247,10 +283,13 @@ Deno.serve(async (request) => {
         p_email: input.email, p_reason: input.reason, p_notes: input.notes, p_consent: input.consent,
         p_domicile: input.domicile, p_institution: input.institution,
         // Sent only when present, so other sign-ups keep working if this function is
-        // deployed before the migration that adds the parameter (20260927010000, 20260929010000).
+        // deployed before the migration that adds the parameter (20260927010000, 20260929010000,
+        // 20260930010000).
         ...(input.selection_answer !== null ? { p_selection_answer: input.selection_answer } : {}),
         ...(input.commitment !== null ? { p_commitment: input.commitment } : {}),
         ...(uploadedPath !== null ? { p_instagram_proof_path: uploadedPath } : {}),
+        ...(uploadedCvPath !== null ? { p_cv_path: uploadedCvPath } : {}),
+        ...(input.portfolio_url !== null ? { p_portfolio_url: input.portfolio_url } : {}),
       }),
     });
     const result = await rpcResponse.json().catch(() => null) as Record<string, unknown> | null;

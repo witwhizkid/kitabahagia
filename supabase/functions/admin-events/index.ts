@@ -23,7 +23,7 @@ const eventProjection = [
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "is_demo", "payment_window_minutes",
   "registration_mode", "registration_opens_at", "applicant_limit", "announcement_at",
-  "selection_question", "selection_min_chars", "commitment_text",
+  "selection_question", "selection_min_chars", "commitment_text", "selection_requirements",
   "wa_message_accepted", "wa_message_waitlisted", "wa_message_rejected",
   "archived_at",
 ].join(",");
@@ -34,7 +34,7 @@ const writableFields = new Set([
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "payment_window_minutes",
   "registration_mode", "registration_opens_at", "applicant_limit", "announcement_at",
-  "selection_question", "selection_min_chars", "commitment_text",
+  "selection_question", "selection_min_chars", "commitment_text", "selection_requirements",
   "wa_message_accepted", "wa_message_waitlisted", "wa_message_rejected",
 ]);
 const registrationModes = new Set(["first_come", "selection"]);
@@ -106,9 +106,9 @@ const validatePayload = (input: unknown, creating: boolean) => {
   const data: Record<string, unknown> = {};
   try {
     for (const [field, value] of Object.entries(source)) {
-      if (["activities", "benefits"].includes(field)) {
+      if (["activities", "benefits", "selection_requirements"].includes(field)) {
         if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
-          return { error: "Aktivitas dan manfaat harus berupa daftar teks." } as const;
+          return { error: "Aktivitas, manfaat, dan persyaratan harus berupa daftar teks." } as const;
         }
         data[field] = value.map((item) => item.trim()).filter(Boolean);
       } else if (["price", "capacity"].includes(field)) {
@@ -164,6 +164,10 @@ const validatePayload = (input: unknown, creating: boolean) => {
   if (data.announcement_at !== undefined && !validIsoTimestamp(data.announcement_at)) return { error: "Tanggal pengumuman tidak valid." } as const;
   if (typeof data.selection_question === "string" && data.selection_question.length > 500) return { error: "Pertanyaan seleksi maksimal 500 karakter." } as const;
   if (typeof data.commitment_text === "string" && data.commitment_text.length > 300) return { error: "Teks komitmen maksimal 300 karakter." } as const;
+  if (Array.isArray(data.selection_requirements) && (data.selection_requirements.length > 15
+    || (data.selection_requirements as string[]).some((item) => item.length > 500))) {
+    return { error: "Persyaratan maksimal 15 poin, masing-masing maksimal 500 karakter." } as const;
+  }
   for (const field of ["wa_message_accepted", "wa_message_waitlisted", "wa_message_rejected"]) {
     if (typeof data[field] === "string" && (data[field] as string).length > 1000) return { error: "Pesan WhatsApp maksimal 1000 karakter." } as const;
   }

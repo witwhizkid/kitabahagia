@@ -71,8 +71,10 @@ Halaman pendaftaran (`pendaftaran.html`):
 - Langkah 1–2 mengikuti gaya halaman pembayaran; watermark header memakai
   logo Kita Bahagia.
 - Event gratis + Seleksi punya tab/bagian "Persyaratan jika lolos" di detail
-  kegiatan. Isinya masih placeholder statis di `pendaftaran.html` (sama untuk
-  semua event seleksi) sampai admin bisa mengaturnya per kegiatan.
+  kegiatan, diisi admin per kegiatan (satu poin per baris, `**teks**` = tebal).
+  Form seleksi gratis juga punya CV/portofolio PDF (opsional, bucket privat
+  `selection-cvs`, 5 MB) dan link portofolio `https://` (opsional). Detail:
+  "Selection extras" di `supabase/README.md`.
 
 Lainnya:
 - Foto disajikan sebagai WebP yang sudah diperkecil (originalnya 2–7 MB).
