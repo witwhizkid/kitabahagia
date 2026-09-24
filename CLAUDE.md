@@ -116,7 +116,7 @@ Lainnya:
   dikerjakan (butuh domain). Bukti follow Instagram hanya untuk event gratis +
   Seleksi: multipart hanya pada kondisi itu; JPG/PNG/WebP maksimal 2 MiB masuk
   ke bucket privat `instagram-proofs`, dan database hanya menyimpan object path.
-  Admin mendapat signed URL 120 detik setelah verifikasi admin. Rate limiting
+  Admin mendapat signed URL 10 menit setelah verifikasi admin. Rate limiting
   upload anonim adalah follow-up security pra-launch; function crash di antara
   upload dan RPC bisa meninggalkan object privat orphan. Detail ada di
   `supabase/README.md`.

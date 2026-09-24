@@ -518,6 +518,7 @@
       const heading = document.createElement("h3");
       heading.textContent = "Bukti follow Instagram";
       const previewLink = document.createElement("a");
+      previewLink.className = "text-button";
       previewLink.href = signedUrl.href;
       previewLink.target = "_blank";
       previewLink.rel = "noopener noreferrer";
@@ -527,9 +528,10 @@
       image.className = "applicant-proof-preview";
       image.src = signedUrl.href;
       image.alt = "Screenshot bukti follow Instagram peserta";
-      image.loading = "lazy";
       image.referrerPolicy = "no-referrer";
       section.append(heading, previewLink, image);
+      // A quick back-and-forth to the same applicant can resolve two requests for one render.
+      applicantDialogContent.querySelector(".applicant-proof-field")?.remove();
       applicantDialogContent.append(section);
     } catch (error) {
       if (currentDialogApplicant()?.registration_code === registration.registration_code) {

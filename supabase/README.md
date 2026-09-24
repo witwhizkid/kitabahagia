@@ -179,7 +179,7 @@ RPC can leave a private orphan; cleanup automation is a future follow-up.
 
 `admin-registrations?proof=<registration_code>` reuses the normal active-admin
 verification, fetches the object path only for a free selection registration,
-and returns a 120-second signed URL. The list response never includes the proof
+and returns a 10-minute signed URL. The list response never includes the proof
 path or signed URL. Rate limiting for anonymous registration/file upload is a
 pre-launch security follow-up; this feature does not add a separate limiter.
 

@@ -23,8 +23,10 @@ const errorMessages: Record<string, string> = {
   EVENT_NOT_OPEN: "Kegiatan tidak sedang menerima pendaftaran.",
   REGISTRATION_CLOSED: "Batas waktu pendaftaran telah berakhir.",
   EVENT_FULL: "Kapasitas kegiatan sudah penuh.",
+  // Deliberately does not say whether the email or the phone number matched.
   ALREADY_REGISTERED: "Email atau nomor WhatsApp ini sudah terdaftar di kegiatan ini. Jika belum membayar, lanjutkan pembayaran dari perangkat yang sama atau hubungi admin dengan kode pendaftaranmu.",
   REGISTRATION_NOT_OPEN: "Pendaftaran kegiatan ini belum dibuka.",
+  // Deliberately says nothing about how many people applied.
   APPLICANTS_FULL: "Pendaftaran kegiatan ini sudah ditutup.",
   INVALID_ANSWER: "Jawaban seleksi belum memenuhi syarat.",
 };
@@ -66,6 +68,7 @@ const validateInput = (value: unknown): RegistrationInput | null => {
   const institution = typeof body.institution === "string" ? body.institution.trim() || null : null;
   const reason = body.reason.trim();
   const notes = typeof body.notes === "string" ? body.notes.trim() || null : null;
+  // Browsers submit textarea line breaks as CRLF; count them like the database does.
   const selectionAnswer = typeof body.selection_answer === "string"
     ? body.selection_answer.replace(/\r\n?/g, "\n").trim() || null : null;
   const commitment = typeof body.commitment === "boolean" ? body.commitment : null;
@@ -159,8 +162,9 @@ Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
   if (request.method !== "POST") return errorResponse(405, "INVALID_REQUEST", "Gunakan metode POST.");
 
-  const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
-  const isMultipart = contentType.startsWith("multipart/form-data;");
+  // The multipart boundary is case-sensitive, so only the comparison is lowercased.
+  const contentType = request.headers.get("content-type") ?? "";
+  const isMultipart = contentType.toLowerCase().startsWith("multipart/form-data;");
   let body: unknown;
   let proofFile: File | null = null;
   if (isMultipart) {
@@ -169,7 +173,7 @@ Deno.serve(async (request) => {
     if (parsed.tooLarge) return errorResponse(413, "INVALID_INSTAGRAM_PROOF", errorMessages.INVALID_INSTAGRAM_PROOF);
     body = parsed.fields;
     proofFile = parsed.proof;
-  } else if (contentType.includes("application/json")) {
+  } else if (contentType.toLowerCase().includes("application/json")) {
     try { body = await request.json(); }
     catch { return errorResponse(400, "INVALID_REQUEST", errorMessages.INVALID_REQUEST); }
   } else {
@@ -242,9 +246,11 @@ Deno.serve(async (request) => {
         p_event_slug: input.event_slug, p_name: input.name, p_phone: input.phone,
         p_email: input.email, p_reason: input.reason, p_notes: input.notes, p_consent: input.consent,
         p_domicile: input.domicile, p_institution: input.institution,
+        // Sent only when present, so other sign-ups keep working if this function is
+        // deployed before the migration that adds the parameter (20260927010000, 20260929010000).
         ...(input.selection_answer !== null ? { p_selection_answer: input.selection_answer } : {}),
         ...(input.commitment !== null ? { p_commitment: input.commitment } : {}),
-        p_instagram_proof_path: uploadedPath,
+        ...(uploadedPath !== null ? { p_instagram_proof_path: uploadedPath } : {}),
       }),
     });
     const result = await rpcResponse.json().catch(() => null) as Record<string, unknown> | null;

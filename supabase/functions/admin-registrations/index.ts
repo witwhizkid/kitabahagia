@@ -183,7 +183,7 @@ Deno.serve(async (request) => {
     const signedResponse = await fetch(`${supabaseUrl}/storage/v1/object/sign/instagram-proofs/${encodedPath}`, {
       method: "POST",
       headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ expiresIn: 120 }),
+      body: JSON.stringify({ expiresIn: 600 }),
     });
     const signedResult = await signedResponse.json().catch(() => null) as { signedURL?: string; signedUrl?: string } | null;
     const signedPath = signedResult?.signedURL || signedResult?.signedUrl;
@@ -193,14 +193,15 @@ Deno.serve(async (request) => {
     }
     let signedUrl: URL;
     try {
-      signedUrl = new URL(signedPath, `${supabaseUrl}/storage/v1/`);
+      // Storage answers "/object/sign/..." relative to /storage/v1 (as supabase-js assumes).
+      signedUrl = new URL(signedPath.startsWith("/object/") ? `${supabaseUrl}/storage/v1${signedPath}` : signedPath, supabaseUrl);
     } catch {
       return fail(500, "SERVER_ERROR", "Bukti follow belum dapat dibuka.");
     }
     if (signedUrl.origin !== new URL(supabaseUrl).origin || !signedUrl.pathname.startsWith("/storage/v1/object/sign/")) {
       return fail(500, "SERVER_ERROR", "Bukti follow belum dapat dibuka.");
     }
-    return json(200, { proof: { signed_url: signedUrl.href, expires_in: 120 } });
+    return json(200, { proof: { signed_url: signedUrl.href, expires_in: 600 } });
   }
 
   const eventSlug = url.searchParams.get("event")?.trim().toLowerCase() || null;

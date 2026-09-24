@@ -1271,7 +1271,7 @@ if (registrationForm) {
       retryError.hidden = true;
       retryError.textContent = '';
     }
-    const instagramCta = stage.querySelector('[data-payment-state="payment_paid"] [data-instagram]');
+    const instagramCta = stage.querySelector('[data-payment-instagram-cta]');
     if (instagramCta) instagramCta.hidden = state !== 'paid';
     const backLink = stage.querySelector('[data-payment-back]');
     if (backLink) {
@@ -1720,11 +1720,15 @@ if (registrationForm) {
     }
     context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     bitmap.close();
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.92));
-    if (!blob || blob.type !== 'image/webp' || blob.size > INSTAGRAM_PROOF_MAX_BYTES) {
+    const encode = (type, quality) => new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+    let blob = await encode('image/webp', 0.92);
+    // Safari cannot encode WebP and returns PNG instead; fall back to JPEG like the admin uploader.
+    if (!blob || blob.type !== 'image/webp') blob = await encode('image/jpeg', 0.9);
+    if (!blob || !['image/webp', 'image/jpeg'].includes(blob.type) || blob.size > INSTAGRAM_PROOF_MAX_BYTES) {
       throw { code: 'INVALID_INSTAGRAM_PROOF' };
     }
-    return new File([blob], 'instagram-proof.webp', { type: 'image/webp', lastModified: Date.now() });
+    const extension = blob.type === 'image/webp' ? 'webp' : 'jpg';
+    return new File([blob], `instagram-proof.${extension}`, { type: blob.type, lastModified: Date.now() });
   };
   const updateSelectionCounter = () => {
     const counter = document.getElementById('selectionAnswerCount');

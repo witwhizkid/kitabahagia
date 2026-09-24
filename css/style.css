@@ -6110,6 +6110,10 @@ html.home-document { overflow-x: hidden; }
 .registration-page .check-row { align-items:center; padding:14px 16px; border-radius:var(--radius-md); background:var(--maroon-soft); color:var(--ink); cursor:pointer; }
 .registration-page .check-row input { width:20px; min-height:20px; height:20px; margin:0; }
 .registration-page .check-row:has(input:focus-visible) { outline:3px solid var(--maroon); outline-offset:2px; }
+.registration-page .selection-instagram-proof { padding:18px; border:1.5px solid var(--line); border-radius:var(--radius-md); }
+.registration-page .selection-instagram-proof .eyebrow { margin:0; }
+.registration-page .selection-instagram-proof p:not(.eyebrow) { margin:0; color:var(--muted); font-size:14px; line-height:1.6; }
+.registration-page .selection-instagram-proof [data-instagram] { justify-self:start; margin-bottom:8px; }
 .registration-page .form-actions .btn,
 .registration-page .registration-review-actions .btn { min-height:52px; padding:12px 28px; border-radius:999px; }
 
