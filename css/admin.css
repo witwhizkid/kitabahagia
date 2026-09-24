@@ -197,6 +197,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .registration-row { display: grid; grid-template-columns: minmax(190px, 1.2fr) minmax(170px, 1fr) minmax(170px, .9fr) minmax(130px, .7fr); gap: 22px; align-items: start; padding: 20px 0; border-bottom: 1px solid var(--line); }
 .registration-person, .registration-event, .registration-statuses, .registration-date { min-width: 0; display: grid; justify-items: start; gap: 5px; }
 .registration-person > span:not(.data-label), .registration-event > span:not(.data-label), .registration-row time { color: var(--muted); font-size: .82rem; overflow-wrap: anywhere; }
+.registration-email { font-size: .76rem !important; }
 .registration-code { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 8px; }
 .registration-statuses { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .registration-row.is-selection-row { position: relative; padding-left: 38px; }
@@ -205,7 +206,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .selection-answer-line { min-width: 0; width: 100%; display: flex; align-items: center; gap: 8px; }
 .selection-answer-line .data-label { flex: 0 0 auto; }
 .selection-answer-text { min-width: 0; overflow: hidden; color: var(--muted); font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
-.applicant-detail-button { flex: 0 0 auto; min-height: 32px; font-size: .82rem; }
+.applicant-detail-button { align-self: start; flex: 0 0 auto; min-height: 32px; padding: 0; font-size: .82rem; }
 .applicant-history { color: var(--maroon); font-size: .78rem; font-weight: 700; }
 .selection-tools { margin: 14px 0 20px; padding: 18px; border: 1px solid var(--line); background: var(--paper); }
 .selection-summary { margin: 0; color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }

@@ -412,14 +412,10 @@
           <div class="registration-person registration-cell">
             <span class="data-label">Pendaftar</span>
             <strong>${escapeHtml(registration.name)}</strong>
-            <span>${escapeHtml(registration.email)}</span>
-            <span>${escapeHtml(registration.phone)}</span>
-            ${isSelectionEvent && !registration.selection_answer ? `<button class="text-button applicant-detail-button" type="button" data-applicant-detail="${escapeHtml(registration.registration_code)}">Buka detail</button>` : ""}
-            <span><span class="data-label">Domisili</span> ${escapeHtml(registration.domicile || "-")}</span>
-            <span><span class="data-label">Asal instansi</span> ${escapeHtml(registration.institution || "-")}</span>
-            <span><span class="data-label">DEFINISI BAHAGIA</span> ${escapeHtml(registration.reason || "-")}</span>${registration.selection_answer ? `
-            <span class="selection-answer-line"><span class="data-label">JAWABAN SELEKSI</span><span class="selection-answer-text">${escapeHtml(registration.selection_answer)}</span><button class="text-button applicant-detail-button" type="button" data-applicant-detail="${escapeHtml(registration.registration_code)}">Detail</button></span>` : ""}
+            <span class="registration-email">${escapeHtml(registration.email)}</span>
+            ${isSelectionEvent && registration.selection_answer ? `<span class="selection-answer-line"><span class="data-label">Jawaban</span><span class="selection-answer-text">${escapeHtml(registration.selection_answer)}</span></span>` : ""}
             ${isSelectionEvent ? `<span class="applicant-history">${historyCount ? `Pernah ikut ${historyCount}×` : "Peserta baru"}</span>` : ""}
+            <button class="text-button applicant-detail-button" type="button" data-applicant-detail="${escapeHtml(registration.registration_code)}">Detail</button>
           </div>
           <div class="registration-event registration-cell">
             <span class="data-label">Kegiatan</span>
@@ -515,19 +511,33 @@
     appendApplicantField("Domisili", applicant.domicile);
     appendApplicantField("Instansi", applicant.institution);
     appendApplicantField("Definisi bahagia", applicant.reason);
-    appendApplicantField("Pertanyaan seleksi", applicant.selection_question);
-    appendApplicantField("Jawaban seleksi", applicant.selection_answer);
-    appendApplicantField("Komitmen", applicant.commitment_text);
-    appendApplicantField("Catatan tambahan", applicant.notes);
     appendApplicantField("Kegiatan", event.title);
     appendApplicantField("Tanggal kegiatan", event.event_date ? formatDate(event.event_date) : "-");
     appendApplicantField("Kode pendaftaran", applicant.registration_code);
     appendApplicantField("Status", event.registration_mode === "selection" && status === "confirmed"
       ? "Diterima" : registrationStatusLabels[status] || status);
+    const paymentStatus = applicant.payment_expired ? "expired" : applicant.payment_status;
+    appendApplicantField("Pembayaran", paymentStatus === "not_required"
+      ? "Tidak perlu bayar" : paymentStatusLabels[paymentStatus] || paymentStatus || "-");
+    if (applicant.payment_deadline && paymentStatus !== "not_required") {
+      appendApplicantField("Batas pembayaran", formatDateTime(applicant.payment_deadline));
+    }
+    appendApplicantField("Catatan tambahan", applicant.notes);
     appendApplicantField("Terdaftar", formatDateTime(applicant.created_at));
-    const outcomes = ["confirmed", "waitlisted", "rejected"].includes(status);
+    const isSelectionEvent = event.registration_mode === "selection";
+    if (isSelectionEvent) {
+      appendApplicantField("Pertanyaan seleksi", applicant.selection_question);
+      appendApplicantField("Jawaban seleksi", applicant.selection_answer);
+      appendApplicantField("Komitmen", applicant.commitment_text);
+      appendApplicantField("Riwayat seleksi", Number(selectionOverview?.history?.[applicant.registration_code])
+        ? `Pernah ikut ${selectionOverview.history[applicant.registration_code]}×` : "Peserta baru");
+      appendApplicantField("Keputusan seleksi", applicant.selection_decided_at
+        ? formatDateTime(applicant.selection_decided_at) : "Belum diputuskan");
+    }
+    const outcomes = isSelectionEvent && ["confirmed", "waitlisted", "rejected"].includes(status);
+    applicantDialog.querySelector(".applicant-selection-actions").hidden = !isSelectionEvent;
     applicantDialog.querySelectorAll("[data-applicant-decision]").forEach((button) => {
-      button.disabled = button.dataset.applicantDecision === (status === "confirmed" ? "accepted" : status);
+      button.disabled = isSelectionEvent && button.dataset.applicantDecision === (status === "confirmed" ? "accepted" : status);
     });
     const waButton = applicantDialog.querySelector("[data-applicant-whatsapp]");
     waButton.hidden = !outcomes;
@@ -643,7 +653,7 @@
 
   registrationsList.addEventListener("click", (event) => {
     const button = event.target.closest("[data-applicant-detail]");
-    if (button && selectionEnabled()) showApplicant(button.dataset.applicantDetail);
+    if (button) showApplicant(button.dataset.applicantDetail);
   });
   $("#selection-select-all").addEventListener("change", (event) => {
     registrationsList.querySelectorAll("[data-applicant-select]").forEach((checkbox) => { checkbox.checked = event.currentTarget.checked; });

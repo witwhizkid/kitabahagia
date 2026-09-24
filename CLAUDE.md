@@ -103,8 +103,11 @@ Lainnya:
   keputusan satuan/bulk dengan batas kapasitas dari server; ringkasan hasil dan
   riwayat keikutsertaan; ekspor CSV dari baris yang sedang tampil; serta draft
   WhatsApp dengan template per kegiatan atau pesan default. Dialog detail
-  memakai `<dialog>` native, navigasi panah, dan layout layar penuh di HP. Email
-  otomatis masih belum dikerjakan (butuh domain).
+  memakai `<dialog>` native, navigasi panah, dan layout layar penuh di HP.
+  Semua baris pendaftar kini ringkas dan membuka dialog detail universal; data,
+  status pembayaran, dan catatan tampil di dialog, sedangkan kontrol seleksi
+  hanya muncul untuk kegiatan mode Seleksi. Email otomatis masih belum
+  dikerjakan (butuh domain).
 - Status "Kedaluwarsa" di admin tidak disimpan di database: `admin-registrations`
   menurunkannya (`payment_expired`) dari `pending_payment` + `payment_deadline`
   yang sudah lewat, sama dengan aturan pelepasan kursi. "Lunas" selalu menang.
