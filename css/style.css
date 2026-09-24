@@ -6169,7 +6169,7 @@ html.home-document { overflow-x: hidden; }
 .event-row:has(.event-row-link:focus-visible), .event-feature:has(.event-row-link:focus-visible) { outline:3px solid var(--maroon); outline-offset:4px; }
 .event-kicker { margin:0; color:var(--maroon); font-size:11px; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
 .event-kicker span { color:var(--muted); font-weight:600; letter-spacing:.03em; text-transform:none; }
-.event-title { margin:8px 0; color:var(--ink); font:700 clamp(24px, 2.5vw, 32px)/1.06 "Instrument Sans", "DM Sans", sans-serif; letter-spacing:-.035em; overflow-wrap:anywhere; }
+.event-title { margin:8px 0; color:var(--ink); font:700 clamp(20px, 2vw, 26px)/1.15 "Instrument Sans", "DM Sans", sans-serif; letter-spacing:-.025em; overflow-wrap:anywhere; }
 .event-where { margin:0; color:var(--muted); font-size:14px; }
 .event-row-side { display:grid; justify-items:end; gap:5px; text-align:right; }
 .event-price { color:var(--ink); font:700 21px/1.1 "Instrument Sans", "DM Sans", sans-serif; letter-spacing:-.02em; }
@@ -6184,9 +6184,9 @@ html.home-document { overflow-x: hidden; }
 .event-feature { position:relative; display:grid; grid-template-columns:220px minmax(0, 1fr); column-gap:40px; align-content:start; padding:26px 0 30px; }
 .event-feature > .event-feature-photo { grid-row:1 / span 6; }
 .schedule-urgent-grid.is-single .event-feature { grid-template-columns:320px minmax(0, 1fr); column-gap:48px; align-content:center; }
-.schedule-urgent-grid.is-single .event-feature .event-title { font-size:clamp(32px, 3.8vw, 50px); }
+.schedule-urgent-grid.is-single .event-feature .event-title { font-size:clamp(26px, 3vw, 38px); }
 .event-feature + .event-feature { border-top:1px solid var(--line); }
-.event-feature .event-title { font-size:clamp(28px, 3.1vw, 42px); }
+.event-feature .event-title { font-size:clamp(24px, 2.4vw, 32px); }
 .event-closing { justify-self:start; display:inline-block; margin:0 0 10px; padding-bottom:4px; border-bottom:2px solid var(--maroon); color:var(--maroon); font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
 .event-summary-text { margin:10px 0 0; color:var(--muted); font-size:15px; }
 .event-feature-foot { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-top:18px; padding-top:14px; border-top:1px solid var(--line); }
@@ -6230,27 +6230,27 @@ html.home-document { overflow-x: hidden; }
   .event-feature, .schedule-urgent-grid.is-single .event-feature { grid-template-columns:180px minmax(0, 1fr); column-gap:28px; }
 }
 @media (max-width:640px) {
-  /* Phone row: date + category on top, title/place/time beside a 4:5 poster, then price and a compact Daftar. */
-  /* The empty 1fr row takes the poster's extra height, so place/time stay right under the title. */
-  .event-row { grid-template-columns:minmax(0, 1fr) 104px; grid-template-rows:auto auto auto 1fr auto; column-gap:18px; row-gap:0; align-items:start; padding:26px 0 24px; }
-  .event-row .event-row-copy { display:contents; }
+  /* Phone row: date + category, then the title across the full width (long titles stay ~4 lines),
+     then place/time, price and a compact Daftar stacked beside the 4:5 poster.
+     The trailing 1fr row absorbs the poster's extra height so the left stack stays tight. */
+  .event-row { grid-template-columns:minmax(0, 1fr) 104px; grid-template-rows:repeat(6, auto) 1fr; column-gap:18px; row-gap:0; align-items:start; padding:26px 0 24px; }
+  .event-row .event-row-copy, .event-row .event-row-side { display:contents; text-align:left; }
   .event-row .event-date { grid-column:1; grid-row:1; display:flex; align-items:baseline; gap:6px; }
   .event-row .event-date b, .event-row .event-date span { display:inline; margin:0; font:800 12px/1.2 "DM Sans", sans-serif; letter-spacing:.14em; text-transform:uppercase; }
   .event-row .event-date small { margin:0; font-size:12px; }
   .event-row .event-date small::before { content:"· "; }
   .event-row .event-kicker { grid-column:1 / -1; grid-row:1; justify-self:end; max-width:62%; text-align:right; }
-  .event-row .event-title { grid-column:1; grid-row:2; margin:14px 0 8px; font-size:24px; line-height:1.08; }
-  .event-row .event-where { grid-column:1; grid-row:3; font-size:14px; line-height:1.5; }
+  .event-row .event-title { grid-column:1 / -1; grid-row:2; margin:12px 0 0; font-size:20px; line-height:1.2; letter-spacing:-.02em; }
+  .event-row .event-where { grid-column:1; grid-row:3; margin-top:14px; font-size:14px; line-height:1.5; }
   .event-where-place { display:block; }
   .event-where-sep { display:none; }
-  .event-row-photo { grid-column:2; grid-row:2 / span 3; margin-top:14px; }
-  .event-row-side { grid-column:1 / -1; grid-row:5; grid-template-columns:minmax(0, 1fr) auto; column-gap:12px; row-gap:2px; align-items:center; justify-items:start; margin-top:20px; padding-top:14px; border-top:1px solid var(--line); text-align:left; }
-  .event-row-side .event-price { grid-column:1; grid-row:1; font-size:20px; }
-  .event-row-side .event-slot { grid-column:1; grid-row:2; font-size:12px; }
-  .event-row-side .event-cta { grid-column:2; grid-row:1 / span 2; min-height:44px; margin:0; padding:0 16px; }
+  .event-row-photo { grid-column:2; grid-row:3 / span 5; margin-top:14px; }
+  .event-row .event-price { grid-column:1; grid-row:4; margin-top:12px; font-size:20px; }
+  .event-row .event-slot { grid-column:1; grid-row:5; font-size:12px; }
+  .event-row .event-cta { grid-column:1; grid-row:6; justify-self:start; min-height:44px; margin:14px 0 0; padding:0 16px; }
   .event-feature, .schedule-urgent-grid.is-single .event-feature { grid-template-columns:1fr; padding:22px 0 26px; }
   .event-feature > .event-feature-photo { grid-row:auto; width:min(100%, 260px); margin-bottom:16px; }
-  .schedule-urgent-grid.is-single .event-feature .event-title { font-size:30px; }
+  .schedule-urgent-grid.is-single .event-feature .event-title { font-size:24px; }
   .event-feature-foot { flex-direction:column; align-items:stretch; }
   .event-feature-foot .event-cta { width:100%; }
   .event-row.loading-card { grid-template-columns:1fr; }
@@ -6262,9 +6262,12 @@ html.home-document { overflow-x: hidden; }
   .home-upcoming-list .event-row-photo { grid-column:1; grid-row:1; margin:0 -16px 18px; }
   .home-upcoming-list .event-row:hover { background:var(--cream); }
   .home-upcoming-list .event-row .event-date, .home-upcoming-list .event-row .event-kicker { grid-row:2; }
-  .home-upcoming-list .event-row .event-title { grid-row:3; margin:10px 0 8px; }
-  .home-upcoming-list .event-row .event-where { grid-row:4; }
-  .home-upcoming-list .event-row-side { grid-row:5; margin-top:16px; }
+  .home-upcoming-list .event-row .event-title { grid-row:3; display:-webkit-box; margin:10px 0 8px; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:4; line-clamp:4; }
+  .home-upcoming-list .event-row .event-where { grid-row:4; margin-top:0; }
+  .home-upcoming-list .event-row .event-row-side { grid-column:1; grid-row:5; display:grid; grid-template-columns:minmax(0, 1fr) auto; column-gap:12px; row-gap:2px; align-items:center; justify-items:start; margin-top:16px; padding-top:14px; border-top:1px solid var(--line); text-align:left; }
+  .home-upcoming-list .event-row .event-price { grid-row:1; margin:0; }
+  .home-upcoming-list .event-row .event-slot { grid-row:2; }
+  .home-upcoming-list .event-row .event-cta { grid-column:2; grid-row:1 / span 2; margin:0; }
   .home-upcoming-list .event-row.loading-card { display:block; }
   .home-upcoming-list .event-row.loading-card .loading-media { min-height:0; margin:0 -16px; aspect-ratio:4 / 5; }
   .home-upcoming-list .loading-card-copy { padding:18px 0 0; }
