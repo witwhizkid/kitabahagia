@@ -48,6 +48,8 @@ type EventRow = {
   selection_min_chars: number;
   commitment_text: string | null;
   selection_requirements: string[];
+  cv_requested: boolean;
+  cv_note: string | null;
   seats: RegistrationCount[];
   applicants: RegistrationCount[];
 };
@@ -81,6 +83,8 @@ const eventProjection = [
   "selection_min_chars",
   "commitment_text",
   "selection_requirements",
+  "cv_requested",
+  "cv_note",
   // Same table embedded twice. Both need their own alias: with one bare
   // "registrations(count)" PostgREST applies the filters to the wrong embed.
   "seats:registrations(count)",
@@ -251,6 +255,8 @@ Deno.serve(async (request) => {
         selection_min_chars: selection ? event.selection_min_chars : 0,
         commitment_text: selection ? event.commitment_text : null,
         selection_requirements: selection ? event.selection_requirements : [],
+        cv_requested: selection && event.cv_requested,
+        cv_note: selection && event.cv_requested ? event.cv_note : null,
         registration_deadline: event.registration_deadline,
         price: event.price,
         payment_window_minutes: event.payment_window_minutes ?? null,

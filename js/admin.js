@@ -1123,6 +1123,8 @@
     $("#event-selection-min").value = event?.registration_mode === "selection" ? event.selection_min_chars ?? "" : "";
     $("#event-commitment").value = event?.commitment_text || "";
     $("#event-requirements").value = event?.selection_requirements?.join("\n") || "";
+    $("#event-cv-requested").checked = Boolean(event?.cv_requested);
+    $("#event-cv-note").value = event?.cv_note || "";
     $("#event-wa-accepted").value = event?.wa_message_accepted || "";
     $("#event-wa-waitlisted").value = event?.wa_message_waitlisted || "";
     $("#event-wa-rejected").value = event?.wa_message_rejected || "";
@@ -1292,6 +1294,8 @@
     selection_min_chars: Number($("#event-selection-min").value) || 0,
     commitment_text: $("#event-commitment").value.trim() || null,
     selection_requirements: splitLines($("#event-requirements").value),
+    cv_requested: $("#event-cv-requested").checked,
+    cv_note: $("#event-cv-note").value.trim() || null,
     wa_message_accepted: $("#event-wa-accepted").value.trim() || null,
     wa_message_waitlisted: $("#event-wa-waitlisted").value.trim() || null,
     wa_message_rejected: $("#event-wa-rejected").value.trim() || null,

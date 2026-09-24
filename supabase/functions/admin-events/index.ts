@@ -23,7 +23,7 @@ const eventProjection = [
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "is_demo", "payment_window_minutes",
   "registration_mode", "registration_opens_at", "applicant_limit", "announcement_at",
-  "selection_question", "selection_min_chars", "commitment_text", "selection_requirements",
+  "selection_question", "selection_min_chars", "commitment_text", "selection_requirements", "cv_requested", "cv_note",
   "wa_message_accepted", "wa_message_waitlisted", "wa_message_rejected",
   "archived_at",
 ].join(",");
@@ -34,7 +34,7 @@ const writableFields = new Set([
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "payment_window_minutes",
   "registration_mode", "registration_opens_at", "applicant_limit", "announcement_at",
-  "selection_question", "selection_min_chars", "commitment_text", "selection_requirements",
+  "selection_question", "selection_min_chars", "commitment_text", "selection_requirements", "cv_requested", "cv_note",
   "wa_message_accepted", "wa_message_waitlisted", "wa_message_rejected",
 ]);
 const registrationModes = new Set(["first_come", "selection"]);
@@ -137,7 +137,10 @@ const validatePayload = (input: unknown, creating: boolean) => {
       } else if (field === "is_public") {
         if (typeof value !== "boolean") return { error: "Status tampil di website tidak valid." } as const;
         data[field] = value;
-      } else if (["description", "registration_description", "category", "category_key", "start_time", "end_at", "location", "registration_deadline", "image_url", "image_alt", "whatsapp_group_url", "registration_opens_at", "announcement_at", "selection_question", "commitment_text", "wa_message_accepted", "wa_message_waitlisted", "wa_message_rejected"].includes(field)) {
+      } else if (field === "cv_requested") {
+        if (typeof value !== "boolean") return { error: "Pilihan CV/portofolio tidak valid." } as const;
+        data[field] = value;
+      } else if (["description", "registration_description", "category", "category_key", "start_time", "end_at", "location", "registration_deadline", "image_url", "image_alt", "whatsapp_group_url", "registration_opens_at", "announcement_at", "selection_question", "commitment_text", "cv_note", "wa_message_accepted", "wa_message_waitlisted", "wa_message_rejected"].includes(field)) {
         data[field] = cleanNullableText(value);
       } else if (typeof value === "string") data[field] = value.trim();
       else return { error: `${field} tidak valid.` } as const;
@@ -164,6 +167,7 @@ const validatePayload = (input: unknown, creating: boolean) => {
   if (data.announcement_at !== undefined && !validIsoTimestamp(data.announcement_at)) return { error: "Tanggal pengumuman tidak valid." } as const;
   if (typeof data.selection_question === "string" && data.selection_question.length > 500) return { error: "Pertanyaan seleksi maksimal 500 karakter." } as const;
   if (typeof data.commitment_text === "string" && data.commitment_text.length > 300) return { error: "Teks komitmen maksimal 300 karakter." } as const;
+  if (typeof data.cv_note === "string" && data.cv_note.length > 300) return { error: "Keterangan CV/portofolio maksimal 300 karakter." } as const;
   if (Array.isArray(data.selection_requirements) && (data.selection_requirements.length > 15
     || (data.selection_requirements as string[]).some((item) => item.length > 500))) {
     return { error: "Persyaratan maksimal 15 poin, masing-masing maksimal 500 karakter." } as const;

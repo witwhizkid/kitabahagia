@@ -147,6 +147,8 @@ const normalizeRegistrationEvent = (event) => {
     activities: Array.isArray(event.activities) ? event.activities.filter(Boolean) : [],
     benefits: Array.isArray(event.benefits) ? event.benefits.filter(Boolean) : [],
     selectionRequirements: Array.isArray(event.selection_requirements) ? event.selection_requirements.filter(Boolean) : [],
+    cvRequested: event.cv_requested === true,
+    cvNote: event.cv_note || '',
     remainingCapacity: event.remaining_capacity,
     registrationDeadline: event.registration_deadline || null,
     paymentWindowMinutes: Number.isInteger(event.payment_window_minutes) ? event.payment_window_minutes : null
@@ -1687,6 +1689,9 @@ if (registrationForm) {
   });
   // Optional CV/portfolio PDF. Not compressed; the server checks type, size and signature again.
   const selectionCvInput = document.getElementById('selectionCv');
+  const cvFieldsShown = () => isFreeSelectionEvent() && Boolean(selectedEvent?.cvRequested);
+  const portfolioHint = document.getElementById('portfolioUrlHint');
+  const defaultPortfolioHint = portfolioHint?.textContent || '';
   const CV_MAX_BYTES = 5 * 1024 * 1024;
   const cvFileError = (file) => {
     if (!file || !file.size) return '';
@@ -1791,9 +1796,10 @@ if (registrationForm) {
     const cvField = document.getElementById('selectionCvField');
     const portfolioField = document.getElementById('selectionPortfolioField');
     if (cvField && portfolioField && selectionCvInput) {
-      const showCv = isFreeSelectionEvent();
+      const showCv = cvFieldsShown();
       cvField.hidden = !showCv;
       portfolioField.hidden = !showCv;
+      if (portfolioHint) portfolioHint.textContent = selectedEvent?.cvNote || defaultPortfolioHint;
       selectionCvInput.setCustomValidity('');
       selectionCvInput.removeAttribute('aria-invalid');
       const cvError = document.getElementById('selectionCvError');
@@ -2097,9 +2103,9 @@ if (registrationForm) {
     let requestBody = JSON.stringify(payload);
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
     if (isFreeSelectionEvent()) {
-      payload.portfolio_url = String(formData.get('portfolio_url') || '').trim() || null;
+      if (cvFieldsShown()) payload.portfolio_url = String(formData.get('portfolio_url') || '').trim() || null;
       const proof = await prepareInstagramProof(formData.get('instagram_proof'));
-      const cv = await prepareCv(formData.get('cv'));
+      const cv = cvFieldsShown() ? await prepareCv(formData.get('cv')) : null;
       const multipart = new FormData();
       Object.entries(payload).forEach(([key, value]) => multipart.append(key, value === null ? '' : String(value)));
       multipart.append('instagram_proof', proof);
@@ -2509,7 +2515,7 @@ if (registrationForm) {
     if (portfolioReview) {
       const cvFile = formData.get('cv');
       const items = [cvFile instanceof File && cvFile.size ? cvFile.name : '', String(formData.get('portfolio_url') || '').trim()].filter(Boolean);
-      portfolioReview.hidden = !isFreeSelectionEvent() || !items.length;
+      portfolioReview.hidden = !cvFieldsShown() || !items.length;
       setDataText('[data-review-portfolio-value]', items.join(' · '), registrationReview);
     }
     setDataText('[data-review-event-title]', selectedEvent.name, registrationReview);

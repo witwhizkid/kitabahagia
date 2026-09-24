@@ -214,6 +214,12 @@ and CSV export. Rollback:
 Rollout order: apply the migration, deploy `create-registration`,
 `admin-registrations`, `admin-events` and `public-events`, then the static site.
 
+Migration `20261001010000_selection_cv_setting.sql` adds `events.cv_requested`
+(default false; set true for selection events that existed) and `events.cv_note`
+(max 300 chars, shown under the portfolio link; empty = built-in text). The RPC
+rejects a CV or portfolio link when `cv_requested` is off. Deploy `admin-events`
+and `public-events` after the migration, then the site.
+
 ## Confirmed registration onboarding
 
 `POST /functions/v1/payment-status` requires `registration_code` and the matching

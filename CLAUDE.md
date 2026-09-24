@@ -73,7 +73,8 @@ Halaman pendaftaran (`pendaftaran.html`):
 - Event gratis + Seleksi punya tab/bagian "Persyaratan jika lolos" di detail
   kegiatan, diisi admin per kegiatan (satu poin per baris, `**teks**` = tebal).
   Form seleksi gratis juga punya CV/portofolio PDF (opsional, bucket privat
-  `selection-cvs`, 5 MB) dan link portofolio `https://` (opsional). Detail:
+  `selection-cvs`, 5 MB) dan link portofolio `https://` (opsional), hanya kalau
+  admin mencentang "Minta CV/portofolio" (keterangannya bisa diedit). Detail:
   "Selection extras" di `supabase/README.md`.
 
 Lainnya:
