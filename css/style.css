@@ -2569,6 +2569,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   .registration-event-content { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); column-gap:40px; align-items:start; }
   .registration-content-nav,
   #eventDescriptionSection,
+  #eventRequirementsSection,
   .registration-detail-note,
   .registration-event-content > .text-link { grid-column:1 / -1; }
   #eventActivitiesSection,

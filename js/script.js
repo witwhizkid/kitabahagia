@@ -1836,6 +1836,9 @@ if (registrationForm) {
     };
     renderEventList('eventActivitiesSection', 'eventActivities', 'eventActivitiesNav', selectedEvent.activities);
     renderEventList('eventBenefitsSection', 'eventBenefits', 'eventBenefitsNav', selectedEvent.benefits);
+    const showRequirements = isFreeSelectionEvent();
+    document.getElementById('eventRequirementsSection')?.toggleAttribute('hidden', !showRequirements);
+    document.getElementById('eventRequirementsNav')?.toggleAttribute('hidden', !showRequirements);
 
     const eventNameInput = document.getElementById('kegiatan');
     const eventSlugInput = document.getElementById('eventSlug');

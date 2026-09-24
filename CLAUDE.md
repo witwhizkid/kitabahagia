@@ -70,6 +70,9 @@ Halaman pendaftaran (`pendaftaran.html`):
   Esc, atau klik di luar.
 - Langkah 1–2 mengikuti gaya halaman pembayaran; watermark header memakai
   logo Kita Bahagia.
+- Event gratis + Seleksi punya tab/bagian "Persyaratan jika lolos" di detail
+  kegiatan. Isinya masih placeholder statis di `pendaftaran.html` (sama untuk
+  semua event seleksi) sampai admin bisa mengaturnya per kegiatan.
 
 Lainnya:
 - Foto disajikan sebagai WebP yang sudah diperkecil (originalnya 2–7 MB).
