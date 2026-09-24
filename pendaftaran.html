@@ -141,6 +141,15 @@
                     <div class="field full"><label for="bahagia">Apa definisi bahagia menurut kamu? *</label><textarea id="bahagia" name="bahagia" placeholder="Tulis definisi bahagia menurutmu..." required></textarea></div>
                     <div class="field full" id="selectionAnswerField" hidden><label for="selectionAnswer" id="selectionAnswerLabel"></label><textarea id="selectionAnswer" name="selection_answer" maxlength="2000" aria-describedby="selectionAnswerCount"></textarea><span id="selectionAnswerCount" class="field-counter" aria-live="polite"></span></div>
                     <div class="field full" id="selectionCommitmentField" hidden><label class="check-row" for="selectionCommitment"><input id="selectionCommitment" name="selection_commitment" type="checkbox" value="ya"><span id="selectionCommitmentText"></span></label></div>
+                    <div class="field full selection-instagram-proof" id="selectionInstagramProofField" hidden>
+                      <p class="eyebrow">Ikuti Kita Bahagia di Instagram</p>
+                      <p>Sebelum mengirim pendaftaran, ikuti @kitabahagiaa_, lalu unggah screenshot sebagai bukti.</p>
+                      <a class="text-link" data-instagram target="_blank" rel="noopener noreferrer">Buka Instagram <span aria-hidden="true">&rarr;</span></a>
+                      <label for="instagramProof">Bukti follow Instagram *</label>
+                      <input id="instagramProof" name="instagram_proof" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" aria-describedby="instagramProofHint instagramProofError">
+                      <span id="instagramProofHint" class="field-counter">JPG, PNG, atau WebP. Maksimal 2 MB setelah diperkecil.</span>
+                      <span id="instagramProofError" class="field-error" role="alert" hidden></span>
+                    </div>
                     <div class="field full"><label class="check-row" for="consent"><input id="consent" name="consent" type="checkbox" value="setuju" required><span>Saya setuju untuk dihubungi oleh tim Kita Bahagia terkait pendaftaran ini.</span></label></div>
                   </div>
                   <div class="form-actions">
@@ -191,7 +200,7 @@
             <div class="payment-header-row"><div><span class="payment-eyebrow">Pembayaran kegiatan</span><h2 id="paymentHeading">Selesaikan pembayaran</h2></div><div class="payment-countdown" aria-live="polite" aria-label="Waktu tersisa untuk pembayaran"><span>Bayar sebelum</span><strong>15:00</strong><small></small></div></div>
           </header>
           <div class="payment-primary">
-            <p class="payment-intro">Pendaftaranmu sudah tercatat. Selesaikan pembayaran untuk mengamankan tempatmu.</p>
+            <p class="payment-intro">Slotmu ditahan sementara sampai batas waktu pembayaran. Jika pembayaran belum berhasil saat waktu habis, slot akan kembali tersedia untuk peserta lain.</p>
             <div class="payment-next-actions" data-payment-next hidden>
               <a class="btn btn-primary" data-payment-register-again href="jadwal.html">Daftar lagi</a>
               <a class="payment-secondary-link" href="jadwal.html">Lihat jadwal kegiatan &rarr;</a>
@@ -208,6 +217,7 @@
             <div class="payment-state payment_pending" data-payment-state="payment_pending" role="status" aria-live="polite"><strong>Menunggu pembayaran</strong><p>Menunggu status pembayaran.</p></div>
             <div class="payment-state payment_processing" data-payment-state="payment_processing" role="status" aria-live="polite" hidden><strong>Pembayaran sedang diverifikasi</strong></div>
             <div class="payment-state payment_paid" data-payment-state="payment_paid" role="status" aria-live="polite" hidden><strong>Pembayaran berhasil</strong><p>Tempatmu sudah dikonfirmasi.</p></div>
+            <a class="text-link" data-payment-instagram-cta data-instagram target="_blank" rel="noopener noreferrer" hidden>Ikuti Kita Bahagia di Instagram <span aria-hidden="true">&rarr;</span></a>
             <div class="payment-state payment_expired" data-payment-state="payment_expired" role="status" aria-live="polite" hidden><strong>Waktu pembayaran habis.</strong></div>
             <div class="payment-state payment_failed" data-payment-state="payment_failed" role="status" aria-live="polite" hidden><strong>Pembayaran belum berhasil.</strong></div>
             <div class="payment-state payment_refunded" data-payment-state="payment_refunded" role="status" aria-live="polite" hidden><strong>Pembayaran dikembalikan</strong><p>Pembayaran ini sudah dikembalikan.</p></div>
@@ -231,6 +241,7 @@
         <section class="registration-confirmation" id="freeRegistrationConfirmation" aria-labelledby="freeConfirmationHeading" tabindex="-1" hidden>
           <h2 id="freeConfirmationHeading">Kamu sudah terdaftar.</h2>
           <p data-confirmation-copy>Tempatmu sudah dikonfirmasi.</p>
+          <a class="text-link" data-registration-instagram-cta data-instagram target="_blank" rel="noopener noreferrer" hidden>Ikuti Kita Bahagia di Instagram <span aria-hidden="true">&rarr;</span></a>
           <dl><div><dt>Kode pendaftaran</dt><dd data-result-code></dd></div><div><dt>Kegiatan</dt><dd data-result-title></dd></div></dl>
           <p class="registration-status-link" data-status-link hidden><a class="text-link" href="cek-status.html">Cek hasil seleksi di halaman Cek status <span aria-hidden="true">&rarr;</span></a></p>
           <section class="registration-onboarding" data-registration-onboarding aria-labelledby="freeOnboardingHeading" hidden>

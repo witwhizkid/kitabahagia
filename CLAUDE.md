@@ -90,6 +90,12 @@ Lainnya:
   disimpan dan QR digambar sendiri (`js/vendor/qrcode-generator.min.js`).
 - Jendela pembayaran/seat-hold diatur per kegiatan dari admin
   (`payment_window_minutes`); lihat "Seat-hold rules" di `supabase/README.md`.
+  Copy menjelaskan slot ditahan sementara sampai deadline yang sama; countdown
+  tetap memakai `payment_deadline` existing. Jangan hardcode durasi. CTA
+  "Ikuti Kita Bahagia di Instagram" muncul setelah pendaftaran gratis biasa
+  terkonfirmasi atau pembayaran berbayar terkonfirmasi. Pendaftar gratis mode
+  Seleksi diminta follow dan unggah bukti sebelum submit, jadi CTA follow tidak
+  muncul lagi setelah sukses.
 - Kegiatan lebih dari 1 hari: admin mengisi "Tanggal selesai" + "Jam selesai"
   (digabung jadi `end_at`, tanpa perubahan skema). Publik menampilkan
   "Sabtu · 2 hari" dan "24 Okt, 09.00 – 25 Okt, 17.00 WIB".
@@ -107,7 +113,13 @@ Lainnya:
   Semua baris pendaftar kini ringkas dan membuka dialog detail universal; data,
   status pembayaran, dan catatan tampil di dialog, sedangkan kontrol seleksi
   hanya muncul untuk kegiatan mode Seleksi. Email otomatis masih belum
-  dikerjakan (butuh domain).
+  dikerjakan (butuh domain). Bukti follow Instagram hanya untuk event gratis +
+  Seleksi: multipart hanya pada kondisi itu; JPG/PNG/WebP maksimal 2 MiB masuk
+  ke bucket privat `instagram-proofs`, dan database hanya menyimpan object path.
+  Admin mendapat signed URL 120 detik setelah verifikasi admin. Rate limiting
+  upload anonim adalah follow-up security pra-launch; function crash di antara
+  upload dan RPC bisa meninggalkan object privat orphan. Detail ada di
+  `supabase/README.md`.
 - Status "Kedaluwarsa" di admin tidak disimpan di database: `admin-registrations`
   menurunkannya (`payment_expired`) dari `pending_payment` + `payment_deadline`
   yang sudah lewat, sama dengan aturan pelepasan kursi. "Lunas" selalu menang.
@@ -122,3 +134,5 @@ CSP di `vercel.json` sudah **enforce** (bukan Report-Only). Artinya: tidak ada
 `data:`/`blob:` di HTML/CSS. Host luar baru (font, gambar, API, iframe) harus
 ditambahkan ke CSP dulu. Cek dengan memuat halaman ber-header CSP di Playwright
 dan cari pesan "Refused to" di console.
+Bucket `instagram-proofs` tetap privat dan tidak punya policy Storage untuk
+browser; jangan membuka akses anon atau menyimpan signed/public URL di database.

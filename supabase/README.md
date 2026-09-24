@@ -155,6 +155,38 @@ working because the new RPC parameters default to null), then deploy
 `create-registration`, `public-events`, `admin-events` and `admin-registrations`,
 then the site.
 
+## Instagram proof for free selection events
+
+Migration `20260929010000_instagram_proof.sql` adds nullable
+`registrations.instagram_proof_path` and the private `instagram-proofs` Storage
+bucket (JPG, PNG, WebP; 2 MiB object limit). It creates no browser Storage
+policies: anonymous/authenticated roles cannot upload or read these objects.
+The database RPC requires a path matching the event slug and a random UUID only
+for free selection events; every other event rejects a supplied path. Existing
+JSON registration calls keep working because the new RPC parameter defaults to
+null. Rollback is in `supabase/rollback/20260929010000_instagram_proof.down.sql`;
+it stops if the bucket still contains proof files so rollback cannot silently
+delete participant evidence. Manual checks:
+`supabase/tests/20260929010000_instagram_proof_manual.sql`.
+
+Only the `create-registration` Edge Function accepts multipart, and only after
+checking that the event is free + selection. It caps the multipart body, checks
+MIME and file signature, caps the image at 2 MiB, uploads with the server-only
+service-role key under `<event-slug>/<random-uuid>.<ext>`, then calls
+`create_registration`. If the RPC fails, it removes the just-uploaded object.
+All other registrations keep the JSON path. A function crash between upload and
+RPC can leave a private orphan; cleanup automation is a future follow-up.
+
+`admin-registrations?proof=<registration_code>` reuses the normal active-admin
+verification, fetches the object path only for a free selection registration,
+and returns a 120-second signed URL. The list response never includes the proof
+path or signed URL. Rate limiting for anonymous registration/file upload is a
+pre-launch security follow-up; this feature does not add a separate limiter.
+
+Rollout order: apply the migration, deploy `create-registration`, deploy
+`admin-registrations`, then deploy the static site. No payment function changes
+are required. Do not expose `SUPABASE_SERVICE_ROLE_KEY` in the site.
+
 ## Confirmed registration onboarding
 
 `POST /functions/v1/payment-status` requires `registration_code` and the matching

@@ -225,6 +225,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .applicant-detail-field { min-width: 0; }
 .applicant-detail-field h3 { margin: 0 0 6px; color: var(--muted); font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; }
 .applicant-detail-field p { margin: 0; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-wrap; }
+.applicant-proof-preview { display: block; max-width: min(100%, 480px); max-height: 260px; margin-top: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); object-fit: contain; }
 .applicant-dialog-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line); }
 .applicant-dialog-navigation, .applicant-dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .applicant-dialog-navigation { justify-content: space-between; margin-bottom: 12px; }

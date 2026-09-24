@@ -928,7 +928,7 @@ if (registrationForm) {
   const editRegistrationButton = document.getElementById('editRegistrationButton');
   const confirmRegistrationButton = document.getElementById('confirmRegistrationButton');
   const paymentStates = {
-    pending: ['Selesaikan pembayaran', 'Pendaftaranmu sudah tercatat. Selesaikan pembayaran untuk mengamankan tempatmu.'],
+    pending: ['Selesaikan pembayaran', 'Slotmu ditahan sementara sampai batas waktu pembayaran. Jika pembayaran belum berhasil saat waktu habis, slot akan kembali tersedia untuk peserta lain.'],
     processing: ['Pembayaran sedang diverifikasi', 'Kami sedang memastikan pembayaranmu. Halaman ini akan diperbarui setelah statusnya terkonfirmasi.'],
     paid: ['Pembayaran berhasil', 'Tempatmu sudah dikonfirmasi.'],
     expired: ['Waktu pembayaran habis', 'QRIS sebelumnya sudah kedaluwarsa. Pendaftaranmu masih tersimpan. Kamu bisa membuat QRIS baru untuk melanjutkan pembayaran.'],
@@ -937,7 +937,7 @@ if (registrationForm) {
     deadline_passed: ['Waktu pembayaran habis, pendaftaran dibatalkan', 'Batas waktu pembayaran sudah lewat, jadi kuota untuk pendaftaran ini sudah dilepas. Kamu bisa mendaftar lagi jika kuota masih tersedia.']
   };
   const paymentStatusCopy = {
-    pending: ['Menunggu pembayaran', 'Selesaikan pembayaran melalui QRIS sebelum waktu pembayaran habis.'],
+    pending: ['Menunggu pembayaran', 'Slotmu ditahan sementara sampai batas waktu pembayaran. Jika pembayaran belum berhasil saat waktu habis, slot akan kembali tersedia untuk peserta lain.'],
     processing: ['Pembayaran sedang diperiksa', 'Pembayaranmu sedang diperiksa. Tidak perlu melakukan pembayaran ulang.'],
     refunded: ['Pembayaran dikembalikan', 'Pembayaran ini sudah dikembalikan.']
   };
@@ -1271,6 +1271,8 @@ if (registrationForm) {
       retryError.hidden = true;
       retryError.textContent = '';
     }
+    const instagramCta = stage.querySelector('[data-payment-state="payment_paid"] [data-instagram]');
+    if (instagramCta) instagramCta.hidden = state !== 'paid';
     const backLink = stage.querySelector('[data-payment-back]');
     if (backLink) {
       backLink.hidden = !['pending', 'expired'].includes(state) || !eventSlug;
@@ -1401,6 +1403,8 @@ if (registrationForm) {
     });
     resultStage.querySelector('#freeConfirmationHeading').textContent = outcome.heading;
     resultStage.querySelector('[data-confirmation-copy]').textContent = outcome.copy;
+    const instagramCta = resultStage.querySelector('[data-registration-instagram-cta]');
+    if (instagramCta) instagramCta.hidden = isSelectionEvent();
     const onboarding = resultStage.querySelector('[data-registration-onboarding]');
     if (outcome.onboarding) renderOnboarding(onboarding, data);
     else onboarding.hidden = true;
@@ -1660,10 +1664,68 @@ if (registrationForm) {
     return days ? `${days} hari ${clock}` : clock;
   };
   const isSelectionEvent = () => selectedEvent?.registrationMode === 'selection';
+  const isFreeSelectionEvent = () => isSelectionEvent() && Number(selectedEvent?.price) === 0;
 
   // Selection events add their own question and commitment checkbox to the form.
   const selectionAnswerInput = document.getElementById('selectionAnswer');
   const selectionCommitmentInput = document.getElementById('selectionCommitment');
+  const instagramProofInput = document.getElementById('instagramProof');
+  const INSTAGRAM_PROOF_MAX_BYTES = 2 * 1024 * 1024;
+  const allowedProofTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+  instagramProofInput?.addEventListener('change', () => {
+    const error = document.getElementById('instagramProofError');
+    const file = instagramProofInput.files?.[0];
+    const message = file && !allowedProofTypes.has(file.type)
+      ? 'Pilih screenshot JPG, PNG, atau WebP.' : '';
+    instagramProofInput.setCustomValidity(message);
+    instagramProofInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+    if (error) {
+      error.textContent = message;
+      error.hidden = !message;
+    }
+  });
+  const prepareInstagramProof = async (file) => {
+    if (!(file instanceof File) || !allowedProofTypes.has(file.type) || !file.size) {
+      throw { code: 'INVALID_INSTAGRAM_PROOF' };
+    }
+    const header = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+    const jpeg = header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff;
+    const png = header.length >= 8 && header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4e
+      && header[3] === 0x47 && header[4] === 0x0d && header[5] === 0x0a && header[6] === 0x1a && header[7] === 0x0a;
+    const webp = header.length >= 12 && String.fromCharCode(...header.subarray(0, 4)) === 'RIFF'
+      && String.fromCharCode(...header.subarray(8, 12)) === 'WEBP';
+    if (!(file.type === 'image/jpeg' && jpeg) && !(file.type === 'image/png' && png)
+      && !(file.type === 'image/webp' && webp)) throw { code: 'INVALID_INSTAGRAM_PROOF' };
+
+    if (typeof createImageBitmap !== 'function') {
+      if (file.size <= INSTAGRAM_PROOF_MAX_BYTES) return file;
+      throw { code: 'INVALID_INSTAGRAM_PROOF' };
+    }
+    let bitmap;
+    try { bitmap = await createImageBitmap(file); }
+    catch { throw { code: 'INVALID_INSTAGRAM_PROOF' }; }
+    const maxDimension = 2000;
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.size <= INSTAGRAM_PROOF_MAX_BYTES) {
+      bitmap.close();
+      return file;
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const context = canvas.getContext('2d');
+    if (!context) {
+      bitmap.close();
+      throw { code: 'INVALID_INSTAGRAM_PROOF' };
+    }
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.92));
+    if (!blob || blob.type !== 'image/webp' || blob.size > INSTAGRAM_PROOF_MAX_BYTES) {
+      throw { code: 'INVALID_INSTAGRAM_PROOF' };
+    }
+    return new File([blob], 'instagram-proof.webp', { type: 'image/webp', lastModified: Date.now() });
+  };
   const updateSelectionCounter = () => {
     const counter = document.getElementById('selectionAnswerCount');
     if (!counter || !selectionAnswerInput) return;
@@ -1681,6 +1743,20 @@ if (registrationForm) {
     const showCommitment = isSelectionEvent() && Boolean(selectedEvent.commitmentText);
     const answerField = document.getElementById('selectionAnswerField');
     const commitmentField = document.getElementById('selectionCommitmentField');
+    const proofField = document.getElementById('selectionInstagramProofField');
+    if (proofField && instagramProofInput) {
+      const showProof = isFreeSelectionEvent();
+      proofField.hidden = !showProof;
+      instagramProofInput.required = showProof;
+      instagramProofInput.setCustomValidity('');
+      instagramProofInput.removeAttribute('aria-invalid');
+      const proofError = document.getElementById('instagramProofError');
+      if (proofError) {
+        proofError.textContent = '';
+        proofError.hidden = true;
+      }
+      if (!showProof) instagramProofInput.value = '';
+    }
     if (answerField && selectionAnswerInput) {
       answerField.hidden = !showQuestion;
       selectionAnswerInput.required = showQuestion;
@@ -1786,10 +1862,10 @@ if (registrationForm) {
           const closeLabel = new Intl.DateTimeFormat('id-ID', {
             day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
           }).format(new Date(registrationClose));
-          paymentWindowNote.textContent = `Selesaikan pembayaran sebelum pendaftaran ditutup (${closeLabel} WIB) agar tempatmu tidak dilepas.`;
+          paymentWindowNote.textContent = `Slotmu ditahan sementara sampai pendaftaran ditutup (${closeLabel} WIB). Jika pembayaran belum berhasil saat waktu habis, slot akan kembali tersedia untuk peserta lain.`;
         } else {
           const duration = minutes % 60 === 0 ? `${minutes / 60} jam` : `${minutes} menit`;
-          paymentWindowNote.textContent = `Selesaikan pembayaran dalam ${duration} setelah mendaftar agar tempatmu tidak dilepas.`;
+          paymentWindowNote.textContent = `Slotmu ditahan sementara sampai batas pembayaran, yaitu ${duration} setelah mendaftar. Jika pembayaran belum berhasil saat waktu habis, slot akan kembali tersedia untuk peserta lain.`;
         }
       }
     }
@@ -1956,10 +2032,20 @@ if (registrationForm) {
       payload.selection_answer = String(formData.get('selection_answer') || '').trim() || null;
       payload.commitment = formData.get('selection_commitment') !== null;
     }
+    let requestBody = JSON.stringify(payload);
+    const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
+    if (isFreeSelectionEvent()) {
+      const proof = await prepareInstagramProof(formData.get('instagram_proof'));
+      const multipart = new FormData();
+      Object.entries(payload).forEach(([key, value]) => multipart.append(key, value === null ? '' : String(value)));
+      multipart.append('instagram_proof', proof);
+      requestBody = multipart;
+      delete headers['Content-Type'];
+    }
     const response = await fetch(REGISTRATION_CONFIG.registrationEndpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify(payload),
+      headers,
+      body: requestBody,
       signal: AbortSignal.timeout(20000)
     });
     const result = await response.json().catch(() => null);
@@ -1972,6 +2058,7 @@ if (registrationForm) {
   };
 
   const registrationErrorMessages = {
+    INVALID_INSTAGRAM_PROOF: 'Bukti follow wajib berupa screenshot JPG, PNG, atau WebP. Ukuran maksimal 2 MB setelah diperkecil.',
     INVALID_REQUEST: 'Data pendaftaran belum valid. Periksa kembali isian kamu.',
     EVENT_NOT_FOUND: 'Kegiatan ini belum ditemukan di sistem pendaftaran.',
     EVENT_NOT_OPEN: 'Pendaftaran untuk kegiatan ini sedang tidak dibuka.',

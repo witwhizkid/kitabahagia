@@ -210,6 +210,12 @@
     return authorizedRequest(url, { method: "GET" });
   };
 
+  const applicantProofRequest = (registrationCode) => {
+    const url = new URL(adminRegistrationsUrl);
+    url.searchParams.set("proof", registrationCode);
+    return authorizedRequest(url, { method: "GET" });
+  };
+
   const selectionDecisionRequest = (registration_codes, decision) => authorizedRequest(adminRegistrationsUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -500,6 +506,37 @@
   };
 
   const currentDialogApplicant = () => registrations[applicantDialogIndex] || null;
+  const loadApplicantProof = async (registration) => {
+    if (registration?.events?.registration_mode !== "selection") return;
+    try {
+      const result = await applicantProofRequest(registration.registration_code);
+      if (currentDialogApplicant()?.registration_code !== registration.registration_code || !result.proof?.signed_url) return;
+      const signedUrl = new URL(result.proof.signed_url);
+      if (signedUrl.origin !== new URL(CONFIG.supabaseUrl).origin) throw new Error("Bukti follow tidak dapat dibuka.");
+      const section = document.createElement("section");
+      section.className = "applicant-detail-field applicant-proof-field";
+      const heading = document.createElement("h3");
+      heading.textContent = "Bukti follow Instagram";
+      const previewLink = document.createElement("a");
+      previewLink.href = signedUrl.href;
+      previewLink.target = "_blank";
+      previewLink.rel = "noopener noreferrer";
+      previewLink.referrerPolicy = "no-referrer";
+      previewLink.textContent = "Lihat bukti";
+      const image = document.createElement("img");
+      image.className = "applicant-proof-preview";
+      image.src = signedUrl.href;
+      image.alt = "Screenshot bukti follow Instagram peserta";
+      image.loading = "lazy";
+      image.referrerPolicy = "no-referrer";
+      section.append(heading, previewLink, image);
+      applicantDialogContent.append(section);
+    } catch (error) {
+      if (currentDialogApplicant()?.registration_code === registration.registration_code) {
+        setFeedback($("#applicant-dialog-feedback"), error.message || "Bukti follow belum dapat dibuka.", "error");
+      }
+    }
+  };
   const syncSelectionDecisionControls = () => {
     const applicant = currentDialogApplicant();
     const status = applicant?.payment_expired ? "expired" : applicant?.registration_status;
@@ -547,6 +584,7 @@
         ? `Pernah ikut ${selectionOverview.history[applicant.registration_code]}×` : "Peserta baru");
       appendApplicantField("Keputusan seleksi", applicant.selection_decided_at
         ? formatDateTime(applicant.selection_decided_at) : "Belum diputuskan");
+      void loadApplicantProof(applicant);
     }
     const outcomes = isSelectionEvent && ["confirmed", "waitlisted", "rejected"].includes(status);
     applicantDialog.querySelector(".applicant-selection-actions").hidden = !isSelectionEvent;

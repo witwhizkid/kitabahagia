@@ -5,23 +5,26 @@ const corsHeaders = {
   "Access-Control-Max-Age": "86400",
 };
 
+const MAX_PROOF_BYTES = 2 * 1024 * 1024;
+const MAX_MULTIPART_BYTES = MAX_PROOF_BYTES + 64 * 1024;
+const proofMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+
 const jsonResponse = (status: number, body: Record<string, unknown>) => new Response(
   JSON.stringify(body),
-  { status, headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" } },
+  { status, headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } },
 );
 const errorResponse = (status: number, code: string, message: string) =>
   jsonResponse(status, { success: false, error: { code, message } });
 
 const errorMessages: Record<string, string> = {
   INVALID_REQUEST: "Data pendaftaran tidak valid.",
+  INVALID_INSTAGRAM_PROOF: "Unggah screenshot follow Instagram dalam format JPG, PNG, atau WebP dengan ukuran maksimal 2 MB.",
   EVENT_NOT_FOUND: "Kegiatan tidak ditemukan.",
   EVENT_NOT_OPEN: "Kegiatan tidak sedang menerima pendaftaran.",
   REGISTRATION_CLOSED: "Batas waktu pendaftaran telah berakhir.",
   EVENT_FULL: "Kapasitas kegiatan sudah penuh.",
-  // Deliberately does not say whether the email or the phone number matched.
   ALREADY_REGISTERED: "Email atau nomor WhatsApp ini sudah terdaftar di kegiatan ini. Jika belum membayar, lanjutkan pembayaran dari perangkat yang sama atau hubungi admin dengan kode pendaftaranmu.",
   REGISTRATION_NOT_OPEN: "Pendaftaran kegiatan ini belum dibuka.",
-  // Deliberately says nothing about how many people applied.
   APPLICANTS_FULL: "Pendaftaran kegiatan ini sudah ditutup.",
   INVALID_ANSWER: "Jawaban seleksi belum memenuhi syarat.",
 };
@@ -37,11 +40,9 @@ type RegistrationInput = {
   reason: string; notes: string | null; consent: true;
   selection_answer: string | null; commitment: boolean | null;
 };
+type ProofFile = { bytes: Uint8Array; contentType: string; extension: string };
 
-const normalizePhone = (value: string) => {
-  const compact = value.trim().replace(/[\s().-]/g, "");
-  return compact;
-};
+const normalizePhone = (value: string) => value.trim().replace(/[\s().-]/g, "");
 
 const validateInput = (value: unknown): RegistrationInput | null => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -65,7 +66,6 @@ const validateInput = (value: unknown): RegistrationInput | null => {
   const institution = typeof body.institution === "string" ? body.institution.trim() || null : null;
   const reason = body.reason.trim();
   const notes = typeof body.notes === "string" ? body.notes.trim() || null : null;
-  // Browsers submit textarea line breaks as CRLF; count them like the database does.
   const selectionAnswer = typeof body.selection_answer === "string"
     ? body.selection_answer.replace(/\r\n?/g, "\n").trim() || null : null;
   const commitment = typeof body.commitment === "boolean" ? body.commitment : null;
@@ -83,16 +83,98 @@ const validateInput = (value: unknown): RegistrationInput | null => {
   };
 };
 
+const readBoundedBody = async (request: Request, maxBytes: number) => {
+  const reader = request.body?.getReader();
+  if (!reader) return null;
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > maxBytes) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const body = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body;
+};
+
+const parseMultipart = async (request: Request, contentType: string) => {
+  const declaredLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_MULTIPART_BYTES) return { tooLarge: true as const };
+  const bytes = await readBoundedBody(request, MAX_MULTIPART_BYTES);
+  if (!bytes) return { tooLarge: true as const };
+  let form: FormData;
+  try {
+    form = await new Request(request.url, { method: "POST", headers: { "content-type": contentType }, body: bytes }).formData();
+  } catch {
+    return null;
+  }
+  const fields: Record<string, unknown> = {};
+  let proof: File | null = null;
+  for (const [key, value] of form.entries()) {
+    if (key === "instagram_proof") {
+      if (proof || typeof value === "string") return null;
+      proof = value;
+      continue;
+    }
+    if (!allowedFields.has(key) || Object.hasOwn(fields, key) || typeof value !== "string") return null;
+    fields[key] = value;
+  }
+  fields.consent = fields.consent === "true";
+  if (fields.commitment !== undefined) fields.commitment = fields.commitment === "true";
+  return { fields, proof, tooLarge: false as const };
+};
+
+const validateProof = async (file: File | null): Promise<ProofFile | null> => {
+  if (!file || file.size < 1 || file.size > MAX_PROOF_BYTES || !proofMimeTypes.has(file.type)) return null;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const jpeg = bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  const png = bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e
+    && bytes[3] === 0x47 && bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a;
+  const webp = bytes.length >= 12 && String.fromCharCode(...bytes.subarray(0, 4)) === "RIFF"
+    && String.fromCharCode(...bytes.subarray(8, 12)) === "WEBP";
+  if (file.type === "image/jpeg" && jpeg) return { bytes, contentType: file.type, extension: "jpg" };
+  if (file.type === "image/png" && png) return { bytes, contentType: file.type, extension: "png" };
+  if (file.type === "image/webp" && webp) return { bytes, contentType: file.type, extension: "webp" };
+  return null;
+};
+
+const storagePathUrl = (base: string, path: string) =>
+  `${base}/storage/v1/object/instagram-proofs/${path.split("/").map(encodeURIComponent).join("/")}`;
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
   if (request.method !== "POST") return errorResponse(405, "INVALID_REQUEST", "Gunakan metode POST.");
-  if (!(request.headers.get("content-type")?.toLowerCase() ?? "").includes("application/json")) {
+
+  const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
+  const isMultipart = contentType.startsWith("multipart/form-data;");
+  let body: unknown;
+  let proofFile: File | null = null;
+  if (isMultipart) {
+    const parsed = await parseMultipart(request, contentType);
+    if (!parsed) return errorResponse(400, "INVALID_REQUEST", errorMessages.INVALID_REQUEST);
+    if (parsed.tooLarge) return errorResponse(413, "INVALID_INSTAGRAM_PROOF", errorMessages.INVALID_INSTAGRAM_PROOF);
+    body = parsed.fields;
+    proofFile = parsed.proof;
+  } else if (contentType.includes("application/json")) {
+    try { body = await request.json(); }
+    catch { return errorResponse(400, "INVALID_REQUEST", errorMessages.INVALID_REQUEST); }
+  } else {
     return errorResponse(400, "INVALID_REQUEST", errorMessages.INVALID_REQUEST);
   }
-
-  let body: unknown;
-  try { body = await request.json(); }
-  catch { return errorResponse(400, "INVALID_REQUEST", errorMessages.INVALID_REQUEST); }
   const input = validateInput(body);
   if (!input) return errorResponse(400, "INVALID_REQUEST", errorMessages.INVALID_REQUEST);
 
@@ -103,7 +185,56 @@ Deno.serve(async (request) => {
     return errorResponse(500, "SERVER_ERROR", "Terjadi kesalahan pada server.");
   }
 
+  let uploadedPath: string | null = null;
+  const removeUploadedProof = async () => {
+    if (!uploadedPath) return;
+    try {
+      const response = await fetch(`${supabaseUrl}/storage/v1/object/instagram-proofs`, {
+        method: "DELETE",
+        headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ prefixes: [uploadedPath] }),
+      });
+      if (!response.ok) console.error("Instagram proof cleanup failed", { status: response.status });
+    } catch {
+      console.error("Instagram proof cleanup request failed");
+    }
+    uploadedPath = null;
+  };
+
   try {
+    // Multipart is accepted only for events the database defines as free + selection.
+    if (isMultipart) {
+      const query = new URLSearchParams({ select: "slug,price,registration_mode", slug: `eq.${input.event_slug}`, limit: "1" });
+      const eventResponse = await fetch(`${supabaseUrl}/rest/v1/events?${query}`, {
+        headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, Accept: "application/json" },
+      });
+      const events = await eventResponse.json().catch(() => null) as Array<Record<string, unknown>> | null;
+      if (!eventResponse.ok || !Array.isArray(events)) return errorResponse(500, "SERVER_ERROR", "Terjadi kesalahan pada server.");
+      if (!events.length) return errorResponse(404, "EVENT_NOT_FOUND", errorMessages.EVENT_NOT_FOUND);
+      if (events[0].registration_mode !== "selection" || Number(events[0].price) !== 0) {
+        return errorResponse(400, "INVALID_REQUEST", errorMessages.INVALID_REQUEST);
+      }
+
+      const proof = await validateProof(proofFile);
+      if (!proof) return errorResponse(400, "INVALID_INSTAGRAM_PROOF", errorMessages.INVALID_INSTAGRAM_PROOF);
+      uploadedPath = `${input.event_slug}/${crypto.randomUUID()}.${proof.extension}`;
+      const uploadResponse = await fetch(storagePathUrl(supabaseUrl, uploadedPath), {
+        method: "POST",
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+          "Content-Type": proof.contentType,
+          "x-upsert": "false",
+        },
+        body: proof.bytes,
+      });
+      if (!uploadResponse.ok) {
+        console.error("Instagram proof upload failed", { status: uploadResponse.status });
+        uploadedPath = null;
+        return errorResponse(500, "SERVER_ERROR", "Bukti follow belum dapat disimpan. Silakan coba lagi.");
+      }
+    }
+
     const rpcResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/create_registration`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "apikey": serviceRoleKey, "Authorization": `Bearer ${serviceRoleKey}` },
@@ -111,10 +242,9 @@ Deno.serve(async (request) => {
         p_event_slug: input.event_slug, p_name: input.name, p_phone: input.phone,
         p_email: input.email, p_reason: input.reason, p_notes: input.notes, p_consent: input.consent,
         p_domicile: input.domicile, p_institution: input.institution,
-        // Sent only when present, so first-come sign-ups keep working if this function
-        // is deployed before migration 20260927010000 adds the parameters.
         ...(input.selection_answer !== null ? { p_selection_answer: input.selection_answer } : {}),
         ...(input.commitment !== null ? { p_commitment: input.commitment } : {}),
+        p_instagram_proof_path: uploadedPath,
       }),
     });
     const result = await rpcResponse.json().catch(() => null) as Record<string, unknown> | null;
@@ -122,12 +252,15 @@ Deno.serve(async (request) => {
 
     const databaseCode = typeof result?.message === "string" ? result.message : "";
     if (databaseCode in errorMessages) {
+      await removeUploadedProof();
       const status = databaseCode === "EVENT_NOT_FOUND" ? 404 : conflictErrors.has(databaseCode) ? 409 : 400;
       return errorResponse(status, databaseCode, errorMessages[databaseCode]);
     }
     console.error("Registration RPC failed", { status: rpcResponse.status, code: result?.code });
+    await removeUploadedProof();
     return errorResponse(500, "SERVER_ERROR", "Terjadi kesalahan pada server.");
   } catch (error) {
+    await removeUploadedProof();
     console.error("Registration request failed", error instanceof Error ? error.message : "Unknown error");
     return errorResponse(500, "SERVER_ERROR", "Terjadi kesalahan pada server.");
   }

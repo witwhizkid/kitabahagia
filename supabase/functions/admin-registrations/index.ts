@@ -154,6 +154,55 @@ Deno.serve(async (request) => {
   }
 
   const url = new URL(request.url);
+  const proofCode = url.searchParams.get("proof");
+  if (proofCode !== null) {
+    if (!registrationCodePattern.test(proofCode)) return fail(400, "INVALID_REQUEST", "Kode pendaftar tidak valid.");
+    const proofQuery = new URLSearchParams({
+      select: "instagram_proof_path,events!inner(slug,price,registration_mode)",
+      registration_code: `eq.${proofCode}`,
+      limit: "1",
+    });
+    const proofResponse = await fetch(`${supabaseUrl}/rest/v1/registrations?${proofQuery}`, {
+      headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, Accept: "application/json" },
+    });
+    const proofRows = await proofResponse.json().catch(() => null) as Array<Record<string, unknown>> | null;
+    if (!proofResponse.ok || !Array.isArray(proofRows)) return fail(500, "SERVER_ERROR", "Bukti follow belum dapat dimuat.");
+    const row = proofRows[0];
+    const event = row?.events as { slug?: string; price?: number; registration_mode?: string } | undefined;
+    const path = row?.instagram_proof_path;
+    if (!row || event?.registration_mode !== "selection" || Number(event.price) !== 0
+      || typeof path !== "string" || !path.startsWith(`${event.slug}/`)) {
+      return json(200, { proof: null });
+    }
+
+    const objectName = path.split("/").at(-1) || "";
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(jpg|png|webp)$/.test(objectName)) {
+      return fail(500, "SERVER_ERROR", "Bukti follow belum dapat dimuat.");
+    }
+    const encodedPath = path.split("/").map(encodeURIComponent).join("/");
+    const signedResponse = await fetch(`${supabaseUrl}/storage/v1/object/sign/instagram-proofs/${encodedPath}`, {
+      method: "POST",
+      headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ expiresIn: 120 }),
+    });
+    const signedResult = await signedResponse.json().catch(() => null) as { signedURL?: string; signedUrl?: string } | null;
+    const signedPath = signedResult?.signedURL || signedResult?.signedUrl;
+    if (!signedResponse.ok || typeof signedPath !== "string") {
+      console.error("Instagram proof signing failed", { status: signedResponse.status });
+      return fail(500, "SERVER_ERROR", "Bukti follow belum dapat dibuka.");
+    }
+    let signedUrl: URL;
+    try {
+      signedUrl = new URL(signedPath, `${supabaseUrl}/storage/v1/`);
+    } catch {
+      return fail(500, "SERVER_ERROR", "Bukti follow belum dapat dibuka.");
+    }
+    if (signedUrl.origin !== new URL(supabaseUrl).origin || !signedUrl.pathname.startsWith("/storage/v1/object/sign/")) {
+      return fail(500, "SERVER_ERROR", "Bukti follow belum dapat dibuka.");
+    }
+    return json(200, { proof: { signed_url: signedUrl.href, expires_in: 120 } });
+  }
+
   const eventSlug = url.searchParams.get("event")?.trim().toLowerCase() || null;
   const registrationStatus = url.searchParams.get("registration_status")?.trim() || null;
   const paymentStatus = url.searchParams.get("payment_status")?.trim() || null;
