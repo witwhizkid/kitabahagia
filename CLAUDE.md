@@ -74,9 +74,10 @@ Halaman pendaftaran (`pendaftaran.html`):
 Lainnya:
 - Foto disajikan sebagai WebP yang sudah diperkecil (originalnya 2–7 MB).
 - Hero beranda di HP/tablet setinggi layar (`max(560px,100svh)`). HP (≤767px)
-  memakai crop potret `img/hero-*-mobile.webp` lewat `<picture>`; crop slide 1
-  dan 3 diambil dari foto asli beresolusi tinggi (`IMG_0452 (1).jpg`,
-  `DSC01930.JPG.jpeg`).
+  memakai crop potret `img/hero-*-mobile.webp` lewat `<picture>`. Slide 1 =
+  foto relawan + adik-adik (`hero-volunteer-*`, dari `IMG_20260815_011030.jpg`,
+  dicerahkan sedikit saat ekspor); crop slide 3 dari `DSC01930.JPG.jpeg`.
+  Foto kelas lama (`hero-relawan*.webp`) masih dipakai di halaman lain.
 - Midtrans sandbox/production dipilih lewat `MIDTRANS_ENV`; payload QRIS mentah
   disimpan dan QR digambar sendiri (`js/vendor/qrcode-generator.min.js`).
 - Jendela pembayaran/seat-hold diatur per kegiatan dari admin

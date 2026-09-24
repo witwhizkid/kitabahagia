@@ -97,6 +97,7 @@
     border-radius: 0;
     filter: saturate(.9) contrast(1.02) brightness(.96);
   }
+  .home-page .hero-slide:nth-child(1) img { object-position: center 78%; }
   .home-page .hero-slide:nth-child(2) img { object-position: center 48%; }
   .home-page .hero-slide:nth-child(3) img { object-position: center 42%; }
   .home-page .hero-campaign-inner {
