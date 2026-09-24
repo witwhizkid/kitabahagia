@@ -58,6 +58,11 @@ Daftar kegiatan (`jadwal.html` + beranda, dirender oleh `js/script.js`):
   dengan poster lebih besar; di HP poster pindah ke atas dengan lebar dibatasi.
 - Label tutup: "Tutup 27 September · 3 hari lagi" / "Besok" / "Hari ini".
 - Bingkai poster 4:5 dengan `object-fit: contain` (poster tidak terpotong).
+- HP: Jadwal = daftar ke bawah (tanggal "10 OKT · Sabtu" + kategori di atas,
+  judul/tempat/waktu di samping poster 104px, harga + tombol Daftar sejajar);
+  beranda = kartu geser dengan poster besar. Keduanya pakai `eventRowMarkup`
+  yang sama, beda di CSS `@media (max-width:640px)`. Efek hover baris hanya di
+  `@media (hover:hover)` supaya tidak "nyangkut" setelah tap.
 
 Halaman pendaftaran (`pendaftaran.html`):
 - Thumbnail poster ("Lihat poster") membuka `<dialog>` native; tutup via ×,

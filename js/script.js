@@ -200,7 +200,7 @@ const eventRowMarkup = (event, { heading = 'h2', attributes = '' } = {}) => `<ar
   <div class="event-row-copy">
     <p class="event-kicker">${escapeHTML(event.category)}${event.statusKey === 'open' ? '' : ` <span>· ${escapeHTML(event.status)}</span>`}</p>
     <${heading} class="event-title"><a class="event-row-link" href="${eventHref(event)}">${escapeHTML(event.name)}</a></${heading}>
-    <p class="event-where"><span class="visually-hidden">${escapeHTML(event.date)}, </span>${escapeHTML(event.location)} · ${escapeHTML(event.time)}</p>
+    <p class="event-where"><span class="visually-hidden">${escapeHTML(event.date)}, </span><span class="event-where-place">${escapeHTML(event.location)}</span><span class="event-where-sep"> · </span>${escapeHTML(event.time)}</p>
   </div>
   <div class="event-row-side"><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}${eventCta(event)}</div>
 </article>`;
