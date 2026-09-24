@@ -34,6 +34,16 @@ git push origin main
 Setelah Vercel selesai deploy: buka situs, tekan Ctrl+Shift+R. Kalau ada
 migrasi atau Edge Function, tulis juga langkah Supabase-nya secara eksplisit.
 
+Edge Function tidak ikut ter-deploy lewat Vercel. Deploy dari `main` dan selalu
+sebut project-nya (folder lokal user belum tentu ter-link):
+
+```
+npx supabase functions deploy <nama-function> --project-ref cmrdapfuqtjlmpepfwfq
+```
+
+Kalau diminta login: `npx supabase login` dulu. Cek hasilnya di Supabase →
+Edge Functions (waktu deploy terakhir) sebelum menyimpulkan kodenya salah.
+
 ## Keputusan desain yang sudah dibuat
 
 Daftar kegiatan (`jadwal.html` + beranda, dirender oleh `js/script.js`):
