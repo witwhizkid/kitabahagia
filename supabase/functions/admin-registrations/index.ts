@@ -228,6 +228,8 @@ Deno.serve(async (request) => {
     order: "created_at.desc",
   });
   if (eventSlug) query.set("events.slug", `eq.${eventSlug}`);
+  // Archived events (e.g. sandbox tests) are hidden from the registrant list; restore the event to see them.
+  query.set("events.archived_at", "is.null");
   if (registrationStatus) {
     query.set("registration_status", `eq.${registrationStatus === "expired" ? "pending_payment" : registrationStatus}`);
   }

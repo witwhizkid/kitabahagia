@@ -331,7 +331,8 @@
     `).join("");
     const eventFilter = $("#registration-event-filter");
     const currentFilter = eventFilter.value;
-    eventFilter.innerHTML = `<option value="">Semua kegiatan</option>${events.map((event) =>
+    // Archived events stay out of the filter; their registrants are hidden too (see admin-registrations).
+    eventFilter.innerHTML = `<option value="">Semua kegiatan</option>${events.filter((event) => !event.archived_at).map((event) =>
       `<option value="${escapeHtml(event.slug)}">${escapeHtml(event.title)}</option>`).join("")}`;
     eventFilter.value = currentFilter;
   };
