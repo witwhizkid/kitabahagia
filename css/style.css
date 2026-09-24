@@ -6128,3 +6128,14 @@ html.home-document { overflow-x: hidden; }
 .registration-page .registration-event-disclosure[open] > summary::after { transform:translateY(2px) rotate(-135deg); }
 .registration-page .registration-event-disclosure > summary:focus-visible { outline:3px solid var(--maroon); outline-offset:2px; }
 @media (prefers-reduced-motion: reduce) { .registration-page .registration-event-disclosure > summary::after { transition:none; } }
+
+/* Brand watermark: the Kita Bahagia mark replaces the generic decorative circles. */
+.registration-page .payment-header::before,
+.registration-page .registration-summary-sticky::before { width:200px; height:200px; top:auto; right:-28px; bottom:-58px; border-radius:0; background:url("../assets/logo/pictorial-white.webp") center / contain no-repeat; opacity:.09; transform:rotate(-12deg); }
+.registration-page .registration-summary-sticky::before { width:240px; height:240px; right:-36px; bottom:-64px; }
+.registration-page .payment-header::after,
+.registration-page .registration-summary-sticky::after { display:none; }
+@media (max-width:640px) {
+  .registration-page .payment-header::before { width:150px; height:150px; right:-26px; bottom:-48px; }
+  .registration-page .registration-summary-sticky::before { width:190px; height:190px; right:-34px; bottom:-52px; }
+}
