@@ -565,6 +565,19 @@
   };
 
   const toIso = (value) => value ? new Date(`${value}:00+07:00`).toISOString() : null;
+  // end_at is one timestamp; the form splits it into an optional end date (multi-day events) and an end time.
+  const endAtFromForm = () => {
+    const endDate = $("#event-end-date").value;
+    const endTime = $("#event-end-time").value;
+    if (!endDate && !endTime) return null;
+    return toIso(`${endDate || $("#event-date").value}T${endTime || "23:59"}`);
+  };
+  const endAtError = () => {
+    const endAt = endAtFromForm();
+    if (!endAt || !$("#event-date").value) return "";
+    const startAt = toIso(`${$("#event-date").value}T${$("#event-start-time").value || "00:00"}`);
+    return new Date(endAt) <= new Date(startAt) ? "Waktu selesai harus setelah waktu mulai." : "";
+  };
   const splitLines = (value) => value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
 
   const setImagePreview = (url = "") => {
@@ -690,7 +703,9 @@
     $("#event-registration-description").value = event?.registration_description || "";
     $("#event-date").value = event?.event_date || "";
     $("#event-start-time").value = event?.start_time?.slice(0, 5) || "";
-    $("#event-end-at").value = toLocalDateTime(event?.end_at);
+    const [endDate = "", endTime = ""] = toLocalDateTime(event?.end_at).split("T");
+    $("#event-end-date").value = endDate && endDate !== event?.event_date ? endDate : "";
+    $("#event-end-time").value = endTime;
     $("#event-deadline").value = toLocalDateTime(event?.registration_deadline);
     $("#event-location").value = event?.location || "";
     $("#event-price").value = event?.price ?? 0;
@@ -841,7 +856,7 @@
     category_key: $("#event-category-key").value.trim() || null,
     event_date: $("#event-date").value,
     start_time: $("#event-start-time").value || null,
-    end_at: toIso($("#event-end-at").value),
+    end_at: endAtFromForm(),
     timezone: "Asia/Jakarta",
     location: $("#event-location").value.trim() || null,
     price: Number($("#event-price").value),
@@ -1251,6 +1266,12 @@
     event.preventDefault();
     if (imageUploading) {
       setFeedback($("#form-feedback"), "Tunggu sampai upload foto selesai.", "error");
+      return;
+    }
+    const scheduleError = endAtError();
+    if (scheduleError) {
+      setFeedback($("#form-feedback"), scheduleError, "error");
+      $("#event-end-time").focus();
       return;
     }
     const payload = formPayload();

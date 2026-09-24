@@ -51,6 +51,16 @@ const eventDateParts = (date) => Object.fromEntries(new Intl.DateTimeFormat('id-
   day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta'
 }).formatToParts(date).map((part) => [part.type, part.value]));
 
+const eventShortDateFormatter = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' });
+const isSameEventDay = (a, b) => eventDateFormatter.format(a) === eventDateFormatter.format(b);
+// Multi-day events name both days: "24 Okt, 09.00 – 25 Okt, 17.00 WIB".
+const formatEventTime = (start, end) => {
+  if (!end) return `${eventTimeFormatter.format(start)} WIB`;
+  if (isSameEventDay(start, end)) return `${eventTimeFormatter.format(start)}\u2013${eventTimeFormatter.format(end)} WIB`;
+  const day = (date) => eventShortDateFormatter.format(date).replace('.', '');
+  return `${day(start)}, ${eventTimeFormatter.format(start)} \u2013 ${day(end)}, ${eventTimeFormatter.format(end)} WIB`;
+};
+
 const formatEventDeadline = (value) => {
   if (!value) return '';
   const deadline = new Date(value);
@@ -103,9 +113,7 @@ const normalizeScheduleEvent = (event) => {
     start: event.start_at,
     end: event.end_at,
     date: formatEventDateRange(start, end),
-    time: end
-      ? `${eventTimeFormatter.format(start)}\u2013${eventTimeFormatter.format(end)} WIB`
-      : `${eventTimeFormatter.format(start)} WIB`,
+    time: formatEventTime(start, end),
     location: event.location || 'Lokasi menyusul',
     status: statusLabels[statusKey] || event.status || 'Status belum tersedia',
     statusKey,
@@ -175,8 +183,10 @@ const eventClosingMarkup = (event) => {
 };
 const eventDateBlock = (event) => {
   const start = new Date(event.start);
+  const end = event.end ? new Date(event.end) : null;
+  const days = end && !Number.isNaN(end.getTime()) ? jakartaDayNumber(end) - jakartaDayNumber(start) + 1 : 1;
   return `<div class="event-date" aria-hidden="true"><b>${eventCalendarFormatters.day.format(start)}</b>
-    <span>${escapeHTML(eventCalendarFormatters.month.format(start).replace('.', ''))}</span><small>${escapeHTML(eventCalendarFormatters.weekday.format(start))}</small></div>`;
+    <span>${escapeHTML(eventCalendarFormatters.month.format(start).replace('.', ''))}</span><small>${escapeHTML(eventCalendarFormatters.weekday.format(start))}${days > 1 ? ` · ${days} hari` : ''}</small></div>`;
 };
 // Few seats left is the "siapa cepat" signal, so it gets the accent.
 const eventSlotNote = (event) => {

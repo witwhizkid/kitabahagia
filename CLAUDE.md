@@ -81,6 +81,9 @@ Lainnya:
   disimpan dan QR digambar sendiri (`js/vendor/qrcode-generator.min.js`).
 - Jendela pembayaran/seat-hold diatur per kegiatan dari admin
   (`payment_window_minutes`); lihat "Seat-hold rules" di `supabase/README.md`.
+- Kegiatan lebih dari 1 hari: admin mengisi "Tanggal selesai" + "Jam selesai"
+  (digabung jadi `end_at`, tanpa perubahan skema). Publik menampilkan
+  "Sabtu · 2 hari" dan "24 Okt, 09.00 – 25 Okt, 17.00 WIB".
 - Status "Kedaluwarsa" di admin tidak disimpan di database: `admin-registrations`
   menurunkannya (`payment_expired`) dari `pending_payment` + `payment_deadline`
   yang sudah lewat, sama dengan aturan pelepasan kursi. "Lunas" selalu menang.
