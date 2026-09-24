@@ -6239,6 +6239,27 @@ html.home-document { overflow-x: hidden; }
   .event-feature-foot { flex-direction:column; align-items:stretch; }
   .event-feature-foot .event-cta { width:100%; }
   .event-row.loading-card { grid-template-columns:1fr; }
+  /* Homepage: one swipeable poster card per event instead of a long stacked list. */
+  /* --bleed matches the 18px homepage gutter (.home-page main > .section > .container). */
+  .home-upcoming-list { --bleed:18px; display:flex; gap:16px; margin-inline:calc(var(--bleed) * -1); padding:24px var(--bleed) 6px; overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x mandatory; scroll-padding-inline:var(--bleed); scrollbar-width:none; }
+  .home-upcoming-list::-webkit-scrollbar { display:none; }
+  .home-upcoming-list .event-row { flex:0 0 min(300px, 82%); grid-template-columns:minmax(0, 1fr) auto; gap:0; align-content:start; padding:0 0 20px; background:var(--cream); border-bottom:1px solid var(--line); scroll-snap-align:start; }
+  .home-upcoming-list .event-row:hover { background:var(--cream); }
+  .home-upcoming-list .event-row-photo { grid-column:1 / -1; grid-row:1; }
+  .home-upcoming-list .event-row .event-date { grid-column:1 / -1; grid-row:2; display:flex; align-items:baseline; gap:6px; margin:18px 16px 0; }
+  .home-upcoming-list .event-date b, .home-upcoming-list .event-date span { margin:0; font:800 12px/1.2 "DM Sans", sans-serif; letter-spacing:.14em; text-transform:uppercase; }
+  .home-upcoming-list .event-date small { margin:0; font-size:12px; }
+  .home-upcoming-list .event-date small::before { content:"· "; }
+  .home-upcoming-list .event-row .event-row-copy { grid-column:1 / -1; grid-row:3; margin:10px 16px 0; }
+  .home-upcoming-list .event-row .event-title { margin:6px 0 8px; font-size:24px; line-height:1.08; }
+  .home-upcoming-list .event-where { font-size:14px; line-height:1.5; }
+  .home-upcoming-list .event-row-side { grid-column:1 / -1; grid-row:4; grid-template-columns:minmax(0, 1fr) auto; column-gap:12px; row-gap:2px; margin:16px 16px 0; padding-top:14px; border-top:1px solid var(--line); }
+  .home-upcoming-list .event-row-side .event-price { grid-column:1; grid-row:1; font-size:20px; }
+  .home-upcoming-list .event-row-side .event-slot { grid-column:1; grid-row:2; justify-self:start; font-size:12px; }
+  .home-upcoming-list .event-row-side .event-cta { grid-column:2; grid-row:1 / span 2; width:auto; min-height:44px; margin:0; padding:0 16px; }
+  .home-upcoming-list .event-row.loading-card { display:block; }
+  .home-upcoming-list .event-row.loading-card .loading-media { min-height:0; aspect-ratio:4 / 5; }
+  .home-upcoming-list .loading-card-copy { padding:18px 16px 0; }
   .schedule-filters { flex-wrap:nowrap; justify-content:flex-start; gap:20px; overflow-x:auto; scrollbar-width:none; }
   .schedule-filters .filter-btn { flex:none; }
   .registration-page .registration-summary-image { flex-basis:84px; width:84px; height:105px; }
