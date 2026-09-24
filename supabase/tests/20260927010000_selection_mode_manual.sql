@@ -145,7 +145,8 @@ $$;
 
 select * from kb_selection_test order by step;
 
--- 11. Existing data: every event defaults to first_come (read-only).
+-- 11. Existing data: every event defaults to first_come (read-only). Only meaningful
+--     right after the migration; once selection events exist this row is expected to fail.
 select '11' as step, 'Semua kegiatan lama first_come' as check_name,
        count(*) filter (where registration_mode <> 'first_come') as not_first_come,
        count(*) filter (where registration_mode <> 'first_come') = 0 as pass

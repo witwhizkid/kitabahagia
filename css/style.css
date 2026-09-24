@@ -206,6 +206,17 @@
 .detail-page { max-width: 1040px; }
 .detail-page h1 { font-size: clamp(30px, 5vw, 54px); line-height: 1.15; }
 .detail-page h2 { margin-top: 28px; }
+/* cek-status.html */
+.status-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 16px; align-items: end; max-width: 760px; margin-top: 24px; }
+.status-form .field { display: grid; gap: 6px; }
+.status-form label { font-size: 13px; font-weight: 700; }
+.status-form input { min-height: 48px; padding: 10px 14px; border: 1px solid #cbbdb2; border-radius: 4px; background: var(--white); color: var(--ink); font: inherit; }
+.status-form input:focus { border-color: var(--maroon); outline: 3px solid rgba(122,31,43,.12); outline-offset: 2px; }
+.status-message { min-height: 1.5em; margin-top: 16px; color: var(--muted); }
+.status-result { max-width: 760px; margin-top: 8px; padding-top: 24px; border-top: 2px solid var(--ink); }
+.status-result h2 { margin: 6px 0 10px; }
+.status-result .btn { margin-top: 12px; }
+@media (max-width: 640px) { .status-form { grid-template-columns: 1fr; } }
 .event-detail-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; margin: 32px 0; }
 .event-detail-grid > img { border-radius: 20px; aspect-ratio: 3 / 2; height: auto; }
 .detail-checklist { padding: 28px; margin: 24px 0; background: white; border: 1px solid var(--line); border-radius: 20px; }
@@ -2624,6 +2635,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .payment-details { padding-left:32px; border-left:1px solid var(--line); }
 .payment-details h3 { margin:0 0 24px; font-size:22px; }
 .payment-details dl, .registration-confirmation dl { margin:0; }
+.registration-status-link { margin:18px 0 0; }
 .payment-details dl > div, .registration-confirmation dl > div { padding:16px 0; border-bottom:1px solid var(--line); }
 .payment-details dt, .registration-confirmation dt { font-size:12px; color:var(--muted); }
 .payment-details dd, .registration-confirmation dd { margin:6px 0 0; overflow-wrap:anywhere; font-weight:600; }

@@ -26,7 +26,12 @@ type Registration = {
   payment_deadline: string | null;
 };
 
-type Event = { whatsapp_group_url: string | null };
+type Event = {
+  whatsapp_group_url: string | null;
+  title: string;
+  registration_mode: string;
+  announcement_at: string | null;
+};
 
 type Attempt = {
   order_id: string;
@@ -87,11 +92,20 @@ Deno.serve(async (request) => {
   const registration = registrations?.[0];
   if (!registration) return errorResponse(404, "REGISTRATION_NOT_FOUND");
 
-  const eventQuery = `events?select=whatsapp_group_url&id=eq.${encodeURIComponent(registration.event_id)}&limit=1`;
+  const eventQuery = `events?select=whatsapp_group_url,title,registration_mode,announcement_at&id=eq.${encodeURIComponent(registration.event_id)}&limit=1`;
   const events = await restQuery<Event>(url, serviceKey, eventQuery).catch(() => null);
-  const isConfirmed = registration.registration_status === "confirmed"
+  const event = events?.[0];
+  // Selection results stay hidden until the announcement date: before it, every
+  // decided applicant still reads as 'applied' (waiting). No date means no wait.
+  const selection = event?.registration_mode === "selection";
+  const announcement = Date.parse(event?.announcement_at ?? "");
+  const resultsAnnounced = !selection || !Number.isFinite(announcement) || announcement <= Date.now();
+  const registrationStatus = selection && !resultsAnnounced
+    && ["confirmed", "waitlisted", "rejected"].includes(registration.registration_status)
+    ? "applied" : registration.registration_status;
+  const isConfirmed = registrationStatus === "confirmed"
     && ["paid", "not_required"].includes(registration.payment_status);
-  const whatsappGroupUrl = isConfirmed ? safeWhatsAppGroupUrl(events?.[0]?.whatsapp_group_url) : null;
+  const whatsappGroupUrl = isConfirmed ? safeWhatsAppGroupUrl(event?.whatsapp_group_url) : null;
 
   const attemptQuery = `payment_attempts?select=order_id,status,expires_at&registration_id=eq.${encodeURIComponent(registration.id)}&order=created_at.desc&limit=1`;
   const attempts = await restQuery<Attempt>(url, serviceKey, attemptQuery).catch(() => null);
@@ -100,8 +114,11 @@ Deno.serve(async (request) => {
   return jsonResponse(200, {
     success: true,
     registration_code: registration.registration_code,
-    registration_status: registration.registration_status,
+    registration_status: registrationStatus,
     payment_status: registration.payment_status,
+    event_title: event?.title ?? null,
+    registration_mode: selection ? "selection" : "first_come",
+    announcement_at: selection ? event?.announcement_at ?? null : null,
     order_id: attempt?.order_id ?? null,
     expires_at: attempt?.expires_at ?? null,
     payment_deadline: registration.payment_deadline ?? null,

@@ -856,6 +856,61 @@ function initScheduleCountdown() {
 
 initScheduleCountdown();
 
+const safeWhatsAppGroupUrl = (value) => {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === 'https:' && url.hostname === 'chat.whatsapp.com' ? url.toString() : null;
+  } catch {
+    return null;
+  }
+};
+
+const announcementDateFormatter = new Intl.DateTimeFormat('id-ID', {
+  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta'
+});
+// Heading and message for a registration's current state, shared by the
+// registration page and cek-status.html. payment-status already hides selection
+// results before the announcement date, so 'applied' covers that wait.
+const registrationOutcomeCopy = (data) => {
+  const selection = data?.registration_mode === 'selection';
+  const title = data?.event_title || 'kegiatan ini';
+  const announcement = Date.parse(data?.announcement_at || '');
+  switch (data?.registration_status) {
+    case 'applied':
+      return {
+        heading: 'Pendaftaranmu sudah kami terima.',
+        copy: `Tim Kita Bahagia akan menyeleksi semua pendaftar. ${Number.isFinite(announcement)
+          ? `Hasilnya diumumkan ${announcementDateFormatter.format(new Date(announcement))}.`
+          : 'Hasilnya akan diumumkan oleh tim.'} Simpan kode pendaftaranmu.`
+      };
+    case 'confirmed':
+      return selection
+        ? { heading: 'Selamat, kamu terpilih!', copy: `Kamu terpilih sebagai peserta ${title}.`, onboarding: true }
+        : { heading: 'Kamu sudah terdaftar.', copy: 'Tempatmu sudah dikonfirmasi.', onboarding: true };
+    case 'waitlisted':
+      return {
+        heading: 'Kamu masuk daftar cadangan.',
+        copy: `Terima kasih sudah mendaftar ${title}. Kalau ada peserta yang berhalangan, tim Kita Bahagia akan menghubungimu lewat WhatsApp.`
+      };
+    case 'rejected':
+      return {
+        heading: 'Terima kasih sudah mendaftar.',
+        copy: `Kali ini kamu belum terpilih sebagai peserta ${title} karena kuota terbatas. Sampai jumpa di kegiatan Kita Bahagia berikutnya.`
+      };
+    case 'pending_payment':
+      return {
+        heading: 'Pembayaran belum selesai.',
+        copy: 'Lanjutkan pembayaran dari halaman kegiatan di perangkat yang sama, atau hubungi admin dengan kode pendaftaranmu.'
+      };
+    default:
+      return {
+        heading: 'Pendaftaran tidak aktif.',
+        copy: 'Pendaftaran ini sudah dibatalkan atau batas pembayarannya sudah lewat.'
+      };
+  }
+};
+
 const registrationForm = document.querySelector('[data-registration-form]');
 
 if (registrationForm) {
@@ -1265,16 +1320,6 @@ if (registrationForm) {
     }
   };
 
-  const safeWhatsAppGroupUrl = (value) => {
-    if (typeof value !== 'string' || !value.trim()) return null;
-    try {
-      const url = new URL(value.trim());
-      return url.protocol === 'https:' && url.hostname === 'chat.whatsapp.com' ? url.toString() : null;
-    } catch {
-      return null;
-    }
-  };
-
   const renderOnboarding = (container, data) => {
     if (!container) return;
     const copy = container.querySelector('[data-onboarding-copy]');
@@ -1347,19 +1392,23 @@ if (registrationForm) {
     registrationProgress?.classList.add('hidden');
     resultStage.querySelector('[data-result-code]').textContent = data.registration_code;
     resultStage.querySelector('[data-result-title]').textContent = data.event_title || selectedEvent?.name || '';
-    // Selection applications reuse this screen with "waiting for selection" copy.
-    const applied = data.registration_status === 'applied';
-    const announcement = Date.parse(data.announcement_at || selectedEvent?.announcementAt || '');
-    resultStage.querySelector('#freeConfirmationHeading').textContent = applied
-      ? 'Pendaftaranmu sudah kami terima.' : 'Kamu sudah terdaftar.';
-    resultStage.querySelector('[data-confirmation-copy]').textContent = applied
-      ? `Tim Kita Bahagia akan menyeleksi semua pendaftar. ${Number.isFinite(announcement)
-        ? `Hasilnya diumumkan ${announcementFormatter.format(new Date(announcement))}.`
-        : 'Hasilnya akan diumumkan oleh tim.'} Simpan kode pendaftaranmu.`
-      : 'Tempatmu sudah dikonfirmasi.';
+    // Selection applications reuse this screen: waiting, accepted, waitlisted or not selected.
+    const outcome = registrationOutcomeCopy({
+      registration_mode: selectedEvent?.registrationMode,
+      announcement_at: selectedEvent?.announcementAt,
+      event_title: data.event_title || selectedEvent?.name,
+      ...data
+    });
+    resultStage.querySelector('#freeConfirmationHeading').textContent = outcome.heading;
+    resultStage.querySelector('[data-confirmation-copy]').textContent = outcome.copy;
     const onboarding = resultStage.querySelector('[data-registration-onboarding]');
-    if (applied) onboarding.hidden = true;
-    else renderOnboarding(onboarding, data);
+    if (outcome.onboarding) renderOnboarding(onboarding, data);
+    else onboarding.hidden = true;
+    const statusLink = resultStage.querySelector('[data-status-link]');
+    if (statusLink) {
+      statusLink.hidden = !isSelectionEvent();
+      statusLink.querySelector('a').href = `cek-status.html?kode=${encodeURIComponent(data.registration_code)}`;
+    }
     resultStage.hidden = false;
     document.getElementById('registrationStatus')?.classList.add('hidden');
     markTerminalRecoveryForRefresh(data);
@@ -1602,9 +1651,6 @@ if (registrationForm) {
   let registrationOpensTimer = null;
   const registrationOpensFormatter = new Intl.DateTimeFormat('id-ID', {
     weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
-  });
-  const announcementFormatter = new Intl.DateTimeFormat('id-ID', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta'
   });
   const formatOpensCountdown = (milliseconds) => {
     const totalSeconds = Math.ceil(milliseconds / 1000);
@@ -2000,7 +2046,7 @@ if (registrationForm) {
       showFreeRegistrationConfirmation(restored);
       return true;
     }
-    if (status.registration_status === 'applied') {
+    if (['applied', 'waitlisted', 'rejected'].includes(status.registration_status)) {
       if (!resumeFromDetail && !canRestoreTerminalRecovery(recovery)) {
         clearRegistrationRecovery();
         renderSelectedEvent();
@@ -2473,6 +2519,57 @@ if (registrationForm) {
         editRegistrationButton.disabled = false;
         confirmRegistrationButton.textContent = originalButtonText;
       }
+    }
+  });
+}
+
+// cek-status.html: look up a registration by code + email (same endpoint as payment recovery).
+const statusForm = document.getElementById('statusForm');
+if (statusForm) {
+  const message = document.getElementById('statusMessage');
+  const result = document.getElementById('statusResult');
+  const codeInput = document.getElementById('statusCode');
+  const prefill = new URLSearchParams(window.location.search).get('kode');
+  if (prefill && codeInput) codeInput.value = prefill.slice(0, 50);
+  statusForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = statusForm.querySelector('[type="submit"]');
+    const formData = new FormData(statusForm);
+    result.hidden = true;
+    message.textContent = 'Memeriksa status...';
+    button.disabled = true;
+    try {
+      const response = await fetch(`${SUPABASE_FUNCTIONS_BASE_URL}/payment-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          registration_code: String(formData.get('registration_code') || '').trim().toUpperCase(),
+          email: String(formData.get('email') || '').trim().toLowerCase()
+        }),
+        signal: AbortSignal.timeout(10000)
+      });
+      const data = await response.json().catch(() => null);
+      if (response.status === 404 || response.status === 400) {
+        message.textContent = 'Pendaftaran tidak ditemukan. Periksa kembali kode pendaftaran dan email yang kamu pakai saat mendaftar.';
+        return;
+      }
+      if (!response.ok || !data?.registration_status) throw new Error('status');
+      const outcome = registrationOutcomeCopy(data);
+      result.querySelector('[data-status-event]').textContent = data.event_title || '';
+      result.querySelector('[data-status-heading]').textContent = outcome.heading;
+      result.querySelector('[data-status-copy]').textContent = outcome.copy;
+      const link = result.querySelector('[data-status-whatsapp]');
+      const groupUrl = outcome.onboarding ? safeWhatsAppGroupUrl(data.whatsapp_group_url) : null;
+      link.hidden = !groupUrl;
+      if (groupUrl) link.href = groupUrl;
+      else link.removeAttribute('href');
+      message.textContent = '';
+      result.hidden = false;
+      result.focus();
+    } catch {
+      message.textContent = 'Status belum dapat diperiksa. Coba lagi beberapa saat lagi.';
+    } finally {
+      button.disabled = false;
     }
   });
 }

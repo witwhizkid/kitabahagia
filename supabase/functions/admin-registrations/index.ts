@@ -1,7 +1,7 @@
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -25,17 +25,29 @@ const registrationProjection = [
   "domicile",
   "institution",
   "reason",
+  "notes",
+  "selection_question",
   "selection_answer",
+  "commitment_text",
+  "selection_decided_at",
   "registration_status",
   "payment_status",
   "payment_deadline",
   "created_at",
-  "events!inner(slug,title,event_date,start_time,end_at)",
+  "events!inner(slug,title,event_date,start_time,end_at,registration_mode)",
 ].join(",");
 
 // "expired" is derived, not stored: a pending_payment row whose payment_deadline
 // has passed. It matches the lazy seat release rule, so the seat is already free.
-const registrationStatuses = new Set(["pending_payment", "confirmed", "cancelled", "expired", "applied"]);
+const registrationStatuses = new Set(["pending_payment", "confirmed", "cancelled", "expired", "applied", "waitlisted", "rejected"]);
+const decisions = new Set(["accepted", "waitlisted", "rejected", "applied"]);
+const registrationCodePattern = /^KB-[A-Z0-9-]{6,40}$/;
+const decisionErrors: Record<string, [number, string]> = {
+  CAPACITY_EXCEEDED: [409, "Kuota peserta sudah penuh. Pindahkan peserta lain ke cadangan dulu."],
+  NOT_SELECTION_EVENT: [400, "Keputusan seleksi hanya untuk kegiatan mode Seleksi."],
+  INVALID_DECISION: [400, "Keputusan tidak valid."],
+  INVALID_REQUEST: [400, "Pilih pendaftar dari satu kegiatan saja."],
+};
 const paymentStatuses = new Set(["not_required", "unpaid", "pending", "paid", "failed", "expired", "refunded"]);
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -49,14 +61,14 @@ const serviceHeaders = (key: string) => ({
 
 const authorize = async (request: Request, supabaseUrl: string, anonKey: string, serviceKey: string) => {
   const token = request.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
-  if (!token) return false;
+  if (!token) return null;
 
   const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
     headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
   });
-  if (!userResponse.ok) return false;
+  if (!userResponse.ok) return null;
   const user = await userResponse.json().catch(() => null) as { id?: string } | null;
-  if (!user?.id) return false;
+  if (!user?.id) return null;
 
   const query = new URLSearchParams({
     select: "user_id",
@@ -69,7 +81,8 @@ const authorize = async (request: Request, supabaseUrl: string, anonKey: string,
     headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, Accept: "application/json" },
   });
   const rows = await adminResponse.json().catch(() => null);
-  return adminResponse.ok && Array.isArray(rows) && rows.length === 1;
+  // The admin's user id, recorded with each selection decision; null when not an active admin.
+  return adminResponse.ok && Array.isArray(rows) && rows.length === 1 ? user.id : null;
 };
 
 const safeSearch = (value: string | null) => {
@@ -104,14 +117,40 @@ const isActiveRegistration = (event: { end_at?: string | null; event_date?: stri
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: responseHeaders });
-  if (request.method !== "GET") return fail(405, "METHOD_NOT_ALLOWED", "Pendaftar hanya dapat dilihat.");
+  if (!["GET", "POST"].includes(request.method)) return fail(405, "METHOD_NOT_ALLOWED", "Metode tidak didukung.");
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !anonKey || !serviceKey) return fail(500, "SERVER_ERROR", "Konfigurasi server belum lengkap.");
-  if (!await authorize(request, supabaseUrl, anonKey, serviceKey)) {
+  const adminId = await authorize(request, supabaseUrl, anonKey, serviceKey);
+  if (!adminId) {
     return fail(401, "UNAUTHORIZED", "Sesi admin tidak valid atau akses tidak diizinkan.");
+  }
+
+  const rpc = (name: string, args: Record<string, unknown>) => fetch(`${supabaseUrl}/rest/v1/rpc/${name}`, {
+    method: "POST",
+    headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify(args),
+  });
+
+  // POST: accept / waitlist / reject / reset one or more applicants of one selection event.
+  if (request.method === "POST") {
+    const body = await request.json().catch(() => null) as Record<string, unknown> | null;
+    const codes = body?.registration_codes;
+    const decision = body?.decision;
+    if (!body || Object.keys(body).some((key) => !["registration_codes", "decision"].includes(key))
+      || !Array.isArray(codes) || codes.length < 1 || codes.length > 500
+      || codes.some((code) => typeof code !== "string" || !registrationCodePattern.test(code))
+      || typeof decision !== "string" || !decisions.has(decision)) {
+      return fail(400, "INVALID_REQUEST", "Data keputusan tidak valid.");
+    }
+    const response = await rpc("decide_selection", { p_registration_codes: codes, p_decision: decision, p_actor: adminId });
+    const result = await response.json().catch(() => null) as Record<string, unknown> | null;
+    if (response.ok && result) return json(200, { registrations: [], total: 0, selection: result });
+    const code = typeof result?.message === "string" ? result.message : "";
+    const [status, message] = decisionErrors[code] ?? [500, "Keputusan belum dapat disimpan."];
+    return fail(status, code in decisionErrors ? code : "SERVER_ERROR", message);
   }
 
   const url = new URL(request.url);
@@ -162,5 +201,12 @@ Deno.serve(async (request) => {
     return lifecycle === "active" ? isActiveRegistration(event, now) : !isActiveRegistration(event, now);
   });
 
-  return json(200, { registrations: lifecycleRows, total: lifecycleRows.length });
+  // With one event selected, add the selection counts and each applicant's history.
+  let selection: unknown = null;
+  if (eventSlug) {
+    const overview = await rpc("selection_overview", { p_event_slug: eventSlug });
+    selection = overview.ok ? await overview.json().catch(() => null) : null;
+  }
+
+  return json(200, { registrations: lifecycleRows, total: lifecycleRows.length, selection });
 });
