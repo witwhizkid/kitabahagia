@@ -100,7 +100,7 @@
                 <div class="registration-summary-topline"><span class="registration-event-category" id="eventCategory"></span><span id="eventStatus"></span></div>
                 <div class="registration-summary-title-row">
                   <figure class="registration-summary-image" id="eventImageWrap" hidden>
-                    <img id="eventImage" alt="" loading="lazy" decoding="async">
+                    <button class="registration-poster-button" type="button" data-poster-open aria-label="Perbesar poster kegiatan"><img id="eventImage" alt="" loading="lazy" decoding="async"><span aria-hidden="true">Lihat poster</span></button>
                   </figure>
                   <h2 id="eventName"></h2>
                 </div>
@@ -237,6 +237,10 @@
         </section>
       </div>
     </section>
+    <dialog class="poster-dialog" id="eventPosterDialog" aria-label="Poster kegiatan">
+      <img data-poster-image alt="">
+      <button class="poster-dialog-close" type="button" data-poster-close aria-label="Tutup poster">&times;</button>
+    </dialog>
   </main>
 
   <footer class="site-footer">

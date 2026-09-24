@@ -156,7 +156,22 @@ const eventCalendarFormatters = {
   day: new Intl.DateTimeFormat('id-ID', { day: 'numeric', timeZone: 'Asia/Jakarta' }),
   month: new Intl.DateTimeFormat('id-ID', { month: 'short', timeZone: 'Asia/Jakarta' }),
   weekday: new Intl.DateTimeFormat('id-ID', { weekday: 'long', timeZone: 'Asia/Jakarta' }),
-  closing: new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', timeZone: 'Asia/Jakarta' })
+  closing: new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', timeZone: 'Asia/Jakarta' }),
+  monthYear: new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' }),
+  isoDay: new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Jakarta' })
+};
+// Calendar-day number in Jakarta, so "N hari lagi" counts dates, not 24-hour blocks.
+const jakartaDayNumber = (date) => {
+  const [year, month, day] = eventCalendarFormatters.isoDay.format(date).split('-').map(Number);
+  return Date.UTC(year, month - 1, day) / 864e5;
+};
+const eventHref = (event) => `pendaftaran.html?event=${encodeURIComponent(event.slug)}`;
+const eventClosingMarkup = (event) => {
+  const deadline = new Date(event.registrationDeadline || '');
+  if (Number.isNaN(deadline.getTime())) return '';
+  const days = jakartaDayNumber(deadline) - jakartaDayNumber(new Date());
+  const relative = days <= 0 ? 'Hari ini' : days === 1 ? 'Besok' : `${days} hari lagi`;
+  return `<p class="event-closing">Tutup ${escapeHTML(eventCalendarFormatters.closing.format(deadline))} <b>${relative}</b></p>`;
 };
 const eventDateBlock = (event) => {
   const start = new Date(event.start);
@@ -183,20 +198,37 @@ const eventRowMarkup = (event, { heading = 'h2', attributes = '' } = {}) => `<ar
   ${eventDateBlock(event)}
   ${eventPhoto(event, 'event-row-photo')}
   <div class="event-row-copy">
-    <p class="event-kicker">${escapeHTML(event.category)} <span>· ${escapeHTML(event.status)}</span></p>
-    <${heading} class="event-title">${escapeHTML(event.name)}</${heading}>
+    <p class="event-kicker">${escapeHTML(event.category)}${event.statusKey === 'open' ? '' : ` <span>· ${escapeHTML(event.status)}</span>`}</p>
+    <${heading} class="event-title"><a class="event-row-link" href="${eventHref(event)}">${escapeHTML(event.name)}</a></${heading}>
     <p class="event-where"><span class="visually-hidden">${escapeHTML(event.date)}, </span>${escapeHTML(event.location)} · ${escapeHTML(event.time)}</p>
   </div>
   <div class="event-row-side"><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}${eventCta(event)}</div>
 </article>`;
 const eventFeatureMarkup = (event) => `<article class="event-feature">
   ${eventPhoto(event, 'event-feature-photo')}
-  ${event.registrationDeadline ? `<p class="event-closing">Tutup ${escapeHTML(eventCalendarFormatters.closing.format(new Date(event.registrationDeadline)))}</p>` : ''}
-  <h3 class="event-title">${escapeHTML(event.name)}</h3>
+  ${eventClosingMarkup(event)}
+  <h3 class="event-title"><a class="event-row-link" href="${eventHref(event)}">${escapeHTML(event.name)}</a></h3>
   <p class="event-where">${escapeHTML(event.date)} · ${escapeHTML(event.location)}</p>
   ${event.description ? `<p class="event-summary-text">${escapeHTML(event.description)}</p>` : ''}
   <div class="event-feature-foot"><div><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}</div>${eventCta(event)}</div>
 </article>`;
+
+// Schedule rows grouped under a "Oktober 2026" heading; the count is kept in sync by the filters.
+const eventMonthGroupsMarkup = (events, rowOptions) => {
+  const groups = [];
+  events.forEach((event) => {
+    const label = eventCalendarFormatters.monthYear.format(new Date(event.start));
+    if (groups.at(-1)?.label !== label) groups.push({ label, events: [] });
+    groups.at(-1).events.push(event);
+  });
+  return groups.map(({ label, events: monthEvents }) => {
+    const [month, year] = [label.replace(/\s*\d{4}$/, ''), (label.match(/\d{4}$/) || [''])[0]];
+    return `<section class="event-month-group" aria-label="${escapeHTML(label)}">
+      <h2 class="event-month"><span>${escapeHTML(month)}</span> <em>${escapeHTML(year)}</em> <small data-month-count>${monthEvents.length} kegiatan</small></h2>
+      ${monthEvents.map((event) => eventRowMarkup(event, rowOptions(event))).join('')}
+    </section>`;
+  }).join('');
+};
 
 const skeletonLine = (size = '') => `<span class="loading-line${size ? ` loading-line-${size}` : ''}"></span>`;
 const eventCardSkeleton = (className = 'schedule-card') => `<article class="${className} loading-card" aria-hidden="true">
@@ -350,15 +382,17 @@ const renderScheduleEvents = async () => {
 
   if (urgentEvents.length) {
     featured.innerHTML = urgentEvents.map(eventFeatureMarkup).join('');
+    featured.classList.toggle('is-single', urgentEvents.length === 1);
     featuredSection.hidden = false;
   } else {
     featured.replaceChildren();
     featuredSection.hidden = true;
   }
 
-  grid.innerHTML = scheduleEvents.map((event) => eventRowMarkup(event, {
+  grid.innerHTML = eventMonthGroupsMarkup(scheduleEvents, (event) => ({
+    heading: 'h3',
     attributes: ` data-category="${escapeHTML(event.categoryKey)}" data-date="${escapeHTML(event.start)}" data-search="${escapeHTML(`${event.name} ${event.location} ${event.category}`.toLocaleLowerCase('id-ID'))}"`
-  })).join('');
+  }));
   grid.removeAttribute('aria-busy');
   if (count) {
     count.classList.remove('visually-hidden');
@@ -722,6 +756,12 @@ function initializeScheduleFilters() {
       const match = categoryMatches && searchMatches;
       card.classList.toggle('hidden', !match);
       if (match) visible += 1;
+    });
+    document.querySelectorAll('.event-month-group').forEach((group) => {
+      const inGroup = group.querySelectorAll('[data-category]:not(.hidden)').length;
+      group.classList.toggle('hidden', inGroup === 0);
+      const label = group.querySelector('[data-month-count]');
+      if (label) label.textContent = `${inGroup} kegiatan`;
     });
     if (scheduleCount) scheduleCount.textContent = `Menampilkan ${visible} kegiatan`;
     scheduleEmpty?.classList.toggle('hidden', visible !== 0);
@@ -1499,6 +1539,21 @@ if (registrationForm) {
     stage.hidden = false;
     stage.focus();
   };
+
+  // Event posters are dense with text, so the small ticket thumbnail opens the full poster.
+  const posterDialog = document.getElementById('eventPosterDialog');
+  document.querySelector('[data-poster-open]')?.addEventListener('click', () => {
+    const source = document.getElementById('eventImage');
+    const image = posterDialog?.querySelector('[data-poster-image]');
+    if (!posterDialog || !image || !source?.getAttribute('src')) return;
+    image.src = source.src;
+    image.alt = source.alt;
+    if (typeof posterDialog.showModal === 'function') posterDialog.showModal();
+    else window.open(source.src, '_blank', 'noopener,noreferrer');
+  });
+  posterDialog?.querySelector('[data-poster-close]')?.addEventListener('click', () => posterDialog.close());
+  // A click on the dimmed backdrop lands on the dialog element itself.
+  posterDialog?.addEventListener('click', (event) => { if (event.target === posterDialog) posterDialog.close(); });
 
   const renderSelectedEvent = () => {
     if (!selectedEvent) return;
