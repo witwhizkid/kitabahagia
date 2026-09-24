@@ -93,3 +93,9 @@ Lainnya:
 
 `SUPABASE_SERVICE_ROLE_KEY` hanya di server. Jangan pernah taruh di kode
 browser, log, atau commit.
+
+CSP di `vercel.json` sudah **enforce** (bukan Report-Only). Artinya: tidak ada
+`<script>`/`<style>` inline, atribut `style="..."`, handler `on*=`, atau gambar
+`data:`/`blob:` di HTML/CSS. Host luar baru (font, gambar, API, iframe) harus
+ditambahkan ke CSP dulu. Cek dengan memuat halaman ber-header CSP di Playwright
+dan cari pesan "Refused to" di console.
