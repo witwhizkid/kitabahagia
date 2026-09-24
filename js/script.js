@@ -98,7 +98,11 @@ const normalizeScheduleEvent = (event) => {
     completed: 'Selesai',
     cancelled: 'Dibatalkan'
   };
-  const capacity = remainingCapacity === null
+  const selection = event.registration_mode === 'selection';
+  // Selection events show no numbers publicly (the API does not send them either).
+  const capacity = selection
+    ? 'Seleksi'
+    : remainingCapacity === null
     ? 'Kuota tidak dibatasi'
     : remainingCapacity === 0
       ? 'Kuota penuh'
@@ -123,7 +127,14 @@ const normalizeScheduleEvent = (event) => {
     image: event.image_url || '',
     imageAlt: event.image_alt || `Dokumentasi ${event.title}`,
     registrationDeadline: event.registration_deadline || null,
-    deadlineLabel: formatEventDeadline(event.registration_deadline)
+    deadlineLabel: formatEventDeadline(event.registration_deadline),
+    registrationMode: selection ? 'selection' : 'first_come',
+    registrationOpensAt: event.registration_opens_at || null,
+    applicantsFull: event.applicants_full === true,
+    announcementAt: event.announcement_at || null,
+    selectionQuestion: event.selection_question || '',
+    selectionMinChars: Number(event.selection_min_chars) || 0,
+    commitmentText: event.commitment_text || ''
   };
 };
 
@@ -151,6 +162,9 @@ const eventRegistrationAvailability = (event) => {
   if (Number.isNaN(availabilityEnd) || event.statusKey !== 'open') {
     return { available: false, reason: 'unavailable' };
   }
+  if (event.applicantsFull) return { available: false, reason: 'applicants_full' };
+  const opensAt = Date.parse(event.registrationOpensAt || '');
+  if (Number.isFinite(opensAt) && opensAt > Date.now()) return { available: false, reason: 'not_yet', opensAt };
   return { available: true, reason: null };
 };
 
@@ -189,7 +203,15 @@ const eventDateBlock = (event) => {
     <span>${escapeHTML(eventCalendarFormatters.month.format(start).replace('.', ''))}</span><small>${escapeHTML(eventCalendarFormatters.weekday.format(start))}${days > 1 ? ` · ${days} hari` : ''}</small></div>`;
 };
 // Few seats left is the "siapa cepat" signal, so it gets the accent.
+const eventOpensFormatter = new Intl.DateTimeFormat('id-ID', {
+  day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
+});
 const eventSlotNote = (event) => {
+  const availability = eventRegistrationAvailability(event);
+  if (availability.reason === 'not_yet') {
+    return `<span class="event-slot is-low">Dibuka ${escapeHTML(eventOpensFormatter.format(new Date(availability.opensAt)))}</span>`;
+  }
+  if (event.applicantsFull) return '<span class="event-slot is-full">Pendaftaran ditutup</span>';
   const remaining = event.remainingCapacity;
   if (event.statusKey === 'full' || remaining === 0) return '<span class="event-slot is-full">Kuota penuh</span>';
   if (Number.isInteger(remaining) && remaining <= 5 && eventRegistrationAvailability(event).available) {
@@ -385,7 +407,7 @@ const renderScheduleEvents = async () => {
   const now = Date.now();
   const urgencyWindow = 14 * 24 * 60 * 60 * 1000;
   const urgentEvents = scheduleEvents.filter((event) => {
-    if (!event.registrationDeadline || event.statusKey !== 'open') return false;
+    if (!event.registrationDeadline || !eventRegistrationAvailability(event).available) return false;
     const remaining = new Date(event.registrationDeadline).getTime() - now;
     return remaining > 0 && remaining <= urgencyWindow;
   }).sort((a, b) => new Date(a.registrationDeadline) - new Date(b.registrationDeadline));
@@ -1325,7 +1347,19 @@ if (registrationForm) {
     registrationProgress?.classList.add('hidden');
     resultStage.querySelector('[data-result-code]').textContent = data.registration_code;
     resultStage.querySelector('[data-result-title]').textContent = data.event_title || selectedEvent?.name || '';
-    renderOnboarding(resultStage.querySelector('[data-registration-onboarding]'), data);
+    // Selection applications reuse this screen with "waiting for selection" copy.
+    const applied = data.registration_status === 'applied';
+    const announcement = Date.parse(data.announcement_at || selectedEvent?.announcementAt || '');
+    resultStage.querySelector('#freeConfirmationHeading').textContent = applied
+      ? 'Pendaftaranmu sudah kami terima.' : 'Kamu sudah terdaftar.';
+    resultStage.querySelector('[data-confirmation-copy]').textContent = applied
+      ? `Tim Kita Bahagia akan menyeleksi semua pendaftar. ${Number.isFinite(announcement)
+        ? `Hasilnya diumumkan ${announcementFormatter.format(new Date(announcement))}.`
+        : 'Hasilnya akan diumumkan oleh tim.'} Simpan kode pendaftaranmu.`
+      : 'Tempatmu sudah dikonfirmasi.';
+    const onboarding = resultStage.querySelector('[data-registration-onboarding]');
+    if (applied) onboarding.hidden = true;
+    else renderOnboarding(onboarding, data);
     resultStage.hidden = false;
     document.getElementById('registrationStatus')?.classList.add('hidden');
     markTerminalRecoveryForRefresh(data);
@@ -1565,6 +1599,57 @@ if (registrationForm) {
   // A click on the dimmed backdrop lands on the dialog element itself.
   posterDialog?.addEventListener('click', (event) => { if (event.target === posterDialog) posterDialog.close(); });
 
+  let registrationOpensTimer = null;
+  const registrationOpensFormatter = new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
+  });
+  const announcementFormatter = new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta'
+  });
+  const formatOpensCountdown = (milliseconds) => {
+    const totalSeconds = Math.ceil(milliseconds / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const clock = [Math.floor(totalSeconds % 86400 / 3600), Math.floor(totalSeconds % 3600 / 60), totalSeconds % 60]
+      .map((part) => String(part).padStart(2, '0')).join(':');
+    return days ? `${days} hari ${clock}` : clock;
+  };
+  const isSelectionEvent = () => selectedEvent?.registrationMode === 'selection';
+
+  // Selection events add their own question and commitment checkbox to the form.
+  const selectionAnswerInput = document.getElementById('selectionAnswer');
+  const selectionCommitmentInput = document.getElementById('selectionCommitment');
+  const updateSelectionCounter = () => {
+    const counter = document.getElementById('selectionAnswerCount');
+    if (!counter || !selectionAnswerInput) return;
+    // Code points, like the database's char_length (an emoji counts once).
+    const length = [...selectionAnswerInput.value.replace(/\r\n?/g, '\n').trim()].length;
+    const minimum = selectedEvent?.selectionMinChars || 0;
+    counter.textContent = minimum
+      ? (length >= minimum ? `${length} karakter · sudah cukup` : `${length} dari minimal ${minimum} karakter`)
+      : `${length} karakter`;
+    selectionAnswerInput.setCustomValidity(minimum && length < minimum
+      ? `Jawaban minimal ${minimum} karakter (sekarang ${length}).` : '');
+  };
+  const renderSelectionFields = () => {
+    const showQuestion = isSelectionEvent() && Boolean(selectedEvent.selectionQuestion);
+    const showCommitment = isSelectionEvent() && Boolean(selectedEvent.commitmentText);
+    const answerField = document.getElementById('selectionAnswerField');
+    const commitmentField = document.getElementById('selectionCommitmentField');
+    if (answerField && selectionAnswerInput) {
+      answerField.hidden = !showQuestion;
+      selectionAnswerInput.required = showQuestion;
+      document.getElementById('selectionAnswerLabel').textContent = `${selectedEvent?.selectionQuestion || ''} *`;
+      if (showQuestion) updateSelectionCounter();
+      else selectionAnswerInput.setCustomValidity('');
+    }
+    if (commitmentField && selectionCommitmentInput) {
+      commitmentField.hidden = !showCommitment;
+      selectionCommitmentInput.required = showCommitment;
+      document.getElementById('selectionCommitmentText').textContent = selectedEvent?.commitmentText || '';
+    }
+  };
+  selectionAnswerInput?.addEventListener('input', updateSelectionCounter);
+
   const renderSelectedEvent = () => {
     if (!selectedEvent) return;
     const setText = (id, value) => {
@@ -1582,9 +1667,13 @@ if (registrationForm) {
     setText('eventDate', selectedEvent.date);
     setText('eventTime', selectedEvent.time);
     setText('eventLocation', selectedEvent.location);
-    setText('eventStatus', selectedEvent.status === selectedEvent.capacity
-      ? selectedEvent.status
-      : `${selectedEvent.status} · ${selectedEvent.capacity}`);
+    // The status line must not say "dibuka" while the form below is closed or not open yet.
+    const statusReason = eventRegistrationAvailability(selectedEvent).reason;
+    const statusText = statusReason === 'not_yet' ? 'Pendaftaran belum dibuka'
+      : statusReason === 'applicants_full' ? 'Pendaftaran ditutup' : selectedEvent.status;
+    setText('eventStatus', statusText === selectedEvent.capacity
+      ? statusText
+      : `${statusText} · ${selectedEvent.capacity}`);
 
     const eventImageWrap = document.getElementById('eventImageWrap');
     const eventImage = document.getElementById('eventImage');
@@ -1670,6 +1759,7 @@ if (registrationForm) {
     document.querySelector('.registration-summary-cta')?.toggleAttribute('hidden', !registrationAvailable);
     registrationFormPanel?.classList.toggle('hidden', !registrationAvailable);
     registrationUnavailable?.classList.toggle('hidden', registrationAvailable);
+    window.clearInterval(registrationOpensTimer);
     if (registrationAvailable) {
       setRegistrationStep('data');
     } else {
@@ -1678,11 +1768,29 @@ if (registrationForm) {
         full: ['Kuota kegiatan telah terpenuhi', 'Seluruh tempat untuk kegiatan ini sudah terisi. Kamu masih dapat melihat detail kegiatan atau memilih agenda lainnya.'],
         closed: ['Pendaftaran telah ditutup', 'Waktu pendaftaran untuk kegiatan ini sudah berakhir. Kamu masih dapat melihat detail kegiatan atau memilih agenda lainnya.'],
         past: ['Kegiatan ini telah selesai', 'Kegiatan ini sudah berlangsung. Lihat detailnya atau temukan kegiatan lain yang masih tersedia.'],
-        unavailable: ['Pendaftaran belum tersedia', 'Pendaftaran untuk kegiatan ini belum dapat dilakukan. Lihat detailnya atau pilih kegiatan lainnya.']
+        unavailable: ['Pendaftaran belum tersedia', 'Pendaftaran untuk kegiatan ini belum dapat dilakukan. Lihat detailnya atau pilih kegiatan lainnya.'],
+        not_yet: ['Pendaftaran belum dibuka', ''],
+        applicants_full: ['Pendaftaran sudah ditutup', 'Pendaftaran untuk kegiatan ini sudah ditutup. Pantau halaman jadwal untuk kegiatan berikutnya.']
       }[availability.reason || 'unavailable'];
       setText('registrationUnavailableTitle', unavailableCopy[0]);
       setText('registrationUnavailableMessage', unavailableCopy[1]);
+      if (availability.reason === 'not_yet') {
+        // Counts down to the opening time, then shows the form without a reload.
+        const opensLabel = registrationOpensFormatter.format(new Date(availability.opensAt));
+        const tick = () => {
+          const left = availability.opensAt - Date.now();
+          if (left <= 0) {
+            window.clearInterval(registrationOpensTimer);
+            renderSelectedEvent();
+            return;
+          }
+          setText('registrationUnavailableMessage', `Pendaftaran dibuka ${opensLabel} WIB. Dibuka dalam ${formatOpensCountdown(left)}.`);
+        };
+        tick();
+        registrationOpensTimer = window.setInterval(tick, 1000);
+      }
     }
+    renderSelectionFields();
     if (submitButton) {
       submitButton.disabled = !registrationAvailable;
       submitButton.textContent = 'Lanjutkan';
@@ -1796,6 +1904,12 @@ if (registrationForm) {
       notes: String(formData.get('catatan') || '').trim() || null,
       consent: formData.get('consent') !== null
     };
+    // Only selection events send these, so first-come registrations stay compatible
+    // with an older create-registration function during a staged deploy.
+    if (isSelectionEvent()) {
+      payload.selection_answer = String(formData.get('selection_answer') || '').trim() || null;
+      payload.commitment = formData.get('selection_commitment') !== null;
+    }
     const response = await fetch(REGISTRATION_CONFIG.registrationEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -1818,6 +1932,9 @@ if (registrationForm) {
     REGISTRATION_CLOSED: 'Batas waktu pendaftaran kegiatan ini sudah berakhir.',
     EVENT_FULL: 'Kapasitas kegiatan ini sudah penuh.',
     ALREADY_REGISTERED: 'Email atau nomor WhatsApp ini sudah terdaftar di kegiatan ini. Jika belum membayar, lanjutkan pembayaran dari perangkat yang sama atau hubungi admin dengan kode pendaftaranmu.',
+    REGISTRATION_NOT_OPEN: 'Pendaftaran kegiatan ini belum dibuka.',
+    APPLICANTS_FULL: 'Pendaftaran kegiatan ini sudah ditutup.',
+    INVALID_ANSWER: 'Jawaban seleksi belum memenuhi syarat. Periksa panjang jawaban dan centang pernyataan komitmen.',
     PAYMENT_IN_PROGRESS: 'Pembayaran sedang disiapkan. Status akan diperbarui otomatis.',
     PAYMENT_AWAITING_CONFIRMATION: 'Pembayaran sedang menunggu konfirmasi. Status akan diperbarui otomatis.',
     PAYMENT_ALREADY_PAID: 'Pembayaran untuk pendaftaran ini sudah selesai.',
@@ -1875,6 +1992,15 @@ if (registrationForm) {
       return true;
     }
     if (status.registration_status === 'confirmed' && status.payment_status === 'not_required') {
+      if (!resumeFromDetail && !canRestoreTerminalRecovery(recovery)) {
+        clearRegistrationRecovery();
+        renderSelectedEvent();
+        return false;
+      }
+      showFreeRegistrationConfirmation(restored);
+      return true;
+    }
+    if (status.registration_status === 'applied') {
       if (!resumeFromDetail && !canRestoreTerminalRecovery(recovery)) {
         clearRegistrationRecovery();
         renderSelectedEvent();
@@ -2172,6 +2298,12 @@ if (registrationForm) {
     setDataText('[data-review-domicile]', String(formData.get('domicile') || '').trim(), registrationReview);
     setDataText('[data-review-institution]', String(formData.get('institution') || '').trim(), registrationReview);
     setDataText('[data-review-happiness]', String(formData.get('bahagia') || '').trim(), registrationReview);
+    const selectionReview = registrationReview?.querySelector('[data-review-selection]');
+    if (selectionReview) {
+      selectionReview.hidden = !(isSelectionEvent() && Boolean(selectedEvent.selectionQuestion));
+      setDataText('[data-review-selection-question]', selectedEvent.selectionQuestion || '', registrationReview);
+      setDataText('[data-review-selection-answer]', String(formData.get('selection_answer') || '').trim(), registrationReview);
+    }
     setDataText('[data-review-event-title]', selectedEvent.name, registrationReview);
     setDataText('[data-review-event-date]', `${selectedEvent.date} · ${selectedEvent.time}`, registrationReview);
     setDataText('[data-review-event-location]', selectedEvent.location, registrationReview);
@@ -2179,7 +2311,8 @@ if (registrationForm) {
     if (confirmRegistrationButton) {
       // Naming the amount here avoids a surprise on the payment step.
       confirmRegistrationButton.textContent = selectedEvent.price > 0
-        ? `Lanjut bayar ${formatEventPrice(selectedEvent.price)}` : 'Konfirmasi pendaftaran';
+        ? `Lanjut bayar ${formatEventPrice(selectedEvent.price)}`
+        : isSelectionEvent() ? 'Kirim pendaftaran' : 'Konfirmasi pendaftaran';
     }
     document.getElementById('registrationStatus')?.classList.add('hidden');
     registrationFormPanel?.classList.add('hidden');
@@ -2282,11 +2415,13 @@ if (registrationForm) {
         || typeof registration.payment_status !== 'string') throw { code: 'SERVER_ERROR' };
       const isFreeConfirmed = registration.registration_status === 'confirmed'
         && registration.payment_status === 'not_required';
+      const isApplied = registration.registration_status === 'applied'
+        && registration.payment_status === 'not_required';
       const isPaidPending = registration.registration_status === 'pending_payment'
         && registration.payment_status === 'unpaid' && registration.amount > 0;
       persistRegistrationRecovery(registration, registrationEmail);
 
-      if (isFreeConfirmed) {
+      if (isFreeConfirmed || isApplied) {
         showRegistrationMessage(`Pendaftaran ${title} sudah tercatat. Kode pendaftaran kamu: ${code}.`, 'success');
       } else if (isPaidPending) {
         const payment = await createPayment(registration, registrationEmail);
@@ -2299,8 +2434,10 @@ if (registrationForm) {
       }
       registrationCompleted = true;
       confirmRegistrationButton.textContent = 'Pendaftaran tercatat';
-      const resultStage = isFreeConfirmed ? document.getElementById('freeRegistrationConfirmation') : null;
-      if (resultStage) {
+      const resultStage = isFreeConfirmed || isApplied ? document.getElementById('freeRegistrationConfirmation') : null;
+      if (resultStage && isApplied) {
+        showFreeRegistrationConfirmation({ ...registration, event_title: title });
+      } else if (resultStage) {
         showFreeRegistrationConfirmation({
           ...registration,
           event_title: title,

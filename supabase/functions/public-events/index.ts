@@ -40,7 +40,15 @@ type EventRow = {
   payment_window_minutes: number | null;
   image_url: string | null;
   image_alt: string | null;
-  registrations: RegistrationCount[];
+  registration_mode: "first_come" | "selection";
+  registration_opens_at: string | null;
+  applicant_limit: number | null;
+  announcement_at: string | null;
+  selection_question: string | null;
+  selection_min_chars: number;
+  commitment_text: string | null;
+  seats: RegistrationCount[];
+  applicants: RegistrationCount[];
 };
 
 const eventProjection = [
@@ -64,7 +72,17 @@ const eventProjection = [
   "payment_window_minutes",
   "image_url",
   "image_alt",
-  "registrations(count)",
+  "registration_mode",
+  "registration_opens_at",
+  "applicant_limit",
+  "announcement_at",
+  "selection_question",
+  "selection_min_chars",
+  "commitment_text",
+  // Same table embedded twice. Both need their own alias: with one bare
+  // "registrations(count)" PostgREST applies the filters to the wrong embed.
+  "seats:registrations(count)",
+  "applicants:registrations(count)",
 ].join(",");
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -135,8 +153,8 @@ const zonedDateTimeToIso = (date: string, time: string | null, timeZone: string)
   return new Date(candidate).toISOString();
 };
 
-const occupiedSlots = (event: EventRow) => {
-  const count = Number(event.registrations?.[0]?.count ?? 0);
+const embeddedCount = (rows: RegistrationCount[] | undefined) => {
+  const count = Number(rows?.[0]?.count ?? 0);
   return Number.isSafeInteger(count) && count >= 0 ? count : 0;
 };
 
@@ -172,7 +190,9 @@ Deno.serve(async (request) => {
     archived_at: "is.null",
     is_demo: demo ? "eq.true" : "eq.false",
     // Same rule as create_registration: unpaid registrations hold a seat only until payment_deadline.
-    "registrations.or": `(registration_status.eq.confirmed,and(registration_status.eq.pending_payment,or(payment_deadline.is.null,payment_deadline.gt."${new Date().toISOString()}")))`,
+    "seats.or": `(registration_status.eq.confirmed,and(registration_status.eq.pending_payment,or(payment_deadline.is.null,payment_deadline.gt."${new Date().toISOString()}")))`,
+    // Same rule as create_registration's applicant_limit: every application except cancelled ones.
+    "applicants.registration_status": "neq.cancelled",
     order: "event_date.asc,start_time.asc,slug.asc",
     limit: String(slug ? 1 : limit),
   });
@@ -202,7 +222,8 @@ Deno.serve(async (request) => {
     const events = rows.map((event) => {
       const startAt = zonedDateTimeToIso(event.event_date, event.start_time, event.timezone);
       if (!startAt) throw new Error("INVALID_EVENT_TIMEZONE");
-      const used = occupiedSlots(event);
+      const selection = event.registration_mode === "selection";
+      const used = embeddedCount(event.seats);
       return {
         slug: event.slug,
         title: event.title,
@@ -216,8 +237,17 @@ Deno.serve(async (request) => {
         end_at: event.end_at ? new Date(event.end_at).toISOString() : null,
         location: event.location,
         status: event.status,
-        capacity: event.capacity,
-        remaining_capacity: event.capacity === null ? null : Math.max(event.capacity - used, 0),
+        // Selection events show no numbers publicly: neither seats nor applicants.
+        capacity: selection ? null : event.capacity,
+        remaining_capacity: selection || event.capacity === null ? null : Math.max(event.capacity - used, 0),
+        registration_mode: selection ? "selection" : "first_come",
+        registration_opens_at: event.registration_opens_at,
+        applicants_full: selection && event.applicant_limit !== null
+          && embeddedCount(event.applicants) >= event.applicant_limit,
+        announcement_at: selection ? event.announcement_at : null,
+        selection_question: selection ? event.selection_question : null,
+        selection_min_chars: selection ? event.selection_min_chars : 0,
+        commitment_text: selection ? event.commitment_text : null,
         registration_deadline: event.registration_deadline,
         price: event.price,
         payment_window_minutes: event.payment_window_minutes ?? null,

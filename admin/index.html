@@ -165,6 +165,27 @@
               </div>
             </section>
 
+            <section class="form-section" aria-labelledby="mode-heading">
+              <div class="section-heading">
+                <h2 id="mode-heading">Mode pendaftaran</h2>
+                <p>Langsung: tempat untuk pendaftar tercepat. Seleksi: tim memilih peserta dari pendaftar (khusus kegiatan gratis).</p>
+              </div>
+              <div class="form-grid">
+                <label>Mode
+                  <select id="event-registration-mode" name="registration_mode">
+                    <option value="first_come" selected>Langsung (siapa cepat)</option>
+                    <option value="selection">Seleksi</option>
+                  </select>
+                </label>
+                <label>Pendaftaran dibuka <span class="label-note">Kosongkan jika langsung dibuka</span><input id="event-opens-at" name="registration_opens_at" type="datetime-local" /></label>
+                <label data-selection-only hidden>Batas pendaftar <span class="label-note">Formulir tutup saat tercapai; tidak ditampilkan ke publik</span><input id="event-applicant-limit" name="applicant_limit" type="number" min="1" step="1" /></label>
+                <label data-selection-only hidden>Tanggal pengumuman<input id="event-announcement-at" name="announcement_at" type="datetime-local" /></label>
+                <label class="span-2" data-selection-only hidden>Pertanyaan seleksi <span class="label-note">Kosongkan jika tidak ada pertanyaan tambahan</span><textarea id="event-selection-question" name="selection_question" rows="2" maxlength="500"></textarea></label>
+                <label data-selection-only hidden>Minimal karakter jawaban<input id="event-selection-min" name="selection_min_chars" type="number" min="0" max="2000" step="1" /></label>
+                <label data-selection-only hidden>Teks komitmen <span class="label-note">Wajib dicentang pendaftar; kosongkan jika tidak perlu</span><input id="event-commitment" name="commitment_text" maxlength="300" /></label>
+              </div>
+            </section>
+
             <section class="form-section" aria-labelledby="media-heading">
               <div class="section-heading">
                 <h2 id="media-heading">Foto dan komunikasi</h2>
@@ -243,6 +264,7 @@
             <label>Status pendaftaran
               <select id="registration-status-filter">
                 <option value="">Semua status</option>
+                <option value="applied">Menunggu seleksi</option>
                 <option value="pending_payment">Menunggu pembayaran</option>
                 <option value="confirmed">Terkonfirmasi</option>
                 <option value="expired">Kedaluwarsa</option>

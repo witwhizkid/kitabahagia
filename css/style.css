@@ -2581,6 +2581,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-page .field textarea:focus { outline:3px solid rgba(122,31,43,.12); outline-offset:1px; border-color:var(--maroon); box-shadow:none; }
 .registration-page .field input[aria-invalid="true"] { border-color:var(--maroon-deep); }
 .registration-page .field-error { color:var(--maroon-deep); font-size:12px; font-weight:600; }
+.registration-page .field-counter { color:var(--muted); font-size:12px; }
 .registration-page .check-row { display:flex; align-items:flex-start; gap:11px; color:var(--muted); font-size:13px; font-weight:400; line-height:1.55; }
 .registration-page .check-row input { width:17px; min-height:17px; height:17px; margin:2px 0 0; padding:0; flex:0 0 auto; accent-color:var(--maroon); }
 .registration-page .form-actions { display:flex; align-items:center; justify-content:flex-start; gap:20px; margin-top:28px; }
@@ -5936,7 +5937,8 @@ html.home-document { overflow-x: hidden; }
 .registration-page .registration-review-participant h3 { margin: 0 0 8px; font-size: 16px; }
 .registration-page .registration-review-participant dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 20px; }
 .registration-page .registration-review-participant dl div { display: grid; grid-template-columns: 1fr; gap: 3px; padding: 9px 0; }
-.registration-page .registration-review-participant dl div:last-child { grid-column: 1 / -1; }
+.registration-page .registration-review-participant dl div:has(> [data-review-happiness]),
+.registration-page .registration-review-participant dl div[data-review-selection] { grid-column: 1 / -1; }
 .registration-page .registration-review-participant dd,
 .registration-page .registration-review-event dd { line-height: 1.5; overflow-wrap: anywhere; }
 .registration-page .registration-review-event { position: static; padding: 15px 0 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: transparent; }

@@ -68,6 +68,7 @@
   };
 
   const registrationStatusLabels = {
+    applied: "Menunggu seleksi",
     pending_payment: "Menunggu pembayaran",
     confirmed: "Terkonfirmasi",
     cancelled: "Dibatalkan",
@@ -100,6 +101,7 @@
     paid: "is-positive",
     not_required: "is-positive",
     pending_payment: "is-pending",
+    applied: "is-pending",
     unpaid: "is-pending",
     pending: "is-pending",
     full: "is-neutral",
@@ -368,7 +370,8 @@
             <span>${escapeHtml(registration.phone)}</span>
             <span><span class="data-label">Domisili</span> ${escapeHtml(registration.domicile || "-")}</span>
             <span><span class="data-label">Asal instansi</span> ${escapeHtml(registration.institution || "-")}</span>
-            <span><span class="data-label">DEFINISI BAHAGIA</span> ${escapeHtml(registration.reason || "-")}</span>
+            <span><span class="data-label">DEFINISI BAHAGIA</span> ${escapeHtml(registration.reason || "-")}</span>${registration.selection_answer ? `
+            <span><span class="data-label">JAWABAN SELEKSI</span> ${escapeHtml(registration.selection_answer)}</span>` : ""}
           </div>
           <div class="registration-event registration-cell">
             <span class="data-label">Kegiatan</span>
@@ -706,6 +709,28 @@
     $("#event-payment-window-field").hidden = Number($("#event-price").value) <= 0;
   };
 
+  // Starting values for a new selection event; the owner can rewrite them per event.
+  const SELECTION_DEFAULTS = {
+    question: "Kenapa kamu ingin ikut kegiatan ini?",
+    minChars: 150,
+    commitment: "Saya bersedia hadir penuh sesuai jadwal kegiatan.",
+    applicantsPerSeat: 4,
+  };
+  const toggleSelectionFields = () => {
+    const selection = $("#event-registration-mode").value === "selection";
+    document.querySelectorAll("[data-selection-only]").forEach((field) => { field.hidden = !selection; });
+  };
+  const applySelectionDefaults = () => {
+    if ($("#event-registration-mode").value !== "selection") return;
+    const capacity = Number($("#event-capacity").value);
+    if (!$("#event-applicant-limit").value && capacity > 0) {
+      $("#event-applicant-limit").value = capacity * SELECTION_DEFAULTS.applicantsPerSeat;
+    }
+    if (!$("#event-selection-question").value.trim()) $("#event-selection-question").value = SELECTION_DEFAULTS.question;
+    if (!$("#event-selection-min").value) $("#event-selection-min").value = SELECTION_DEFAULTS.minChars;
+    if (!$("#event-commitment").value.trim()) $("#event-commitment").value = SELECTION_DEFAULTS.commitment;
+  };
+
   const fillForm = (event = null) => {
     eventForm.reset();
     $("#form-title").textContent = event ? "Edit Kegiatan" : "Tambah Kegiatan";
@@ -727,6 +752,14 @@
     $("#event-capacity").value = event?.capacity ?? "";
     setPaymentWindow(event?.payment_window_minutes ?? 15);
     togglePaymentWindowField();
+    $("#event-registration-mode").value = event?.registration_mode || "first_come";
+    $("#event-opens-at").value = toLocalDateTime(event?.registration_opens_at);
+    $("#event-applicant-limit").value = event?.applicant_limit ?? "";
+    $("#event-announcement-at").value = toLocalDateTime(event?.announcement_at);
+    $("#event-selection-question").value = event?.selection_question || "";
+    $("#event-selection-min").value = event?.registration_mode === "selection" ? event.selection_min_chars ?? "" : "";
+    $("#event-commitment").value = event?.commitment_text || "";
+    toggleSelectionFields();
     $("#event-activities").value = event?.activities?.join("\n") || "";
     $("#event-benefits").value = event?.benefits?.join("\n") || "";
     $("#event-image-url").value = event?.image_url || "";
@@ -883,6 +916,13 @@
     image_alt: $("#event-image-alt").value.trim() || null,
     whatsapp_group_url: $("#event-whatsapp").value.trim() || null,
     is_public: $("#event-public").checked,
+    registration_mode: $("#event-registration-mode").value,
+    registration_opens_at: toIso($("#event-opens-at").value),
+    applicant_limit: $("#event-applicant-limit").value ? Number($("#event-applicant-limit").value) : null,
+    announcement_at: toIso($("#event-announcement-at").value),
+    selection_question: $("#event-selection-question").value.trim() || null,
+    selection_min_chars: Number($("#event-selection-min").value) || 0,
+    commitment_text: $("#event-commitment").value.trim() || null,
   });
 
   const storyFormPayload = () => ({
@@ -982,6 +1022,10 @@
   };
 
   $("#event-price").addEventListener("input", togglePaymentWindowField);
+  $("#event-registration-mode").addEventListener("change", () => {
+    applySelectionDefaults();
+    toggleSelectionFields();
+  });
 
   $("#event-image-file").addEventListener("change", async (event) => {
     const file = event.target.files?.[0];
@@ -1287,6 +1331,11 @@
     if (scheduleError) {
       setFeedback($("#form-feedback"), scheduleError, "error");
       $("#event-end-time").focus();
+      return;
+    }
+    if ($("#event-registration-mode").value === "selection" && Number($("#event-price").value) > 0) {
+      setFeedback($("#form-feedback"), "Mode seleksi hanya untuk kegiatan gratis. Ubah harga jadi 0 atau pilih mode Langsung.", "error");
+      $("#event-registration-mode").focus();
       return;
     }
     const payload = formPayload();

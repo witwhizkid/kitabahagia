@@ -93,6 +93,13 @@ Lainnya:
 - Kegiatan lebih dari 1 hari: admin mengisi "Tanggal selesai" + "Jam selesai"
   (digabung jadi `end_at`, tanpa perubahan skema). Publik menampilkan
   "Sabtu · 2 hari" dan "24 Okt, 09.00 – 25 Okt, 17.00 WIB".
+- Mode Seleksi (kegiatan gratis): pendaftar jadi `applied` ("Menunggu seleksi"),
+  tidak memakan kursi; admin mengatur batas pendaftar, jam buka, tanggal
+  pengumuman, pertanyaan esai + minimal karakter, dan teks komitmen per
+  kegiatan. Publik **tidak** melihat angka apa pun untuk kegiatan seleksi (cuma
+  "Seleksi" / "Pendaftaran ditutup"). Detail: "Selection mode" di
+  `supabase/README.md`. Tahap 2 (layar seleksi Terima/Cadangan/Tolak, Cek status,
+  tombol WA, CSV) dan email otomatis (butuh domain) belum dikerjakan.
 - Status "Kedaluwarsa" di admin tidak disimpan di database: `admin-registrations`
   menurunkannya (`payment_expired`) dari `pending_payment` + `payment_deadline`
   yang sudah lewat, sama dengan aturan pelepasan kursi. "Lunas" selalu menang.

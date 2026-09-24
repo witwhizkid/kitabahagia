@@ -20,14 +20,22 @@ const errorMessages: Record<string, string> = {
   EVENT_FULL: "Kapasitas kegiatan sudah penuh.",
   // Deliberately does not say whether the email or the phone number matched.
   ALREADY_REGISTERED: "Email atau nomor WhatsApp ini sudah terdaftar di kegiatan ini. Jika belum membayar, lanjutkan pembayaran dari perangkat yang sama atau hubungi admin dengan kode pendaftaranmu.",
+  REGISTRATION_NOT_OPEN: "Pendaftaran kegiatan ini belum dibuka.",
+  // Deliberately says nothing about how many people applied.
+  APPLICANTS_FULL: "Pendaftaran kegiatan ini sudah ditutup.",
+  INVALID_ANSWER: "Jawaban seleksi belum memenuhi syarat.",
 };
-const conflictErrors = new Set(["EVENT_NOT_OPEN", "REGISTRATION_CLOSED", "EVENT_FULL", "ALREADY_REGISTERED"]);
-const allowedFields = new Set(["event_slug", "name", "phone", "email", "domicile", "institution", "reason", "notes", "consent"]);
+const conflictErrors = new Set(["EVENT_NOT_OPEN", "REGISTRATION_CLOSED", "EVENT_FULL", "ALREADY_REGISTERED", "REGISTRATION_NOT_OPEN", "APPLICANTS_FULL"]);
+const allowedFields = new Set([
+  "event_slug", "name", "phone", "email", "domicile", "institution", "reason", "notes", "consent",
+  "selection_answer", "commitment",
+]);
 
 type RegistrationInput = {
   event_slug: string; name: string; phone: string; email: string;
   domicile: string | null; institution: string | null;
   reason: string; notes: string | null; consent: true;
+  selection_answer: string | null; commitment: boolean | null;
 };
 
 const normalizePhone = (value: string) => {
@@ -44,7 +52,9 @@ const validateInput = (value: unknown): RegistrationInput | null => {
     || typeof body.reason !== "string" || body.consent !== true
     || (body.domicile !== undefined && body.domicile !== null && typeof body.domicile !== "string")
     || (body.institution !== undefined && body.institution !== null && typeof body.institution !== "string")
-    || (body.notes !== undefined && body.notes !== null && typeof body.notes !== "string")) return null;
+    || (body.notes !== undefined && body.notes !== null && typeof body.notes !== "string")
+    || (body.selection_answer !== undefined && body.selection_answer !== null && typeof body.selection_answer !== "string")
+    || (body.commitment !== undefined && body.commitment !== null && typeof body.commitment !== "boolean")) return null;
 
   const eventSlug = body.event_slug.trim().toLowerCase();
   const name = body.name.trim();
@@ -55,14 +65,22 @@ const validateInput = (value: unknown): RegistrationInput | null => {
   const institution = typeof body.institution === "string" ? body.institution.trim() || null : null;
   const reason = body.reason.trim();
   const notes = typeof body.notes === "string" ? body.notes.trim() || null : null;
+  // Browsers submit textarea line breaks as CRLF; count them like the database does.
+  const selectionAnswer = typeof body.selection_answer === "string"
+    ? body.selection_answer.replace(/\r\n?/g, "\n").trim() || null : null;
+  const commitment = typeof body.commitment === "boolean" ? body.commitment : null;
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(eventSlug) || eventSlug.length > 120
     || name.length < 2 || name.length > 150 || !/^\+?\d{8,20}$/.test(phone)
     || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
     || (domicile !== null && domicile.length > 200)
     || (institution !== null && institution.length > 200)
     || reason.length < 1 || reason.length > 2000
-    || (notes !== null && notes.length > 2000)) return null;
-  return { event_slug: eventSlug, name, phone, email, domicile, institution, reason, notes, consent: true };
+    || (notes !== null && notes.length > 2000)
+    || (selectionAnswer !== null && [...selectionAnswer].length > 2000)) return null;
+  return {
+    event_slug: eventSlug, name, phone, email, domicile, institution, reason, notes, consent: true,
+    selection_answer: selectionAnswer, commitment,
+  };
 };
 
 Deno.serve(async (request) => {
@@ -93,6 +111,10 @@ Deno.serve(async (request) => {
         p_event_slug: input.event_slug, p_name: input.name, p_phone: input.phone,
         p_email: input.email, p_reason: input.reason, p_notes: input.notes, p_consent: input.consent,
         p_domicile: input.domicile, p_institution: input.institution,
+        // Sent only when present, so first-come sign-ups keep working if this function
+        // is deployed before migration 20260927010000 adds the parameters.
+        ...(input.selection_answer !== null ? { p_selection_answer: input.selection_answer } : {}),
+        ...(input.commitment !== null ? { p_commitment: input.commitment } : {}),
       }),
     });
     const result = await rpcResponse.json().catch(() => null) as Record<string, unknown> | null;

@@ -139,6 +139,8 @@
                     <div class="field"><label for="domicile">Domisili *</label><input id="domicile" name="domicile" type="text" autocomplete="address" placeholder="Tempat Tinggal kamu sekarang" maxlength="200" required></div>
                     <div class="field"><label for="institution">Asal Instansi *</label><input id="institution" name="institution" type="text" autocomplete="organization" placeholder="Nama instansi tempat kamu bekerja atau kuliah" maxlength="200" required></div>
                     <div class="field full"><label for="bahagia">Apa definisi bahagia menurut kamu? *</label><textarea id="bahagia" name="bahagia" placeholder="Tulis definisi bahagia menurutmu..." required></textarea></div>
+                    <div class="field full" id="selectionAnswerField" hidden><label for="selectionAnswer" id="selectionAnswerLabel"></label><textarea id="selectionAnswer" name="selection_answer" maxlength="2000" aria-describedby="selectionAnswerCount"></textarea><span id="selectionAnswerCount" class="field-counter" aria-live="polite"></span></div>
+                    <div class="field full" id="selectionCommitmentField" hidden><label class="check-row" for="selectionCommitment"><input id="selectionCommitment" name="selection_commitment" type="checkbox" value="ya"><span id="selectionCommitmentText"></span></label></div>
                     <div class="field full"><label class="check-row" for="consent"><input id="consent" name="consent" type="checkbox" value="setuju" required><span>Saya setuju untuk dihubungi oleh tim Kita Bahagia terkait pendaftaran ini.</span></label></div>
                   </div>
                   <div class="form-actions">
@@ -162,6 +164,7 @@
                   <div><dt>Domisili</dt><dd data-review-domicile></dd></div>
                   <div><dt>Asal Instansi</dt><dd data-review-institution></dd></div>
                   <div><dt>Definisi bahagia</dt><dd data-review-happiness></dd></div>
+                  <div data-review-selection hidden><dt data-review-selection-question></dt><dd data-review-selection-answer></dd></div>
                 </dl>
               </div>
               <aside class="registration-review-event">
@@ -227,7 +230,7 @@
         </section>
         <section class="registration-confirmation" id="freeRegistrationConfirmation" aria-labelledby="freeConfirmationHeading" tabindex="-1" hidden>
           <h2 id="freeConfirmationHeading">Kamu sudah terdaftar.</h2>
-          <p>Tempatmu sudah dikonfirmasi.</p>
+          <p data-confirmation-copy>Tempatmu sudah dikonfirmasi.</p>
           <dl><div><dt>Kode pendaftaran</dt><dd data-result-code></dd></div><div><dt>Kegiatan</dt><dd data-result-title></dd></div></dl>
           <section class="registration-onboarding" data-registration-onboarding aria-labelledby="freeOnboardingHeading" hidden>
             <h3 id="freeOnboardingHeading">Langkah berikutnya</h3>

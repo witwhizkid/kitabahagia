@@ -25,6 +25,7 @@ const registrationProjection = [
   "domicile",
   "institution",
   "reason",
+  "selection_answer",
   "registration_status",
   "payment_status",
   "payment_deadline",
@@ -34,7 +35,7 @@ const registrationProjection = [
 
 // "expired" is derived, not stored: a pending_payment row whose payment_deadline
 // has passed. It matches the lazy seat release rule, so the seat is already free.
-const registrationStatuses = new Set(["pending_payment", "confirmed", "cancelled", "expired"]);
+const registrationStatuses = new Set(["pending_payment", "confirmed", "cancelled", "expired", "applied"]);
 const paymentStatuses = new Set(["not_required", "unpaid", "pending", "paid", "failed", "expired", "refunded"]);
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 

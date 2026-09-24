@@ -127,6 +127,34 @@ Deploy order: `supabase db push` → deploy `create-registration`, `admin-events
 `public-events` → deploy the frontend (the page hides the seat-hold note when
 the field is missing).
 
+## Selection mode
+
+Migration `20260927010000_event_selection_mode.sql` (rollback in
+`supabase/rollback/`, manual checks in `supabase/tests/20260927010000_selection_mode_manual.sql`):
+
+- `events.registration_mode`: `first_come` (default, unchanged behaviour) or
+  `selection` (free events only; enforced in `create_registration` and `admin-events`).
+- `events.registration_opens_at` (both modes): `create_registration` answers
+  `REGISTRATION_NOT_OPEN` before it.
+- Selection events: an application gets `registration_status = 'applied'`,
+  `payment_status = 'not_required'` and holds **no seat**; `capacity` means the
+  number accepted later. `applicant_limit` caps non-cancelled applications
+  (`APPLICANTS_FULL`), counted while the event row is locked.
+- `selection_question` + `selection_min_chars` and `commitment_text` are asked on
+  the form; a short answer or an unticked commitment is `INVALID_ANSWER`. The
+  question, answer and commitment text are copied onto the registration.
+- An `applied` registration blocks a second application by the same email or
+  normalised WhatsApp number (`ALREADY_REGISTERED`).
+- `public-events` never exposes counts for selection events: `capacity` and
+  `remaining_capacity` are null and only `applicants_full` (boolean) is sent.
+  It embeds `registrations` twice under two aliases (`seats`, `applicants`);
+  both must stay aliased, or PostgREST applies the filters to the wrong embed.
+
+Deploy order: run the migration first (the deployed `create-registration` keeps
+working because the new RPC parameters default to null), then deploy
+`create-registration`, `public-events`, `admin-events` and `admin-registrations`,
+then the site.
+
 ## Confirmed registration onboarding
 
 `POST /functions/v1/payment-status` requires `registration_code` and the matching

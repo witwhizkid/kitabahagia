@@ -22,6 +22,8 @@ const eventProjection = [
   "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "is_demo", "payment_window_minutes",
+  "registration_mode", "registration_opens_at", "applicant_limit", "announcement_at",
+  "selection_question", "selection_min_chars", "commitment_text",
   "archived_at",
 ].join(",");
 
@@ -30,7 +32,10 @@ const writableFields = new Set([
   "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "payment_window_minutes",
+  "registration_mode", "registration_opens_at", "applicant_limit", "announcement_at",
+  "selection_question", "selection_min_chars", "commitment_text",
 ]);
+const registrationModes = new Set(["first_come", "selection"]);
 const requiredCreateFields = ["title", "slug", "event_date", "status"];
 const statuses = new Set(["draft", "open", "full", "closed", "completed", "cancelled"]);
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -114,10 +119,23 @@ const validatePayload = (input: unknown, creating: boolean) => {
           return { error: "Batas waktu bayar harus 10 sampai 1440 menit." } as const;
         }
         data[field] = value;
+      } else if (field === "registration_mode") {
+        if (typeof value !== "string" || !registrationModes.has(value)) return { error: "Mode pendaftaran tidak valid." } as const;
+        data[field] = value;
+      } else if (field === "applicant_limit") {
+        if (value !== null && (!Number.isInteger(value) || Number(value) < 1 || Number(value) > 100000)) {
+          return { error: "Batas pendaftar harus bilangan bulat positif." } as const;
+        }
+        data[field] = value;
+      } else if (field === "selection_min_chars") {
+        if (!Number.isInteger(value) || Number(value) < 0 || Number(value) > 2000) {
+          return { error: "Minimal karakter jawaban harus 0 sampai 2000." } as const;
+        }
+        data[field] = value;
       } else if (field === "is_public") {
         if (typeof value !== "boolean") return { error: "Status tampil di website tidak valid." } as const;
         data[field] = value;
-      } else if (["description", "registration_description", "category", "category_key", "start_time", "end_at", "location", "registration_deadline", "image_url", "image_alt", "whatsapp_group_url"].includes(field)) {
+      } else if (["description", "registration_description", "category", "category_key", "start_time", "end_at", "location", "registration_deadline", "image_url", "image_alt", "whatsapp_group_url", "registration_opens_at", "announcement_at", "selection_question", "commitment_text"].includes(field)) {
         data[field] = cleanNullableText(value);
       } else if (typeof value === "string") data[field] = value.trim();
       else return { error: `${field} tidak valid.` } as const;
@@ -140,6 +158,14 @@ const validatePayload = (input: unknown, creating: boolean) => {
   }
   if (data.end_at !== undefined && !validIsoTimestamp(data.end_at)) return { error: "Waktu selesai tidak valid." } as const;
   if (data.registration_deadline !== undefined && !validIsoTimestamp(data.registration_deadline)) return { error: "Batas pendaftaran tidak valid." } as const;
+  if (data.registration_opens_at !== undefined && !validIsoTimestamp(data.registration_opens_at)) return { error: "Jam buka pendaftaran tidak valid." } as const;
+  if (data.announcement_at !== undefined && !validIsoTimestamp(data.announcement_at)) return { error: "Tanggal pengumuman tidak valid." } as const;
+  if (typeof data.selection_question === "string" && data.selection_question.length > 500) return { error: "Pertanyaan seleksi maksimal 500 karakter." } as const;
+  if (typeof data.commitment_text === "string" && data.commitment_text.length > 300) return { error: "Teks komitmen maksimal 300 karakter." } as const;
+  // Only checked when the form sends both (it always does); the database has no such constraint.
+  if (data.registration_mode === "selection" && typeof data.price === "number" && data.price > 0) {
+    return { error: "Mode seleksi hanya untuk kegiatan gratis." } as const;
+  }
   if (data.status !== undefined && (typeof data.status !== "string" || !statuses.has(data.status))) return { error: "Status kegiatan tidak valid." } as const;
   if (data.timezone !== undefined) {
     if (typeof data.timezone !== "string" || !data.timezone || data.timezone.length > 64) return { error: "Zona waktu tidak valid." } as const;
