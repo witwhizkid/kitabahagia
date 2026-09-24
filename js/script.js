@@ -110,6 +110,7 @@ const normalizeScheduleEvent = (event) => {
     status: statusLabels[statusKey] || event.status || 'Status belum tersedia',
     statusKey,
     capacity,
+    remainingCapacity: event.remaining_capacity ?? null,
     price: Number(event.price) || 0,
     image: event.image_url || '',
     imageAlt: event.image_alt || `Dokumentasi ${event.title}`,
@@ -150,6 +151,53 @@ const eventRegistrationLink = (event, className, eligibleLabel, unavailableLabel
   href="pendaftaran.html?event=${encodeURIComponent(event.slug)}">${eventRegistrationAvailability(event).available
     ? eligibleLabel : unavailableLabel}</a>`;
 
+// Editorial event layouts shared by the schedule page and the homepage.
+const eventCalendarFormatters = {
+  day: new Intl.DateTimeFormat('id-ID', { day: 'numeric', timeZone: 'Asia/Jakarta' }),
+  month: new Intl.DateTimeFormat('id-ID', { month: 'short', timeZone: 'Asia/Jakarta' }),
+  weekday: new Intl.DateTimeFormat('id-ID', { weekday: 'long', timeZone: 'Asia/Jakarta' }),
+  closing: new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', timeZone: 'Asia/Jakarta' })
+};
+const eventDateBlock = (event) => {
+  const start = new Date(event.start);
+  return `<div class="event-date" aria-hidden="true"><b>${eventCalendarFormatters.day.format(start)}</b>
+    <span>${escapeHTML(eventCalendarFormatters.month.format(start).replace('.', ''))}</span><small>${escapeHTML(eventCalendarFormatters.weekday.format(start))}</small></div>`;
+};
+// Few seats left is the "siapa cepat" signal, so it gets the accent.
+const eventSlotNote = (event) => {
+  const remaining = event.remainingCapacity;
+  if (event.statusKey === 'full' || remaining === 0) return '<span class="event-slot is-full">Kuota penuh</span>';
+  if (Number.isInteger(remaining) && remaining <= 5 && eventRegistrationAvailability(event).available) {
+    return `<span class="event-slot is-low">Tinggal ${remaining} slot</span>`;
+  }
+  return `<span class="event-slot">${escapeHTML(event.capacity)}</span>`;
+};
+const eventPhoto = (event, className) => `<figure class="${className}${event.image ? '' : ' is-empty'}">${event.image
+  ? `<img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}" loading="lazy" decoding="async">` : ''}</figure>`;
+const eventCta = (event) => {
+  const { available } = eventRegistrationAvailability(event);
+  return eventRegistrationLink(event, `event-cta${available ? '' : ' is-quiet'}`,
+    'Daftar <span aria-hidden="true">&rarr;</span>', 'Lihat detail <span aria-hidden="true">&rarr;</span>');
+};
+const eventRowMarkup = (event, { heading = 'h2', attributes = '' } = {}) => `<article class="event-row"${attributes}>
+  ${eventDateBlock(event)}
+  ${eventPhoto(event, 'event-row-photo')}
+  <div class="event-row-copy">
+    <p class="event-kicker">${escapeHTML(event.category)} <span>· ${escapeHTML(event.status)}</span></p>
+    <${heading} class="event-title">${escapeHTML(event.name)}</${heading}>
+    <p class="event-where"><span class="visually-hidden">${escapeHTML(event.date)}, </span>${escapeHTML(event.location)} · ${escapeHTML(event.time)}</p>
+  </div>
+  <div class="event-row-side"><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}${eventCta(event)}</div>
+</article>`;
+const eventFeatureMarkup = (event) => `<article class="event-feature">
+  ${eventPhoto(event, 'event-feature-photo')}
+  ${event.registrationDeadline ? `<p class="event-closing">Tutup ${escapeHTML(eventCalendarFormatters.closing.format(new Date(event.registrationDeadline)))}</p>` : ''}
+  <h3 class="event-title">${escapeHTML(event.name)}</h3>
+  <p class="event-where">${escapeHTML(event.date)} · ${escapeHTML(event.location)}</p>
+  ${event.description ? `<p class="event-summary-text">${escapeHTML(event.description)}</p>` : ''}
+  <div class="event-feature-foot"><div><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}</div>${eventCta(event)}</div>
+</article>`;
+
 const skeletonLine = (size = '') => `<span class="loading-line${size ? ` loading-line-${size}` : ''}"></span>`;
 const eventCardSkeleton = (className = 'schedule-card') => `<article class="${className} loading-card" aria-hidden="true">
   <div class="loading-media"></div>
@@ -188,7 +236,7 @@ const renderHomepageEvents = async () => {
   };
 
   homepageEventsLoading = true;
-  list.innerHTML = `${eventCardSkeleton('home-upcoming-event featured')}<div class="home-upcoming-supporting">${eventCardSkeleton('home-upcoming-event')}${eventCardSkeleton('home-upcoming-event')}</div>`;
+  list.innerHTML = `${eventCardSkeleton('event-row')}${eventCardSkeleton('event-row')}${eventCardSkeleton('event-row')}`;
   list.hidden = false;
   list.setAttribute('aria-busy', 'true');
   empty.hidden = true;
@@ -215,22 +263,7 @@ const renderHomepageEvents = async () => {
     return;
   }
 
-  const eventMarkup = (event, featured = false) => `<article class="home-upcoming-event${featured ? ' featured' : ''} reveal visible" data-upcoming-event>
-    <figure><img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}"></figure>
-    <div class="home-upcoming-event-copy">
-      <div class="home-upcoming-event-topline"><span>${escapeHTML(event.category)}</span><span>${escapeHTML(event.status)}</span></div>
-      <h3>${escapeHTML(event.name)}</h3>
-      <dl class="home-upcoming-meta">
-        <div><dt>Tanggal &amp; waktu</dt><dd>${escapeHTML(event.date)} · ${escapeHTML(event.time)}</dd></div>
-        <div><dt>Lokasi</dt><dd>${escapeHTML(event.location)}</dd></div>
-        <div><dt>Harga</dt><dd>${formatEventPrice(event.price)}</dd></div>
-      </dl>
-      ${eventRegistrationLink(event, 'home-upcoming-register', 'Daftar sekarang &rarr;', 'Lihat detail &rarr;')}
-    </div>
-  </article>`;
-
-  list.innerHTML = `${eventMarkup(events[0], true)}<div class="home-upcoming-supporting">
-    ${events.slice(1).map((event) => eventMarkup(event)).join('')}</div>`;
+  list.innerHTML = events.map((event) => eventRowMarkup(event, { heading: 'h3' })).join('');
   list.hidden = false;
   list.removeAttribute('aria-busy');
   empty.hidden = true;
@@ -275,7 +308,7 @@ const renderScheduleEvents = async () => {
   }
   featuredSection.hidden = true;
   empty?.classList.add('hidden');
-  grid.innerHTML = `${eventCardSkeleton()}${eventCardSkeleton()}${eventCardSkeleton()}${eventCardSkeleton()}`;
+  grid.innerHTML = `${eventCardSkeleton('event-row')}${eventCardSkeleton('event-row')}${eventCardSkeleton('event-row')}`;
   grid.setAttribute('aria-busy', 'true');
 
   let scheduleEvents;
@@ -307,19 +340,6 @@ const renderScheduleEvents = async () => {
     return;
   }
 
-  const eventImage = (event, className) => `<figure class="${className}${event.image ? '' : ' is-empty'}">${event.image
-    ? `<img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}" loading="lazy" decoding="async">`
-    : ''}</figure>`;
-  const eventMeta = (event) => `<dl class="schedule-meta">
-    <div><dt>Tanggal &amp; waktu</dt><dd>${escapeHTML(event.date)} · ${escapeHTML(event.time)}</dd></div>
-    <div><dt>Lokasi</dt><dd>${escapeHTML(event.location)}</dd></div>
-    <div><dt>Harga</dt><dd>${formatEventPrice(event.price)}</dd></div>
-  </dl>`;
-  const eventTopline = (event) => `<div class="schedule-event-head">
-    <span class="schedule-category">${escapeHTML(event.category)}</span>
-    <span class="status-label ${event.statusKey === 'full' || event.statusKey === 'closed' ? 'limited' : 'available'}">${escapeHTML(event.status)}</span>
-  </div>`;
-
   const now = Date.now();
   const urgencyWindow = 14 * 24 * 60 * 60 * 1000;
   const urgentEvents = scheduleEvents.filter((event) => {
@@ -329,35 +349,16 @@ const renderScheduleEvents = async () => {
   }).sort((a, b) => new Date(a.registrationDeadline) - new Date(b.registrationDeadline));
 
   if (urgentEvents.length) {
-    featured.innerHTML = urgentEvents.map((event) => `<article class="schedule-urgent-card reveal visible">
-      ${eventImage(event, 'schedule-urgent-image')}
-      <div class="schedule-urgent-content">
-        ${eventTopline(event)}
-        <h3>${escapeHTML(event.name)}</h3>
-        <p>${escapeHTML(event.description)}</p>
-        <p class="schedule-deadline"><span>Batas pendaftaran</span><strong>${escapeHTML(event.deadlineLabel)}</strong></p>
-        ${eventMeta(event)}
-        ${eventRegistrationLink(event, 'schedule-register', 'Lihat kegiatan <span aria-hidden="true">→</span>', 'Lihat detail <span aria-hidden="true">→</span>')}
-      </div>
-    </article>`).join('');
+    featured.innerHTML = urgentEvents.map(eventFeatureMarkup).join('');
     featuredSection.hidden = false;
   } else {
     featured.replaceChildren();
     featuredSection.hidden = true;
   }
 
-  grid.innerHTML = scheduleEvents.map((event) => `<article class="schedule-card reveal visible" data-category="${escapeHTML(event.categoryKey)}" data-date="${escapeHTML(event.start)}" data-search="${escapeHTML(`${event.name} ${event.location} ${event.category}`.toLocaleLowerCase('id-ID'))}">
-    ${eventImage(event, 'schedule-card-image')}
-    <div class="schedule-card-content">
-    <div class="schedule-event">
-      ${eventTopline(event)}
-      <h2>${escapeHTML(event.name)}</h2>
-      <p>${escapeHTML(event.description)}</p>
-    </div>
-    ${eventMeta(event)}
-    <div class="schedule-card-footer"><strong>${escapeHTML(event.capacity)}</strong>${eventRegistrationLink(event, 'schedule-register', 'Lihat kegiatan <span aria-hidden="true">→</span>', 'Lihat detail <span aria-hidden="true">→</span>')}</div>
-    </div>
-  </article>`).join('');
+  grid.innerHTML = scheduleEvents.map((event) => eventRowMarkup(event, {
+    attributes: ` data-category="${escapeHTML(event.categoryKey)}" data-date="${escapeHTML(event.start)}" data-search="${escapeHTML(`${event.name} ${event.location} ${event.category}`.toLocaleLowerCase('id-ID'))}"`
+  })).join('');
   grid.removeAttribute('aria-busy');
   if (count) {
     count.classList.remove('visually-hidden');
