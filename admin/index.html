@@ -183,6 +183,9 @@
                 <label class="span-2" data-selection-only hidden>Pertanyaan seleksi <span class="label-note">Kosongkan jika tidak ada pertanyaan tambahan</span><textarea id="event-selection-question" name="selection_question" rows="2" maxlength="500"></textarea></label>
                 <label data-selection-only hidden>Minimal karakter jawaban<input id="event-selection-min" name="selection_min_chars" type="number" min="0" max="2000" step="1" /></label>
                 <label data-selection-only hidden>Teks komitmen <span class="label-note">Wajib dicentang pendaftar; kosongkan jika tidak perlu</span><input id="event-commitment" name="commitment_text" maxlength="300" /></label>
+                <label class="span-2" data-selection-only hidden>Pesan WhatsApp untuk peserta diterima<textarea id="event-wa-accepted" name="wa_message_accepted" rows="3" maxlength="1000"></textarea></label>
+                <label class="span-2" data-selection-only hidden>Pesan WhatsApp untuk peserta cadangan<textarea id="event-wa-waitlisted" name="wa_message_waitlisted" rows="3" maxlength="1000"></textarea></label>
+                <label class="span-2" data-selection-only hidden>Pesan WhatsApp untuk peserta tidak lolos<textarea id="event-wa-rejected" name="wa_message_rejected" rows="3" maxlength="1000"></textarea></label>
               </div>
             </section>
 
@@ -242,7 +245,7 @@
             <div>
               <p class="eyebrow">Data peserta</p>
               <h1 id="registrations-title">Pendaftar</h1>
-              <p>Lihat pendaftar berdasarkan kegiatan dan status. Data di halaman ini hanya dapat dibaca.</p>
+              <p>Lihat data pendaftar dan, untuk kegiatan mode Seleksi, tinjau serta putuskan hasilnya.</p>
             </div>
             <p class="registrant-total"><strong id="registrations-total">0</strong><span>pendaftar</span></p>
           </div>
@@ -266,7 +269,9 @@
                 <option value="">Semua status</option>
                 <option value="applied">Menunggu seleksi</option>
                 <option value="pending_payment">Menunggu pembayaran</option>
-                <option value="confirmed">Terkonfirmasi</option>
+                <option value="confirmed">Terkonfirmasi / diterima</option>
+                <option value="waitlisted">Cadangan</option>
+                <option value="rejected">Tidak lolos</option>
                 <option value="expired">Kedaluwarsa</option>
                 <option value="cancelled">Dibatalkan</option>
               </select>
@@ -288,10 +293,42 @@
           </form>
 
           <p id="registrations-feedback" class="feedback" role="status" aria-live="polite"></p>
+          <section id="selection-tools" class="selection-tools" aria-label="Alat seleksi" hidden>
+            <p id="selection-summary" class="selection-summary"></p>
+            <p id="selection-announcement" class="selection-announcement"></p>
+            <div class="selection-actions">
+              <label class="selection-select-all"><input id="selection-select-all" type="checkbox" /> Pilih semua yang tampil</label>
+              <button class="button button-secondary" type="button" data-selection-bulk="accepted">Terima dipilih</button>
+              <button class="button button-secondary" type="button" data-selection-bulk="waitlisted">Cadangkan dipilih</button>
+              <button class="button button-secondary" type="button" data-selection-bulk="rejected">Tolak dipilih</button>
+              <button id="selection-export" class="button button-secondary" type="button">Ekspor CSV</button>
+            </div>
+          </section>
           <div id="registrations-loading" class="state-panel" role="status" hidden>Memuat pendaftar…</div>
           <div id="registrations-empty" class="state-panel" hidden>Tidak ada pendaftar yang cocok dengan filter ini.</div>
           <div id="registrations-list" class="registration-list" hidden></div>
         </section>
+
+        <dialog id="applicant-dialog" class="applicant-dialog" aria-labelledby="applicant-dialog-title">
+          <div class="applicant-dialog-panel">
+            <header class="applicant-dialog-header">
+              <div><p class="eyebrow">Detail pendaftar</p><h2 id="applicant-dialog-title"></h2></div>
+              <button class="applicant-dialog-close" type="button" aria-label="Tutup detail pendaftar">×</button>
+            </header>
+            <div id="applicant-dialog-content" class="applicant-dialog-content"></div>
+            <p id="applicant-dialog-feedback" class="feedback" role="status" aria-live="polite"></p>
+            <footer class="applicant-dialog-footer">
+              <div class="applicant-dialog-navigation"><button class="button button-secondary" type="button" data-applicant-nav="previous">Sebelumnya</button><button class="button button-secondary" type="button" data-applicant-nav="next">Berikutnya</button></div>
+              <div class="applicant-dialog-actions">
+                <button class="button button-primary" type="button" data-applicant-decision="accepted">Terima</button>
+                <button class="button button-secondary" type="button" data-applicant-decision="waitlisted">Cadangan</button>
+                <button class="button button-secondary" type="button" data-applicant-decision="rejected">Tolak</button>
+                <button class="button button-secondary" type="button" data-applicant-decision="applied">Kembalikan ke menunggu</button>
+                <button class="button button-secondary" type="button" data-applicant-whatsapp hidden>Kirim WhatsApp hasil</button>
+              </div>
+            </footer>
+          </div>
+        </dialog>
 
         <section id="stories-view" class="content-view" aria-labelledby="stories-title" hidden>
           <div class="view-heading">

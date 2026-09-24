@@ -199,6 +199,36 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .registration-person > span:not(.data-label), .registration-event > span:not(.data-label), .registration-row time { color: var(--muted); font-size: .82rem; overflow-wrap: anywhere; }
 .registration-code { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 8px; }
 .registration-statuses { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.registration-row.is-selection-row { position: relative; padding-left: 38px; }
+.registration-select { position: absolute; top: 21px; left: 0; display: block; }
+.registration-select input, .selection-select-all input { width: 20px; min-height: 20px; margin: 0; accent-color: var(--maroon); }
+.selection-answer-line { min-width: 0; width: 100%; display: flex; align-items: center; gap: 8px; }
+.selection-answer-line .data-label { flex: 0 0 auto; }
+.selection-answer-text { min-width: 0; overflow: hidden; color: var(--muted); font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+.applicant-detail-button { flex: 0 0 auto; min-height: 32px; font-size: .82rem; }
+.applicant-history { color: var(--maroon); font-size: .78rem; font-weight: 700; }
+.selection-tools { margin: 14px 0 20px; padding: 18px; border: 1px solid var(--line); background: var(--paper); }
+.selection-summary { margin: 0; color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+.selection-announcement { margin: 6px 0 14px; color: var(--muted); font-size: .84rem; }
+.selection-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.selection-actions .button { min-height: 42px; padding: 8px 12px; }
+.selection-select-all { display: flex; grid-template-columns: auto 1fr; align-items: center; gap: 8px; margin-right: auto; cursor: pointer; }
+.applicant-dialog { position: fixed; inset: 0 0 0 auto; width: min(680px, 100%); max-width: 100%; height: 100dvh; max-height: 100dvh; margin: 0; padding: 0; border: 0; color: var(--ink); background: transparent; overflow: visible; }
+.applicant-dialog[open] { animation: applicant-dialog-in 220ms ease both; }
+.applicant-dialog::backdrop { background: rgba(36,31,29,.48); }
+.applicant-dialog-panel { height: 100%; display: flex; flex-direction: column; padding: 28px clamp(20px, 4vw, 40px); background: var(--paper); box-shadow: -16px 0 48px rgba(36,31,29,.16); overflow-y: auto; }
+.applicant-dialog-header { display: flex; align-items: start; justify-content: space-between; gap: 18px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.applicant-dialog-header h2 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.3rem); overflow-wrap: anywhere; }
+.applicant-dialog-close { width: 44px; height: 44px; flex: 0 0 auto; border: 1px solid var(--line); color: var(--maroon); background: transparent; font-size: 1.6rem; cursor: pointer; }
+.applicant-dialog-content { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; padding: 22px 0; }
+.applicant-detail-field { min-width: 0; }
+.applicant-detail-field h3 { margin: 0 0 6px; color: var(--muted); font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; }
+.applicant-detail-field p { margin: 0; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-wrap; }
+.applicant-dialog-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line); }
+.applicant-dialog-navigation, .applicant-dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.applicant-dialog-navigation { justify-content: space-between; margin-bottom: 12px; }
+.applicant-dialog-navigation .button, .applicant-dialog-actions .button { min-height: 44px; padding: 9px 12px; }
+@keyframes applicant-dialog-in { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
 
 .story-list { border-top: 1px solid var(--line); }
 .story-row { display: grid; grid-template-columns: minmax(240px, 1.4fr) minmax(130px, .55fr) minmax(160px, .7fr) auto; gap: 20px; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--line); }
@@ -244,6 +274,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
   .form-section { grid-template-columns: 1fr; gap: 22px; }
   .registration-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .registration-lifecycle-tabs button { flex: 1; }
+  .selection-actions .button { flex: 1 1 150px; }
+  .selection-select-all { flex: 1 0 100%; }
   .registration-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .story-row { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
   .story-row-meta { grid-column: 1; }
@@ -462,7 +494,13 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
   .registration-filters label { grid-column: 1; }
   .registration-filters .button { min-width: 0; min-height: 44px; }
   .registration-row { grid-template-columns: 1fr; gap: 16px; padding: 18px 0; }
+  .registration-row.is-selection-row { padding-left: 34px; }
+  .registration-select { top: 19px; }
   .registration-statuses { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .applicant-dialog { inset: 0; width: 100%; height: 100dvh; }
+  .applicant-dialog-panel { padding: 20px 18px max(20px, env(safe-area-inset-bottom)); }
+  .applicant-dialog-content { grid-template-columns: minmax(0, 1fr); gap: 15px; }
+  .applicant-dialog-navigation .button, .applicant-dialog-actions .button { flex: 1 1 44%; }
   .admin-list-heading { display: block; }
   .admin-list-heading p { text-align: left; }
   .admin-invite-form { grid-template-columns: 1fr; }
@@ -477,4 +515,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 
 @media (prefers-reduced-motion: no-preference) {
   .button, .edit-button, input, textarea, select { transition: background-color 160ms ease, border-color 160ms ease; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .applicant-dialog[open] { animation: none; }
 }

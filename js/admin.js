@@ -39,6 +39,8 @@
   let admins = [];
   let currentRole = "";
   let registrationLifecycle = "active";
+  let selectionOverview = null;
+  let applicantDialogIndex = -1;
   let imageUploading = false;
   let storyImageUploading = false;
   let storySlugManuallyEdited = false;
@@ -71,6 +73,8 @@
     applied: "Menunggu seleksi",
     pending_payment: "Menunggu pembayaran",
     confirmed: "Terkonfirmasi",
+    waitlisted: "Cadangan",
+    rejected: "Tidak lolos",
     cancelled: "Dibatalkan",
     expired: "Kedaluwarsa",
   };
@@ -102,6 +106,7 @@
     not_required: "is-positive",
     pending_payment: "is-pending",
     applied: "is-pending",
+    waitlisted: "is-pending",
     unpaid: "is-pending",
     pending: "is-pending",
     full: "is-neutral",
@@ -109,6 +114,7 @@
     completed: "is-neutral",
     draft: "is-neutral",
     cancelled: "is-negative",
+    rejected: "is-negative",
     failed: "is-negative",
     expired: "is-negative",
     refunded: "is-neutral",
@@ -178,7 +184,11 @@
       showLogin("Sesi tidak valid atau akun ini belum diberi akses admin.");
       throw new Error("Akses admin tidak diizinkan.");
     }
-    if (!response.ok) throw new Error(data.error?.message || "Permintaan belum dapat diproses.");
+    if (!response.ok) {
+      const error = new Error(data.error?.message || "Permintaan belum dapat diproses.");
+      error.code = data.error?.code || "";
+      throw error;
+    }
     return data;
   };
 
@@ -198,6 +208,12 @@
     Object.entries(params).forEach(([key, value]) => { if (value) url.searchParams.set(key, value); });
     return authorizedRequest(url, { method: "GET" });
   };
+
+  const selectionDecisionRequest = (registration_codes, decision) => authorizedRequest(adminRegistrationsUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ registration_codes, decision }),
+  });
 
   const adminUsersRequest = (method = "GET", body) => authorizedRequest(adminUsersUrl, {
     method,
@@ -351,6 +367,31 @@
     }).format(new Date(iso));
   };
 
+  const selectedRegistrationEvent = () => events.find((event) => event.slug === $("#registration-event-filter").value) || null;
+  const selectionEnabled = () => selectedRegistrationEvent()?.registration_mode === "selection";
+
+  const renderSelectionTools = () => {
+    const tools = $("#selection-tools");
+    const event = selectedRegistrationEvent();
+    const active = event?.registration_mode === "selection";
+    tools.hidden = !active;
+    if (!active) {
+      selectionOverview = null;
+      return;
+    }
+    const counts = selectionOverview?.counts || {};
+    const accepted = Number(counts.accepted) || 0;
+    const capacity = event.capacity === null || event.capacity === undefined ? "∞" : event.capacity;
+    $("#selection-summary").textContent = `Diterima ${accepted}/${capacity} · Cadangan ${Number(counts.waitlisted) || 0} · Tidak lolos ${Number(counts.rejected) || 0} · Menunggu ${Number(counts.applied) || 0}`;
+    const announcement = $("#selection-announcement");
+    const announcementAt = event.announcement_at ? new Date(event.announcement_at) : null;
+    if (!announcementAt || Number.isNaN(announcementAt.getTime())) announcement.textContent = "Waktu pengumuman belum ditentukan.";
+    else announcement.textContent = Date.now() < announcementAt.getTime()
+      ? `Hasil belum terlihat oleh pendaftar · diumumkan ${formatDateTime(event.announcement_at)}`
+      : `Hasil sudah terlihat oleh pendaftar sejak ${formatDateTime(event.announcement_at)}`;
+    $("#selection-select-all").checked = false;
+  };
+
   const renderRegistrations = (total) => {
     $("#registrations-loading").hidden = true;
     $("#registrations-empty").hidden = registrations.length > 0;
@@ -361,17 +402,24 @@
       const linkedEvent = registration.events || {};
       const registrationStatus = registration.payment_expired ? "expired" : registration.registration_status;
       const paymentStatus = registration.payment_expired ? "expired" : registration.payment_status;
+      const historyCount = Number(selectionOverview?.history?.[registration.registration_code]) || 0;
+      const isSelectionEvent = selectionEnabled();
+      const selectionStatus = isSelectionEvent && registrationStatus === "confirmed"
+        ? "Diterima" : registrationStatusLabels[registrationStatus] || registrationStatus;
       return `
-        <article class="registration-row">
+        <article class="registration-row${isSelectionEvent ? " is-selection-row" : ""}" data-registration-code="${escapeHtml(registration.registration_code)}">
+          ${isSelectionEvent ? `<label class="registration-select"><input type="checkbox" data-applicant-select value="${escapeHtml(registration.registration_code)}" aria-label="Pilih ${escapeHtml(registration.name)}" /></label>` : ""}
           <div class="registration-person registration-cell">
             <span class="data-label">Pendaftar</span>
             <strong>${escapeHtml(registration.name)}</strong>
             <span>${escapeHtml(registration.email)}</span>
             <span>${escapeHtml(registration.phone)}</span>
+            ${isSelectionEvent && !registration.selection_answer ? `<button class="text-button applicant-detail-button" type="button" data-applicant-detail="${escapeHtml(registration.registration_code)}">Buka detail</button>` : ""}
             <span><span class="data-label">Domisili</span> ${escapeHtml(registration.domicile || "-")}</span>
             <span><span class="data-label">Asal instansi</span> ${escapeHtml(registration.institution || "-")}</span>
             <span><span class="data-label">DEFINISI BAHAGIA</span> ${escapeHtml(registration.reason || "-")}</span>${registration.selection_answer ? `
-            <span><span class="data-label">JAWABAN SELEKSI</span> ${escapeHtml(registration.selection_answer)}</span>` : ""}
+            <span class="selection-answer-line"><span class="data-label">JAWABAN SELEKSI</span><span class="selection-answer-text">${escapeHtml(registration.selection_answer)}</span><button class="text-button applicant-detail-button" type="button" data-applicant-detail="${escapeHtml(registration.registration_code)}">Detail</button></span>` : ""}
+            ${isSelectionEvent ? `<span class="applicant-history">${historyCount ? `Pernah ikut ${historyCount}×` : "Peserta baru"}</span>` : ""}
           </div>
           <div class="registration-event registration-cell">
             <span class="data-label">Kegiatan</span>
@@ -379,7 +427,7 @@
             <span class="registration-code"><span class="data-label">Kode</span>${escapeHtml(registration.registration_code)}</span>
           </div>
           <div class="registration-statuses">
-            <span class="data-group"><span class="data-label">Pendaftaran</span><span class="status-token ${statusTone(registrationStatus)}">${escapeHtml(registrationStatusLabels[registrationStatus] || registrationStatus)}</span></span>
+            <span class="data-group"><span class="data-label">Pendaftaran</span><span class="status-token ${statusTone(registrationStatus)}">${escapeHtml(selectionStatus)}</span></span>
             <span class="data-group"><span class="data-label">Pembayaran</span><span class="status-token ${statusTone(paymentStatus)}">${escapeHtml(paymentStatusLabels[paymentStatus] || paymentStatus)}</span></span>
           </div>
           <span class="registration-date"><span class="data-label">Terdaftar</span><time datetime="${escapeHtml(registration.created_at)}">${escapeHtml(formatDateTime(registration.created_at))}</time>${registration.payment_expired && registration.payment_deadline ? `
@@ -387,6 +435,10 @@
         </article>
       `;
     }).join("");
+    renderSelectionTools();
+    const selectAll = $("#selection-select-all");
+    selectAll.checked = false;
+    selectAll.disabled = registrations.length === 0 || !selectionEnabled();
   };
 
   const loadRegistrations = async () => {
@@ -401,6 +453,7 @@
     const cached = tabCache.registrations.get(cacheKey);
     if (cached) {
       registrations = cached.registrations;
+      selectionOverview = cached.selection || null;
       renderRegistrations(cached.total);
       if (Date.now() - cached.loadedAt < adminCacheTtl) return;
     }
@@ -414,8 +467,9 @@
     const request = registrationRequest(params)
       .then((data) => {
         registrations = Array.isArray(data.registrations) ? data.registrations : [];
+        selectionOverview = data.selection || null;
         const total = Number(data.total) || 0;
-        tabCache.registrations.set(cacheKey, { registrations, total, loadedAt: Date.now() });
+        tabCache.registrations.set(cacheKey, { registrations, total, selection: selectionOverview, loadedAt: Date.now() });
         renderRegistrations(total);
         const otherLifecycle = registrationLifecycle === "active" ? "history" : "active";
         const otherParams = { ...params, lifecycle: otherLifecycle };
@@ -433,6 +487,187 @@
     tabCache.registrations.set(`${cacheKey}:request`, request);
     return request;
   };
+
+  const applicantDialog = $("#applicant-dialog");
+  const applicantDialogContent = $("#applicant-dialog-content");
+  const appendApplicantField = (label, value) => {
+    const item = document.createElement("section");
+    item.className = "applicant-detail-field";
+    const heading = document.createElement("h3");
+    heading.textContent = label;
+    const content = document.createElement("p");
+    content.textContent = value || "-";
+    item.append(heading, content);
+    applicantDialogContent.append(item);
+  };
+
+  const currentDialogApplicant = () => registrations[applicantDialogIndex] || null;
+  const renderApplicantDialog = () => {
+    const applicant = currentDialogApplicant();
+    if (!applicant) return;
+    const event = applicant.events || {};
+    const status = applicant.payment_expired ? "expired" : applicant.registration_status;
+    $("#applicant-dialog-title").textContent = applicant.name || "Pendaftar";
+    applicantDialogContent.replaceChildren();
+    appendApplicantField("Nama", applicant.name);
+    appendApplicantField("Email", applicant.email);
+    appendApplicantField("WhatsApp", applicant.phone);
+    appendApplicantField("Domisili", applicant.domicile);
+    appendApplicantField("Instansi", applicant.institution);
+    appendApplicantField("Definisi bahagia", applicant.reason);
+    appendApplicantField("Pertanyaan seleksi", applicant.selection_question);
+    appendApplicantField("Jawaban seleksi", applicant.selection_answer);
+    appendApplicantField("Komitmen", applicant.commitment_text);
+    appendApplicantField("Catatan tambahan", applicant.notes);
+    appendApplicantField("Kegiatan", event.title);
+    appendApplicantField("Tanggal kegiatan", event.event_date ? formatDate(event.event_date) : "-");
+    appendApplicantField("Kode pendaftaran", applicant.registration_code);
+    appendApplicantField("Status", event.registration_mode === "selection" && status === "confirmed"
+      ? "Diterima" : registrationStatusLabels[status] || status);
+    appendApplicantField("Terdaftar", formatDateTime(applicant.created_at));
+    const outcomes = ["confirmed", "waitlisted", "rejected"].includes(status);
+    applicantDialog.querySelectorAll("[data-applicant-decision]").forEach((button) => {
+      button.disabled = button.dataset.applicantDecision === (status === "confirmed" ? "accepted" : status);
+    });
+    const waButton = applicantDialog.querySelector("[data-applicant-whatsapp]");
+    waButton.hidden = !outcomes;
+    applicantDialog.querySelector('[data-applicant-nav="previous"]').disabled = applicantDialogIndex <= 0;
+    applicantDialog.querySelector('[data-applicant-nav="next"]').disabled = applicantDialogIndex >= registrations.length - 1;
+    setFeedback($("#applicant-dialog-feedback"));
+  };
+
+  const showApplicant = (registrationCode) => {
+    applicantDialogIndex = registrations.findIndex((item) => item.registration_code === registrationCode);
+    if (applicantDialogIndex < 0) return;
+    renderApplicantDialog();
+    if (!applicantDialog.open) applicantDialog.showModal();
+  };
+
+  const moveApplicant = (offset) => {
+    const nextIndex = applicantDialogIndex + offset;
+    if (nextIndex < 0 || nextIndex >= registrations.length) return;
+    applicantDialogIndex = nextIndex;
+    renderApplicantDialog();
+    applicantDialog.querySelector(".applicant-dialog-panel").scrollTop = 0;
+  };
+
+  const refreshRegistrations = async () => {
+    tabCache.registrations.clear();
+    await loadRegistrations();
+  };
+
+  const decideApplicants = async (codes, decision, { advance = false } = {}) => {
+    if (!selectionEnabled()) return;
+    if (!codes.length) {
+      setFeedback(applicantDialog.open ? $("#applicant-dialog-feedback") : $("#registrations-feedback"), "Pilih setidaknya satu pendaftar.", "error");
+      return;
+    }
+    const current = currentDialogApplicant();
+    const nextCode = advance && applicantDialogIndex < registrations.length - 1
+      ? registrations[applicantDialogIndex + 1]?.registration_code : null;
+    const decisionLabel = { accepted: "menerima", waitlisted: "memasukkan ke daftar cadangan", rejected: "menolak", applied: "mengembalikan ke status menunggu" }[decision];
+    if (codes.length === 1 && !window.confirm(`Yakin ingin ${decisionLabel} pendaftar ini?`)) return;
+    const feedback = applicantDialog.open ? $("#applicant-dialog-feedback") : $("#registrations-feedback");
+    setFeedback(feedback, "Menyimpan keputusan…");
+    try {
+      const result = await selectionDecisionRequest(codes, decision);
+      selectionOverview = result.selection || selectionOverview;
+      $("#selection-select-all").checked = false;
+      await refreshRegistrations();
+      setFeedback($("#registrations-feedback"), "Keputusan berhasil disimpan.", "success");
+      if (advance && applicantDialog.open) {
+        if (nextCode && registrations.some((item) => item.registration_code === nextCode)) showApplicant(nextCode);
+        else applicantDialog.close();
+      } else if (applicantDialog.open && current) {
+        const refreshed = registrations.find((item) => item.registration_code === current.registration_code);
+        if (refreshed) showApplicant(refreshed.registration_code);
+      }
+    } catch (error) {
+      if (error.code === "CAPACITY_EXCEEDED") {
+        setFeedback(feedback, error.message, "error");
+        try { await refreshRegistrations(); } catch { /* Keep the capacity error visible. */ }
+      } else setFeedback(feedback, error.message, "error");
+    }
+  };
+
+  const csvCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+  const exportRegistrationsCsv = () => {
+    const columns = ["Kode", "Nama", "Email", "WhatsApp", "Domisili", "Instansi", "Definisi bahagia", "Jawaban seleksi", "Status", "Terdaftar"];
+    const rows = registrations.map((applicant) => [
+      applicant.registration_code, applicant.name, applicant.email, applicant.phone, applicant.domicile,
+      applicant.institution, applicant.reason, applicant.selection_answer,
+      selectionEnabled() && applicant.registration_status === "confirmed"
+        ? "Diterima" : registrationStatusLabels[applicant.registration_status] || applicant.registration_status,
+      formatDateTime(applicant.created_at),
+    ]);
+    const csv = `\uFEFF${[columns, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n")}`;
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `pendaftar-${selectedRegistrationEvent()?.slug || "kegiatan"}.csv`;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const DEFAULT_WA_MESSAGES = {
+    accepted: "Halo {nama}, selamat! Kamu diterima di kegiatan {kegiatan} pada {tanggal}. Kode pendaftaran: {kode}. Gabung grup peserta: {link_grup}. Cek hasil: {link_status}",
+    waitlisted: "Halo {nama}, saat ini kamu masuk daftar cadangan kegiatan {kegiatan} pada {tanggal}. Kode pendaftaran: {kode}. Kami akan menghubungi jika ada perubahan. Cek hasil: {link_status}",
+    rejected: "Halo {nama}, terima kasih sudah mendaftar kegiatan {kegiatan} pada {tanggal}. Kali ini kamu belum terpilih. Semoga ada kesempatan bertemu di kegiatan berikutnya. Cek hasil: {link_status}",
+  };
+  const normalizeWhatsApp = (phone) => {
+    let digits = String(phone || "").replace(/\D/g, "");
+    if (digits.startsWith("0")) digits = `62${digits.slice(1)}`;
+    else if (digits.startsWith("8")) digits = `62${digits}`;
+    return digits.startsWith("62") ? digits : "";
+  };
+  const sendApplicantWhatsApp = () => {
+    const applicant = currentDialogApplicant();
+    const status = applicant?.registration_status;
+    const outcome = status === "confirmed" ? "accepted" : status;
+    if (!applicant || !["accepted", "waitlisted", "rejected"].includes(outcome)) return;
+    const phone = normalizeWhatsApp(applicant.phone);
+    if (!phone) return setFeedback($("#applicant-dialog-feedback"), "Nomor WhatsApp tidak valid.", "error");
+    const event = events.find((item) => item.slug === applicant.events?.slug) || {};
+    const date = event.event_date ? formatDate(event.event_date) : "tanggal kegiatan";
+    const groupLink = event.whatsapp_group_url || "(link grup menyusul)";
+    const statusLink = `${window.location.origin}/cek-status.html?kode=${encodeURIComponent(applicant.registration_code)}`;
+    const template = event[`wa_message_${outcome}`] || DEFAULT_WA_MESSAGES[outcome];
+    const message = template.replace(/\{(nama|kegiatan|tanggal|kode|link_grup|link_status)\}/g, (_, key) => ({
+      nama: applicant.name || "", kegiatan: event.title || applicant.events?.title || "", tanggal: date,
+      kode: applicant.registration_code, link_grup: groupLink, link_status: statusLink,
+    })[key]);
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  };
+
+  registrationsList.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-applicant-detail]");
+    if (button && selectionEnabled()) showApplicant(button.dataset.applicantDetail);
+  });
+  $("#selection-select-all").addEventListener("change", (event) => {
+    registrationsList.querySelectorAll("[data-applicant-select]").forEach((checkbox) => { checkbox.checked = event.currentTarget.checked; });
+  });
+  document.querySelectorAll("[data-selection-bulk]").forEach((button) => button.addEventListener("click", () => {
+    const codes = [...registrationsList.querySelectorAll("[data-applicant-select]:checked")].map((checkbox) => checkbox.value);
+    void decideApplicants(codes, button.dataset.selectionBulk);
+  }));
+  $("#selection-export").addEventListener("click", exportRegistrationsCsv);
+  applicantDialog.querySelector(".applicant-dialog-close").addEventListener("click", () => applicantDialog.close());
+  applicantDialog.addEventListener("click", (event) => { if (event.target === applicantDialog) applicantDialog.close(); });
+  applicantDialog.querySelectorAll("[data-applicant-nav]").forEach((button) => button.addEventListener("click", () => moveApplicant(button.dataset.applicantNav === "previous" ? -1 : 1)));
+  applicantDialog.querySelectorAll("[data-applicant-decision]").forEach((button) => button.addEventListener("click", () => {
+    const applicant = currentDialogApplicant();
+    if (applicant) void decideApplicants([applicant.registration_code], button.dataset.applicantDecision, { advance: true });
+  }));
+  applicantDialog.querySelector("[data-applicant-whatsapp]").addEventListener("click", sendApplicantWhatsApp);
+  document.addEventListener("keydown", (event) => {
+    if (!applicantDialog.open || event.altKey || event.ctrlKey || event.metaKey) return;
+    const target = event.target;
+    if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+    if (event.key === "ArrowLeft") { event.preventDefault(); moveApplicant(-1); }
+    else if (event.key === "ArrowRight") { event.preventDefault(); moveApplicant(1); }
+  });
 
   const renderAdmins = () => {
     const currentUserId = sessionUserId();
@@ -715,6 +950,9 @@
     minChars: 150,
     commitment: "Saya bersedia hadir penuh sesuai jadwal kegiatan.",
     applicantsPerSeat: 4,
+    waAccepted: "Halo {nama}, selamat! Kamu diterima di kegiatan {kegiatan} pada {tanggal}. Kode pendaftaran: {kode}. Gabung grup peserta: {link_grup}. Cek hasil: {link_status}",
+    waWaitlisted: "Halo {nama}, saat ini kamu masuk daftar cadangan kegiatan {kegiatan} pada {tanggal}. Kode pendaftaran: {kode}. Kami akan menghubungi jika ada perubahan. Cek hasil: {link_status}",
+    waRejected: "Halo {nama}, terima kasih sudah mendaftar kegiatan {kegiatan} pada {tanggal}. Kali ini kamu belum terpilih. Semoga ada kesempatan bertemu di kegiatan berikutnya. Cek hasil: {link_status}",
   };
   const toggleSelectionFields = () => {
     const selection = $("#event-registration-mode").value === "selection";
@@ -729,6 +967,9 @@
     if (!$("#event-selection-question").value.trim()) $("#event-selection-question").value = SELECTION_DEFAULTS.question;
     if (!$("#event-selection-min").value) $("#event-selection-min").value = SELECTION_DEFAULTS.minChars;
     if (!$("#event-commitment").value.trim()) $("#event-commitment").value = SELECTION_DEFAULTS.commitment;
+    if (!$("#event-wa-accepted").value.trim()) $("#event-wa-accepted").value = SELECTION_DEFAULTS.waAccepted;
+    if (!$("#event-wa-waitlisted").value.trim()) $("#event-wa-waitlisted").value = SELECTION_DEFAULTS.waWaitlisted;
+    if (!$("#event-wa-rejected").value.trim()) $("#event-wa-rejected").value = SELECTION_DEFAULTS.waRejected;
   };
 
   const fillForm = (event = null) => {
@@ -759,7 +1000,11 @@
     $("#event-selection-question").value = event?.selection_question || "";
     $("#event-selection-min").value = event?.registration_mode === "selection" ? event.selection_min_chars ?? "" : "";
     $("#event-commitment").value = event?.commitment_text || "";
+    $("#event-wa-accepted").value = event?.wa_message_accepted || "";
+    $("#event-wa-waitlisted").value = event?.wa_message_waitlisted || "";
+    $("#event-wa-rejected").value = event?.wa_message_rejected || "";
     toggleSelectionFields();
+    if (event?.registration_mode === "selection") applySelectionDefaults();
     $("#event-activities").value = event?.activities?.join("\n") || "";
     $("#event-benefits").value = event?.benefits?.join("\n") || "";
     $("#event-image-url").value = event?.image_url || "";
@@ -923,6 +1168,9 @@
     selection_question: $("#event-selection-question").value.trim() || null,
     selection_min_chars: Number($("#event-selection-min").value) || 0,
     commitment_text: $("#event-commitment").value.trim() || null,
+    wa_message_accepted: $("#event-wa-accepted").value.trim() || null,
+    wa_message_waitlisted: $("#event-wa-waitlisted").value.trim() || null,
+    wa_message_rejected: $("#event-wa-rejected").value.trim() || null,
   });
 
   const storyFormPayload = () => ({

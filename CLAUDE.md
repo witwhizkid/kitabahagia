@@ -98,8 +98,13 @@ Lainnya:
   pengumuman, pertanyaan esai + minimal karakter, dan teks komitmen per
   kegiatan. Publik **tidak** melihat angka apa pun untuk kegiatan seleksi (cuma
   "Seleksi" / "Pendaftaran ditutup"). Detail: "Selection mode" di
-  `supabase/README.md`. Tahap 2 (layar seleksi Terima/Cadangan/Tolak, Cek status,
-  tombol WA, CSV) dan email otomatis (butuh domain) belum dikerjakan.
+  `supabase/README.md`. Tahap 2 admin: filter/status Menunggu seleksi, Diterima,
+  Cadangan, dan Tidak lolos; jawaban esai satu baris dengan dialog detail;
+  keputusan satuan/bulk dengan batas kapasitas dari server; ringkasan hasil dan
+  riwayat keikutsertaan; ekspor CSV dari baris yang sedang tampil; serta draft
+  WhatsApp dengan template per kegiatan atau pesan default. Dialog detail
+  memakai `<dialog>` native, navigasi panah, dan layout layar penuh di HP. Email
+  otomatis masih belum dikerjakan (butuh domain).
 - Status "Kedaluwarsa" di admin tidak disimpan di database: `admin-registrations`
   menurunkannya (`payment_expired`) dari `pending_payment` + `payment_deadline`
   yang sudah lewat, sama dengan aturan pelepasan kursi. "Lunas" selalu menang.
