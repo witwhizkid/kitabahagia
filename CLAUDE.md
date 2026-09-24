@@ -76,7 +76,12 @@ Lainnya:
 - Hero beranda di HP/tablet setinggi layar (`max(560px,100svh)`). HP (≤767px)
   memakai crop potret `img/hero-*-mobile.webp` lewat `<picture>`. Slide 1 =
   foto relawan + adik-adik (`hero-volunteer-*`, dari `IMG_20260815_011030.jpg`,
-  dicerahkan sedikit saat ekspor); crop slide 3 dari `DSC01930.JPG.jpeg`.
+  dicerahkan sedikit saat ekspor); slide 2 dari `DSCF6787.webp` (diberi
+  grade hangat saat ekspor); crop slide 3 dari `DSC01930.JPG.jpeg`.
+- Foto yang tampil dengan `object-fit: cover` di bingkai yang lebih "kotak"
+  dari fotonya butuh file lebih lebar dari bingkainya: atur `sizes` ke lebar
+  foto yang benar-benar dirender (contoh foto Jejak di beranda:
+  `relawan-anak-960/1440/1920`, `sizes` 890px). Selalu ekspor dari file asli.
   Foto kelas lama (`hero-relawan*.webp`) masih dipakai di halaman lain.
 - Midtrans sandbox/production dipilih lewat `MIDTRANS_ENV`; payload QRIS mentah
   disimpan dan QR digambar sendiri (`js/vendor/qrcode-generator.min.js`).
