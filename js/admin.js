@@ -597,26 +597,61 @@
     status.textContent = "Foto siap digunakan.";
   };
 
-  const uploadEventImage = async (file) => {
+  // Photos are shrunk in the browser before upload, so a 4 MB phone photo or a PNG
+  // poster from Canva is stored as a ~200 KB WebP that is still sharp on screen.
+  const MAX_SOURCE_BYTES = 25 * 1024 * 1024;
+  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+  const encodeCanvas = (canvas, type, quality) => new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+  const compressImage = async (file, maxWidth, maxHeight) => {
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    } catch {
+      throw new Error("Foto tidak dapat dibaca. Coba simpan ulang sebagai JPG atau PNG.");
+    }
+    const scale = Math.min(1, maxWidth / bitmap.width, maxHeight / bitmap.height);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const context = canvas.getContext("2d");
+    context.imageSmoothingQuality = "high";
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    let blob = await encodeCanvas(canvas, "image/webp", 0.82);
+    if (!blob || blob.type !== "image/webp") {
+      // Browsers without WebP encoding (older Safari) get JPEG; paint transparency white, not black.
+      context.globalCompositeOperation = "destination-over";
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      blob = await encodeCanvas(canvas, "image/jpeg", 0.85);
+    }
+    if (!blob) throw new Error("Foto belum dapat diproses.");
+    // An already small, already sized file is kept as it is.
+    return scale === 1 && file.size <= blob.size && file.size <= MAX_UPLOAD_BYTES ? file : blob;
+  };
+
+  const uploadImage = async (file, { bucket, slugInput, maxWidth, maxHeight }) => {
     const allowedTypes = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
-    const extension = allowedTypes[file.type];
-    if (!extension) throw new Error("Gunakan file JPG, PNG, atau WebP.");
-    if (file.size > 5 * 1024 * 1024) throw new Error("Ukuran foto maksimal 5 MB.");
+    if (!allowedTypes[file.type]) throw new Error("Gunakan file JPG, PNG, atau WebP.");
+    if (file.size > MAX_SOURCE_BYTES) throw new Error("Ukuran foto maksimal 25 MB.");
+    const image = await compressImage(file, maxWidth, maxHeight);
+    if (image.size > MAX_UPLOAD_BYTES) throw new Error("Foto masih terlalu besar setelah dikompres. Coba foto lain.");
+    const extension = allowedTypes[image.type];
 
     const token = await validAccessToken();
     if (!token) throw new Error("Sesi berakhir. Silakan masuk kembali.");
-    const slug = $("#event-slug").value.trim().toLowerCase();
+    const slug = $(slugInput).value.trim().toLowerCase();
     const folder = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? slug : "draft";
     const objectPath = `${folder}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
-    const response = await fetch(`${CONFIG.supabaseUrl}/storage/v1/object/event-images/${objectPath}`, {
+    const response = await fetch(`${CONFIG.supabaseUrl}/storage/v1/object/${bucket}/${objectPath}`, {
       method: "POST",
       headers: {
         apikey: CONFIG.publishableKey,
         Authorization: `Bearer ${token}`,
-        "Content-Type": file.type,
+        "Content-Type": image.type,
         "x-upsert": "false",
       },
-      body: file,
+      body: image,
     });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401 || response.status === 403) {
@@ -624,8 +659,13 @@
     }
     if (!response.ok) throw new Error(data.message || data.error || "Foto belum dapat diunggah.");
     const publicPath = objectPath.split("/").map(encodeURIComponent).join("/");
-    return `${CONFIG.supabaseUrl}/storage/v1/object/public/event-images/${publicPath}`;
+    return `${CONFIG.supabaseUrl}/storage/v1/object/public/${bucket}/${publicPath}`;
   };
+
+  // Event photos are mostly 4:5 posters; 1200x1500 stays sharp in the poster dialog.
+  const uploadEventImage = (file) => uploadImage(file, {
+    bucket: "event-images", slugInput: "#event-slug", maxWidth: 1200, maxHeight: 1500,
+  });
 
   const setStoryImagePreview = (url = "") => {
     const preview = $("#story-image-preview");
@@ -644,35 +684,10 @@
     status.textContent = "Foto siap digunakan.";
   };
 
-  const uploadStoryImage = async (file) => {
-    const allowedTypes = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
-    const extension = allowedTypes[file.type];
-    if (!extension) throw new Error("Gunakan file JPG, PNG, atau WebP.");
-    if (file.size > 5 * 1024 * 1024) throw new Error("Ukuran foto maksimal 5 MB.");
-
-    const token = await validAccessToken();
-    if (!token) throw new Error("Sesi berakhir. Silakan masuk kembali.");
-    const slug = $("#story-slug").value.trim().toLowerCase();
-    const folder = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? slug : "draft";
-    const objectPath = `${folder}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
-    const response = await fetch(`${CONFIG.supabaseUrl}/storage/v1/object/story-images/${objectPath}`, {
-      method: "POST",
-      headers: {
-        apikey: CONFIG.publishableKey,
-        Authorization: `Bearer ${token}`,
-        "Content-Type": file.type,
-        "x-upsert": "false",
-      },
-      body: file,
-    });
-    const data = await response.json().catch(() => ({}));
-    if (response.status === 401 || response.status === 403) {
-      throw new Error("Akun ini tidak memiliki izin upload foto.");
-    }
-    if (!response.ok) throw new Error(data.message || data.error || "Foto belum dapat diunggah.");
-    const publicPath = objectPath.split("/").map(encodeURIComponent).join("/");
-    return `${CONFIG.supabaseUrl}/storage/v1/object/public/story-images/${publicPath}`;
-  };
+  // Story covers run wide on the Kisah pages.
+  const uploadStoryImage = (file) => uploadImage(file, {
+    bucket: "story-images", slugInput: "#story-slug", maxWidth: 1600, maxHeight: 1600,
+  });
 
   // Seat-hold window only matters for paid events; values set outside the preset
   // list (e.g. via SQL) are kept as an extra option instead of being lost.
@@ -977,7 +992,7 @@
     button.disabled = true;
     status.classList.remove("is-error");
     event.target.removeAttribute("aria-invalid");
-    status.textContent = "Mengunggah foto…";
+    status.textContent = "Mengompres dan mengunggah foto…";
     try {
       const publicUrl = await uploadEventImage(file);
       $("#event-image-url").value = publicUrl;
@@ -1002,7 +1017,7 @@
     button.disabled = true;
     status.classList.remove("is-error");
     event.target.removeAttribute("aria-invalid");
-    status.textContent = "Mengunggah foto…";
+    status.textContent = "Mengompres dan mengunggah foto…";
     try {
       const publicUrl = await uploadStoryImage(file);
       $("#story-image-url").value = publicUrl;

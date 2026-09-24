@@ -73,6 +73,9 @@ Halaman pendaftaran (`pendaftaran.html`):
 
 Lainnya:
 - Foto disajikan sebagai WebP yang sudah diperkecil (originalnya 2–7 MB).
+- Upload foto di admin dikompres di browser sebelum dikirim (`compressImage`
+  di `js/admin.js`): kegiatan maks. 1200×1500, kisah maks. 1600×1600, WebP
+  (JPEG di browser tanpa WebP). File sumber boleh sampai 25 MB.
 - Hero beranda di HP/tablet setinggi layar (`max(560px,100svh)`). HP (≤767px)
   memakai crop potret `img/hero-*-mobile.webp` lewat `<picture>`. Slide 1 =
   foto relawan + adik-adik (`hero-volunteer-*`, dari `IMG_20260815_011030.jpg`,
