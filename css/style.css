@@ -6115,6 +6115,15 @@ html.home-document { overflow-x: hidden; }
 .registration-page .selection-instagram-proof .eyebrow { margin:0; }
 .registration-page .selection-instagram-proof p:not(.eyebrow) { margin:0; color:var(--muted); font-size:14px; line-height:1.6; }
 .registration-page .selection-instagram-proof [data-instagram] { justify-self:start; margin-bottom:8px; }
+/* Native file input stays on top (transparent) so click, keyboard and screen readers keep working. */
+.registration-page .file-picker { position:relative; display:flex; align-items:center; gap:12px; min-height:50px; padding:7px 14px 7px 7px; border:1.5px solid var(--line); border-radius:var(--radius-md); background:var(--cream); }
+.registration-page .field .file-picker .file-picker-input { position:absolute; inset:0; width:100%; height:100%; min-height:0; margin:0; padding:0; opacity:0; cursor:pointer; }
+.registration-page .file-picker-button { flex:none; padding:8px 16px; border-radius:999px; background:var(--maroon); color:var(--white); font-size:13px; font-weight:700; }
+.registration-page .file-picker-name { min-width:0; overflow:hidden; color:var(--muted); font-size:14px; text-overflow:ellipsis; white-space:nowrap; }
+.registration-page .file-picker-name.has-file { color:var(--ink); font-weight:600; }
+.registration-page .file-picker:hover { border-color:#d9c9ca; }
+.registration-page .file-picker:has(.file-picker-input:focus-visible) { outline:3px solid var(--maroon); outline-offset:2px; }
+.registration-page .file-picker:has(.file-picker-input[aria-invalid="true"]) { border-color:var(--maroon-deep); background:var(--rose); }
 .registration-page .form-actions .btn,
 .registration-page .registration-review-actions .btn { min-height:52px; padding:12px 28px; border-radius:999px; }
 

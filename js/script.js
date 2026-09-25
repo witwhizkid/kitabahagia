@@ -1689,6 +1689,16 @@ if (registrationForm) {
   });
   // Optional CV/portfolio PDF. Not compressed; the server checks type, size and signature again.
   const selectionCvInput = document.getElementById('selectionCv');
+  // Custom "Pilih file" pickers: show the chosen name; call again after clearing an input in code.
+  const syncFilePickerNames = () => document.querySelectorAll('.file-picker').forEach((picker) => {
+    const file = picker.querySelector('.file-picker-input')?.files?.[0];
+    const name = picker.querySelector('[data-file-name]');
+    if (!name) return;
+    name.textContent = file ? file.name : 'Belum ada file';
+    name.classList.toggle('has-file', Boolean(file));
+  });
+  document.querySelectorAll('.file-picker-input').forEach((input) => input.addEventListener('change', syncFilePickerNames));
+  registrationForm.addEventListener('reset', () => setTimeout(syncFilePickerNames));
   const cvFieldsShown = () => isFreeSelectionEvent() && Boolean(selectedEvent?.cvRequested);
   const portfolioHint = document.getElementById('portfolioUrlHint');
   const defaultPortfolioHint = portfolioHint?.textContent || '';
@@ -1812,6 +1822,7 @@ if (registrationForm) {
         document.getElementById('portfolioUrl').value = '';
       }
     }
+    syncFilePickerNames();
     if (answerField && selectionAnswerInput) {
       answerField.hidden = !showQuestion;
       selectionAnswerInput.required = showQuestion;
@@ -1900,6 +1911,9 @@ if (registrationForm) {
     renderEventList('eventBenefitsSection', 'eventBenefits', 'eventBenefitsNav', selectedEvent.benefits);
     renderEventList('eventRequirementsSection', 'eventRequirements', 'eventRequirementsNav',
       isFreeSelectionEvent() ? selectedEvent.selectionRequirements : [], true);
+    // Selection applicants should read the requirements before the form, so start with details open.
+    const eventDisclosure = document.querySelector('.registration-event-disclosure');
+    if (eventDisclosure && isFreeSelectionEvent()) eventDisclosure.open = true;
 
     const eventNameInput = document.getElementById('kegiatan');
     const eventSlugInput = document.getElementById('eventSlug');

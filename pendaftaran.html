@@ -148,7 +148,11 @@
                     <div class="field full" id="selectionCommitmentField" hidden><label class="check-row" for="selectionCommitment"><input id="selectionCommitment" name="selection_commitment" type="checkbox" value="ya"><span id="selectionCommitmentText"></span></label></div>
                     <div class="field full" id="selectionCvField" hidden>
                       <label for="selectionCv">CV/portofolio (PDF, opsional)</label>
-                      <input id="selectionCv" name="cv" type="file" accept="application/pdf,.pdf" aria-describedby="selectionCvHint selectionCvError">
+                      <div class="file-picker">
+                        <input class="file-picker-input" title="Pilih file" id="selectionCv" name="cv" type="file" accept="application/pdf,.pdf" aria-describedby="selectionCvHint selectionCvError">
+                        <span class="file-picker-button" aria-hidden="true">Pilih file</span>
+                        <span class="file-picker-name" data-file-name aria-hidden="true">Belum ada file</span>
+                      </div>
                       <span id="selectionCvHint" class="field-counter">Maksimal 5 MB.</span>
                       <span id="selectionCvError" class="field-error" role="alert" hidden></span>
                     </div>
@@ -162,7 +166,11 @@
                       <p>Sebelum mengirim pendaftaran, ikuti @kitabahagiaa_, lalu unggah screenshot sebagai bukti.</p>
                       <a class="text-link" data-instagram target="_blank" rel="noopener noreferrer">Buka Instagram <span aria-hidden="true">&rarr;</span></a>
                       <label for="instagramProof">Bukti follow Instagram *</label>
-                      <input id="instagramProof" name="instagram_proof" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" aria-describedby="instagramProofHint instagramProofError">
+                      <div class="file-picker">
+                        <input class="file-picker-input" title="Pilih file" id="instagramProof" name="instagram_proof" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" aria-describedby="instagramProofHint instagramProofError">
+                        <span class="file-picker-button" aria-hidden="true">Pilih file</span>
+                        <span class="file-picker-name" data-file-name aria-hidden="true">Belum ada file</span>
+                      </div>
                       <span id="instagramProofHint" class="field-counter">JPG, PNG, atau WebP. Maksimal 2 MB setelah diperkecil.</span>
                       <span id="instagramProofError" class="field-error" role="alert" hidden></span>
                     </div>
