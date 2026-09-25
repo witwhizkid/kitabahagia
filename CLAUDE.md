@@ -130,6 +130,11 @@ Lainnya:
   kegiatan/kisah terbuka), logo di header, judul + tombol Tambah satu baris,
   kartu kegiatan ringkas tanpa label. Tablet (769–900px) tetap tab atas. Form
   kegiatan punya tombol lompat per bagian yang menempel saat di-scroll.
+- Preview link (WA/IG): tiap halaman memakai gambar JPG 1200×630 di `img/og/`
+  (dibuat dari foto yang ada, di bawah 300 KB). `middleware.js` (Vercel Routing
+  Middleware) hanya untuk bot preview di `pendaftaran.html?event=...`: bot
+  mendapat HTML kecil dengan judul/tanggal/lokasi/harga/poster kegiatan dari
+  `public-events`; pengunjung biasa tetap dapat halaman statis.
 - Status "Kedaluwarsa" di admin tidak disimpan di database: `admin-registrations`
   menurunkannya (`payment_expired`) dari `pending_payment` + `payment_deadline`
   yang sudah lewat, sama dengan aturan pelepasan kursi. "Lunas" selalu menang.
