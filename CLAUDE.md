@@ -140,6 +140,45 @@ Lainnya:
   menurunkannya (`payment_expired`) dari `pending_payment` + `payment_deadline`
   yang sudah lewat, sama dengan aturan pelepasan kursi. "Lunas" selalu menang.
 
+## Rencana fitur (belum dikerjakan)
+
+Web sengaja tidak ditambah fitur baru sampai pemicunya terjadi (roadmap:
+4 kegiatan/bulan, tim ± 70 orang; 24 perancang program = 6 tim × 4 orang,
+tim 1–3 dan 4–6 bergantian tiap bulan, + 1 kegiatan gratis akhir bulan).
+**Ingatkan user soal sertifikat otomatis** kalau topiknya muncul atau user
+bilang "lanjut fitur sertifikat".
+
+Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
+- Fondasi: data kehadiran. Tambah "Tandai hadir" (bulk) di admin Pendaftar;
+  sekarang sistem hanya tahu siapa yang daftar.
+- Alur: admin klik "Terbitkan sertifikat" → semua yang hadir → pratinjau
+  daftar nama (bisa dibetulkan; rapikan huruf kapital) → relawan unduh PDF lewat
+  Cek status (kode + no. HP); link bisa dikirim lewat draf WA.
+- Template per kegiatan dari divisi Desain: PNG 2000×1414 (A4 landscape) yang
+  sudah berisi latar, deskripsi kegiatan, tanda tangan Founder + Project Leader.
+  Sistem hanya menempel nomor, nama, peran ("Sebagai Relawan Tingkat
+  Nasional"/Panitia/Pemateri), dan QR. Posisi teks harus sama di semua
+  template; nama panjang otomatis mengecil. QR di area kosong kanan tanda
+  tangan Project Leader. Font nama: tanyakan ke Desain.
+- Nomor mengikuti format lama `13.044/KB/VII/2026` sekaligus jadi kode
+  verifikasi; arti "13" dan "044" **belum dijawab** tim Desain.
+- Verifikasi publik: `sertifikat?kode=...` menampilkan nama/kegiatan/tanggal.
+- Template bertanda tangan disimpan di bucket privat (bisa dipalsukan kalau
+  bocor); relawan hanya bisa mengunduh sertifikat miliknya. Minta izin Project
+  Leader untuk pemakaian tanda tangannya.
+- Panitia tidak daftar lewat web: perlu "Tambah panitia" di admin atau impor.
+- Data sebelum fitur ada dicatat di Google Sheet (template
+  `Pencatatan-Kehadiran-Dampak-Kita-Bahagia.xlsx`): tab `Kegiatan` (slug,
+  tanggal, durasi_jam, penerima_manfaat, hasil, dll.) dan `Kehadiran` (slug,
+  kode_pendaftaran, nama_lengkap, no_hp, peran, hadir, dll.). Diimpor sekali
+  saat fitur dibangun (cocokkan slug + kode/no. HP).
+
+Dashboard dampak publik (setelah ± 6 laporan bulanan konsisten): angka total
+kegiatan, relawan hadir unik, jam relawan (durasi × hadir), penerima manfaat,
+lokasi, mitra, relawan yang ikut lagi; grafik per bulan. Sebagian otomatis dari
+data hadir, sebagian dari bagian "Laporan dampak" di form kegiatan. Publik hanya
+melihat agregat, tanpa data pribadi.
+
 ## Keamanan
 
 `SUPABASE_SERVICE_ROLE_KEY` hanya di server. Jangan pernah taruh di kode
