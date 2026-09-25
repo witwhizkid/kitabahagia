@@ -6267,19 +6267,20 @@ html.home-document { overflow-x: hidden; }
   /* Phone row: date + category, then the title across the full width (long titles stay ~4 lines),
      then place/time, price and a compact Daftar stacked beside the 4:5 poster.
      The trailing 1fr row absorbs the poster's extra height so the left stack stays tight. */
-  .event-row { grid-template-columns:minmax(0, 1fr) 104px; grid-template-rows:repeat(6, auto) 1fr; column-gap:18px; row-gap:0; align-items:start; padding:26px 0 24px; }
+  .schedule-section .container { width:min(100% - 40px, 1160px); }
+  .event-row { grid-template-columns:minmax(0, 1fr) 104px; grid-template-rows:repeat(6, auto) 1fr; column-gap:18px; row-gap:0; align-items:start; padding:28px 0 26px; }
   .event-row .event-row-copy, .event-row .event-row-side { display:contents; text-align:left; }
   .event-row .event-date { grid-column:1; grid-row:1; display:flex; align-items:baseline; gap:6px; }
   .event-row .event-date b, .event-row .event-date span { display:inline; margin:0; font:800 12px/1.2 "DM Sans", sans-serif; letter-spacing:.14em; text-transform:uppercase; }
   .event-row .event-date small { margin:0; font-size:12px; }
   .event-row .event-date small::before { content:"· "; }
   .event-row .event-kicker { grid-column:1 / -1; grid-row:1; justify-self:end; max-width:62%; text-align:right; }
-  .event-row .event-title { grid-column:1 / -1; grid-row:2; margin:12px 0 0; font-size:20px; line-height:1.2; letter-spacing:-.02em; }
-  .event-row .event-where { grid-column:1; grid-row:3; margin-top:14px; font-size:14px; line-height:1.5; }
+  .event-row .event-title { grid-column:1 / -1; grid-row:2; margin:14px 0 0; font-size:19px; line-height:1.3; letter-spacing:-.005em; }
+  .event-row .event-where { grid-column:1; grid-row:3; margin-top:16px; font-size:14px; line-height:1.55; }
   .event-where-place { display:block; }
   .event-where-sep { display:none; }
   .event-row-photo { grid-column:2; grid-row:3 / span 5; margin-top:14px; }
-  .event-row .event-price { grid-column:1; grid-row:4; margin-top:12px; font-size:20px; }
+  .event-row .event-price { grid-column:1; grid-row:4; margin-top:16px; font-size:20px; letter-spacing:0; }
   .event-row .event-slot { grid-column:1; grid-row:5; font-size:12px; }
   .event-row .event-cta { grid-column:1; grid-row:6; justify-self:start; min-height:44px; margin:14px 0 0; padding:0 16px; }
   .event-feature, .schedule-urgent-grid.is-single .event-feature { grid-template-columns:1fr; padding:22px 0 26px; }
