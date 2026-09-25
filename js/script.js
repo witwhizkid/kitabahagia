@@ -1196,6 +1196,20 @@ if (registrationForm) {
     return `<svg viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" aria-hidden="true"><rect width="${size}" height="${size}" fill="#fff"/><path d="${path}" fill="#231f20"/></svg>`;
   };
 
+  // "Sampai jumpa" card on the success screens (free confirmation and paid). Selection applicants
+  // are not promised a seat, so their card shows only the event name.
+  const fillConfirmationEventCard = (card, eventTitle) => {
+    if (!card) return;
+    card.hidden = !selectedEvent;
+    if (!selectedEvent) return;
+    const eventName = eventTitle || selectedEvent.name;
+    card.querySelector('[data-confirmation-event-line]').textContent = selectedEvent.registrationMode === 'selection' ? eventName : `Sampai jumpa di ${eventName}`;
+    card.querySelector('[data-confirmation-event-meta]').textContent = [selectedEvent.date, selectedEvent.location].filter(Boolean).join(' · ');
+    const poster = card.querySelector('[data-confirmation-poster]');
+    poster.hidden = !selectedEvent.image;
+    if (selectedEvent.image) poster.src = selectedEvent.image;
+  };
+
   const renderPaymentState = (state, incoming) => {
     const stage = document.getElementById('paymentStage');
     if (!stage || !Object.hasOwn(paymentStates, state)) return;
@@ -1276,6 +1290,11 @@ if (registrationForm) {
     }
     const instagramCta = stage.querySelector('[data-payment-instagram-cta]');
     if (instagramCta) instagramCta.hidden = state !== 'paid';
+    const paidEventCard = stage.querySelector('[data-confirmation-event]');
+    if (paidEventCard) {
+      if (state === 'paid') fillConfirmationEventCard(paidEventCard, data.event_title);
+      else paidEventCard.hidden = true;
+    }
     const backLink = stage.querySelector('[data-payment-back]');
     if (backLink) {
       backLink.hidden = !['pending', 'expired'].includes(state) || !eventSlug;
@@ -1406,19 +1425,7 @@ if (registrationForm) {
     });
     resultStage.querySelector('#freeConfirmationHeading').textContent = outcome.heading;
     resultStage.querySelector('[data-confirmation-copy]').textContent = outcome.copy;
-    // A short "see you there" card; selection applicants are not promised a seat, so no "sampai jumpa".
-    const eventCard = resultStage.querySelector('[data-confirmation-event]');
-    if (eventCard) {
-      eventCard.hidden = !selectedEvent;
-      if (selectedEvent) {
-        const eventName = data.event_title || selectedEvent.name;
-        eventCard.querySelector('[data-confirmation-event-line]').textContent = isSelectionEvent() ? eventName : `Sampai jumpa di ${eventName}`;
-        eventCard.querySelector('[data-confirmation-event-meta]').textContent = [selectedEvent.date, selectedEvent.location].filter(Boolean).join(' · ');
-        const poster = eventCard.querySelector('[data-confirmation-poster]');
-        poster.hidden = !selectedEvent.image;
-        if (selectedEvent.image) poster.src = selectedEvent.image;
-      }
-    }
+    fillConfirmationEventCard(resultStage.querySelector('[data-confirmation-event]'), data.event_title);
     const instagramCta = resultStage.querySelector('[data-registration-instagram-cta]');
     if (instagramCta) instagramCta.hidden = isSelectionEvent();
     const onboarding = resultStage.querySelector('[data-registration-onboarding]');
