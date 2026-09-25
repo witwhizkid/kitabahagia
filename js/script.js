@@ -2163,6 +2163,7 @@ if (registrationForm) {
   };
 
   const registrationErrorMessages = {
+    RATE_LIMITED: 'Terlalu banyak percobaan pendaftaran dari jaringan ini. Coba lagi beberapa menit lagi.',
     INVALID_CV: 'CV/portofolio harus berupa file PDF dengan ukuran maksimal 5 MB.',
     INVALID_PORTFOLIO_URL: 'Link portofolio harus diawali https:// dan maksimal 500 karakter.',
     FILES_TOO_LARGE: 'Ukuran file terlalu besar. Bukti follow maksimal 2 MB dan CV/portofolio maksimal 5 MB.',

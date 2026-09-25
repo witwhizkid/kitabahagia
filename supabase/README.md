@@ -220,6 +220,21 @@ Migration `20261001010000_selection_cv_setting.sql` adds `events.cv_requested`
 rejects a CV or portfolio link when `cv_requested` is off. Deploy `admin-events`
 and `public-events` after the migration, then the site.
 
+## Registration rate limit
+
+Migration `20261002010000_registration_rate_limit.sql` adds
+`registration_attempts` (HMAC-SHA-256 of the client IP keyed with the
+service role key, + time; service role
+only, rows older than a day are deleted on each call) and
+`check_registration_rate(ip_hash)`: at most 5 attempts per 10 minutes and 20 per
+24 hours per IP (taken from `cf-connecting-ip`, then `x-real-ip`, then the
+first `x-forwarded-for` entry). `create-registration` calls it before reading the request body
+and answers `429 RATE_LIMITED` when over. The check fails open (a database or
+network error lets the registration through), so the function can be deployed
+before the migration. Shared networks (campus wifi) share one IP; adjust the
+numbers in the function if needed. Rollback:
+`supabase/rollback/20261002010000_registration_rate_limit.down.sql`.
+
 ## Confirmed registration onboarding
 
 `POST /functions/v1/payment-status` requires `registration_code` and the matching

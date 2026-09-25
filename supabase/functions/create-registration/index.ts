@@ -32,6 +32,7 @@ const errorMessages: Record<string, string> = {
   REGISTRATION_NOT_OPEN: "Pendaftaran kegiatan ini belum dibuka.",
   // Deliberately says nothing about how many people applied.
   APPLICANTS_FULL: "Pendaftaran kegiatan ini sudah ditutup.",
+  RATE_LIMITED: "Terlalu banyak percobaan pendaftaran dari jaringan ini. Coba lagi beberapa menit lagi.",
   INVALID_ANSWER: "Jawaban seleksi belum memenuhi syarat.",
 };
 const conflictErrors = new Set(["EVENT_NOT_OPEN", "REGISTRATION_CLOSED", "EVENT_FULL", "ALREADY_REGISTERED", "REGISTRATION_NOT_OPEN", "APPLICANTS_FULL"]);
@@ -169,12 +170,56 @@ const validateCv = async (file: File): Promise<ProofFile | null> => {
   return { bytes, contentType: file.type, extension: "pdf" };
 };
 
+// Per-IP limit (see migration 20261002010000). Only a keyed hash of the IP is stored.
+// Fails open: if the check itself errors, the registration still goes through.
+// The client can prepend anything to x-forwarded-for, so prefer headers the
+// platform sets itself (Cloudflare's cf-connecting-ip, then x-real-ip).
+const clientIp = (request: Request) =>
+  request.headers.get("cf-connecting-ip")?.trim()
+  || request.headers.get("x-real-ip")?.trim()
+  || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
+
+const withinRateLimit = async (request: Request, supabaseUrl: string, serviceRoleKey: string) => {
+  const ip = clientIp(request);
+  if (!ip) return true;
+  try {
+    // HMAC with the server-only key: the stored hash cannot be reversed by trying every IPv4.
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(serviceRoleKey), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(ip));
+    const ipHash = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    const response = await fetch(`${supabaseUrl}/rest/v1/rpc/check_registration_rate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` },
+      body: JSON.stringify({ p_ip_hash: ipHash }),
+    });
+    if (!response.ok) {
+      console.error("Rate limit check failed", { status: response.status });
+      return true;
+    }
+    return (await response.json()) !== false;
+  } catch {
+    console.error("Rate limit check request failed");
+    return true;
+  }
+};
+
 const storagePathUrl = (base: string, bucket: string, path: string) =>
   `${base}/storage/v1/object/${bucket}/${path.split("/").map(encodeURIComponent).join("/")}`;
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
   if (request.method !== "POST") return errorResponse(405, "INVALID_REQUEST", "Gunakan metode POST.");
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("Missing required Supabase server environment variables");
+    return errorResponse(500, "SERVER_ERROR", "Terjadi kesalahan pada server.");
+  }
+  // Checked before the body is read, so large upload spam is refused cheaply.
+  if (!(await withinRateLimit(request, supabaseUrl, serviceRoleKey))) {
+    return errorResponse(429, "RATE_LIMITED", errorMessages.RATE_LIMITED);
+  }
 
   // The multipart boundary is case-sensitive, so only the comparison is lowercased.
   const contentType = request.headers.get("content-type") ?? "";
@@ -197,13 +242,6 @@ Deno.serve(async (request) => {
   }
   const input = validateInput(body);
   if (!input) return errorResponse(400, "INVALID_REQUEST", errorMessages.INVALID_REQUEST);
-
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRoleKey) {
-    console.error("Missing required Supabase server environment variables");
-    return errorResponse(500, "SERVER_ERROR", "Terjadi kesalahan pada server.");
-  }
 
   let uploadedPath: string | null = null;
   let uploadedCvPath: string | null = null;
