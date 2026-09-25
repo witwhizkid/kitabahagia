@@ -18,3 +18,7 @@ node_modules
 supabase
 CLAUDE.md
 README.md
+
+# Local scripts and backups
+scripts
+backups

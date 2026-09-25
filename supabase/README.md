@@ -235,6 +235,29 @@ before the migration. Shared networks (campus wifi) share one IP; adjust the
 numbers in the function if needed. Rollback:
 `supabase/rollback/20261002010000_registration_rate_limit.down.sql`.
 
+## Database backup
+
+The free Supabase plan has no restorable daily backups, so export manually,
+for example after every event and before running a migration.
+
+One-time setup (Windows): install PostgreSQL 17 from postgresql.org and select
+only "Command Line Tools"; reopen the terminal so `pg_dump` is on PATH.
+
+Each backup:
+1. Supabase → Connect (top bar) → Connection string → **Session pooler**; copy the
+   URI and replace `[YOUR-PASSWORD]` with the database password (Project
+   Settings → Database → reset it if unknown).
+2. `powershell -ExecutionPolicy Bypass -File scripts\backup-db.ps1` and paste
+   the URI when asked (or set `$env:KB_DB_URL` for the session).
+3. The file lands in `backups\` (git- and Vercel-ignored). Copy it somewhere
+   else too; it holds participants' personal data, so keep it private.
+
+The dump is the `public` schema (schema + data). It does not include Storage
+files (posters, story photos, Instagram proofs, CVs) or admin logins in `auth`;
+admins can be re-invited. Restore into an empty project with
+`pg_restore --dbname="<uri>" --no-owner --no-privileges <file>.dump`.
+It prints `schema "public" already exists`; that error is expected and harmless.
+
 ## Confirmed registration onboarding
 
 `POST /functions/v1/payment-status` requires `registration_code` and the matching

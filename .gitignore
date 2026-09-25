@@ -20,3 +20,6 @@ debug.log
 
 # Supabase CLI local state
 supabase/.temp/
+
+# Database backups contain participants' personal data: never commit
+backups/
