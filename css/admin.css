@@ -211,7 +211,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .selection-answer-line { min-width: 0; width: 100%; display: flex; align-items: center; gap: 8px; }
 .selection-answer-line .data-label { flex: 0 0 auto; }
 .selection-answer-text { min-width: 0; overflow: hidden; color: var(--muted); font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
-.applicant-detail-button { align-self: start; flex: 0 0 auto; min-height: 32px; padding: 0; font-size: .82rem; }
+.applicant-detail-button { align-self: start; flex: 0 0 auto; min-height: 36px; margin-top: 8px; padding: 6px 16px; border: 1.5px solid var(--maroon); border-radius: 999px; background: rgba(122, 31, 43, .07); font-size: .86rem; }
+.applicant-detail-button:hover, .applicant-detail-button:focus-visible { background: var(--maroon); color: #fffaf2; }
 .applicant-history { color: var(--maroon); font-size: .78rem; font-weight: 700; }
 .selection-tools { margin: 14px 0 20px; padding: 18px; border: 1px solid var(--line); background: var(--paper); }
 .selection-summary { margin: 0; color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -517,6 +518,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
   .registration-filters .button { min-width: 0; min-height: 44px; }
   .registration-row { grid-template-columns: 1fr; gap: 16px; padding: 18px 0; }
   .registration-row.is-selection-row { padding-left: 34px; }
+  .applicant-detail-button { min-height: 44px; padding-inline: 20px; font-size: .92rem; }
   .registration-select { top: 19px; }
   .registration-statuses { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
   .applicant-dialog { inset: 0; width: 100%; height: 100dvh; }

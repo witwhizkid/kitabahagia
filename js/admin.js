@@ -423,7 +423,7 @@
             <span class="registration-email">${escapeHtml(registration.email)}</span>
             ${isSelectionEvent && registration.selection_answer ? `<span class="selection-answer-line"><span class="data-label">Jawaban</span><span class="selection-answer-text">${escapeHtml(registration.selection_answer)}</span></span>` : ""}
             ${isSelectionEvent ? `<span class="applicant-history">${historyCount ? `Pernah ikut ${historyCount}×` : "Peserta baru"}</span>` : ""}
-            <button class="text-button applicant-detail-button" type="button" data-applicant-detail="${escapeHtml(registration.registration_code)}">Detail</button>
+            <button class="text-button applicant-detail-button" type="button" data-applicant-detail="${escapeHtml(registration.registration_code)}">Lihat detail →</button>
           </div>
           <div class="registration-event registration-cell">
             <span class="data-label">Kegiatan</span>
