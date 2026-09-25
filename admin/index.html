@@ -70,14 +70,14 @@
 
       <div class="workspace">
         <header class="mobile-header">
-          <span>KB Admin</span>
+          <span class="mobile-brand"><img src="../assets/logo/2.%20Logo%20Gabungan/19.png" alt="Kita Bahagia" /><span>Admin</span></span>
           <button id="mobile-logout-button" type="button">Keluar</button>
         </header>
         <nav class="mobile-nav" aria-label="Navigasi admin seluler">
-          <a class="is-active" href="#events" data-admin-view="events" aria-current="page">Kegiatan</a>
-          <a href="#registrations" data-admin-view="registrations">Pendaftar</a>
-          <a href="#stories" data-admin-view="stories">Kisah</a>
-          <a href="#admins" data-admin-view="admins" data-super-admin-only hidden>Kelola Admin</a>
+          <a class="is-active" href="#events" data-admin-view="events" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Kegiatan</span></a>
+          <a href="#registrations" data-admin-view="registrations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.6c2.3.2 3.9 1.8 4.5 4.4"/></svg><span>Pendaftar</span></a>
+          <a href="#stories" data-admin-view="stories"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5c2.8-1 5.4-.8 8 1 2.6-1.8 5.2-2 8-1V19c-2.8-1-5.4-.8-8 1-2.6-1.8-5.2-2-8-1z"/><path d="M12 6.5V20"/></svg><span>Kisah</span></a>
+          <a href="#admins" data-admin-view="admins" data-super-admin-only hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 19 6v5.5c0 4.3-3 7.6-7 9-4-1.4-7-4.7-7-9V6z"/><path d="m9 12 2 2 4-4"/></svg><span>Admin</span></a>
         </nav>
 
         <section id="events-view" class="content-view" aria-labelledby="events-title">
@@ -107,6 +107,14 @@
             <button id="back-button" class="text-button" type="button">← Kembali ke kegiatan</button>
             <p class="eyebrow">Data kegiatan</p>
             <h1 id="form-title">Tambah Kegiatan</h1>
+            <nav class="form-jump" aria-label="Bagian formulir kegiatan">
+              <a href="#basic-heading">Informasi</a>
+              <a href="#schedule-heading">Jadwal</a>
+              <a href="#detail-heading">Detail</a>
+              <a href="#mode-heading">Pendaftaran</a>
+              <a href="#media-heading">Foto</a>
+              <a href="#publish-heading">Publikasi</a>
+            </nav>
           </div>
 
           <form id="event-form" class="event-form">
