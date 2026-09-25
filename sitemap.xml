@@ -25,4 +25,7 @@
     <loc>https://kitabahagia.vercel.app/relawan.html</loc>
   </url>
   <url><loc>https://kitabahagia.vercel.app/cek-status.html</loc></url>
+  <url>
+    <loc>https://kitabahagia.vercel.app/faq.html</loc>
+  </url>
 </urlset>
