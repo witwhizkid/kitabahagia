@@ -1406,6 +1406,19 @@ if (registrationForm) {
     });
     resultStage.querySelector('#freeConfirmationHeading').textContent = outcome.heading;
     resultStage.querySelector('[data-confirmation-copy]').textContent = outcome.copy;
+    // A short "see you there" card; selection applicants are not promised a seat, so no "sampai jumpa".
+    const eventCard = resultStage.querySelector('[data-confirmation-event]');
+    if (eventCard) {
+      eventCard.hidden = !selectedEvent;
+      if (selectedEvent) {
+        const eventName = data.event_title || selectedEvent.name;
+        eventCard.querySelector('[data-confirmation-event-line]').textContent = isSelectionEvent() ? eventName : `Sampai jumpa di ${eventName}`;
+        eventCard.querySelector('[data-confirmation-event-meta]').textContent = [selectedEvent.date, selectedEvent.location].filter(Boolean).join(' · ');
+        const poster = eventCard.querySelector('[data-confirmation-poster]');
+        poster.hidden = !selectedEvent.image;
+        if (selectedEvent.image) poster.src = selectedEvent.image;
+      }
+    }
     const instagramCta = resultStage.querySelector('[data-registration-instagram-cta]');
     if (instagramCta) instagramCta.hidden = isSelectionEvent();
     const onboarding = resultStage.querySelector('[data-registration-onboarding]');

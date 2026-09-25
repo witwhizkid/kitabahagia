@@ -2546,7 +2546,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-page .summary-card { grid-area:summary; min-width:0; overflow:visible; padding:0; background:transparent; border:0; border-radius:0; box-shadow:none; }
 .registration-summary-sticky { position:sticky; top:calc(var(--site-header-height) + 28px); padding:26px 28px 28px; background:var(--cream); border-top:1px solid var(--ink); border-bottom:1px solid var(--line); }
 .registration-summary-topline { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px; color:var(--muted); font-size:11px; font-weight:700; }
-.registration-event-category { margin:0; color:var(--maroon); font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.registration-event-category { margin:0; color:var(--maroon); font-size:11px; font-weight:800; }
 .registration-page .summary-card h2 { margin:0; font-size:clamp(30px, 3.1vw, 43px); line-height:1.06; letter-spacing:-.03em; text-wrap:balance; }
 .event-summary { margin:28px 0 22px; }
 .event-summary div { display:grid; grid-template-columns:72px minmax(0, 1fr); gap:16px; padding:11px 0; border-top:1px solid var(--line); }
@@ -2703,6 +2703,11 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-page .payment-stage.payment_deadline_passed .payment-intro { display:block; margin:0; text-align:center; }
 .registration-page .payment-back-link:focus-visible { outline-color:var(--white); }
 .registration-confirmation { margin-top:48px; padding:32px 0; border-top:1px solid var(--line); max-width:680px; }
+.registration-confirmation-event { display:flex; align-items:center; gap:16px; margin:0 0 20px; padding:14px; border-radius:var(--radius-md); background:var(--maroon-soft); }
+.registration-confirmation-event img { flex:none; width:64px; aspect-ratio:4 / 5; border-radius:8px; background:var(--cream); object-fit:contain; }
+.registration-confirmation-event p { margin:0; line-height:1.5; }
+.registration-confirmation-event strong { display:block; color:var(--maroon); font-size:17px; }
+.registration-confirmation-event span { color:var(--muted); font-size:14px; }
 @media (max-width:640px) {
   .registration-page .payment-stage { grid-template-columns:1fr; gap:32px; margin-top:40px; padding:28px 6px; }
   .site-header .nav {
@@ -6112,8 +6117,8 @@ html.home-document { overflow-x: hidden; }
 .registration-page .check-row input { width:20px; min-height:20px; height:20px; margin:0; }
 .registration-page .check-row:has(input:focus-visible) { outline:3px solid var(--maroon); outline-offset:2px; }
 .registration-page .selection-instagram-proof { padding:18px; border:1.5px solid var(--line); border-radius:var(--radius-md); }
-.registration-page .selection-instagram-proof .eyebrow { margin:0; }
-.registration-page .selection-instagram-proof p:not(.eyebrow) { margin:0; color:var(--muted); font-size:14px; line-height:1.6; }
+.registration-page .selection-instagram-proof .selection-instagram-title { color:var(--ink); font-size:15px; font-weight:700; }
+.registration-page .selection-instagram-proof p { margin:0; color:var(--muted); font-size:14px; line-height:1.6; }
 .registration-page .selection-instagram-proof [data-instagram] { justify-self:start; margin-bottom:8px; }
 /* Native file input stays on top (transparent) so click, keyboard and screen readers keep working. */
 .registration-page .file-picker { position:relative; display:flex; align-items:center; gap:12px; min-height:50px; padding:7px 14px 7px 7px; border:1.5px solid var(--line); border-radius:var(--radius-md); background:var(--cream); }
