@@ -126,6 +126,10 @@ Lainnya:
   upload anonim adalah follow-up security pra-launch; function crash di antara
   upload dan RPC bisa meninggalkan object privat orphan. Detail ada di
   `supabase/README.md`.
+- Admin di HP (≤768px): tab bar bawah dengan ikon (disembunyikan saat form
+  kegiatan/kisah terbuka), logo di header, judul + tombol Tambah satu baris,
+  kartu kegiatan ringkas tanpa label. Tablet (769–900px) tetap tab atas. Form
+  kegiatan punya tombol lompat per bagian yang menempel saat di-scroll.
 - Status "Kedaluwarsa" di admin tidak disimpan di database: `admin-registrations`
   menurunkannya (`payment_expired`) dari `pending_payment` + `payment_deadline`
   yang sudah lewat, sama dengan aturan pelepasan kursi. "Lunas" selalu menang.
