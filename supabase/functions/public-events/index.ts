@@ -33,6 +33,7 @@ type EventRow = {
   timezone: string;
   end_at: string | null;
   location: string | null;
+  location_url: string | null;
   status: string;
   capacity: number | null;
   registration_deadline: string | null;
@@ -68,6 +69,7 @@ const eventProjection = [
   "timezone",
   "end_at",
   "location",
+  "location_url",
   "status",
   "capacity",
   "registration_deadline",
@@ -242,6 +244,7 @@ Deno.serve(async (request) => {
         start_at: startAt,
         end_at: event.end_at ? new Date(event.end_at).toISOString() : null,
         location: event.location,
+        location_url: event.location_url ?? null,
         status: event.status,
         // Selection events show no numbers publicly: neither seats nor applicants.
         capacity: selection ? null : event.capacity,

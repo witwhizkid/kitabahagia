@@ -119,6 +119,7 @@ const normalizeScheduleEvent = (event) => {
     date: formatEventDateRange(start, end),
     time: formatEventTime(start, end),
     location: event.location || 'Lokasi menyusul',
+    locationUrl: safeMapsUrl(event.location_url),
     status: statusLabels[statusKey] || event.status || 'Status belum tersedia',
     statusKey,
     capacity,
@@ -869,6 +870,16 @@ function initScheduleCountdown() {
 }
 
 initScheduleCountdown();
+
+const safeMapsUrl = (value) => {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === 'https:' ? url.toString() : null;
+  } catch {
+    return null;
+  }
+};
 
 const safeWhatsAppGroupUrl = (value) => {
   if (typeof value !== 'string' || !value.trim()) return null;
@@ -1957,6 +1968,30 @@ if (registrationForm) {
     setText('eventDate', selectedEvent.date);
     setText('eventTime', selectedEvent.time);
     setText('eventLocation', selectedEvent.location);
+    if (selectedEvent.locationUrl) {
+      const directions = document.createElement('a');
+      directions.className = 'event-directions-link';
+      directions.href = selectedEvent.locationUrl;
+      directions.target = '_blank';
+      directions.rel = 'noopener noreferrer';
+      directions.textContent = 'Petunjuk arah ↗';
+      document.getElementById('eventLocation')?.append(document.createElement('br'), directions);
+    }
+    const shareUrl = `${window.location.origin}/pendaftaran.html?event=${encodeURIComponent(selectedEvent.slug)}`;
+    const shareWhatsApp = document.querySelector('[data-event-share-whatsapp]');
+    if (shareWhatsApp) shareWhatsApp.href = `https://wa.me/?text=${encodeURIComponent(`${selectedEvent.name} · daftar di Kita Bahagia: ${shareUrl}`)}`;
+    const shareCopy = document.querySelector('[data-event-share-copy]');
+    if (shareCopy) {
+      shareCopy.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          shareCopy.textContent = 'Tersalin';
+        } catch {
+          shareCopy.textContent = 'Gagal menyalin';
+        }
+        setTimeout(() => { shareCopy.textContent = 'Salin link'; }, 2000);
+      };
+    }
     // The status line must not say "dibuka" while the form below is closed or not open yet.
     const statusReason = eventRegistrationAvailability(selectedEvent).reason;
     const statusText = statusReason === 'not_yet' ? 'Pendaftaran belum dibuka'

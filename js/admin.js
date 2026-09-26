@@ -1113,6 +1113,7 @@
     $("#event-end-time").value = endTime;
     $("#event-deadline").value = toLocalDateTime(event?.registration_deadline);
     $("#event-location").value = event?.location || "";
+    $("#event-location-url").value = event?.location_url || "";
     $("#event-price").value = event?.price ?? 0;
     $("#event-capacity").value = event?.capacity ?? "";
     setPaymentWindow(event?.payment_window_minutes ?? 15);
@@ -1279,6 +1280,7 @@
     end_at: endAtFromForm(),
     timezone: "Asia/Jakarta",
     location: $("#event-location").value.trim() || null,
+    location_url: $("#event-location-url").value.trim() || null,
     price: Number($("#event-price").value),
     capacity: $("#event-capacity").value ? Number($("#event-capacity").value) : null,
     payment_window_minutes: Number($("#event-payment-window").value),

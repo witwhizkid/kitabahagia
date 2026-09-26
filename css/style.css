@@ -6133,6 +6133,9 @@ html.home-document { overflow-x: hidden; }
 .registration-page .registration-payment-window::before { content:""; flex:none; width:14px; height:14px; border:2px solid currentColor; border-radius:50%; background:linear-gradient(currentColor, currentColor) 50% 30% / 2px 5px no-repeat; }
 .registration-page .registration-payment-window[hidden] { display:none; }
 .registration-page .registration-summary-cta { border-radius:999px; background:var(--white); color:var(--maroon); }
+.registration-page .event-directions-link { display:inline-block; margin-top:2px; padding-block:6px; margin-block:-6px; color:var(--white); font-weight:600; text-decoration:underline; text-underline-offset:3px; }
+.registration-page .registration-share { display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; margin:12px 0 0; color:rgba(255,255,255,.72); font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+.registration-page .registration-share a, .registration-page .registration-share button { padding:10px 0; margin-block:-10px; border:0; background:none; color:var(--white); font:inherit; letter-spacing:inherit; text-transform:inherit; text-decoration:underline; text-underline-offset:4px; cursor:pointer; }
 .registration-page .registration-event-disclosure { border-bottom:0; }
 .registration-page .registration-event-disclosure > summary { display:inline-flex; align-items:center; min-height:40px; padding:8px 16px; border-radius:999px; background:var(--maroon-soft); }
 .registration-page .registration-event-disclosure[open] .registration-event-content { margin-top:12px; padding:20px 22px; border-radius:var(--radius-lg); background:var(--cream); }

@@ -248,6 +248,17 @@ Events edited before the migration show nothing until their next edit.
 function selects these columns). Rollback: deploy the previous `admin-events`,
 then `supabase/rollback/20261004010000_event_last_edited.down.sql`.
 
+## Event location link ("Petunjuk arah")
+
+Migration `20261005010000_event_location_url.sql` adds optional
+`events.location_url` (https only, DB check). `admin-events` accepts only Google
+Maps links (`maps.app.goo.gl`, `goo.gl`, `maps.google.com`, `google.com/maps…`, `google.co.id/maps…`)
+and `null` to clear; `public-events` returns it and the registration page shows
+"Petunjuk arah ↗" under the location. **Deploy order:** migration first, then
+`admin-events` and `public-events` (both select the column), then the site.
+Rollback: deploy the previous functions, then
+`supabase/rollback/20261005010000_event_location_url.down.sql`.
+
 ## Database backup
 
 The free Supabase plan has no restorable daily backups, so export manually,

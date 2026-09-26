@@ -19,7 +19,7 @@ const fail = (status: number, code: string, message: string) =>
 
 const eventProjection = [
   "slug", "title", "description", "registration_description", "activities", "benefits",
-  "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location",
+  "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location", "location_url",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "is_demo", "payment_window_minutes",
   "registration_mode", "registration_opens_at", "applicant_limit", "announcement_at",
@@ -30,7 +30,7 @@ const eventProjection = [
 
 const writableFields = new Set([
   "title", "slug", "description", "registration_description", "activities", "benefits",
-  "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location",
+  "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location", "location_url",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "payment_window_minutes",
   "registration_mode", "registration_opens_at", "applicant_limit", "announcement_at",
@@ -140,7 +140,7 @@ const validatePayload = (input: unknown, creating: boolean) => {
       } else if (field === "cv_requested") {
         if (typeof value !== "boolean") return { error: "Pilihan CV/portofolio tidak valid." } as const;
         data[field] = value;
-      } else if (["description", "registration_description", "category", "category_key", "start_time", "end_at", "location", "registration_deadline", "image_url", "image_alt", "whatsapp_group_url", "registration_opens_at", "announcement_at", "selection_question", "commitment_text", "cv_note", "wa_message_accepted", "wa_message_waitlisted", "wa_message_rejected"].includes(field)) {
+      } else if (["description", "registration_description", "category", "category_key", "start_time", "end_at", "location", "location_url", "registration_deadline", "image_url", "image_alt", "whatsapp_group_url", "registration_opens_at", "announcement_at", "selection_question", "commitment_text", "cv_note", "wa_message_accepted", "wa_message_waitlisted", "wa_message_rejected"].includes(field)) {
         data[field] = cleanNullableText(value);
       } else if (typeof value === "string") data[field] = value.trim();
       else return { error: `${field} tidak valid.` } as const;
@@ -183,6 +183,15 @@ const validatePayload = (input: unknown, creating: boolean) => {
   if (data.timezone !== undefined) {
     if (typeof data.timezone !== "string" || !data.timezone || data.timezone.length > 64) return { error: "Zona waktu tidak valid." } as const;
     try { new Intl.DateTimeFormat("en", { timeZone: data.timezone }); } catch { return { error: "Zona waktu tidak valid." } as const; }
+  }
+  if (data.location_url !== undefined && data.location_url !== null) {
+    try {
+      const url = new URL(String(data.location_url));
+      const googleMaps = ["maps.app.goo.gl", "goo.gl", "maps.google.com"].includes(url.hostname)
+        || (/^(www\.)?google\.(com|co\.id)$/.test(url.hostname) && url.pathname.startsWith("/maps"));
+      if (url.protocol !== "https:" || !googleMaps || url.href.length > 1000) throw new Error();
+      data.location_url = url.toString();
+    } catch { return { error: "Link lokasi harus berupa link Google Maps (https://maps.app.goo.gl/… atau https://www.google.com/maps/…)." } as const; }
   }
   if (data.whatsapp_group_url !== undefined && data.whatsapp_group_url !== null) {
     try {
