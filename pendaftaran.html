@@ -79,6 +79,7 @@
                 <a href="#eventActivitiesSection" id="eventActivitiesNav">Yang akan kamu lakukan</a>
                 <a href="#eventBenefitsSection" id="eventBenefitsNav">Yang kamu bawa pulang</a>
                 <a href="#eventRequirementsSection" id="eventRequirementsNav" hidden>Persyaratan jika lolos</a>
+                <a href="#eventLocationSection" id="eventLocationNav" hidden>Lokasi</a>
               </nav>
               <section class="registration-detail" id="eventDescriptionSection" aria-labelledby="eventDescriptionTitle">
                 <h3 id="eventDescriptionTitle">Tentang kegiatan</h3>
@@ -95,6 +96,12 @@
               <section class="registration-detail" id="eventRequirementsSection" aria-labelledby="eventRequirementsTitle" hidden>
                 <h3 id="eventRequirementsTitle">Persyaratan jika lolos</h3>
                 <ul id="eventRequirements"></ul>
+              </section>
+              <section class="registration-detail" id="eventLocationSection" aria-labelledby="eventLocationTitle" hidden>
+                <h3 id="eventLocationTitle">Lokasi</h3>
+                <p id="eventLocationText"></p>
+                <div class="event-map" data-event-map></div>
+                <a class="event-map-open" data-event-map-open target="_blank" rel="noopener noreferrer">Buka di Google Maps <span aria-hidden="true">&nearr;</span></a>
               </section>
               <p class="registration-detail-note"></p>
             </article>

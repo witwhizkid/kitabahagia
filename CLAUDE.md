@@ -76,8 +76,11 @@ Halaman pendaftaran (`pendaftaran.html`):
   `selection-cvs`, 5 MB) dan link portofolio `https://` (opsional), hanya kalau
   admin mencentang "Minta CV/portofolio" (keterangannya bisa diedit). Detail:
   "Selection extras" di `supabase/README.md`.
-- Kartu ringkasan: link Google Maps opsional dari admin (`events.location_url`)
-  tampil sebagai "Petunjuk arah ↗" di bawah Lokasi. "Ajak teman ikut: WhatsApp ·
+- Kartu ringkasan: nama lokasi sendiri jadi link ↗ ke Google Maps
+  (`events.location_url` dari admin, kalau kosong pencarian nama lokasi). Detail
+  kegiatan punya bagian "Lokasi" dengan peta Google tertanam (dicari dari teks
+  lokasi, dimuat hanya saat "Detail kegiatan" dibuka) + tombol "Buka di Google
+  Maps". CSP `frame-src` mengizinkan www.google.com dan maps.google.com. "Ajak teman ikut: WhatsApp ·
   Salin link" ada di layar sukses (`renderShare` di `renderOnboarding`), bukan di
   kartu ringkasan, supaya tidak mengganggu alur form. Tombol Daftar yang
   menempel ala Luma sengaja tidak dibuat: form sudah langsung di bawah ringkasan.

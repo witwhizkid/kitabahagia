@@ -6133,7 +6133,11 @@ html.home-document { overflow-x: hidden; }
 .registration-page .registration-payment-window::before { content:""; flex:none; width:14px; height:14px; border:2px solid currentColor; border-radius:50%; background:linear-gradient(currentColor, currentColor) 50% 30% / 2px 5px no-repeat; }
 .registration-page .registration-payment-window[hidden] { display:none; }
 .registration-page .registration-summary-cta { border-radius:999px; background:var(--white); color:var(--maroon); }
-.registration-page .event-directions-link { display:inline-block; margin-top:2px; padding-block:6px; margin-block:-6px; color:var(--white); font-weight:600; text-decoration:underline; text-underline-offset:3px; }
+.registration-page .event-location-link { color:inherit; text-decoration:underline; text-decoration-color:rgba(255,255,255,.45); text-decoration-thickness:1px; text-underline-offset:4px; }
+.registration-page .event-location-link:hover { text-decoration-color:currentColor; }
+.event-map { margin-top:16px; overflow:hidden; border-radius:var(--radius-md); background:var(--sand); aspect-ratio:16 / 9; }
+.event-map iframe { display:block; width:100%; height:100%; border:0; }
+.event-map-open { display:inline-flex; align-items:center; gap:6px; min-height:44px; margin-top:6px; color:var(--maroon); font-size:14px; font-weight:600; text-decoration:underline; text-underline-offset:4px; }
 .registration-page .registration-share { display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; margin:22px 0 0; color:var(--muted); font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
 .registration-page .registration-share[hidden] { display:none; }
 .registration-page .registration-share a, .registration-page .registration-share button { padding:10px 0; margin-block:-10px; border:0; background:none; color:var(--maroon); font:inherit; letter-spacing:inherit; text-transform:inherit; text-decoration:underline; text-underline-offset:4px; cursor:pointer; }

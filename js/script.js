@@ -1989,14 +1989,45 @@ if (registrationForm) {
     setText('eventDate', selectedEvent.date);
     setText('eventTime', selectedEvent.time);
     setText('eventLocation', selectedEvent.location);
-    if (selectedEvent.locationUrl) {
-      const directions = document.createElement('a');
-      directions.className = 'event-directions-link';
-      directions.href = selectedEvent.locationUrl;
-      directions.target = '_blank';
-      directions.rel = 'noopener noreferrer';
-      directions.textContent = 'Petunjuk arah ↗';
-      document.getElementById('eventLocation')?.append(document.createElement('br'), directions);
+    // The location name itself links to Google Maps (admin link, else a search), and the
+    // "Lokasi" section in the event details gets a small map that loads only when opened.
+    const hasLocation = selectedEvent.location && selectedEvent.location !== 'Lokasi menyusul';
+    const mapsUrl = selectedEvent.locationUrl
+      || (hasLocation ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedEvent.location)}` : null);
+    if (mapsUrl) {
+      const locationLink = document.createElement('a');
+      locationLink.className = 'event-location-link';
+      locationLink.href = mapsUrl;
+      locationLink.target = '_blank';
+      locationLink.rel = 'noopener noreferrer';
+      locationLink.append(document.createTextNode(`${selectedEvent.location} `));
+      const arrow = document.createElement('span');
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.textContent = '↗';
+      locationLink.append(arrow);
+      document.getElementById('eventLocation')?.replaceChildren(locationLink);
+    }
+    const locationSection = document.getElementById('eventLocationSection');
+    if (locationSection) {
+      locationSection.hidden = !hasLocation;
+      document.getElementById('eventLocationNav')?.toggleAttribute('hidden', !hasLocation);
+      if (hasLocation) {
+        setText('eventLocationText', selectedEvent.location);
+        locationSection.querySelector('[data-event-map-open]').href = mapsUrl;
+        const map = locationSection.querySelector('[data-event-map]');
+        const loadMap = () => {
+          if (map.querySelector('iframe')) return;
+          const frame = document.createElement('iframe');
+          frame.src = `https://maps.google.com/maps?q=${encodeURIComponent(selectedEvent.location)}&z=15&output=embed`;
+          frame.title = `Peta lokasi ${selectedEvent.location}`;
+          frame.loading = 'lazy';
+          frame.referrerPolicy = 'no-referrer-when-downgrade';
+          map.append(frame);
+        };
+        const disclosure = document.querySelector('.registration-event-disclosure');
+        if (!disclosure || disclosure.open) loadMap();
+        else disclosure.addEventListener('toggle', () => { if (disclosure.open) loadMap(); }, { once: true });
+      }
     }
     // The status line must not say "dibuka" while the form below is closed or not open yet.
     const statusReason = eventRegistrationAvailability(selectedEvent).reason;
