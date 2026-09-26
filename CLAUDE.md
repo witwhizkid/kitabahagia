@@ -152,8 +152,13 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
 - Fondasi: data kehadiran. Tambah "Tandai hadir" (bulk) di admin Pendaftar;
   sekarang sistem hanya tahu siapa yang daftar.
 - Alur: admin klik "Terbitkan sertifikat" → semua yang hadir → pratinjau
-  daftar nama (bisa dibetulkan; rapikan huruf kapital) → relawan unduh PDF lewat
-  Cek status (kode + no. HP); link bisa dikirim lewat draf WA.
+  daftar nama (bisa dibetulkan; rapikan huruf kapital) → tiap sertifikat dapat
+  **link pribadi** acak (`sertifikat?k=...`, sama dengan isi QR) yang
+  menampilkan "sah" + tombol Unduh PDF. User ingin serba instan, tanpa input
+  kode. Pengiriman: kalau sudah ada domain sendiri → email otomatis ke semua
+  yang hadir (jalur utama) + 1 pengumuman di grup WA kegiatan; tombol "Kirim via
+  WA" per orang (draf WA existing) sebagai cadangan. Sebelum ada domain → draf
+  WA per orang. Cek status (kode + no. HP) tetap ada sebagai cadangan.
 - Template per kegiatan dari divisi Desain: PNG 2000×1414 (A4 landscape) yang
   sudah berisi latar, deskripsi kegiatan, tanda tangan Founder + Project Leader.
   Sistem hanya menempel nomor, nama, peran ("Sebagai Relawan Tingkat
@@ -163,9 +168,8 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
 - Nomor dicetak dengan format lama `13.044/KB/VII/2026` (tampilan/arsip saja,
   berurutan jadi mudah ditebak); arti "13" dan "044" **belum dijawab** tim Desain.
 - QR berisi kode verifikasi **acak** terpisah (tidak bisa ditebak/dienumerasi).
-  Verifikasi publik: `sertifikat?kode=...` hanya menampilkan "sah", nama,
-  kegiatan, tanggal, peran; tanpa HP/email/PDF. Unduh PDF hanya lewat Cek
-  status (kode pendaftaran + no. HP).
+  Halaman link hanya menampilkan "sah", nama, kegiatan, tanggal, peran, dan
+  PDF sertifikat itu sendiri; tanpa HP/email.
 - Template bertanda tangan disimpan di bucket privat (bisa dipalsukan kalau
   bocor); relawan hanya bisa mengunduh sertifikat miliknya. Minta izin Project
   Leader untuk pemakaian tanda tangannya.
