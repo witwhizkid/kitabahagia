@@ -123,7 +123,7 @@ Lainnya:
   Seleksi: multipart hanya pada kondisi itu; JPG/PNG/WebP maksimal 2 MiB masuk
   ke bucket privat `instagram-proofs`, dan database hanya menyimpan object path.
   Admin mendapat signed URL 10 menit setelah verifikasi admin. Rate limit per IP
-  (hash, 5/10 menit, 20/24 jam) ada di `create-registration` sebelum body dibaca
+  (hash, 30/10 menit, 200/24 jam; dilonggarkan karena CGNAT operator/WiFi kampus) ada di `create-registration` sebelum body dibaca
   (`check_registration_rate`, gagal = tetap diizinkan); function crash di antara
   upload dan RPC bisa meninggalkan object privat orphan. Detail ada di
   `supabase/README.md`.

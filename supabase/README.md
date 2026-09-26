@@ -226,14 +226,16 @@ Migration `20261002010000_registration_rate_limit.sql` adds
 `registration_attempts` (HMAC-SHA-256 of the client IP keyed with the
 service role key, + time; service role
 only, rows older than a day are deleted on each call) and
-`check_registration_rate(ip_hash)`: at most 5 attempts per 10 minutes and 20 per
-24 hours per IP (taken from `cf-connecting-ip`, then `x-real-ip`, then the
+`check_registration_rate(ip_hash)`: at most 30 attempts per 10 minutes and 200 per
+24 hours per IP (relaxed from 5/20 by `20261003010000_registration_rate_limit_relax.sql`,
+because carrier CGNAT and campus wifi put many real people behind one IP) (taken from `cf-connecting-ip`, then `x-real-ip`, then the
 first `x-forwarded-for` entry). `create-registration` calls it before reading the request body
 and answers `429 RATE_LIMITED` when over. The check fails open (a database or
 network error lets the registration through), so the function can be deployed
-before the migration. Shared networks (campus wifi) share one IP; adjust the
-numbers in the function if needed. Rollback:
-`supabase/rollback/20261002010000_registration_rate_limit.down.sql`.
+before the migration. To change the numbers, add a migration that replaces the
+function. Manual check: `supabase/tests/20261003010000_registration_rate_limit_relax_manual.sql`.
+Rollback: `supabase/rollback/20261003010000_registration_rate_limit_relax.down.sql` (back to
+5/20), or `supabase/rollback/20261002010000_registration_rate_limit.down.sql` (remove the limit).
 
 ## Database backup
 
