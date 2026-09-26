@@ -297,6 +297,50 @@
     }
   };
 
+  // Story body: blank lines separate blocks; "> " lines become a pull quote and "## " a subheading.
+  const storyBlocks = (text) => text.split(/\r?\n\s*\r?\n/).map((block) => block.trim()).filter(Boolean).map((block) => {
+    if (/^>\s?/.test(block)) {
+      const quote = document.createElement("blockquote");
+      quote.className = "story-pullquote";
+      const lines = block.split(/\r?\n/).map((line) => line.replace(/^>\s?/, "").trim()).filter(Boolean);
+      // A last line starting with a dash ("— Nadia, relawan") is the speaker.
+      const speaker = lines.length > 1 && /^[—–-]\s*/.test(lines.at(-1)) ? lines.pop() : "";
+      const paragraph = document.createElement("p");
+      paragraph.textContent = lines.join("\n");
+      quote.append(paragraph);
+      if (speaker) {
+        const cite = document.createElement("cite");
+        cite.textContent = speaker;
+        quote.append(cite);
+      }
+      return quote;
+    }
+    if (/^##\s+/.test(block)) {
+      const heading = document.createElement("h2");
+      heading.textContent = block.replace(/^##\s+/, "");
+      return heading;
+    }
+    const paragraph = document.createElement("p");
+    paragraph.textContent = block;
+    return paragraph;
+  });
+
+  // "Kisah lainnya" under a story; optional, so a failure just leaves it hidden.
+  const renderMoreStories = async (currentSlug) => {
+    const section = document.querySelector("[data-story-more]");
+    const list = document.querySelector("[data-story-more-list]");
+    if (!section || !list) return;
+    try {
+      const others = (await fetchPublicStories()).filter((item) => item.slug !== currentSlug).slice(0, 3);
+      list.replaceChildren(...others.map((item) => makeStoryCard(item, "kisah-entry", 3)));
+      list.classList.remove("has-one-story", "has-two-stories", "has-many-stories");
+      list.classList.add(others.length === 1 ? "has-one-story" : others.length === 2 ? "has-two-stories" : "has-many-stories");
+      section.hidden = others.length === 0;
+    } catch {
+      section.hidden = true;
+    }
+  };
+
   const renderStoryDetail = async () => {
     const article = document.querySelector("[data-story-detail]");
     if (!article) return;
@@ -317,6 +361,9 @@
       const story = stories[0];
       document.title = `${story.title} — Kita Bahagia`;
       document.querySelector("[data-story-detail-title]").textContent = story.title;
+      const lead = document.querySelector("[data-story-detail-lead]");
+      lead.textContent = story.excerpt?.trim() || "";
+      lead.hidden = !lead.textContent;
       const date = publishedDate(story);
       const time = document.querySelector("[data-story-detail-date]");
       if (date) {
@@ -336,12 +383,10 @@
         coverFigure.hidden = true;
       }
       const body = document.querySelector("[data-story-detail-body]");
-      body.replaceChildren();
-      story.body.split(/\r?\n\s*\r?\n/).filter((paragraph) => paragraph.trim()).forEach((paragraph) => {
-        const element = document.createElement("p");
-        element.textContent = paragraph.trim();
-        body.append(element);
-      });
+      body.replaceChildren(...storyBlocks(story.body));
+      const words = story.body.trim().split(/\s+/).length;
+      document.querySelector("[data-story-detail-reading]").textContent = `${Math.max(1, Math.round(words / 200))} menit baca`;
+      void renderMoreStories(story.slug);
       state.hidden = true;
       state.removeAttribute("aria-busy");
       article.hidden = false;

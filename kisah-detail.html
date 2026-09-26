@@ -51,11 +51,20 @@
         <header class="story-detail-header">
           <span class="eyebrow">Kisah</span>
           <h1 data-story-detail-title></h1>
-          <time data-story-detail-date></time>
+          <p class="story-detail-lead" data-story-detail-lead hidden></p>
+          <p class="story-detail-meta"><time data-story-detail-date></time><span data-story-detail-reading></span></p>
         </header>
         <figure class="story-detail-cover"><img data-story-detail-cover src="" alt="" decoding="async"></figure>
         <div class="story-detail-body" data-story-detail-body></div>
+        <aside class="story-detail-cta" aria-label="Ikut kegiatan">
+          <p>Mau jadi bagian dari cerita berikutnya?</p>
+          <a class="btn btn-primary" href="jadwal.html">Lihat jadwal kegiatan <span aria-hidden="true">&rarr;</span></a>
+        </aside>
       </article>
+      <section class="story-detail-more" data-story-more aria-labelledby="storyMoreHeading" hidden>
+        <div class="kisah-archive-heading"><h2 id="storyMoreHeading">Kisah lainnya</h2></div>
+        <div class="kisah-grid kisah-archive-grid" data-story-more-list></div>
+      </section>
     </div>
   </main>
   <footer class="site-footer">

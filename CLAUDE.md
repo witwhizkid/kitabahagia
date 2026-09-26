@@ -85,6 +85,16 @@ Halaman pendaftaran (`pendaftaran.html`):
   submit valid dan mengisi otomatis pendaftaran berikutnya; tidak dicentang =
   data tersimpan dihapus.
 
+Halaman detail Kisah (`kisah-detail.html`, `js/stories.js`), gaya editorial ala Kinfolk:
+- Ringkasan tampil sebagai paragraf pembuka besar; baris info "tanggal · N menit
+  baca" (200 kata/menit); huruf pertama besar (drop cap).
+- Isi tetap teks polos di database; blok diawali `>` = kutipan besar (baris
+  terakhir diawali "—" jadi nama narasumber kecil), diawali `##` = subjudul.
+  Petunjuknya ada di bawah kolom Isi Kisah di admin.
+- Penutup: ajakan "Lihat jadwal kegiatan" lalu "Kisah lainnya" (3 kartu,
+  memakai kartu arsip). Belum: foto di tengah cerita, keterangan foto, penulis
+  (butuh perubahan database).
+
 Lainnya:
 - Foto disajikan sebagai WebP yang sudah diperkecil (originalnya 2–7 MB).
 - Upload foto di admin dikompres di browser sebelum dikirim (`compressImage`

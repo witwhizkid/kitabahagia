@@ -249,6 +249,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .delete-button { color: var(--error); border-color: #c79797; }
 .delete-button:hover { background: #f8eaea; }
 .story-body-field textarea { min-height: 360px; }
+.story-body-field small { color: var(--muted); font-size: .8rem; font-weight: 400; line-height: 1.45; }
+.story-body-field code { font-size: .9em; }
 
 .admin-invite-section, .admin-directory { padding: 28px 0; border-top: 1px solid var(--line); }
 .admin-invite-section { display: grid; grid-template-columns: minmax(190px, .55fr) minmax(0, 1.45fr); gap: clamp(28px, 5vw, 70px); }
