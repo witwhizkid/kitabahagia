@@ -382,6 +382,19 @@
       } else {
         coverFigure.hidden = true;
       }
+      document.querySelector("[data-story-detail-layout]").classList.toggle("has-cover", Boolean(story.cover_image_url));
+      const pageUrl = window.location.href.split("#")[0];
+      document.querySelector("[data-story-share-whatsapp]").href = `https://wa.me/?text=${encodeURIComponent(`${story.title} ${pageUrl}`)}`;
+      const copyButton = document.querySelector("[data-story-share-copy]");
+      copyButton.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(pageUrl);
+          copyButton.textContent = "Tersalin";
+        } catch {
+          copyButton.textContent = "Gagal menyalin";
+        }
+        setTimeout(() => { copyButton.textContent = "Salin link"; }, 2000);
+      };
       const body = document.querySelector("[data-story-detail-body]");
       body.replaceChildren(...storyBlocks(story.body));
       const words = story.body.trim().split(/\s+/).length;

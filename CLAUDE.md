@@ -87,7 +87,12 @@ Halaman pendaftaran (`pendaftaran.html`):
 
 Halaman detail Kisah (`kisah-detail.html`, `js/stories.js`), gaya editorial ala Kinfolk:
 - Ringkasan tampil sebagai paragraf pembuka besar; baris info "tanggal · N menit
-  baca" (200 kata/menit); huruf pertama besar (drop cap).
+  baca" (200 kata/menit). Drop cap sudah dihapus (user: terlalu kuno).
+- Isi, pembuka, dan kutipan memakai serif **Newsreader** (Google Fonts, hanya di
+  halaman ini); judul/subjudul tetap font KB. Paragraf ber-indentasi baris
+  pertama. Layar ≥900px: foto sampul menempel di kiri, teks di kanan
+  (`.story-detail-layout.has-cover`); HP/tablet bertumpuk. Baris "Bagikan:
+  WhatsApp · Salin link" di atas teks.
 - Isi tetap teks polos di database; blok diawali `>` = kutipan besar (baris
   terakhir diawali "—" jadi nama narasumber kecil), diawali `##` = subjudul.
   Petunjuknya ada di bawah kolom Isi Kisah di admin.

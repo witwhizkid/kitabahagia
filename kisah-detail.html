@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
   <link crossorigin href="https://cmrdapfuqtjlmpepfwfq.supabase.co" rel="preconnect">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Instrument+Sans:wght@500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Instrument+Sans:wght@500;600;700&amp;family=Newsreader:ital,wght@0,400;0,500;1,400&amp;display=swap" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="assets/logo/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32.png">
@@ -54,12 +54,17 @@
           <p class="story-detail-lead" data-story-detail-lead hidden></p>
           <p class="story-detail-meta"><time data-story-detail-date></time><span data-story-detail-reading></span></p>
         </header>
-        <figure class="story-detail-cover"><img data-story-detail-cover src="" alt="" decoding="async"></figure>
-        <div class="story-detail-body" data-story-detail-body></div>
-        <aside class="story-detail-cta" aria-label="Ikut kegiatan">
-          <p>Mau jadi bagian dari cerita berikutnya?</p>
-          <a class="btn btn-primary" href="jadwal.html">Lihat jadwal kegiatan <span aria-hidden="true">&rarr;</span></a>
-        </aside>
+        <div class="story-detail-layout" data-story-detail-layout>
+          <figure class="story-detail-cover"><img data-story-detail-cover src="" alt="" decoding="async"></figure>
+          <div class="story-detail-text">
+            <p class="story-detail-share">Bagikan <a data-story-share-whatsapp target="_blank" rel="noopener noreferrer">WhatsApp</a><button type="button" data-story-share-copy>Salin link</button></p>
+            <div class="story-detail-body" data-story-detail-body></div>
+            <aside class="story-detail-cta" aria-label="Ikut kegiatan">
+              <p>Mau jadi bagian dari cerita berikutnya?</p>
+              <a class="btn btn-primary" href="jadwal.html">Lihat jadwal kegiatan <span aria-hidden="true">&rarr;</span></a>
+            </aside>
+          </div>
+        </div>
       </article>
       <section class="story-detail-more" data-story-more aria-labelledby="storyMoreHeading" hidden>
         <div class="kisah-archive-heading"><h2 id="storyMoreHeading">Kisah lainnya</h2></div>
