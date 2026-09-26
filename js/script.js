@@ -1436,6 +1436,26 @@ if (registrationForm) {
     block.querySelector('[data-calendar-ics]').onclick = () => downloadCalendarFile(item);
   };
 
+  // "Ajak teman ikut" on the success screens: someone who just registered is the best person to invite friends.
+  const renderShare = (container) => {
+    const row = container.querySelector('[data-event-share]');
+    if (!row) return;
+    row.hidden = !selectedEvent;
+    if (!selectedEvent) return;
+    const shareUrl = `${window.location.origin}/pendaftaran.html?event=${encodeURIComponent(selectedEvent.slug)}`;
+    row.querySelector('[data-event-share-whatsapp]').href = `https://wa.me/?text=${encodeURIComponent(`Aku sudah daftar ${selectedEvent.name} di Kita Bahagia, ikut yuk: ${shareUrl}`)}`;
+    const copyButton = row.querySelector('[data-event-share-copy]');
+    copyButton.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        copyButton.textContent = 'Tersalin';
+      } catch {
+        copyButton.textContent = 'Gagal menyalin';
+      }
+      setTimeout(() => { copyButton.textContent = 'Salin link'; }, 2000);
+    };
+  };
+
   const renderOnboarding = (container, data) => {
     if (!container) return;
     const copy = container.querySelector('[data-onboarding-copy]');
@@ -1443,6 +1463,7 @@ if (registrationForm) {
     const groupUrl = safeWhatsAppGroupUrl(data?.whatsapp_group_url);
     container.hidden = false;
     renderCalendar(container, data);
+    renderShare(container);
     if (!groupUrl) {
       if (copy) copy.textContent = 'Link grup akan tersedia setelah disiapkan oleh tim Kita Bahagia.';
       if (link) {
@@ -1976,21 +1997,6 @@ if (registrationForm) {
       directions.rel = 'noopener noreferrer';
       directions.textContent = 'Petunjuk arah ↗';
       document.getElementById('eventLocation')?.append(document.createElement('br'), directions);
-    }
-    const shareUrl = `${window.location.origin}/pendaftaran.html?event=${encodeURIComponent(selectedEvent.slug)}`;
-    const shareWhatsApp = document.querySelector('[data-event-share-whatsapp]');
-    if (shareWhatsApp) shareWhatsApp.href = `https://wa.me/?text=${encodeURIComponent(`${selectedEvent.name} · daftar di Kita Bahagia: ${shareUrl}`)}`;
-    const shareCopy = document.querySelector('[data-event-share-copy]');
-    if (shareCopy) {
-      shareCopy.onclick = async () => {
-        try {
-          await navigator.clipboard.writeText(shareUrl);
-          shareCopy.textContent = 'Tersalin';
-        } catch {
-          shareCopy.textContent = 'Gagal menyalin';
-        }
-        setTimeout(() => { shareCopy.textContent = 'Salin link'; }, 2000);
-      };
     }
     // The status line must not say "dibuka" while the form below is closed or not open yet.
     const statusReason = eventRegistrationAvailability(selectedEvent).reason;

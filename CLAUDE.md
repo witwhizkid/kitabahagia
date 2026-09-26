@@ -77,8 +77,9 @@ Halaman pendaftaran (`pendaftaran.html`):
   admin mencentang "Minta CV/portofolio" (keterangannya bisa diedit). Detail:
   "Selection extras" di `supabase/README.md`.
 - Kartu ringkasan: link Google Maps opsional dari admin (`events.location_url`)
-  tampil sebagai "Petunjuk arah ↗" di bawah Lokasi; baris "Bagikan: WhatsApp ·
-  Salin link" (link bersih `pendaftaran.html?event=slug`). Tombol Daftar yang
+  tampil sebagai "Petunjuk arah ↗" di bawah Lokasi. "Ajak teman ikut: WhatsApp ·
+  Salin link" ada di layar sukses (`renderShare` di `renderOnboarding`), bukan di
+  kartu ringkasan, supaya tidak mengganggu alur form. Tombol Daftar yang
   menempel ala Luma sengaja tidak dibuat: form sudah langsung di bawah ringkasan.
 - Layar sukses (gratis terkonfirmasi / bayar lunas / diterima) punya "Simpan ke
   kalender": link Google Calendar + file .ics (pengingat H-1) dari `selectedEvent`
