@@ -169,6 +169,15 @@ Lainnya:
   Desain, Penulis Kisah) belum dibuat; buat hanya kalau dibutuhkan. Kartu
   kegiatan di admin menampilkan "Diubah <waktu> oleh <bagian email sebelum @>"
   (`events.last_edited_by/at`, hanya diisi `admin-events`; bukan riwayat lengkap).
+- Admin → Pendaftar (tahap 1 "ala Linear", tampilan tetap KB): toolbar satu baris
+  (cari dengan jeda 300 ms, filter langsung berlaku, Reset hanya saat ada filter,
+  total, Ekspor CSV untuk semua kegiatan); satu header kolom lalu baris padat tanpa
+  label berulang (Pendaftar · Kegiatan+kode · Status+bayar+riwayat · Terdaftar ·
+  Detail); seluruh baris membuka Detail; status = titik warna + teks; ringkasan
+  seleksi satu baris; command bar "N dipilih · Terima · Cadangan · Tolak" hanya
+  saat ada yang dicentang; keputusan satuan tanpa `confirm()`. Tablet menyembunyikan
+  kolom tanggal; HP baris bertumpuk. Respons pencarian lama diabaikan
+  (`registrationLoadSeq`). Tahap 2 (susun ulang panel Detail) belum.
 - Admin di HP (≤768px): tab bar bawah dengan ikon (disembunyikan saat form
   kegiatan/kisah terbuka), logo di header, judul + tombol Tambah satu baris,
   kartu kegiatan ringkas tanpa label. Tablet (769–900px) tetap tab atas. Form

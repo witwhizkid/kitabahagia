@@ -259,7 +259,6 @@
               <h1 id="registrations-title">Pendaftar</h1>
               <p>Lihat data pendaftar dan, untuk kegiatan mode Seleksi, tinjau serta putuskan hasilnya.</p>
             </div>
-            <p class="registrant-total"><strong id="registrations-total">0</strong><span>pendaftar</span></p>
           </div>
 
           <div class="registration-lifecycle-tabs" role="tablist" aria-label="Tampilan pendaftar">
@@ -267,16 +266,16 @@
             <button type="button" role="tab" aria-selected="false" data-registration-lifecycle="history">Riwayat <span id="history-registrations-total">0</span></button>
           </div>
 
-          <form id="registration-filters" class="registration-filters" role="search">
-            <label>Cari pendaftar
-              <input id="registration-search" type="search" placeholder="Nama, email, atau kode" autocomplete="off" />
+          <form id="registration-filters" class="registration-toolbar" role="search">
+            <label class="toolbar-search"><span class="sr-only">Cari pendaftar</span>
+              <input id="registration-search" type="search" placeholder="Cari nama, email, atau kode" autocomplete="off" />
             </label>
-            <label>Kegiatan
+            <label class="toolbar-select"><span class="sr-only">Kegiatan</span>
               <select id="registration-event-filter">
                 <option value="">Semua kegiatan</option>
               </select>
             </label>
-            <label>Status pendaftaran
+            <label class="toolbar-select"><span class="sr-only">Status pendaftaran</span>
               <select id="registration-status-filter">
                 <option value="">Semua status</option>
                 <option value="applied">Menunggu seleksi</option>
@@ -288,9 +287,9 @@
                 <option value="cancelled">Dibatalkan</option>
               </select>
             </label>
-            <label>Status pembayaran
+            <label class="toolbar-select"><span class="sr-only">Status pembayaran</span>
               <select id="payment-status-filter">
-                <option value="">Semua status</option>
+                <option value="">Semua pembayaran</option>
                 <option value="not_required">Tidak perlu bayar</option>
                 <option value="unpaid">Belum dibayar</option>
                 <option value="pending">Diproses</option>
@@ -300,22 +299,32 @@
                 <option value="refunded">Dikembalikan</option>
               </select>
             </label>
-            <button class="button button-primary" type="submit">Terapkan</button>
-            <button id="reset-registration-filters" class="button button-secondary" type="button">Reset</button>
+            <button id="reset-registration-filters" class="text-button toolbar-reset" type="button" hidden>Reset</button>
+            <p class="registrant-total"><strong id="registrations-total">0</strong> pendaftar</p>
+            <button id="registrations-export" class="button button-secondary toolbar-export" type="button">Ekspor CSV</button>
+            <button class="sr-only" type="submit">Terapkan filter</button>
           </form>
 
           <p id="registrations-feedback" class="feedback" role="status" aria-live="polite"></p>
-          <section id="selection-tools" class="selection-tools" aria-label="Alat seleksi" hidden>
+          <section id="selection-tools" class="selection-tools" aria-label="Ringkasan seleksi" hidden>
             <p id="selection-summary" class="selection-summary"></p>
             <p id="selection-announcement" class="selection-announcement"></p>
-            <div class="selection-actions">
-              <label class="selection-select-all"><input id="selection-select-all" type="checkbox" /> Pilih semua yang tampil</label>
-              <button class="button button-secondary" type="button" data-selection-bulk="accepted">Terima dipilih</button>
-              <button class="button button-secondary" type="button" data-selection-bulk="waitlisted">Cadangkan dipilih</button>
-              <button class="button button-secondary" type="button" data-selection-bulk="rejected">Tolak dipilih</button>
-              <button id="selection-export" class="button button-secondary" type="button">Ekspor CSV</button>
-            </div>
           </section>
+          <div id="selection-commandbar" class="selection-commandbar" role="region" aria-label="Aksi untuk pendaftar terpilih" hidden>
+            <strong id="selection-count">0 dipilih</strong>
+            <button class="button button-secondary" type="button" data-selection-bulk="accepted">Terima</button>
+            <button class="button button-secondary" type="button" data-selection-bulk="waitlisted">Cadangan</button>
+            <button class="button button-secondary" type="button" data-selection-bulk="rejected">Tolak</button>
+            <button id="selection-clear" class="text-button" type="button">Batal pilih</button>
+          </div>
+          <div id="registrations-head" class="registration-head" hidden>
+            <label class="registration-select registration-select-all"><input id="selection-select-all" type="checkbox" /><span class="registration-select-label">Pilih semua</span></label>
+            <span class="registration-head-label">Pendaftar</span>
+            <span class="registration-head-label">Kegiatan</span>
+            <span class="registration-head-label">Status</span>
+            <span class="registration-head-label registration-head-date">Terdaftar</span>
+            <span class="sr-only">Aksi</span>
+          </div>
           <div id="registrations-loading" class="state-panel" role="status" hidden>Memuat pendaftar…</div>
           <div id="registrations-empty" class="state-panel" hidden>Tidak ada pendaftar yang cocok dengan filter ini.</div>
           <div id="registrations-list" class="registration-list" hidden></div>

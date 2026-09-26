@@ -377,6 +377,11 @@
   };
 
   const selectedRegistrationEvent = () => events.find((event) => event.slug === $("#registration-event-filter").value) || null;
+  const syncFilterReset = () => {
+    const active = ["#registration-search", "#registration-event-filter", "#registration-status-filter", "#payment-status-filter"]
+      .some((selector) => $(selector).value.trim() !== "");
+    $("#reset-registration-filters").hidden = !active;
+  };
   const selectionEnabled = () => selectedRegistrationEvent()?.registration_mode === "selection";
 
   const renderSelectionTools = () => {
@@ -407,36 +412,42 @@
     registrationsList.hidden = registrations.length === 0;
     $("#registrations-total").textContent = String(total);
     $(registrationLifecycle === "active" ? "#active-registrations-total" : "#history-registrations-total").textContent = String(total);
+    const isSelectionEvent = selectionEnabled();
+    const head = $("#registrations-head");
+    head.hidden = registrations.length === 0;
+    head.classList.toggle("is-selection", isSelectionEvent);
+    head.querySelector(".registration-select-all").hidden = !isSelectionEvent;
+    // One header row names the columns, so rows carry values only (dense, easy to scan).
     registrationsList.innerHTML = registrations.map((registration) => {
       const linkedEvent = registration.events || {};
       const registrationStatus = registration.payment_expired ? "expired" : registration.registration_status;
       const paymentStatus = registration.payment_expired ? "expired" : registration.payment_status;
       const historyCount = Number(selectionOverview?.history?.[registration.registration_code]) || 0;
-      const isSelectionEvent = selectionEnabled();
       const selectionStatus = isSelectionEvent && registrationStatus === "confirmed"
         ? "Diterima" : registrationStatusLabels[registrationStatus] || registrationStatus;
+      const showPayment = paymentStatus && paymentStatus !== "not_required";
       return `
         <article class="registration-row${isSelectionEvent ? " is-selection-row" : ""}" data-registration-code="${escapeHtml(registration.registration_code)}">
           ${isSelectionEvent ? `<label class="registration-select"><input type="checkbox" data-applicant-select value="${escapeHtml(registration.registration_code)}" aria-label="Pilih ${escapeHtml(registration.name)}" /></label>` : ""}
-          <div class="registration-person registration-cell">
-            <span class="data-label">Pendaftar</span>
-            <strong>${escapeHtml(registration.name)}</strong>
-            <span class="registration-email">${escapeHtml(registration.email)}</span>
-            ${isSelectionEvent && registration.selection_answer ? `<span class="selection-answer-line"><span class="data-label">Jawaban</span><span class="selection-answer-text">${escapeHtml(registration.selection_answer)}</span></span>` : ""}
+          <div class="registration-person">
+            <strong class="registration-name">${escapeHtml(registration.name)}</strong>
+            <span class="registration-sub">${escapeHtml(registration.email)}</span>
+            ${isSelectionEvent && registration.selection_answer ? `<span class="selection-answer-text">${escapeHtml(registration.selection_answer)}</span>` : ""}
+          </div>
+          <div class="registration-event">
+            <span class="registration-event-title">${escapeHtml(linkedEvent.title || "Kegiatan tidak ditemukan")}</span>
+            <span class="registration-sub registration-code">${escapeHtml(registration.registration_code)}</span>
+          </div>
+          <div class="registration-state">
+            <span class="status-token ${statusTone(registrationStatus)}">${escapeHtml(selectionStatus)}</span>
+            ${showPayment ? `<span class="registration-sub registration-payment ${statusTone(paymentStatus)}">${escapeHtml(paymentStatusLabels[paymentStatus] || paymentStatus)}</span>` : ""}
             ${isSelectionEvent ? `<span class="applicant-history">${historyCount ? `Pernah ikut ${historyCount}×` : "Peserta baru"}</span>` : ""}
-            <button class="text-button applicant-detail-button" type="button" data-applicant-detail="${escapeHtml(registration.registration_code)}">Lihat detail →</button>
           </div>
-          <div class="registration-event registration-cell">
-            <span class="data-label">Kegiatan</span>
-            <strong>${escapeHtml(linkedEvent.title || "Kegiatan tidak ditemukan")}</strong>
-            <span class="registration-code"><span class="data-label">Kode</span>${escapeHtml(registration.registration_code)}</span>
+          <div class="registration-date">
+            <time datetime="${escapeHtml(registration.created_at)}">${escapeHtml(formatDateTime(registration.created_at))}</time>
+            ${registration.payment_expired && registration.payment_deadline ? `<span class="registration-sub">Batas bayar ${escapeHtml(formatDateTime(registration.payment_deadline))}</span>` : ""}
           </div>
-          <div class="registration-statuses">
-            <span class="data-group"><span class="data-label">Pendaftaran</span><span class="status-token ${statusTone(registrationStatus)}">${escapeHtml(selectionStatus)}</span></span>
-            <span class="data-group"><span class="data-label">Pembayaran</span><span class="status-token ${statusTone(paymentStatus)}">${escapeHtml(paymentStatusLabels[paymentStatus] || paymentStatus)}</span></span>
-          </div>
-          <span class="registration-date"><span class="data-label">Terdaftar</span><time datetime="${escapeHtml(registration.created_at)}">${escapeHtml(formatDateTime(registration.created_at))}</time>${registration.payment_expired && registration.payment_deadline ? `
-            <span class="data-label">Batas bayar</span><time datetime="${escapeHtml(registration.payment_deadline)}">${escapeHtml(formatDateTime(registration.payment_deadline))}</time>` : ""}</span>
+          <button class="text-button applicant-detail-button" type="button" data-applicant-detail="${escapeHtml(registration.registration_code)}" aria-label="Lihat detail ${escapeHtml(registration.name)}">Detail</button>
         </article>
       `;
     }).join("");
@@ -445,9 +456,25 @@
     selectAll.checked = false;
     selectAll.disabled = selectionDecisionPending || registrations.length === 0 || !selectionEnabled();
     document.querySelectorAll("[data-selection-bulk]").forEach((button) => { button.disabled = selectionDecisionPending; });
+    $("#registrations-export").disabled = registrations.length === 0;
+    syncSelectionBar();
   };
 
+  // The bulk command bar only appears while rows are selected ("3 dipilih · Terima · Cadangan · Tolak").
+  const syncSelectionBar = () => {
+    const boxes = [...registrationsList.querySelectorAll("[data-applicant-select]")];
+    const checked = boxes.filter((box) => box.checked).length;
+    $("#selection-commandbar").hidden = checked === 0;
+    $("#selection-count").textContent = `${checked} dipilih`;
+    const selectAll = $("#selection-select-all");
+    selectAll.checked = boxes.length > 0 && checked === boxes.length;
+    selectAll.indeterminate = checked > 0 && checked < boxes.length;
+  };
+
+  let registrationLoadSeq = 0;
   const loadRegistrations = async () => {
+    const loadSeq = ++registrationLoadSeq;
+    syncFilterReset();
     const params = {
       event: $("#registration-event-filter").value,
       lifecycle: registrationLifecycle,
@@ -463,19 +490,36 @@
       renderRegistrations(cached.total);
       if (Date.now() - cached.loadedAt < adminCacheTtl) return;
     }
-    if (tabCache.registrations.get(`${cacheKey}:request`)) return tabCache.registrations.get(`${cacheKey}:request`);
+    const inflight = tabCache.registrations.get(`${cacheKey}:request`);
+    if (inflight) {
+      // Same filters already loading (started by an older call): render its result for this call.
+      return inflight.then(() => {
+        const loaded = tabCache.registrations.get(cacheKey);
+        if (loadSeq !== registrationLoadSeq || !loaded) return;
+        registrations = loaded.registrations;
+        selectionOverview = loaded.selection || null;
+        renderRegistrations(loaded.total);
+      });
+    }
     $("#registrations-loading").hidden = Boolean(cached);
     if (!cached) {
       $("#registrations-empty").hidden = true;
       registrationsList.hidden = true;
+      // Never keep a bulk selection alive for rows that are being replaced.
+      registrationsList.querySelectorAll("[data-applicant-select]").forEach((checkbox) => { checkbox.checked = false; });
+      syncSelectionBar();
       setFeedback($("#registrations-feedback"));
     }
     const request = registrationRequest(params)
       .then((data) => {
-        registrations = Array.isArray(data.registrations) ? data.registrations : [];
-        selectionOverview = data.selection || null;
+        const loadedRegistrations = Array.isArray(data.registrations) ? data.registrations : [];
+        const loadedSelection = data.selection || null;
         const total = Number(data.total) || 0;
-        tabCache.registrations.set(cacheKey, { registrations, total, selection: selectionOverview, loadedAt: Date.now() });
+        tabCache.registrations.set(cacheKey, { registrations: loadedRegistrations, total, selection: loadedSelection, loadedAt: Date.now() });
+        // Typing fires several searches; only the latest one may render.
+        if (loadSeq !== registrationLoadSeq) return undefined;
+        registrations = loadedRegistrations;
+        selectionOverview = loadedSelection;
         renderRegistrations(total);
         const otherLifecycle = registrationLifecycle === "active" ? "history" : "active";
         const otherParams = { ...params, lifecycle: otherLifecycle };
@@ -484,6 +528,7 @@
         }).catch(() => undefined);
       })
       .catch((error) => {
+        if (loadSeq !== registrationLoadSeq) return;
         if (!cached) {
           $("#registrations-loading").hidden = true;
           setFeedback($("#registrations-feedback"), error.message, "error");
@@ -674,8 +719,6 @@
       ? registrations.slice(applicantDialogIndex + 1).find((applicant) => applicant.events?.registration_mode === "selection")
       : null;
     const nextCode = nextApplicant?.registration_code || null;
-    const decisionLabel = { accepted: "menerima", waitlisted: "memasukkan ke daftar cadangan", rejected: "menolak", applied: "mengembalikan ke status menunggu" }[decision];
-    if (codes.length === 1 && !window.confirm(`Yakin ingin ${decisionLabel} pendaftar ini?`)) return;
     setFeedback(feedback, "Menyimpan keputusan…");
     selectionDecisionPending = true;
     syncSelectionDecisionControls();
@@ -762,16 +805,31 @@
 
   registrationsList.addEventListener("click", (event) => {
     const button = event.target.closest("[data-applicant-detail]");
-    if (button) showApplicant(button.dataset.applicantDetail);
+    if (button) {
+      showApplicant(button.dataset.applicantDetail);
+      return;
+    }
+    // The whole row opens the detail panel, except its checkbox and other controls.
+    if (event.target.closest("input, label, a, button, select, textarea")) return;
+    const row = event.target.closest(".registration-row");
+    if (row && !window.getSelection()?.toString()) showApplicant(row.dataset.registrationCode);
+  });
+  registrationsList.addEventListener("change", (event) => {
+    if (event.target.matches("[data-applicant-select]")) syncSelectionBar();
   });
   $("#selection-select-all").addEventListener("change", (event) => {
     registrationsList.querySelectorAll("[data-applicant-select]").forEach((checkbox) => { checkbox.checked = event.currentTarget.checked; });
+    syncSelectionBar();
+  });
+  $("#selection-clear").addEventListener("click", () => {
+    registrationsList.querySelectorAll("[data-applicant-select]").forEach((checkbox) => { checkbox.checked = false; });
+    syncSelectionBar();
   });
   document.querySelectorAll("[data-selection-bulk]").forEach((button) => button.addEventListener("click", () => {
     const codes = [...registrationsList.querySelectorAll("[data-applicant-select]:checked")].map((checkbox) => checkbox.value);
     void decideApplicants(codes, button.dataset.selectionBulk);
   }));
-  $("#selection-export").addEventListener("click", exportRegistrationsCsv);
+  $("#registrations-export").addEventListener("click", exportRegistrationsCsv);
   applicantDialog.querySelector(".applicant-dialog-close").addEventListener("click", () => applicantDialog.close());
   applicantDialog.addEventListener("click", (event) => { if (event.target === applicantDialog) applicantDialog.close(); });
   applicantDialog.querySelectorAll("[data-applicant-nav]").forEach((button) => button.addEventListener("click", () => moveApplicant(button.dataset.applicantNav === "previous" ? -1 : 1)));
@@ -1496,6 +1554,15 @@
   $("#reset-registration-filters").addEventListener("click", () => {
     $("#registration-filters").reset();
     loadRegistrations();
+  });
+  // Filters apply immediately; the search waits for a short pause in typing.
+  ["#registration-event-filter", "#registration-status-filter", "#payment-status-filter"].forEach((selector) => {
+    $(selector).addEventListener("change", () => loadRegistrations());
+  });
+  let registrationSearchTimer = 0;
+  $("#registration-search").addEventListener("input", () => {
+    window.clearTimeout(registrationSearchTimer);
+    registrationSearchTimer = window.setTimeout(() => loadRegistrations(), 300);
   });
 
   document.querySelectorAll("[data-registration-lifecycle]").forEach((button) => {
