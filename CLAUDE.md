@@ -198,10 +198,11 @@ Dashboard dampak publik (setelah ± 6 laporan bulanan konsisten): angka total
 kegiatan, relawan hadir unik, jam relawan (durasi × hadir), penerima manfaat,
 lokasi, mitra, relawan yang ikut lagi; grafik per bulan. Sebagian otomatis dari
 data hadir, sebagian dari bagian "Laporan dampak" di form kegiatan. Publik hanya
-melihat agregat, tanpa data pribadi. Kegiatan sebelum web (mis. Juli–Agustus
-2026) ikut diimpor dari Sheet; untuk yang tanpa daftar nama, user menambah
-kolom `jumlah_relawan` di tab `Kegiatan` (angka "ikut lagi" tidak dihitung untuk
-kegiatan itu). Angka perkiraan harus ditandai, pilih yang lebih rendah.
+melihat agregat, tanpa data pribadi. Keputusan user: data kegiatan sebelum web
+(sejak 2024) **tidak** diimpor per kegiatan (tidak tercatat). Dashboard berisi
+angka rinci mulai Oktober 2026, ditambah satu kalimat sejarah yang bisa diedit
+(mis. "Sejak 2024, Kita Bahagia telah mengadakan lebih dari 20 kegiatan di 8
+kota"; angka disepakati owner, dibulatkan ke bawah).
 
 ## Keamanan
 
