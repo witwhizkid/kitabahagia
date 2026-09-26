@@ -237,6 +237,17 @@ function. Manual check: `supabase/tests/20261003010000_registration_rate_limit_r
 Rollback: `supabase/rollback/20261003010000_registration_rate_limit_relax.down.sql` (back to
 5/20), or `supabase/rollback/20261002010000_registration_rate_limit.down.sql` (remove the limit).
 
+## Event "last edited by"
+
+Migration `20261004010000_event_last_edited.sql` adds `events.last_edited_by`
+(the admin's email, kept as a snapshot) and `events.last_edited_at`. Only
+`admin-events` sets them, on create, edit, archive and restore; clients cannot
+send them. The admin event list shows "Diubah 26 Sep 2026, 14.05 oleh <nama>".
+Events edited before the migration show nothing until their next edit.
+**Deploy order:** run the migration first, then deploy `admin-events` (the new
+function selects these columns). Rollback: deploy the previous `admin-events`,
+then `supabase/rollback/20261004010000_event_last_edited.down.sql`.
+
 ## Database backup
 
 The free Supabase plan has no restorable daily backups, so export manually,

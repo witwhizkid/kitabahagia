@@ -25,7 +25,7 @@ const eventProjection = [
   "registration_mode", "registration_opens_at", "applicant_limit", "announcement_at",
   "selection_question", "selection_min_chars", "commitment_text", "selection_requirements", "cv_requested", "cv_note",
   "wa_message_accepted", "wa_message_waitlisted", "wa_message_rejected",
-  "archived_at",
+  "archived_at", "last_edited_by", "last_edited_at",
 ].join(",");
 
 const writableFields = new Set([
@@ -44,7 +44,7 @@ const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
 
-type Admin = { userId: string; role: "admin" | "super_admin" };
+type Admin = { userId: string; email: string | null; role: "admin" | "super_admin" };
 type EventRow = Record<string, unknown> & { is_demo?: boolean };
 
 const serviceHeaders = (key: string, prefer?: string) => ({
@@ -62,7 +62,7 @@ const authorize = async (request: Request, supabaseUrl: string, anonKey: string,
     headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
   });
   if (!userResponse.ok) return null;
-  const user = await userResponse.json().catch(() => null) as { id?: string } | null;
+  const user = await userResponse.json().catch(() => null) as { id?: string; email?: string } | null;
   if (!user?.id) return null;
 
   const query = new URLSearchParams({
@@ -77,7 +77,7 @@ const authorize = async (request: Request, supabaseUrl: string, anonKey: string,
   const rows = await adminResponse.json().catch(() => null) as Array<{ user_id: string; role: string }> | null;
   if (!adminResponse.ok || !Array.isArray(rows) || rows.length !== 1) return null;
   if (rows[0].role !== "admin" && rows[0].role !== "super_admin") return null;
-  return { userId: user.id, role: rows[0].role } as Admin;
+  return { userId: user.id, email: user.email ?? null, role: rows[0].role } as Admin;
 };
 
 const validIsoTimestamp = (value: unknown) => {
@@ -228,12 +228,15 @@ Deno.serve(async (request) => {
     return json(200, { events: rows.map(presentEvent), role: admin.role });
   }
 
+  // Who last changed the event from the dashboard; automatic updates elsewhere leave it alone.
+  const editStamp = { last_edited_by: admin.email, last_edited_at: new Date().toISOString() };
+
   if (action) {
     const endpoint = `${supabaseUrl}/rest/v1/events?slug=eq.${encodeURIComponent(requestedSlug!)}&select=${encodeURIComponent(eventProjection)}`;
     const response = await fetch(endpoint, {
       method: "PATCH",
       headers: serviceHeaders(serviceKey, "return=representation"),
-      body: JSON.stringify({ archived_at: action === "archive" ? new Date().toISOString() : null }),
+      body: JSON.stringify({ archived_at: action === "archive" ? new Date().toISOString() : null, ...editStamp }),
     });
     const rows = await response.json().catch(() => null) as EventRow[] | null;
     if (!response.ok || !Array.isArray(rows)) return fail(500, "SERVER_ERROR", "Arsip kegiatan belum dapat diperbarui.");
@@ -285,7 +288,7 @@ Deno.serve(async (request) => {
   const response = await fetch(endpoint, {
     method: request.method,
     headers: serviceHeaders(serviceKey, "return=representation"),
-    body: JSON.stringify(request.method === "POST" ? { ...validated.data, is_demo: false } : validated.data),
+    body: JSON.stringify(request.method === "POST" ? { ...validated.data, ...editStamp, is_demo: false } : { ...validated.data, ...editStamp }),
   });
   const rows = await response.json().catch(() => null) as EventRow[] | { code?: string } | null;
   if (response.status === 409) return fail(409, "SLUG_EXISTS", "Slug sudah digunakan kegiatan lain.");

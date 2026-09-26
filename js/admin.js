@@ -313,6 +313,7 @@
         <div>
           <h2>${escapeHtml(event.title)}</h2>
           ${event.environment === "development" ? '<span class="status-token is-pending">Demo</span>' : ""}
+          ${event.last_edited_at ? `<p class="event-edited">Diubah ${escapeHtml(formatDateTime(event.last_edited_at))}${event.last_edited_by ? ` oleh <span title="${escapeHtml(event.last_edited_by)}">${escapeHtml(event.last_edited_by.split("@")[0])}</span>` : ""}</p>` : ""}
         </div>
         <div class="event-meta">
           <span class="data-group"><span class="data-label">Jadwal</span><span>${escapeHtml(formatDate(event.event_date))}</span></span>

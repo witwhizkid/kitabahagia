@@ -119,6 +119,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
   border-bottom: 1px solid var(--line);
 }
 .event-row h2 { margin: 0 0 7px; font-size: 1.25rem; line-height: 1.15; }
+.event-edited { margin: 6px 0 0; color: var(--muted); font-size: .8rem; line-height: 1.35; overflow-wrap: anywhere; }
 .event-meta, .event-state { display: grid; gap: 10px; color: var(--muted); font-size: .87rem; }
 .event-state strong { color: var(--ink); }
 .data-group { min-width: 0; display: grid; justify-items: start; gap: 3px; }

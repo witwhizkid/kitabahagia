@@ -130,8 +130,9 @@ Lainnya:
 - Akun admin: 6 ketua tim program memakai peran **Admin** biasa (boleh lihat
   pendaftar/data pribadi dan menayangkan kegiatan); arsip/hapus hanya oleh
   admin inti lewat kesepakatan, bukan kode. Peran khusus (Editor Kegiatan,
-  Desain, Penulis Kisah) dan log "terakhir diubah oleh" belum dibuat; buat
-  hanya kalau dibutuhkan.
+  Desain, Penulis Kisah) belum dibuat; buat hanya kalau dibutuhkan. Kartu
+  kegiatan di admin menampilkan "Diubah <waktu> oleh <bagian email sebelum @>"
+  (`events.last_edited_by/at`, hanya diisi `admin-events`; bukan riwayat lengkap).
 - Admin di HP (≤768px): tab bar bawah dengan ikon (disembunyikan saat form
   kegiatan/kisah terbuka), logo di header, judul + tombol Tambah satu baris,
   kartu kegiatan ringkas tanpa label. Tablet (769–900px) tetap tab atas. Form
