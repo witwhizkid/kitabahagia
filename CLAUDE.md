@@ -96,6 +96,11 @@ Halaman detail Kisah (`kisah-detail.html`, `js/stories.js`), gaya editorial ala 
   (butuh perubahan database).
 
 Lainnya:
+- Gerak halus ala Aesop: `.reveal` (fade + naik 16px, .8s) juga dipasang otomatis
+  oleh JS ke `main > section:not(:first-child) > .container > *` yang di bawah
+  layar pertama (bukan di halaman pendaftaran, bukan saat reduced motion, bukan
+  `sr-only`/tersembunyi). Zoom foto kisah/kegiatan pelan (1.2s/.9s) hanya di
+  `@media (hover:hover)` untuk kisah.
 - Foto disajikan sebagai WebP yang sudah diperkecil (originalnya 2–7 MB).
 - Upload foto di admin dikompres di browser sebelum dikirim (`compressImage`
   di `js/admin.js`): kegiatan maks. 1200×1500, kisah maks. 1600×1600, WebP

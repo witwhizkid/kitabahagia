@@ -760,6 +760,17 @@ if (testimonialSlides.length && testimonialTrack) {
 
 document.getElementById('year')?.replaceChildren(document.createTextNode(new Date().getFullYear()));
 
+// Blocks below the first screen also fade in as they scroll into view. Added only by JS (so
+// nothing stays hidden without it), never with reduced motion, not on the registration flow,
+// and not for blocks already on screen or still hidden at load.
+if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window
+  && !document.body.classList.contains('registration-page')) {
+  document.querySelectorAll('main > section:not(:first-child) > .container > *').forEach((item) => {
+    const top = item.getBoundingClientRect().top;
+    if (item.hidden || item.classList.contains('sr-only') || top === 0 || top < window.innerHeight) return;
+    item.classList.add('reveal');
+  });
+}
 const revealItems = document.querySelectorAll('.reveal');
 if ('IntersectionObserver' in window) {
   const observer = new IntersectionObserver(entries => {
