@@ -244,20 +244,40 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .applicant-dialog { position: fixed; inset: 0 0 0 auto; width: min(680px, 100%); max-width: 100%; height: 100dvh; max-height: 100dvh; margin: 0; padding: 0; border: 0; color: var(--ink); background: transparent; overflow: visible; }
 .applicant-dialog[open] { animation: applicant-dialog-in 220ms ease both; }
 .applicant-dialog::backdrop { background: rgba(36,31,29,.48); }
-.applicant-dialog-panel { height: 100%; display: flex; flex-direction: column; padding: 28px clamp(20px, 4vw, 40px); background: var(--paper); box-shadow: -16px 0 48px rgba(36,31,29,.16); overflow-y: auto; }
-.applicant-dialog-header { display: flex; align-items: start; justify-content: space-between; gap: 18px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
-.applicant-dialog-header h2 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.3rem); overflow-wrap: anywhere; }
-.applicant-dialog-close { width: 44px; height: 44px; flex: 0 0 auto; border: 1px solid var(--line); color: var(--maroon); background: transparent; font-size: 1.6rem; cursor: pointer; }
-.applicant-dialog-content { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; padding: 22px 0; }
+/* Detail panel: sticky header (position, name, status, decisions), then groups ordered by task. */
+.applicant-dialog-panel { height: 100%; display: flex; flex-direction: column; padding: 0 clamp(20px, 4vw, 36px) 24px; background: var(--paper); box-shadow: -16px 0 48px rgba(36,31,29,.16); overflow-y: auto; }
+.applicant-dialog-header { position: sticky; top: 0; z-index: 2; display: grid; gap: 8px; margin: 0 calc(clamp(20px, 4vw, 36px) * -1); padding: 16px clamp(20px, 4vw, 36px) 14px; border-bottom: 1px solid var(--line); background: var(--paper); }
+.applicant-dialog-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.applicant-dialog-navigation { display: flex; align-items: center; gap: 4px; }
+.applicant-nav-button { width: 36px; height: 36px; border: 1px solid var(--line); color: var(--maroon); background: transparent; font-size: 1.25rem; line-height: 1; cursor: pointer; }
+.applicant-nav-button:disabled { color: var(--line); cursor: default; }
+.applicant-dialog-position { min-width: 64px; color: var(--muted); font-size: .82rem; text-align: center; font-variant-numeric: tabular-nums; }
+.applicant-dialog-header h2 { margin: 2px 0 0; font-size: clamp(1.45rem, 3.4vw, 2rem); line-height: 1.15; overflow-wrap: anywhere; }
+.applicant-dialog-close { width: 36px; height: 36px; flex: 0 0 auto; border: 1px solid var(--line); color: var(--maroon); background: transparent; font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.applicant-dialog-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 0; color: var(--muted); font-size: .82rem; font-variant-numeric: tabular-nums; }
+.applicant-dialog-meta .status-token { align-items: center; gap: 6px; padding: 0; background: none; border: 0; font-size: .85rem; }
+.applicant-dialog-meta .status-token::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #a79a91; }
+.applicant-dialog-meta .status-token.is-positive::before { background: #3f7a4c; }
+.applicant-dialog-meta .status-token.is-pending::before { background: #b27b22; }
+.applicant-dialog-meta .status-token.is-negative::before { background: #a33a3a; }
+.applicant-dialog-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
+.applicant-dialog-actions .button { min-height: 38px; padding: 6px 14px; font-size: .88rem; }
+.applicant-dialog-actions .text-button { min-height: 38px; font-size: .85rem; }
+.applicant-shortcuts { display: none; margin-left: auto; color: var(--muted); font-size: .75rem; }
+@media (hover: hover) and (min-width: 900px) { .applicant-shortcuts { display: inline; } }
+.applicant-dialog-content { display: grid; gap: 0; padding: 4px 0 8px; }
+.applicant-group { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.applicant-group:last-child { border-bottom: 0; }
+.applicant-group-title { margin: 0 0 12px; color: var(--maroon); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+.applicant-group-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; }
 .applicant-detail-field { min-width: 0; }
-.applicant-detail-field h3 { margin: 0 0 6px; color: var(--muted); font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; }
+.applicant-detail-field.is-wide { grid-column: 1 / -1; }
+.applicant-detail-field h4 { margin: 0 0 4px; color: var(--muted); font-size: .72rem; font-weight: 600; }
 .applicant-detail-field p { margin: 0; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-wrap; }
 .applicant-file-links { display: flex; flex-wrap: wrap; gap: 0 20px; }
 .applicant-proof-preview { display: block; max-width: min(100%, 480px); max-height: 260px; margin-top: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); object-fit: contain; }
-.applicant-dialog-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line); }
-.applicant-dialog-navigation, .applicant-dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.applicant-dialog-navigation { justify-content: space-between; margin-bottom: 12px; }
-.applicant-dialog-navigation .button, .applicant-dialog-actions .button { min-height: 44px; padding: 9px 12px; }
+.applicant-dialog-footer { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); }
+.applicant-dialog-footer .button { min-height: 42px; }
 @keyframes applicant-dialog-in { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
 
 .story-list { border-top: 1px solid var(--line); }
@@ -530,9 +550,12 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
   .registrations-heading h1 { font-size: clamp(1.85rem, 9vw, 2.4rem); }
   .registrations-heading p { margin-top: 10px; }
   .applicant-dialog { inset: 0; width: 100%; height: 100dvh; }
-  .applicant-dialog-panel { padding: 20px 18px max(20px, env(safe-area-inset-bottom)); }
-  .applicant-dialog-content { grid-template-columns: minmax(0, 1fr); gap: 15px; }
-  .applicant-dialog-navigation .button, .applicant-dialog-actions .button { flex: 1 1 44%; }
+  .applicant-dialog-panel { padding: 0 18px max(20px, env(safe-area-inset-bottom)); }
+  .applicant-dialog-header { margin: 0 -18px; padding: 12px 18px; }
+  .applicant-group-fields { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .applicant-dialog-actions .button { flex: 1 1 28%; min-height: 44px; padding-inline: 8px; }
+  .applicant-dialog-actions .text-button { flex: 1 1 100%; min-height: 40px; }
+  .applicant-dialog-footer .button { width: 100%; min-height: 46px; }
   .admin-list-heading { display: block; }
   .admin-list-heading p { text-align: left; }
   .admin-invite-form { grid-template-columns: 1fr; }

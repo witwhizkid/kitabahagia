@@ -541,15 +541,30 @@
 
   const applicantDialog = $("#applicant-dialog");
   const applicantDialogContent = $("#applicant-dialog-content");
-  const appendApplicantField = (label, value) => {
-    const item = document.createElement("section");
-    item.className = "applicant-detail-field";
+  // The detail panel is grouped by task: Seleksi (for selection events), Data pendaftar, Kegiatan & pembayaran.
+  let applicantGroup = null;
+  let applicantShownAt = 0;
+  const startApplicantGroup = (title, className = "") => {
+    const group = document.createElement("section");
+    group.className = `applicant-group ${className}`.trim();
     const heading = document.createElement("h3");
+    heading.className = "applicant-group-title";
+    heading.textContent = title;
+    const fields = document.createElement("div");
+    fields.className = "applicant-group-fields";
+    group.append(heading, fields);
+    applicantDialogContent.append(group);
+    applicantGroup = fields;
+  };
+  const appendApplicantField = (label, value, { wide = false } = {}) => {
+    const item = document.createElement("div");
+    item.className = `applicant-detail-field${wide ? " is-wide" : ""}`;
+    const heading = document.createElement("h4");
     heading.textContent = label;
     const content = document.createElement("p");
     content.textContent = value || "-";
     item.append(heading, content);
-    applicantDialogContent.append(item);
+    (applicantGroup || applicantDialogContent).append(item);
   };
 
   const externalLink = (href, text) => {
@@ -564,9 +579,9 @@
   };
   // Filled in two steps: the portfolio link is in the row; the CV link needs a signed URL.
   const appendApplicantCvField = (applicant) => {
-    const item = document.createElement("section");
-    item.className = "applicant-detail-field applicant-cv-field";
-    const heading = document.createElement("h3");
+    const item = document.createElement("div");
+    item.className = "applicant-detail-field applicant-cv-field is-wide";
+    const heading = document.createElement("h4");
     heading.textContent = "CV / portofolio";
     const links = document.createElement("p");
     links.className = "applicant-file-links";
@@ -575,7 +590,7 @@
     if (portfolio?.protocol === "https:") links.append(externalLink(portfolio.href, "Buka link portofolio"));
     else links.textContent = "-";
     item.append(heading, links);
-    applicantDialogContent.append(item);
+    (applicantGroup || applicantDialogContent).append(item);
   };
 
   const currentDialogApplicant = () => registrations[applicantDialogIndex] || null;
@@ -601,9 +616,9 @@
       }
       if (!proofHref) return;
       const signedUrl = new URL(proofHref);
-      const section = document.createElement("section");
-      section.className = "applicant-detail-field applicant-proof-field";
-      const heading = document.createElement("h3");
+      const section = document.createElement("div");
+      section.className = "applicant-detail-field applicant-proof-field is-wide";
+      const heading = document.createElement("h4");
       heading.textContent = "Bukti follow Instagram";
       const previewLink = externalLink(signedUrl.href, "Lihat bukti");
       const image = document.createElement("img");
@@ -614,7 +629,7 @@
       section.append(heading, previewLink, image);
       // A quick back-and-forth to the same applicant can resolve two requests for one render.
       applicantDialogContent.querySelector(".applicant-proof-field")?.remove();
-      applicantDialogContent.append(section);
+      (applicantDialogContent.querySelector(".applicant-group-selection .applicant-group-fields") || applicantDialogContent).append(section);
     } catch (error) {
       if (currentDialogApplicant()?.registration_code === registration.registration_code) {
         setFeedback($("#applicant-dialog-feedback"), error.message || "Berkas pendaftar belum dapat dibuka.", "error");
@@ -638,44 +653,52 @@
     if (!applicant) return;
     const event = applicant.events || {};
     const status = applicant.payment_expired ? "expired" : applicant.registration_status;
+    const isSelectionEvent = event.registration_mode === "selection";
+    const statusLabel = isSelectionEvent && status === "confirmed" ? "Diterima" : registrationStatusLabels[status] || status;
     $("#applicant-dialog-title").textContent = applicant.name || "Pendaftar";
+    const statusToken = $("#applicant-dialog-status");
+    statusToken.className = `status-token ${statusTone(status)}`;
+    statusToken.textContent = statusLabel;
+    $("#applicant-dialog-code").textContent = applicant.registration_code;
+    $("#applicant-dialog-position").textContent = `${applicantDialogIndex + 1} / ${registrations.length}`;
+    applicantShownAt = performance.now();
     applicantDialogContent.replaceChildren();
-    appendApplicantField("Nama", applicant.name);
+    applicantGroup = null;
+    if (isSelectionEvent) {
+      startApplicantGroup("Seleksi", "applicant-group-selection");
+      appendApplicantField("Pertanyaan seleksi", applicant.selection_question, { wide: true });
+      appendApplicantField("Jawaban seleksi", applicant.selection_answer, { wide: true });
+      appendApplicantField("Komitmen", applicant.commitment_text, { wide: true });
+      appendApplicantField("Riwayat seleksi", Number(selectionOverview?.history?.[applicant.registration_code])
+        ? `Pernah ikut ${selectionOverview.history[applicant.registration_code]}×` : "Peserta baru");
+      appendApplicantField("Keputusan seleksi", applicant.selection_decided_at
+        ? formatDateTime(applicant.selection_decided_at) : "Belum diputuskan");
+      appendApplicantCvField(applicant);
+      void loadApplicantProof(applicant);
+    }
+    startApplicantGroup("Data pendaftar");
     appendApplicantField("Email", applicant.email);
     appendApplicantField("WhatsApp", applicant.phone);
     appendApplicantField("Domisili", applicant.domicile);
     appendApplicantField("Instansi", applicant.institution);
-    appendApplicantField("Definisi bahagia", applicant.reason);
-    appendApplicantField("Kegiatan", event.title);
+    appendApplicantField("Definisi bahagia", applicant.reason, { wide: true });
+    if (applicant.notes) appendApplicantField("Catatan tambahan", applicant.notes, { wide: true });
+    appendApplicantField("Terdaftar", formatDateTime(applicant.created_at));
+    startApplicantGroup("Kegiatan & pembayaran");
+    appendApplicantField("Kegiatan", event.title, { wide: true });
     appendApplicantField("Tanggal kegiatan", event.event_date ? formatDate(event.event_date) : "-");
-    appendApplicantField("Kode pendaftaran", applicant.registration_code);
-    appendApplicantField("Status", event.registration_mode === "selection" && status === "confirmed"
-      ? "Diterima" : registrationStatusLabels[status] || status);
     const paymentStatus = applicant.payment_expired ? "expired" : applicant.payment_status;
     appendApplicantField("Pembayaran", paymentStatus === "not_required"
       ? "Tidak perlu bayar" : paymentStatusLabels[paymentStatus] || paymentStatus || "-");
     if (applicant.payment_deadline && paymentStatus !== "not_required") {
       appendApplicantField("Batas pembayaran", formatDateTime(applicant.payment_deadline));
     }
-    appendApplicantField("Catatan tambahan", applicant.notes);
-    appendApplicantField("Terdaftar", formatDateTime(applicant.created_at));
-    const isSelectionEvent = event.registration_mode === "selection";
-    if (isSelectionEvent) {
-      appendApplicantField("Pertanyaan seleksi", applicant.selection_question);
-      appendApplicantField("Jawaban seleksi", applicant.selection_answer);
-      appendApplicantField("Komitmen", applicant.commitment_text);
-      appendApplicantCvField(applicant);
-      appendApplicantField("Riwayat seleksi", Number(selectionOverview?.history?.[applicant.registration_code])
-        ? `Pernah ikut ${selectionOverview.history[applicant.registration_code]}×` : "Peserta baru");
-      appendApplicantField("Keputusan seleksi", applicant.selection_decided_at
-        ? formatDateTime(applicant.selection_decided_at) : "Belum diputuskan");
-      void loadApplicantProof(applicant);
-    }
     const outcomes = isSelectionEvent && ["confirmed", "waitlisted", "rejected"].includes(status);
     applicantDialog.querySelector(".applicant-selection-actions").hidden = !isSelectionEvent;
     syncSelectionDecisionControls();
     const waButton = applicantDialog.querySelector("[data-applicant-whatsapp]");
     waButton.hidden = !outcomes;
+    applicantDialog.querySelector(".applicant-dialog-footer").hidden = !outcomes;
     applicantDialog.querySelector('[data-applicant-nav="previous"]').disabled = applicantDialogIndex <= 0;
     applicantDialog.querySelector('[data-applicant-nav="next"]').disabled = applicantDialogIndex >= registrations.length - 1;
     setFeedback($("#applicant-dialog-feedback"));
@@ -844,6 +867,13 @@
     if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
     if (event.key === "ArrowLeft") { event.preventDefault(); moveApplicant(-1); }
     else if (event.key === "ArrowRight") { event.preventDefault(); moveApplicant(1); }
+    else if (!event.shiftKey && !event.repeat && performance.now() - applicantShownAt > 600) {
+      // Selection shortcuts: T = Terima, C = Cadangan, X = Tolak (same as clicking the enabled button).
+      // Held keys and the first moments after moving to a new applicant are ignored so nobody is decided unseen.
+      const decision = { t: "accepted", c: "waitlisted", x: "rejected" }[event.key.toLowerCase()];
+      const button = decision && applicantDialog.querySelector(`.applicant-selection-actions:not([hidden]) [data-applicant-decision="${decision}"]`);
+      if (button && !button.disabled) { event.preventDefault(); button.click(); }
+    }
   });
 
   const renderAdmins = () => {

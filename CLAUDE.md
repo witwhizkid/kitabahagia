@@ -177,7 +177,10 @@ Lainnya:
   seleksi satu baris; command bar "N dipilih · Terima · Cadangan · Tolak" hanya
   saat ada yang dicentang; keputusan satuan tanpa `confirm()`. Tablet menyembunyikan
   kolom tanggal; HP baris bertumpuk. Respons pencarian lama diabaikan
-  (`registrationLoadSeq`). Tahap 2 (susun ulang panel Detail) belum.
+  (`registrationLoadSeq`). Panel Detail (tahap 2): header menempel berisi ‹ n/N ›,
+  nama, status (titik) + kode, dan tombol keputusan (khusus Seleksi); isi dikelompokkan
+  Seleksi → Data pendaftar → Kegiatan & pembayaran; WA hasil di footer (tersembunyi
+  bila belum ada hasil). Pintasan: ← → pindah, T/C/X = Terima/Cadangan/Tolak.
 - Admin di HP (≤768px): tab bar bawah dengan ikon (disembunyikan saat form
   kegiatan/kisah terbuka), logo di header, judul + tombol Tambah satu baris,
   kartu kegiatan ringkas tanpa label. Tablet (769–900px) tetap tab atas. Form

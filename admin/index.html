@@ -333,20 +333,28 @@
         <dialog id="applicant-dialog" class="applicant-dialog" aria-labelledby="applicant-dialog-title">
           <div class="applicant-dialog-panel">
             <header class="applicant-dialog-header">
-              <div><p class="eyebrow">Detail pendaftar</p><h2 id="applicant-dialog-title"></h2></div>
-              <button class="applicant-dialog-close" type="button" aria-label="Tutup detail pendaftar">×</button>
+              <div class="applicant-dialog-topbar">
+                <div class="applicant-dialog-navigation">
+                  <button class="applicant-nav-button" type="button" data-applicant-nav="previous" aria-label="Pendaftar sebelumnya">‹</button>
+                  <span id="applicant-dialog-position" class="applicant-dialog-position"></span>
+                  <button class="applicant-nav-button" type="button" data-applicant-nav="next" aria-label="Pendaftar berikutnya">›</button>
+                </div>
+                <button class="applicant-dialog-close" type="button" aria-label="Tutup detail pendaftar">×</button>
+              </div>
+              <h2 id="applicant-dialog-title"></h2>
+              <p class="applicant-dialog-meta"><span id="applicant-dialog-status" class="status-token"></span><span id="applicant-dialog-code"></span></p>
+              <div class="applicant-dialog-actions applicant-selection-actions" hidden>
+                <button class="button button-primary" type="button" data-applicant-decision="accepted" aria-keyshortcuts="T">Terima</button>
+                <button class="button button-secondary" type="button" data-applicant-decision="waitlisted" aria-keyshortcuts="C">Cadangan</button>
+                <button class="button button-secondary" type="button" data-applicant-decision="rejected" aria-keyshortcuts="X">Tolak</button>
+                <button class="text-button" type="button" data-applicant-decision="applied">Kembalikan ke menunggu</button>
+                <span class="applicant-shortcuts">Pintasan: ← → · T · C · X</span>
+              </div>
             </header>
             <div id="applicant-dialog-content" class="applicant-dialog-content"></div>
             <p id="applicant-dialog-feedback" class="feedback" role="status" aria-live="polite"></p>
             <footer class="applicant-dialog-footer">
-              <div class="applicant-dialog-navigation"><button class="button button-secondary" type="button" data-applicant-nav="previous">Sebelumnya</button><button class="button button-secondary" type="button" data-applicant-nav="next">Berikutnya</button></div>
-              <div class="applicant-dialog-actions applicant-selection-actions" hidden>
-                <button class="button button-primary" type="button" data-applicant-decision="accepted">Terima</button>
-                <button class="button button-secondary" type="button" data-applicant-decision="waitlisted">Cadangan</button>
-                <button class="button button-secondary" type="button" data-applicant-decision="rejected">Tolak</button>
-                <button class="button button-secondary" type="button" data-applicant-decision="applied">Kembalikan ke menunggu</button>
-                <button class="button button-secondary" type="button" data-applicant-whatsapp hidden>Kirim WhatsApp hasil</button>
-              </div>
+              <button class="button button-secondary" type="button" data-applicant-whatsapp hidden>Kirim WhatsApp hasil</button>
             </footer>
           </div>
         </dialog>
