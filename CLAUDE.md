@@ -76,6 +76,14 @@ Halaman pendaftaran (`pendaftaran.html`):
   `selection-cvs`, 5 MB) dan link portofolio `https://` (opsional), hanya kalau
   admin mencentang "Minta CV/portofolio" (keterangannya bisa diedit). Detail:
   "Selection extras" di `supabase/README.md`.
+- Layar sukses (gratis terkonfirmasi / bayar lunas / diterima) punya "Simpan ke
+  kalender": link Google Calendar + file .ics (pengingat H-1) dari `selectedEvent`
+  (`renderCalendar` di `renderOnboarding`). Cek status belum punya karena
+  `payment-status` tidak mengirim tanggal kegiatan.
+- Centang "Ingat data saya" (tanpa `name`, tidak ikut terkirim) menyimpan nama,
+  WA, email, domisili, instansi di `localStorage` `kb_volunteer_profile` saat
+  submit valid dan mengisi otomatis pendaftaran berikutnya; tidak dicentang =
+  data tersimpan dihapus.
 
 Lainnya:
 - Foto disajikan sebagai WebP yang sudah diperkecil (originalnya 2–7 MB).

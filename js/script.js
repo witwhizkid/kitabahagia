@@ -1344,12 +1344,83 @@ if (registrationForm) {
     }
   };
 
+  // "Simpan ke kalender" for confirmed participants: a Google Calendar link and an .ics file
+  // (with a reminder one day before) built from the selected event; nothing is sent anywhere.
+  const calendarStamp = (date) => date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const calendarEvent = (data) => {
+    const start = new Date(selectedEvent?.start || '');
+    if (!selectedEvent || Number.isNaN(start.getTime())) return null;
+    const parsedEnd = new Date(selectedEvent.end || '');
+    const end = Number.isNaN(parsedEnd.getTime()) || parsedEnd <= start ? new Date(start.getTime() + 2 * 3600e3) : parsedEnd;
+    const groupUrl = safeWhatsAppGroupUrl(data?.whatsapp_group_url);
+    const details = [
+      data?.registration_code ? `Kode pendaftaran: ${data.registration_code}` : '',
+      groupUrl ? `Grup WhatsApp: ${groupUrl}` : '',
+      `Detail kegiatan: ${window.location.origin}/pendaftaran.html?event=${encodeURIComponent(selectedEvent.slug)}`
+    ].filter(Boolean).join('\n');
+    return {
+      title: `${selectedEvent.name} · Kita Bahagia`, start, end, details,
+      // normalizeScheduleEvent fills a missing location with a placeholder; keep it out of calendars.
+      location: selectedEvent.location === 'Lokasi menyusul' ? '' : selectedEvent.location || '', uid: `${data?.registration_code || selectedEvent.slug}@kitabahagia`
+    };
+  };
+  const downloadCalendarFile = (item) => {
+    const text = (value) => String(value).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+    // iCalendar lines are folded at 75 octets (UTF-8); continuation lines start with a space.
+    const encoder = new TextEncoder();
+    const fold = (line) => {
+      const parts = [];
+      let current = '';
+      for (const character of line) {
+        if (encoder.encode(current + character).length > (parts.length ? 74 : 75)) {
+          parts.push(current);
+          current = '';
+        }
+        current += character;
+      }
+      parts.push(current);
+      return parts.join('\r\n ');
+    };
+    const lines = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Kita Bahagia//Pendaftaran//ID', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+      'BEGIN:VEVENT', `UID:${item.uid}`, `DTSTAMP:${calendarStamp(new Date())}`,
+      `DTSTART:${calendarStamp(item.start)}`, `DTEND:${calendarStamp(item.end)}`,
+      `SUMMARY:${text(item.title)}`, `LOCATION:${text(item.location)}`, `DESCRIPTION:${text(item.details)}`,
+      'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${text(`Besok: ${item.title}`)}`, 'TRIGGER:-P1D', 'END:VALARM',
+      'END:VEVENT', 'END:VCALENDAR'
+    ];
+    const url = URL.createObjectURL(new Blob([`${lines.map(fold).join('\r\n')}\r\n`], { type: 'text/calendar;charset=utf-8' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `kita-bahagia-${selectedEvent?.slug || 'kegiatan'}.ics`;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  const renderCalendar = (container, data) => {
+    const block = container.querySelector('[data-calendar]');
+    if (!block) return;
+    const item = calendarEvent(data);
+    block.hidden = !item;
+    if (!item) return;
+    const google = new URL('https://calendar.google.com/calendar/render');
+    google.searchParams.set('action', 'TEMPLATE');
+    google.searchParams.set('text', item.title);
+    google.searchParams.set('dates', `${calendarStamp(item.start)}/${calendarStamp(item.end)}`);
+    google.searchParams.set('details', item.details);
+    if (item.location) google.searchParams.set('location', item.location);
+    block.querySelector('[data-calendar-google]').href = google.href;
+    block.querySelector('[data-calendar-ics]').onclick = () => downloadCalendarFile(item);
+  };
+
   const renderOnboarding = (container, data) => {
     if (!container) return;
     const copy = container.querySelector('[data-onboarding-copy]');
     const link = container.querySelector('[data-whatsapp-group]');
     const groupUrl = safeWhatsAppGroupUrl(data?.whatsapp_group_url);
     container.hidden = false;
+    renderCalendar(container, data);
     if (!groupUrl) {
       if (copy) copy.textContent = 'Link grup akan tersedia setelah disiapkan oleh tim Kita Bahagia.';
       if (link) {
@@ -2571,6 +2642,35 @@ if (registrationForm) {
   };
 
   const telephoneInput = document.getElementById('telepon');
+  // Optional "ingat data saya": prefills the next registration on this device only; never sent to the server.
+  const profileStorageKey = 'kb_volunteer_profile';
+  const profileFields = ['nama', 'telepon', 'email', 'domicile', 'institution'];
+  const rememberProfileInput = document.getElementById('rememberProfile');
+  try {
+    const saved = JSON.parse(localStorage.getItem(profileStorageKey) || 'null');
+    if (saved && typeof saved === 'object') {
+      profileFields.forEach((id) => {
+        const input = document.getElementById(id);
+        if (input && !input.value && typeof saved[id] === 'string') input.value = saved[id];
+      });
+      if (rememberProfileInput) rememberProfileInput.checked = true;
+    }
+  } catch {
+    // Storage can be unavailable (private mode); the form still works without it.
+  }
+  const storeProfile = () => {
+    try {
+      if (rememberProfileInput?.checked) {
+        localStorage.setItem(profileStorageKey, JSON.stringify(Object.fromEntries(
+          profileFields.map((id) => [id, document.getElementById(id)?.value.trim() || ''])
+        )));
+      } else {
+        localStorage.removeItem(profileStorageKey);
+      }
+    } catch {
+      // Ignore storage errors; remembering is a convenience only.
+    }
+  };
   const telephoneError = document.getElementById('teleponError');
 
   const getPhoneError = (rawValue) => {
@@ -2618,6 +2718,7 @@ if (registrationForm) {
       telephoneInput?.focus();
       return;
     }
+    storeProfile();
     showRegistrationReview();
   });
 

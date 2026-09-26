@@ -2636,6 +2636,9 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-onboarding h3 { margin:0 0 8px; font-size:20px; }
 .registration-onboarding p { max-width:48ch; margin:0 0 18px; color:var(--muted); font-size:14px; line-height:1.65; }
 .registration-onboarding .btn { display:inline-flex; align-items:center; gap:8px; min-height:48px; }
+.calendar-actions { margin-top:22px; }
+.calendar-actions p { margin-bottom:12px; }
+.calendar-buttons { display:flex; flex-wrap:wrap; gap:10px; }
 .payment-details { padding-left:32px; border-left:1px solid var(--line); }
 .payment-details h3 { margin:0 0 24px; font-size:22px; }
 .payment-details dl, .registration-confirmation dl { margin:0; }
