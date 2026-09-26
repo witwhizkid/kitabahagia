@@ -2792,6 +2792,10 @@ if (registrationForm) {
   telephoneInput?.addEventListener('input', () => {
     if (telephoneError && !telephoneError.hidden) validatePhoneField();
   });
+  // Flag a wrong number as soon as the field is left, not only on submit (an empty field waits for submit).
+  telephoneInput?.addEventListener('blur', () => {
+    if (telephoneInput.value.trim()) validatePhoneField();
+  });
 
   registrationForm.addEventListener('submit', (event) => {
     event.preventDefault();
