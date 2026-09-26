@@ -84,6 +84,11 @@ Halaman pendaftaran (`pendaftaran.html`):
   Salin link" ada di layar sukses (`renderShare` di `renderOnboarding`), bukan di
   kartu ringkasan, supaya tidak mengganggu alur form. Tombol Daftar yang
   menempel ala Luma sengaja tidak dibuat: form sudah langsung di bawah ringkasan.
+- Layar Konfirmasi punya kalimat konsekuensi per mode (`[data-review-consequence]`):
+  berbayar = QRIS dibuat + slot ditahan; seleksi = masuk seleksi + tanggal
+  pengumuman; gratis biasa = langsung aman. Copy `expired` (QRIS kedaluwarsa, slot
+  masih ditahan sampai deadline, buat QRIS baru), `failed`, gagal cek status, dan
+  `SERVER_ERROR` menjelaskan data tetap tersimpan dan tidak perlu daftar/bayar ulang.
 - Layar sukses (gratis terkonfirmasi / bayar lunas / diterima) punya "Simpan ke
   kalender": link Google Calendar + file .ics (pengingat H-1) dari `selectedEvent`
   (`renderCalendar` di `renderOnboarding`). Cek status belum punya karena

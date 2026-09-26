@@ -218,6 +218,7 @@
                 </dl>
               </aside>
             </div>
+            <p class="registration-review-consequence" data-review-consequence></p>
             <div class="registration-review-actions">
               <button class="btn btn-secondary" id="editRegistrationButton" type="button">Ubah data</button>
               <button class="btn btn-primary" id="confirmRegistrationButton" type="button">Lanjut ke pembayaran</button>
@@ -274,7 +275,7 @@
           <aside class="payment-details" aria-label="Ringkasan pendaftaran">
             <dl><div><dt>Kode pendaftaran</dt><dd><span data-result-code></span><button class="payment-copy" type="button" data-payment-copy>Salin</button></dd></div><div><dt>Kegiatan</dt><dd data-result-title></dd></div><div><dt>Order pembayaran</dt><dd data-result-order>Menunggu dibuat</dd></div><div><dt>Transaksi</dt><dd>Pendaftaran kegiatan · pembayaran belum selesai</dd></div></dl>
           </aside>
-          <div class="payment-recovery-error" data-payment-recovery-error role="status" aria-live="polite" hidden><strong>Status pembayaran belum dapat diperiksa</strong><p>Data pendaftaranmu tetap tersimpan. Coba lagi untuk memeriksa status pembayaran.</p><button class="btn btn-primary" type="button" data-payment-recovery-retry>Coba lagi</button></div>
+          <div class="payment-recovery-error" data-payment-recovery-error role="status" aria-live="polite" hidden><strong>Status pembayaran belum dapat diperiksa</strong><p>Data pendaftaranmu tetap tersimpan. Kalau kamu sudah membayar, jangan bayar lagi. Periksa koneksi internet, lalu coba lagi.</p><button class="btn btn-primary" type="button" data-payment-recovery-retry>Coba lagi</button></div>
           <span class="visually-hidden" data-payment-copy-feedback aria-live="polite"></span>
         </section>
         <section class="registration-confirmation" id="freeRegistrationConfirmation" aria-labelledby="freeConfirmationHeading" tabindex="-1" hidden>

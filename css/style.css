@@ -6133,6 +6133,8 @@ html.home-document { overflow-x: hidden; }
 .registration-page .registration-payment-window::before { content:""; flex:none; width:14px; height:14px; border:2px solid currentColor; border-radius:50%; background:linear-gradient(currentColor, currentColor) 50% 30% / 2px 5px no-repeat; }
 .registration-page .registration-payment-window[hidden] { display:none; }
 .registration-page .registration-summary-cta { border-radius:999px; background:var(--white); color:var(--maroon); }
+.registration-review-consequence { margin:20px 0 0; padding:12px 14px; border-left:3px solid var(--maroon); background:var(--cream); color:var(--ink); font-size:14px; line-height:1.6; }
+.registration-review-consequence:empty { display:none; }
 .registration-page .event-location-link { color:inherit; text-decoration:underline; text-decoration-color:rgba(255,255,255,.45); text-decoration-thickness:1px; text-underline-offset:4px; }
 .registration-page .event-location-link:hover { text-decoration-color:currentColor; }
 .event-map { margin-top:16px; overflow:hidden; border-radius:var(--radius-md); background:var(--sand); aspect-ratio:16 / 9; }

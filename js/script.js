@@ -956,8 +956,8 @@ if (registrationForm) {
     pending: ['Selesaikan pembayaran', 'Slotmu ditahan sementara sampai batas waktu pembayaran. Jika pembayaran belum berhasil saat waktu habis, slot akan kembali tersedia untuk peserta lain.'],
     processing: ['Pembayaran sedang diverifikasi', 'Kami sedang memastikan pembayaranmu. Halaman ini akan diperbarui setelah statusnya terkonfirmasi.'],
     paid: ['Pembayaran berhasil', 'Tempatmu sudah dikonfirmasi.'],
-    expired: ['Waktu pembayaran habis', 'QRIS sebelumnya sudah kedaluwarsa. Pendaftaranmu masih tersimpan. Kamu bisa membuat QRIS baru untuk melanjutkan pembayaran.'],
-    failed: ['Pembayaran belum berhasil', 'Pembayaran tidak berhasil diselesaikan. Pendaftaranmu tetap tercatat.'],
+    expired: ['QRIS kedaluwarsa', 'Kode QRIS ini sudah tidak berlaku, tapi pendaftaranmu masih tersimpan. Selama batas waktu pembayaran belum lewat, slotmu tetap ditahan. Buat QRIS baru untuk melanjutkan pembayaran, tidak perlu daftar ulang.'],
+    failed: ['Pembayaran belum berhasil', 'Pembayaran tidak berhasil diselesaikan, tapi pendaftaranmu tetap tercatat. Selama batas waktu pembayaran belum lewat, buat QRIS baru untuk mencoba lagi, tidak perlu daftar ulang.'],
     refunded: ['Pembayaran dikembalikan', 'Pembayaran ini sudah dikembalikan. Hubungi tim Kita Bahagia bila perlu bantuan.'],
     deadline_passed: ['Waktu pembayaran habis, pendaftaran dibatalkan', 'Batas waktu pembayaran sudah lewat, jadi kuota untuk pendaftaran ini sudah dilepas. Kamu bisa mendaftar lagi jika kuota masih tersedia.']
   };
@@ -1758,7 +1758,7 @@ if (registrationForm) {
     stage.querySelector('.payment-recovery-error').hidden = false;
     stage.querySelector('[data-payment-recovery-retry]').onclick = retry;
     stage.querySelector('#paymentHeading').textContent = 'Status pembayaran belum dapat diperiksa';
-    stage.querySelector('.payment-intro').textContent = 'Data pendaftaranmu tetap tersimpan. Coba lagi untuk memeriksa status pembayaran.';
+    stage.querySelector('.payment-intro').textContent = 'Data pendaftaranmu tetap tersimpan. Kalau kamu sudah membayar, jangan bayar lagi. Periksa koneksi internet, lalu coba periksa status lagi.';
     stage.querySelector('.payment-amount').hidden = true;
     stage.querySelector('.payment-qr-placeholder').hidden = true;
     stage.querySelector('[data-payment-download]').hidden = true;
@@ -2336,7 +2336,7 @@ if (registrationForm) {
     PAYMENT_ALREADY_PAID: 'Pembayaran untuk pendaftaran ini sudah selesai.',
     PAYMENT_PROVIDER_ERROR: 'Layanan pembayaran sedang bermasalah. Pendaftaranmu tetap tercatat.',
     PAYMENT_ERROR: 'QRIS belum dapat dibuat. Pendaftaranmu tetap tercatat. Silakan coba lagi beberapa saat lagi.',
-    SERVER_ERROR: 'Layanan pendaftaran sedang bermasalah. Silakan coba lagi.'
+    SERVER_ERROR: 'Pendaftaran belum terkirim karena gangguan jaringan atau layanan. Data yang kamu isi tidak hilang, jadi cukup kirim lagi. Kalau kemudian muncul pesan sudah terdaftar, berarti pendaftaranmu tadi sudah masuk.'
   };
 
   let isSubmitting = false;
@@ -2711,6 +2711,15 @@ if (registrationForm) {
     setDataText('[data-review-event-date]', `${selectedEvent.date} · ${selectedEvent.time}`, registrationReview);
     setDataText('[data-review-event-location]', selectedEvent.location, registrationReview);
     setDataText('[data-review-event-price]', price, registrationReview);
+    // Say what happens right after the click, per registration mode.
+    const announcementAt = Date.parse(selectedEvent.announcementAt || '');
+    setDataText('[data-review-consequence]', selectedEvent.price > 0
+      ? 'Setelah melanjutkan, QRIS akan dibuat dan slotmu ditahan sementara sampai batas waktu pembayaran. Jika belum dibayar sampai batas itu, slot kembali tersedia untuk peserta lain.'
+      : isSelectionEvent()
+        ? `Setelah dikirim, pendaftaranmu masuk tahap seleksi dan belum berarti terpilih. ${Number.isFinite(announcementAt)
+          ? `Hasilnya diumumkan ${announcementDateFormatter.format(new Date(announcementAt))} lewat WhatsApp dan halaman Cek status.`
+          : 'Hasilnya diumumkan lewat WhatsApp dan halaman Cek status.'}`
+        : 'Setelah dikonfirmasi, tempatmu langsung aman. Info selanjutnya dikirim tim Kita Bahagia lewat WhatsApp.', registrationReview);
     if (confirmRegistrationButton) {
       // Naming the amount here avoids a surprise on the payment step.
       confirmRegistrationButton.textContent = selectedEvent.price > 0
