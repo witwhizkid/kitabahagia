@@ -160,9 +160,12 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   Nasional"/Panitia/Pemateri), dan QR. Posisi teks harus sama di semua
   template; nama panjang otomatis mengecil. QR di area kosong kanan tanda
   tangan Project Leader. Font nama: tanyakan ke Desain.
-- Nomor mengikuti format lama `13.044/KB/VII/2026` sekaligus jadi kode
-  verifikasi; arti "13" dan "044" **belum dijawab** tim Desain.
-- Verifikasi publik: `sertifikat?kode=...` menampilkan nama/kegiatan/tanggal.
+- Nomor dicetak dengan format lama `13.044/KB/VII/2026` (tampilan/arsip saja,
+  berurutan jadi mudah ditebak); arti "13" dan "044" **belum dijawab** tim Desain.
+- QR berisi kode verifikasi **acak** terpisah (tidak bisa ditebak/dienumerasi).
+  Verifikasi publik: `sertifikat?kode=...` hanya menampilkan "sah", nama,
+  kegiatan, tanggal, peran; tanpa HP/email/PDF. Unduh PDF hanya lewat Cek
+  status (kode pendaftaran + no. HP).
 - Template bertanda tangan disimpan di bucket privat (bisa dipalsukan kalau
   bocor); relawan hanya bisa mengunduh sertifikat miliknya. Minta izin Project
   Leader untuk pemakaian tanda tangannya.
