@@ -164,7 +164,7 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   kode. Pengiriman: kalau sudah ada domain sendiri → email otomatis ke semua
   yang hadir (jalur utama) + 1 pengumuman di grup WA kegiatan; tombol "Kirim via
   WA" per orang (draf WA existing) sebagai cadangan. Sebelum ada domain → draf
-  WA per orang. Cek status (kode + no. HP) tetap ada sebagai cadangan.
+  WA per orang. Cek status (kode pendaftaran + email) tetap ada sebagai cadangan.
 - Template per kegiatan dari divisi Desain: PNG 2000×1414 (A4 landscape) yang
   sudah berisi latar, deskripsi kegiatan, tanda tangan Founder + Project Leader.
   Sistem hanya menempel nomor, nama, peran ("Sebagai Relawan Tingkat
