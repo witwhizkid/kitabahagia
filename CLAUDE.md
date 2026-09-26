@@ -173,7 +173,15 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
 - Template bertanda tangan disimpan di bucket privat (bisa dipalsukan kalau
   bocor); relawan hanya bisa mengunduh sertifikat miliknya. Minta izin Project
   Leader untuk pemakaian tanda tangannya.
-- Panitia tidak daftar lewat web: perlu "Tambah panitia" di admin atau impor.
+- Keputusan user: sertifikat **hanya untuk relawan yang hadir di lapangan**
+  (tanpa panitia/"Tambah panitia"; peran selalu "Sebagai Relawan Tingkat
+  Nasional", jadi baris ini boleh tetap di template); kegiatan gratis akhir
+  bulan juga dapat; terbit **H+7**; "Tandai hadir" dan "Terbitkan" hanya oleh
+  **admin** (tim pelaksana absen manual lalu lapor ke admin); izin tanda tangan
+  aman; anggap domain sudah ada (email jalur utama). Belum ada data lama untuk
+  diimpor; kegiatan pertama Oktober 2026.
+- Template kosong = sertifikat jadi dengan teks nomor dan nama dihapus; minta
+  juga 1 contoh terisi untuk posisi/ukuran.
 - Data sebelum fitur ada dicatat di Google Sheet (template
   `Pencatatan-Kehadiran-Dampak-Kita-Bahagia.xlsx`): tab `Kegiatan` (slug,
   tanggal, durasi_jam, penerima_manfaat, hasil, dll.) dan `Kehadiran` (slug,
