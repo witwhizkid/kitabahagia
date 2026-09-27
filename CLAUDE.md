@@ -121,9 +121,9 @@ Halaman detail Kisah (`kisah-detail.html`, `js/stories.js`), gaya editorial ala 
   (butuh perubahan database).
 
 Lainnya:
-- Bahasa bentuk (audit premium, Sep 2026): sudut 6px untuk tombol/input/chip,
-  8px untuk kartu/foto (`--radius-*` sudah disetel ke nilai ini); tanpa bentuk
-  pil `999px` baru. Label kapital kecil (`.eyebrow`) di beranda maksimal 2
+- Sudut membulat di halaman pendaftaran/pembayaran (kartu 22–28px, tombol dan
+  label pil) **disengaja** biar playful; jangan disamakan ke 6–8px halaman lain
+  (sudah dicoba, user: terlalu kaku). Label kapital kecil (`.eyebrow`) di beranda maksimal 2
   (Jejak + Agenda berikutnya). Jangan pakai `font-style: italic` pada
   Instrument Sans/DM Sans: versi italic tidak dimuat, jadi browser memiringkan palsu.
 - Gerak halus ala Aesop: `.reveal` (fade + naik 16px, .8s) juga dipasang otomatis
