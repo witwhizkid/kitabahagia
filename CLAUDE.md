@@ -130,6 +130,15 @@ Lainnya:
   Angka Jejak beranda 2×2 di semua lebar dan menghitung naik sekali saat terlihat
   (tahun tidak); label pakai `.impact-editorial-stat > span` supaya span di dalam
   angka tidak ikut mengecil.
+- Hero beranda: foto slide aktif zoom pelan 1.08→1 (7 s) dan judul muncul dengan
+  wipe atas→bawah (`hero-title-in`); HP/tablet hanya teks slide pertama. Mati saat
+  reduced motion.
+- Program beranda desktop (≥901px): JS menambah `.program-stage` (salinan foto
+  kartu, aria-hidden, ditaruh di akhir grid supaya `:nth-child` kartu tetap) yang
+  menempel di kiri dan berganti dengan efek tirai saat teks program lewat tengah
+  layar; foto per kartu disembunyikan. HP/tablet tetap baris biasa + tirai saat
+  kartu muncul. Sticky butuh `overflow-x: clip` (bukan `hidden`) di
+  `html.home-document`/`.home-page`.
 - Foto disajikan sebagai WebP yang sudah diperkecil (originalnya 2–7 MB).
 - Upload foto di admin dikompres di browser sebelum dikirim (`compressImage`
   di `js/admin.js`): kegiatan maks. 1200×1500, kisah maks. 1600×1600, WebP

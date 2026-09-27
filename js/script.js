@@ -819,6 +819,43 @@ if (impactCounters.length && 'IntersectionObserver' in window
   });
 }
 
+// Homepage programs on desktop: one sticky photo that curtains to the program whose text is passing
+// the middle of the screen. The stage copies the cards' own images (same files, already loading);
+// CSS only uses it from 901px, so phones keep the alternating rows.
+const programGrid = document.querySelector('.home-program-section .program-grid');
+const programCards = programGrid ? [...programGrid.querySelectorAll(':scope > .program-card')] : [];
+const programPhotos = programCards.map((card) => card.querySelector('.program-image img'));
+if (programCards.length && programPhotos.every(Boolean) && 'IntersectionObserver' in window) {
+  const stage = document.createElement('div');
+  stage.className = 'program-stage';
+  stage.setAttribute('aria-hidden', 'true');
+  const stagePhotos = programPhotos.map((photo) => {
+    const copy = photo.cloneNode();
+    copy.alt = '';
+    copy.removeAttribute('fetchpriority');
+    return copy;
+  });
+  stage.append(...stagePhotos);
+  stage.style.gridRow = `1 / span ${programCards.length}`;
+  programGrid.append(stage); // last, so the cards keep their :nth-child styles
+  programGrid.classList.add('has-stage');
+  let activeProgram = -1;
+  const showProgram = (index) => {
+    if (index === activeProgram || index < 0) return;
+    stagePhotos.forEach((photo) => photo.classList.remove('is-prev'));
+    stagePhotos[activeProgram]?.classList.replace('is-active', 'is-prev');
+    stagePhotos[index].classList.add('is-active');
+    activeProgram = index;
+  };
+  showProgram(0);
+  const programObserver = new IntersectionObserver((entries) => {
+    entries.forEach(({ isIntersecting, target }) => {
+      if (isIntersecting) showProgram(programCards.indexOf(target));
+    });
+  }, { rootMargin: '-45% 0px -45% 0px' });
+  programCards.forEach((card) => programObserver.observe(card));
+}
+
 function initializeScheduleFilters() {
   const scheduleCards = [...document.querySelectorAll('[data-schedule-filter]')];
   const eventCards = [...document.querySelectorAll('[data-category]')];
