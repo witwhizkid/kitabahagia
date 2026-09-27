@@ -224,7 +224,7 @@ const eventSlotNote = (event) => {
   return `<span class="event-slot">${escapeHTML(event.capacity)}</span>`;
 };
 const eventPhoto = (event, className) => `<figure class="${className}${event.image ? '' : ' is-empty'}">${event.image
-  ? `<img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}" loading="lazy" decoding="async">` : ''}</figure>`;
+  ? `<img class="event-photo-backdrop" src="${escapeHTML(event.image)}" alt="" aria-hidden="true" loading="lazy" decoding="async"><img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}" loading="lazy" decoding="async">` : ''}</figure>`;
 const eventCta = (event) => {
   const { available } = eventRegistrationAvailability(event);
   return eventRegistrationLink(event, `event-cta${available ? '' : ' is-quiet'}`,
@@ -784,6 +784,40 @@ if ('IntersectionObserver' in window) {
   }, { threshold: 0.08 });
   revealItems.forEach(item => observer.observe(item));
 } else revealItems.forEach(item => item.classList.add('visible'));
+
+// Jejak numbers count up once when scrolled into view. The HTML keeps the final value, screen
+// readers get it straight away, and a year (2024) or reduced motion leaves the number as is.
+const impactCounters = [...document.querySelectorAll('.impact-editorial-stat strong')].flatMap((stat) => {
+  const [, end, suffix] = stat.textContent.trim().match(/^(\d+)(\D*)$/) || [];
+  return end && Number(end) < 1000 ? [{ stat, end: Number(end), suffix }] : [];
+});
+if (impactCounters.length && 'IntersectionObserver' in window
+  && window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+  const countObserver = new IntersectionObserver((entries) => {
+    entries.forEach(({ isIntersecting, target }) => {
+      if (!isIntersecting) return;
+      countObserver.unobserve(target);
+      const { end, suffix, shown } = impactCounters.find(({ stat }) => stat === target);
+      const start = performance.now();
+      const tick = (now) => {
+        const progress = Math.min((now - start) / 1400, 1);
+        shown.textContent = `${Math.round(end * (1 - (1 - progress) ** 3))}${suffix}`;
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+  }, { threshold: 0.6 });
+  impactCounters.forEach((counter) => {
+    const label = document.createElement('span');
+    label.className = 'visually-hidden';
+    label.textContent = `${counter.end}${counter.suffix}`;
+    counter.shown = document.createElement('span');
+    counter.shown.setAttribute('aria-hidden', 'true');
+    counter.shown.textContent = `0${counter.suffix}`;
+    counter.stat.replaceChildren(label, counter.shown);
+    countObserver.observe(counter.stat);
+  });
+}
 
 function initializeScheduleFilters() {
   const scheduleCards = [...document.querySelectorAll('[data-schedule-filter]')];
