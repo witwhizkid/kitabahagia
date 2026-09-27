@@ -17,8 +17,10 @@ Situs statis multi-halaman (HTML/CSS/JS vanilla) di Vercel, backend Supabase
   browser tidak ada di repo; skrip lama butuh env `S` dan working directory.
   Di tes klik, scroll dulu elemennya ke dalam viewport.
 - Laporkan dengan jujur kalau sesuatu baru dicek di lokal, belum di situs live.
-- Skill `ui-ux-pro-max` (pihak ketiga, MIT) ada di `.claude/skills/`; jalankan
-  skripnya dari root repo. Keputusan desain di file ini tetap menang atas sarannya.
+- Skill pihak ketiga (MIT) di `.claude/skills/`: `ui-ux-pro-max` (skrip dari root
+  repo) dan `design-dna` (ukur warna butuh `npm install --prefix` di folder
+  `scripts`-nya; `node_modules` tidak di-commit). Keputusan desain di file ini
+  tetap menang atas sarannya.
 - Bahasa ke user: Indonesia santai (gua/lu boleh).
 
 ## Deploy (user pakai PowerShell di Windows)
