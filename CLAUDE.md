@@ -139,6 +139,12 @@ Lainnya:
   layar; foto per kartu disembunyikan. HP/tablet tetap baris biasa + tirai saat
   kartu muncul. Sticky butuh `overflow-x: clip` (bukan `hidden`) di
   `html.home-document`/`.home-page`.
+- Kesan premium (hasil design-dna): kata aksen `h1 em, h2 em` = Newsreader italic
+  maroon (dimuat di semua halaman ber-Google Fonts; `em` netral pakai
+  `font-family: inherit`); `text-wrap: balance` di heading, `pretty` di paragraf;
+  token `--radius-photo` 2px, `--radius-card` 4px, `--ease`; tekstur kertas
+  `img/grain.png` (4 KB) via `body::after` (bukan di pendaftaran); foto `main`
+  fade saat selesai dimuat (`.img-fade`, hero dikecualikan).
 - Foto disajikan sebagai WebP yang sudah diperkecil (originalnya 2–7 MB).
 - Upload foto di admin dikompres di browser sebelum dikirim (`compressImage`
   di `js/admin.js`): kegiatan maks. 1200×1500, kisah maks. 1600×1600, WebP

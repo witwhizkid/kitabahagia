@@ -761,6 +761,20 @@ if (testimonialSlides.length && testimonialTrack) {
 
 document.getElementById('year')?.replaceChildren(document.createTextNode(new Date().getFullYear()));
 
+// Photos fade in as they finish loading (CSS .img-fade). Images already loaded now, and the hero
+// (it has its own motion and is the first paint), are marked ready so they never blink.
+if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+  const markLoaded = ({ target }) => {
+    if (target instanceof HTMLImageElement && !target.classList.contains('is-ready')) target.classList.add('is-loaded');
+  };
+  document.addEventListener('load', markLoaded, true);
+  document.addEventListener('error', markLoaded, true);
+  document.querySelectorAll('main img').forEach((image) => {
+    if (image.complete || image.closest('.hero-slide')) image.classList.add('is-ready');
+  });
+  document.documentElement.classList.add('img-fade');
+}
+
 // Blocks below the first screen also fade in as they scroll into view. Added only by JS (so
 // nothing stays hidden without it), never with reduced motion, not on the registration flow,
 // and not for blocks already on screen or still hidden at load.
