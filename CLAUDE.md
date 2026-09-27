@@ -19,7 +19,9 @@ Situs statis multi-halaman (HTML/CSS/JS vanilla) di Vercel, backend Supabase
 - Laporkan dengan jujur kalau sesuatu baru dicek di lokal, belum di situs live.
 - Skill pihak ketiga (MIT) di `.claude/skills/`: `ui-ux-pro-max` (skrip dari root
   repo) dan `design-dna` (ukur warna butuh `npm install --prefix` di folder
-  `scripts`-nya; `node_modules` tidak di-commit). Keputusan desain di file ini
+  `scripts`-nya; `node_modules` tidak di-commit), `cast` + `paint` dari genjutsu
+  (sub-skill di `.claude/skills/genjutsu/_jutsu`, dicari dari root repo). `cast`/
+  `paint` hanya dipakai kalau user memintanya. Keputusan desain di file ini
   tetap menang atas sarannya.
 - Bahasa ke user: Indonesia santai (gua/lu boleh).
 
