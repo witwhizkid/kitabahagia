@@ -13,9 +13,9 @@
   --white: #ffffff;
   --shadow: 0 18px 40px rgba(54, 19, 24, .08);
   --shadow-soft: 0 8px 20px rgba(77, 31, 35, .05);
-  --radius-xl: 28px;
-  --radius-lg: 22px;
-  --radius-md: 14px;
+  --radius-xl: 8px;
+  --radius-lg: 8px;
+  --radius-md: 6px;
 }
 
 /* Homepage hero: desktop-only full-bleed editorial composition. */
@@ -1198,7 +1198,6 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   color: var(--ink);
   box-shadow: none;
 }
-.home-closing .eyebrow.light { color: var(--maroon); }
 .home-closing .join-copy p { color: var(--muted); }
 .home-closing .join-copy h2 em { color: var(--maroon); }
 .home-closing .join-social { color: var(--maroon); }
@@ -4148,7 +4147,7 @@ h2 em {
   max-width: 55ch;
   margin: 14px 0 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.6;
 }
 
@@ -4488,7 +4487,6 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .kisah-preview { padding-block: 68px 72px; }
 .kisah-section-heading { display: flex; justify-content: space-between; align-items: end; gap: 40px; padding-top: 24px; border-top: 1px solid var(--line); }
 .kisah-section-intro { max-width: 670px; }
-.kisah-section-kicker { display: block; margin-bottom: 16px; color: var(--maroon); font-size: 12px; font-weight: 800; letter-spacing: .14em; line-height: 1.2; text-transform: uppercase; }
 .kisah-section-heading h2 { max-width: 15ch; margin: 0 0 18px; font-size: clamp(38px,4.6vw,58px); line-height: 1.02; letter-spacing: -.045em; text-wrap: balance; }
 .kisah-section-heading p { max-width: 51ch; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.7; }
 .kisah-section-heading > a { flex-shrink: 0; }
@@ -4511,7 +4509,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .kisah-entry h2, .kisah-entry h3 { margin: 0 0 12px; color: var(--ink); font-family: "Instrument Sans","DM Sans",sans-serif; font-size: clamp(23px,2.2vw,29px); font-weight: 600; line-height: 1.2; letter-spacing: -.025em; text-wrap: pretty; }
 .kisah-title-link { color: inherit; text-decoration: none; }
 .kisah-title-link:hover { color: var(--maroon); }
-.kisah-entry > p { max-width: 52ch; margin: 0 0 12px; color: var(--muted); font-size: 15px; line-height: 1.65; }
+.kisah-entry > p { max-width: 52ch; margin: 0 0 12px; color: var(--muted); font-size: 16px; line-height: 1.65; }
 .kisah-text-link { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--maroon); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 5px; text-decoration-color: rgba(122,31,43,.35); }
 .kisah-text-link:hover { text-decoration-color: currentColor; }
 .kisah-data-state { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; min-height: 88px; margin: 34px 0 0; color: var(--muted); font-size: 15px; line-height: 1.65; }
@@ -5870,7 +5868,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 }
 .home-program-section .program-index::after { content: ""; height: 1px; background: var(--line); }
 .home-program-section .program-content h3 { margin: 10px 0 10px; font-size: clamp(26px, 3vw, 38px); line-height: 1.05; }
-.home-program-section .program-content p { max-width: 38ch; margin: 0; font-size: 15px; line-height: 1.7; }
+.home-program-section .program-content p { max-width: 38ch; margin: 0; font-size: 16px; line-height: 1.7; }
 .home-program-section .program-title { margin-top: 0 !important; }
 .home-program-section .program-content > a:last-child { margin-top: 24px; }
 .home-program-section .program-card:nth-child(1) .program-image img { object-position: 48% center; }
@@ -6117,7 +6115,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .payment-header::after { width:90px; height:90px; bottom:-50px; left:38%; }
 .registration-page .payment-header > * { position:relative; }
 .registration-page .payment-header h2 { max-width:none; font-size:clamp(22px, 3.4vw, 28px); }
-.registration-page .payment-countdown { justify-items:end; min-width:0; padding:8px 14px 8px 12px; border:0; border-radius:999px; background:var(--white); box-shadow:0 6px 16px rgba(0,0,0,.14); }
+.registration-page .payment-countdown { justify-items:end; min-width:0; padding:8px 14px 8px 12px; border:0; border-radius:6px; background:var(--white); box-shadow:0 6px 16px rgba(0,0,0,.14); }
 .registration-page .payment-countdown span { color:var(--muted); }
 .registration-page .payment-countdown strong { display:inline-flex; align-items:center; gap:7px; color:var(--maroon); font-size:19px; }
 .registration-page .payment-countdown strong::before { content:""; width:14px; height:14px; border:2px solid currentColor; border-radius:50%; background:linear-gradient(currentColor, currentColor) 50% 30% / 2px 5px no-repeat; }
@@ -6130,12 +6128,12 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .payment-qr-section { order:1; }
 .registration-page .payment-qr-card { display:grid; justify-items:center; width:100%; padding:20px 20px 18px; border-radius:var(--radius-lg); background:var(--cream); }
 .registration-page .payment-qr-heading { flex-direction:column; align-items:center; gap:8px; margin-bottom:14px; }
-.registration-page .payment-qris-badge { padding:5px 14px; border-radius:999px; background:var(--maroon); color:var(--white); font-size:12px; font-weight:800; letter-spacing:.12em; }
+.registration-page .payment-qris-badge { padding:5px 14px; border-radius:6px; background:var(--maroon); color:var(--white); font-size:12px; font-weight:800; letter-spacing:.12em; }
 .registration-page .payment-qr-heading p { font-size:13px; }
-.registration-page .payment-qr-placeholder { width:min(100%, 280px); padding:10px; border:0; border-radius:24px; background:var(--white); box-shadow:var(--shadow-soft); }
-.registration-page .payment-qr-code svg { display:block; width:100%; height:auto; border-radius:14px; }
+.registration-page .payment-qr-placeholder { width:min(100%, 280px); padding:10px; border:0; border-radius:6px; background:var(--white); box-shadow:var(--shadow-soft); }
+.registration-page .payment-qr-code svg { display:block; width:100%; height:auto; border-radius:0; }
 .registration-page .payment-qr-code[hidden], .registration-page .payment-qr-placeholder img[hidden] { display:none; }
-.registration-page .payment-download { display:inline-flex; align-items:center; gap:8px; margin-top:16px; padding:10px 20px; border:0; border-radius:999px; background:var(--rose); color:var(--maroon); font-weight:700; transition:transform .15s ease, background-color .15s ease; }
+.registration-page .payment-download { display:inline-flex; align-items:center; gap:8px; margin-top:16px; padding:10px 20px; border:0; border-radius:6px; background:var(--rose); color:var(--maroon); font-weight:700; transition:transform .15s ease, background-color .15s ease; }
 .registration-page .payment-download:hover { background:#f2cdd6; transform:translateY(-1px); }
 .registration-page .payment-download svg { width:18px; height:18px; }
 .registration-page .payment-download[hidden] { display:none; }
@@ -6150,16 +6148,16 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .payment-guide,
 .registration-page .registration-onboarding { order:3; }
 .registration-page .payment-primary > .payment-state { padding-top:0; border-top:0; text-align:center; }
-.registration-page .payment-state.payment_pending p { display:inline-flex; align-items:center; gap:9px; margin-top:18px; padding:8px 14px; border-radius:999px; background:var(--sand); color:var(--ink); font-weight:600; }
+.registration-page .payment-state.payment_pending p { display:inline-flex; align-items:center; gap:9px; margin-top:18px; padding:8px 14px; border-radius:6px; background:var(--sand); color:var(--ink); font-weight:600; }
 .registration-page .payment-state.payment_pending p::before { content:""; flex:none; width:9px; height:9px; border-radius:50%; background:#e0a526; box-shadow:0 0 0 0 rgba(224,165,38,.6); animation:payment-pulse 1.6s ease-out infinite; }
 @keyframes payment-pulse { 70% { box-shadow:0 0 0 9px rgba(224,165,38,0); } 100% { box-shadow:0 0 0 0 rgba(224,165,38,0); } }
-.registration-page .payment-check, .registration-page .payment-retry, .registration-page [data-payment-retry] { width:100%; max-width:none; min-height:52px; margin-top:16px; border-radius:999px; }
+.registration-page .payment-check, .registration-page .payment-retry, .registration-page [data-payment-retry] { width:100%; max-width:none; min-height:52px; margin-top:16px; border-radius:6px; }
 .registration-page .payment-guide { margin-top:22px; padding:18px 20px; border:0; border-radius:var(--radius-lg); background:var(--cream); }
 .registration-page .payment-guide ol { gap:10px; padding:0; list-style:none; counter-reset:payment-step; color:var(--ink); font-size:13px; }
 .registration-page .payment-guide li { display:flex; align-items:flex-start; gap:10px; counter-increment:payment-step; }
 .registration-page .payment-guide li::before { content:counter(payment-step); flex:none; display:grid; place-items:center; width:24px; height:24px; border-radius:50%; background:var(--rose); color:var(--maroon); font-size:12px; font-weight:800; }
 .registration-page .payment-details { margin-top:22px; padding:6px 24px 0; }
-.registration-page .payment-details .payment-copy { border-radius:999px; }
+.registration-page .payment-details .payment-copy { border-radius:6px; }
 @media (prefers-reduced-motion: reduce) {
   .registration-page .payment-state.payment_pending p::before { animation:none; }
   .registration-page .payment-download { transition:none; }
@@ -6181,7 +6179,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 }
 .registration-page .payment-next-actions { display:grid; justify-items:center; gap:12px; width:100%; margin-top:20px; }
 .registration-page .payment-next-actions[hidden] { display:none; }
-.registration-page .payment-next-actions .btn { width:100%; min-height:52px; border-radius:999px; }
+.registration-page .payment-next-actions .btn { width:100%; min-height:52px; border-radius:6px; }
 .registration-page .payment-next-actions .btn[hidden] { display:none; }
 .registration-page .payment-secondary-link { padding:6px 10px; color:var(--maroon); font-size:14px; font-weight:700; }
 .registration-page .payment-secondary-link:hover { text-decoration:underline; }
@@ -6201,17 +6199,17 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .registration-summary-sticky::after { width:110px; height:110px; bottom:-70px; left:42%; }
 .registration-page .registration-summary-sticky > * { position:relative; }
 .registration-page .registration-summary-topline { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
-.registration-page .registration-summary-topline > span { padding:4px 12px; border-radius:999px; background:rgba(255,255,255,.14); color:var(--white); font-size:12px; font-weight:700; letter-spacing:.04em; }
+.registration-page .registration-summary-topline > span { padding:4px 12px; border-radius:6px; background:rgba(255,255,255,.14); color:var(--white); font-size:12px; font-weight:700; letter-spacing:.04em; }
 .registration-page .registration-summary-topline > span:empty { display:none; }
 .registration-page .registration-summary-title-row h2 { color:var(--white); }
-.registration-page .registration-summary-image { border-radius:14px; }
+.registration-page .registration-summary-image { border-radius:4px; }
 .registration-page .registration-summary-sticky .event-summary div { border-color:rgba(255,255,255,.16); }
 .registration-page .registration-summary-sticky .event-summary dt { color:rgba(255,255,255,.72); }
 .registration-page .registration-summary-sticky .event-summary dd { color:var(--white); font-weight:600; }
 .registration-page .registration-payment-window { display:flex; align-items:center; gap:8px; margin:6px 0 0; padding:10px 14px; border-radius:var(--radius-md); background:rgba(255,255,255,.12); color:var(--white); font-size:13px; }
 .registration-page .registration-payment-window::before { content:""; flex:none; width:14px; height:14px; border:2px solid currentColor; border-radius:50%; background:linear-gradient(currentColor, currentColor) 50% 30% / 2px 5px no-repeat; }
 .registration-page .registration-payment-window[hidden] { display:none; }
-.registration-page .registration-summary-cta { border-radius:999px; background:var(--white); color:var(--maroon); }
+.registration-page .registration-summary-cta { border-radius:6px; background:var(--white); color:var(--maroon); }
 .registration-review-consequence { margin:20px 0 0; padding:12px 14px; border-left:3px solid var(--maroon); background:var(--cream); color:var(--ink); font-size:14px; line-height:1.6; }
 .registration-review-consequence:empty { display:none; }
 .registration-page .event-location-link { color:inherit; text-decoration:underline; text-decoration-color:rgba(255,255,255,.45); text-decoration-thickness:1px; text-underline-offset:4px; }
@@ -6223,7 +6221,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .registration-share[hidden] { display:none; }
 .registration-page .registration-share a, .registration-page .registration-share button { padding:10px 0; margin-block:-10px; border:0; background:none; color:var(--maroon); font:inherit; letter-spacing:inherit; text-transform:inherit; text-decoration:underline; text-underline-offset:4px; cursor:pointer; }
 .registration-page .registration-event-disclosure { border-bottom:0; }
-.registration-page .registration-event-disclosure > summary { display:inline-flex; align-items:center; min-height:40px; padding:8px 16px; border-radius:999px; background:var(--maroon-soft); }
+.registration-page .registration-event-disclosure > summary { display:inline-flex; align-items:center; min-height:40px; padding:8px 16px; border-radius:6px; background:var(--maroon-soft); }
 .registration-page .registration-event-disclosure[open] .registration-event-content { margin-top:12px; padding:20px 22px; border-radius:var(--radius-lg); background:var(--cream); }
 
 /* Participant form */
@@ -6248,14 +6246,14 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 /* Native file input stays on top (transparent) so click, keyboard and screen readers keep working. */
 .registration-page .file-picker { position:relative; display:flex; align-items:center; gap:12px; min-height:50px; padding:7px 14px 7px 7px; border:1.5px solid var(--line); border-radius:var(--radius-md); background:var(--cream); }
 .registration-page .field .file-picker .file-picker-input { position:absolute; inset:0; width:100%; height:100%; min-height:0; margin:0; padding:0; opacity:0; cursor:pointer; }
-.registration-page .file-picker-button { flex:none; padding:8px 16px; border-radius:999px; background:var(--maroon); color:var(--white); font-size:13px; font-weight:700; }
+.registration-page .file-picker-button { flex:none; padding:8px 16px; border-radius:6px; background:var(--maroon); color:var(--white); font-size:13px; font-weight:700; }
 .registration-page .file-picker-name { min-width:0; overflow:hidden; color:var(--muted); font-size:14px; text-overflow:ellipsis; white-space:nowrap; }
 .registration-page .file-picker-name.has-file { color:var(--ink); font-weight:600; }
 .registration-page .file-picker:hover { border-color:#d9c9ca; }
 .registration-page .file-picker:has(.file-picker-input:focus-visible) { outline:3px solid var(--maroon); outline-offset:2px; }
 .registration-page .file-picker:has(.file-picker-input[aria-invalid="true"]) { border-color:var(--maroon-deep); background:var(--rose); }
 .registration-page .form-actions .btn,
-.registration-page .registration-review-actions .btn { min-height:52px; padding:12px 28px; border-radius:999px; }
+.registration-page .registration-review-actions .btn { min-height:52px; padding:12px 28px; border-radius:6px; }
 
 /* Review */
 .registration-page .registration-review { padding:clamp(22px, 4vw, 36px); }
@@ -6314,7 +6312,6 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .event-row-photo, .event-feature-photo { position:relative; margin:0; overflow:hidden; background:var(--sand); aspect-ratio:4 / 5; }
 /* Posters are text-heavy 4:5 images: show them whole; other ratios sit on a blurred copy of themselves. */
 .event-row-photo img, .event-feature-photo img { position:relative; display:block; width:100%; height:100%; object-fit:contain; transition:transform .9s cubic-bezier(.2,.7,.2,1); }
-.event-row-photo .event-photo-backdrop, .event-feature-photo .event-photo-backdrop { position:absolute; inset:0; object-fit:cover; filter:blur(18px) saturate(1.1); opacity:.8; transform:scale(1.2); transition:none; }
 /* Whole row/feature is clickable through the title link; the button stays on top. */
 .event-row-link { color:inherit; text-decoration:none; }
 .event-row-link::after { content:""; position:absolute; inset:0; z-index:1; }
@@ -6322,7 +6319,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 /* Hover only on real pointers: on phones a tap would leave the row tinted and underlined. */
 @media (hover:hover) {
   .event-row:hover { background:linear-gradient(90deg, transparent, rgba(247,223,229,.35) 10%, rgba(247,223,229,.35) 90%, transparent); }
-  .event-row:hover .event-row-photo img:not(.event-photo-backdrop), .event-feature:hover .event-feature-photo img:not(.event-photo-backdrop) { transform:scale(1.03); }
+  .event-row:hover .event-row-photo img, .event-feature:hover .event-feature-photo img { transform:scale(1.03); }
   .event-row:hover .event-row-link, .event-feature:hover .event-row-link { text-decoration:underline; text-decoration-color:var(--maroon); text-decoration-thickness:2px; text-underline-offset:5px; }
 }
 .event-row-link:focus-visible { outline:none; text-decoration:underline; text-decoration-color:var(--maroon); text-decoration-thickness:2px; text-underline-offset:5px; }
@@ -6359,7 +6356,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .schedule-grid { border-top:0; }
 .event-month { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 12px; margin:40px 0 0; padding-bottom:10px; border-bottom:2px solid var(--ink); font:700 clamp(30px, 3.4vw, 44px)/1 "Instrument Sans", "DM Sans", sans-serif; letter-spacing:-.04em; }
 .event-month-group:first-child .event-month { margin-top:0; }
-.event-month em { color:var(--maroon); font-style:italic; }
+.event-month em { color:var(--maroon); font-style:normal; }
 .event-month small { color:var(--muted); font:600 14px/1 "DM Sans", sans-serif; letter-spacing:0; }
 .event-month-group .event-date span { display:none; }
 .event-closing b { margin-left:6px; padding:2px 8px; background:var(--maroon); color:var(--white); letter-spacing:.06em; }
@@ -6373,10 +6370,10 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .schedule-search input:focus { outline:none; border-bottom-color:var(--maroon); box-shadow:0 2px 0 var(--maroon); }
 
 /* Registration ticket: poster thumbnail opens the full poster */
-.registration-page .registration-summary-image { flex:0 0 96px; width:96px; height:120px; border-radius:14px; background:rgba(255,255,255,.12); }
+.registration-page .registration-summary-image { flex:0 0 96px; width:96px; height:120px; border-radius:4px; background:rgba(255,255,255,.12); }
 .registration-poster-button { position:relative; display:block; width:100%; height:100%; padding:0; border:0; background:none; cursor:zoom-in; }
 .registration-page .registration-poster-button img { display:block; width:100%; height:100%; object-fit:contain; }
-.registration-poster-button span { position:absolute; right:6px; bottom:6px; left:6px; padding:3px 0; border-radius:999px; background:rgba(0,0,0,.55); color:var(--white); font-size:11px; font-weight:700; text-align:center; }
+.registration-poster-button span { position:absolute; right:6px; bottom:6px; left:6px; padding:3px 0; border-radius:3px; background:rgba(0,0,0,.55); color:var(--white); font-size:11px; font-weight:700; text-align:center; }
 .registration-poster-button:focus-visible { outline:3px solid var(--white); outline-offset:3px; }
 .poster-dialog { max-width:min(92vw, 560px); max-height:92vh; padding:0; border:0; background:transparent; overflow:visible; }
 .poster-dialog::backdrop { background:rgba(20, 8, 10, .82); }

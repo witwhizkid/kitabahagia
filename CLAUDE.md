@@ -64,7 +64,7 @@ Daftar kegiatan (`jadwal.html` + beranda, dirender oleh `js/script.js`):
   dengan poster lebih besar; di HP poster pindah ke atas dengan lebar dibatasi.
 - Label tutup: "Tutup 27 September · 3 hari lagi" / "Besok" / "Hari ini".
 - Bingkai poster 4:5 dengan `object-fit: contain` (poster tidak terpotong);
-  poster non-4:5 duduk di atas salinan blur dirinya (`.event-photo-backdrop`).
+  poster non-4:5 duduk di latar polos `--sand` (latar blur dihapus: keruh).
 - Judul kegiatan bisa ~80 karakter: ukuran judul `clamp(20px, 2vw, 26px)`.
 - HP: Jadwal = daftar ke bawah (tanggal "10 OKT · Sabtu" + kategori di atas,
   judul selebar penuh, lalu tempat/waktu/harga/Daftar di samping poster 104px);
@@ -121,6 +121,11 @@ Halaman detail Kisah (`kisah-detail.html`, `js/stories.js`), gaya editorial ala 
   (butuh perubahan database).
 
 Lainnya:
+- Bahasa bentuk (audit premium, Sep 2026): sudut 6px untuk tombol/input/chip,
+  8px untuk kartu/foto (`--radius-*` sudah disetel ke nilai ini); tanpa bentuk
+  pil `999px` baru. Label kapital kecil (`.eyebrow`) di beranda maksimal 2
+  (Jejak + Agenda berikutnya). Jangan pakai `font-style: italic` pada
+  Instrument Sans/DM Sans: versi italic tidak dimuat, jadi browser memiringkan palsu.
 - Gerak halus ala Aesop: `.reveal` (fade + naik 16px, .8s) juga dipasang otomatis
   oleh JS ke `main > section:not(:first-child) > .container > *` yang di bawah
   layar pertama (bukan di halaman pendaftaran, bukan saat reduced motion, bukan
