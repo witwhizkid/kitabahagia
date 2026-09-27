@@ -58,7 +58,7 @@
     if (storyRequests.has(cacheKey)) return storyRequests.get(cacheKey);
 
     const request = (async () => {
-      const response = await fetch(url, { headers: { Accept: "application/json" } });
+      const response = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(10000) });
       if (!response.ok) throw new Error(`Public stories request failed with status ${response.status}`);
       const payload = await response.json();
       if (!payload || !Array.isArray(payload.stories)) throw new Error("Public stories response is invalid");

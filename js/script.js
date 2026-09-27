@@ -33,7 +33,7 @@ const fetchPublicEvents = async ({ slug = null, limit = null } = {}) => {
   if (slug) url.searchParams.set('slug', slug);
   if (limit !== null) url.searchParams.set('limit', String(limit));
 
-  const response = await fetch(url, { headers: { Accept: 'application/json' } });
+  const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(10000) });
   if (!response.ok) throw new Error(`Public events request failed with status ${response.status}`);
 
   const payload = await response.json();
