@@ -3997,7 +3997,7 @@ h2 em {
   letter-spacing: -.035em;
 }
 
-.impact-editorial-stat span {
+.impact-editorial-stat > span {
   display: block;
   max-width: 18ch;
   color: var(--muted);
@@ -4088,7 +4088,7 @@ h2 em {
   }
 
   .impact-editorial-stat strong { font-size: 29px; }
-  .impact-editorial-stat span { max-width: 16ch; }
+  .impact-editorial-stat > span { max-width: 16ch; }
   .impact-editorial-note { margin-top: 12px; }
 
   .impact-editorial-image,
@@ -6241,7 +6241,7 @@ html.home-document { overflow-x: hidden; }
 .event-row-photo, .event-feature-photo { position:relative; margin:0; overflow:hidden; background:var(--sand); aspect-ratio:4 / 5; }
 /* Posters are text-heavy 4:5 images: show them whole; other ratios sit on a blurred copy of themselves. */
 .event-row-photo img, .event-feature-photo img { position:relative; display:block; width:100%; height:100%; object-fit:contain; transition:transform .9s cubic-bezier(.2,.7,.2,1); }
-.event-row-photo .event-photo-backdrop, .event-feature-photo .event-photo-backdrop { position:absolute; inset:0; object-fit:cover; filter:blur(18px) saturate(1.1); opacity:.55; transform:scale(1.2); transition:none; }
+.event-row-photo .event-photo-backdrop, .event-feature-photo .event-photo-backdrop { position:absolute; inset:0; object-fit:cover; filter:blur(18px) saturate(1.1); opacity:.8; transform:scale(1.2); transition:none; }
 /* Whole row/feature is clickable through the title link; the button stays on top. */
 .event-row-link { color:inherit; text-decoration:none; }
 .event-row-link::after { content:""; position:absolute; inset:0; z-index:1; }
