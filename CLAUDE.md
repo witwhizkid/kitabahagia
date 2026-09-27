@@ -17,6 +17,8 @@ Situs statis multi-halaman (HTML/CSS/JS vanilla) di Vercel, backend Supabase
   browser tidak ada di repo; skrip lama butuh env `S` dan working directory.
   Di tes klik, scroll dulu elemennya ke dalam viewport.
 - Laporkan dengan jujur kalau sesuatu baru dicek di lokal, belum di situs live.
+- Skill `ui-ux-pro-max` (pihak ketiga, MIT) ada di `.claude/skills/`; jalankan
+  skripnya dari root repo. Keputusan desain di file ini tetap menang atas sarannya.
 - Bahasa ke user: Indonesia santai (gua/lu boleh).
 
 ## Deploy (user pakai PowerShell di Windows)
@@ -207,7 +209,7 @@ Hosting & pembayaran (keputusan user, Sep 2026):
 - Vercel Hobby tidak boleh untuk komersial (memproses pembayaran pengunjung).
   Saat pasang domain, pindah hosting ke **Cloudflare Pages** (gratis, boleh
   komersial) sebelum pendaftaran berbayar dibuka: `vercel.json` headers/CSP →
-  `_headers`, `middleware.js` → Pages Function, `.vercelignore` disesuaikan,
+  `_headers`, `middleware.js` → Pages Function, `.vercelignore` disesuaikan (termasuk `.claude/`, jangan ikut dipublikasikan),
   ganti `kitabahagia.vercel.app` di semua HTML/sitemap/robots/middleware, dan
   Site URL + Redirect URLs (`/admin/`) di Supabase Auth. DNS ke Vercel (selama
   masih dipakai) harus "DNS only". Domain kemungkinan `.id`.
