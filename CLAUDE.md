@@ -63,7 +63,8 @@ Daftar kegiatan (`jadwal.html` + beranda, dirender oleh `js/script.js`):
 - Kalau hanya ada 1 kegiatan yang segera tutup, tampil sebagai fitur lebar
   dengan poster lebih besar; di HP poster pindah ke atas dengan lebar dibatasi.
 - Label tutup: "Tutup 27 September · 3 hari lagi" / "Besok" / "Hari ini".
-- Bingkai poster 4:5 dengan `object-fit: contain` (poster tidak terpotong).
+- Bingkai poster 4:5 dengan `object-fit: contain` (poster tidak terpotong);
+  poster non-4:5 duduk di atas salinan blur dirinya (`.event-photo-backdrop`).
 - Judul kegiatan bisa ~80 karakter: ukuran judul `clamp(20px, 2vw, 26px)`.
 - HP: Jadwal = daftar ke bawah (tanggal "10 OKT · Sabtu" + kategori di atas,
   judul selebar penuh, lalu tempat/waktu/harga/Daftar di samping poster 104px);
@@ -125,6 +126,10 @@ Lainnya:
   layar pertama (bukan di halaman pendaftaran, bukan saat reduced motion, bukan
   `sr-only`/tersembunyi). Zoom foto kisah/kegiatan pelan (1.2s/.9s) hanya di
   `@media (hover:hover)` untuk kisah.
+- Transisi antarhalaman: `@view-transition` fade .3s (mati saat reduced motion).
+  Angka Jejak beranda 2×2 di semua lebar dan menghitung naik sekali saat terlihat
+  (tahun tidak); label pakai `.impact-editorial-stat > span` supaya span di dalam
+  angka tidak ikut mengecil.
 - Foto disajikan sebagai WebP yang sudah diperkecil (originalnya 2–7 MB).
 - Upload foto di admin dikompres di browser sebelum dikirim (`compressImage`
   di `js/admin.js`): kegiatan maks. 1200×1500, kisah maks. 1600×1600, WebP
