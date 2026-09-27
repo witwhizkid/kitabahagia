@@ -203,6 +203,21 @@ Lainnya:
 
 ## Rencana fitur (belum dikerjakan)
 
+Hosting & pembayaran (keputusan user, Sep 2026):
+- Vercel Hobby tidak boleh untuk komersial (memproses pembayaran pengunjung).
+  Saat pasang domain, pindah hosting ke **Cloudflare Pages** (gratis, boleh
+  komersial) sebelum pendaftaran berbayar dibuka: `vercel.json` headers/CSP →
+  `_headers`, `middleware.js` → Pages Function, `.vercelignore` disesuaikan,
+  ganti `kitabahagia.vercel.app` di semua HTML/sitemap/robots/middleware, dan
+  Site URL + Redirect URLs (`/admin/`) di Supabase Auth. DNS ke Vercel (selama
+  masih dipakai) harus "DNS only". Domain kemungkinan `.id`.
+- Payment gateway: Midtrans tetap utama (owner mendaftar, perorangan). Xendit
+  dan Duitku didaftarkan sebagai cadangan; pindah hanya kalau Midtrans belum
+  approve sampai akhir Oktober. Yang diganti cuma `create-payment` +
+  `midtrans-webhook`, CSP, env, dan teks FAQ/Ketentuan/Privasi; frontend QR,
+  seat-hold, `payment-status` tetap.
+
+
 Web sengaja tidak ditambah fitur baru sampai pemicunya terjadi (roadmap:
 4 kegiatan/bulan, tim ± 70 orang; 24 perancang program = 6 tim × 4 orang,
 tim 1–3 dan 4–6 bergantian tiap bulan, + 1 kegiatan gratis akhir bulan).
