@@ -479,7 +479,10 @@
                   <option value="canva">Template dari Canva</option>
                 </select>
               </label>
-              <label>Nomor sertifikat<input id="certificate-number" type="text" maxlength="40" placeholder="13.044/KB/VII/2026" autocomplete="off" /></label>
+              <label>Nomor sertifikat<span id="certificate-number-note" hidden> (samakan dengan di desain)</span>
+                <input id="certificate-number" type="text" maxlength="40" placeholder="13.044/KB/VII/2026" autocomplete="off" />
+                <small id="certificate-number-hint" hidden>Tidak dicetak ulang; dipakai di halaman cek keaslian saat QR dipindai.</small>
+              </label>
               <label>Nama contoh (hanya pratinjau)<input id="certificate-sample-name" type="text" maxlength="120" value="Muhammad Rizky Aditya Pratama" autocomplete="off" /></label>
               <div id="certificate-canva-fields" class="certificate-group" hidden>
                 <label class="certificate-wide">Desain dari Canva (PNG/JPG, A4 landscape)

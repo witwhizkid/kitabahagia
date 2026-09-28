@@ -2176,6 +2176,9 @@
     const canva = templateMode() === "canva";
     $("#certificate-canva-fields").hidden = !canva;
     $("#certificate-system-fields").hidden = canva;
+    // Canva designs print the number themselves; the typed one is what the verification page shows.
+    $("#certificate-number-note").hidden = !canva;
+    $("#certificate-number-hint").hidden = !canva;
     $("#certificate-canvas").classList.toggle("is-draggable", canva);
     const custom = $("#certificate-ornament").value === "custom";
     $("#certificate-color-field").hidden = custom;
