@@ -161,7 +161,7 @@
                 <p>Informasi yang membantu pengunjung memahami kegiatannya.</p>
               </div>
               <div class="form-grid">
-                <label class="span-2">Judul kegiatan<input id="event-title" name="title" required maxlength="180" /></label>
+                <label class="span-2">Judul kegiatan<input id="event-title" name="title" required maxlength="180" aria-describedby="event-title-count" /><small id="event-title-count" class="field-count"></small></label>
                 <label>Slug<input id="event-slug" name="slug" required maxlength="120" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" aria-describedby="slug-help" /></label>
                 <p id="slug-help" class="field-help">Huruf kecil, angka, dan tanda hubung.</p>
                 <label>Kategori<input id="event-category" name="category" /></label>
@@ -193,7 +193,7 @@
                 <p>Kosongkan kapasitas bila jumlah peserta tidak dibatasi.</p>
               </div>
               <div class="form-grid">
-                <label>Harga<input id="event-price" name="price" type="number" min="0" step="1" value="0" required /></label>
+                <label>Harga<input id="event-price" name="price" type="number" min="0" step="1" value="0" required aria-describedby="event-price-hint" /><small id="event-price-hint" class="field-count"></small></label>
                 <label>Kapasitas peserta<input id="event-capacity" name="capacity" type="number" min="1" step="1" /></label>
                 <label id="event-payment-window-field">Batas waktu bayar <span class="label-note">Kursi dilepas jika belum dibayar dalam waktu ini</span>
                   <select id="event-payment-window" name="payment_window_minutes">
@@ -276,16 +276,28 @@
                     <option value="cancelled">Dibatalkan</option>
                   </select>
                 </label>
-                <label class="check-label"><input id="event-public" name="is_public" type="checkbox" /><span><strong>Tampilkan di website</strong><small>Pengunjung dapat menemukan kegiatan ini sesuai statusnya.</small></span></label>
+                <label class="check-label switch-label"><input id="event-public" name="is_public" type="checkbox" role="switch" /><span><strong>Tampilkan di website</strong><small>Pengunjung dapat menemukan kegiatan ini sesuai statusnya.</small></span></label>
               </div>
             </section>
 
             <p id="form-feedback" class="feedback" role="status" aria-live="polite"></p>
             <div class="form-actions">
+              <span class="form-dirty" data-form-dirty hidden>Belum disimpan</span>
               <button id="cancel-button" class="button button-secondary" type="button">Batal</button>
               <button id="save-button" class="button button-primary" type="submit">Simpan Kegiatan</button>
             </div>
           </form>
+          <aside class="event-preview" aria-label="Pratinjau kartu kegiatan">
+            <p class="event-preview-label">Pratinjau di website</p>
+            <div class="event-preview-card">
+              <span id="preview-poster" class="event-preview-poster"></span>
+              <p id="preview-when" class="event-preview-when"></p>
+              <h3 id="preview-title"></h3>
+              <p id="preview-where" class="event-preview-where"></p>
+              <p id="preview-price" class="event-preview-price"></p>
+            </div>
+            <p id="preview-state" class="event-preview-state"></p>
+          </aside>
         </section>
 
         <section id="registrations-view" class="content-view" aria-labelledby="registrations-title" hidden>
@@ -484,6 +496,7 @@
 
             <p id="story-form-feedback" class="feedback" role="status" aria-live="polite"></p>
             <div class="form-actions">
+              <span class="form-dirty" data-form-dirty hidden>Belum disimpan</span>
               <button id="story-cancel-button" class="button button-secondary" type="button">Batal</button>
               <button id="save-story-button" class="button button-primary" type="submit">Simpan Kisah</button>
             </div>

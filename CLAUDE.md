@@ -236,7 +236,12 @@ Lainnya:
   bayangan hangat), tombol dan label status berbentuk pil, kata aksen `h1 em` Newsreader
   italic, skeleton saat memuat, dan pesan sukses jadi toast (kecuali di layar login dan
   hasil terbit sertifikat yang masih punya email gagal: tetap inline). Daftar Pendaftar
-  tetap padat ala Linear.
+  tetap padat ala Linear. Tahap 3: form Kegiatan/Kisah = kartu bernomor 01–06, pil
+  lompat jadi hijau ✓ saat isian wajib bagian itu valid, Mode dan Status jadi pil
+  (`choicePills`; `<select>` tetap sumber data, disembunyikan), "Tampilkan di website"
+  jadi saklar, penghitung judul (/80) + harga "Rp150.000/Gratis", tanda "Belum disimpan"
+  + konfirmasi saat meninggalkan form, dan pratinjau kartu langsung di kanan hanya di
+  layar ≥1240px. Bagian di tab Sertifikat dan Kelola Admin juga jadi kartu.
 - Admin di HP (≤768px): tab bar bawah dengan ikon (disembunyikan saat form
   kegiatan/kisah terbuka), logo di header, judul + tombol Tambah satu baris,
   kartu kegiatan ringkas tanpa label. Tablet (769–900px) tetap tab atas. Form

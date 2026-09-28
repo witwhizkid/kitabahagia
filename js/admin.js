@@ -1394,8 +1394,119 @@
     storyFormView.hidden = true;
     formView.hidden = false;
     window.scrollTo({ top: 0, behavior: "instant" });
+    refreshEventForm();
+    markDirty(eventForm, false);
     $("#event-title").focus();
   };
+
+  // Form polish: choice pills, live hints, section progress, unsaved marker, live preview.
+  const choicePills = (select) => {
+    const group = document.createElement("div");
+    group.className = "choice-pills";
+    group.setAttribute("role", "radiogroup");
+    group.setAttribute("aria-label", select.closest("label")?.firstChild?.textContent.trim() || select.name);
+    [...select.options].forEach((option) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "choice-pill";
+      button.dataset.value = option.value;
+      button.textContent = option.textContent;
+      button.setAttribute("role", "radio");
+      button.addEventListener("click", () => {
+        if (select.value === option.value) return;
+        select.value = option.value;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      group.append(button);
+    });
+    // The select stays the source of truth (form data + existing change handlers).
+    select.classList.add("visually-hidden");
+    select.tabIndex = -1;
+    select.after(group);
+    const sync = () => group.querySelectorAll(".choice-pill").forEach((button) => {
+      const active = button.dataset.value === select.value;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-checked", String(active));
+    });
+    select.addEventListener("change", sync);
+    return sync;
+  };
+  const pillSyncs = [choicePills($("#event-registration-mode")), choicePills($("#event-status"))];
+
+  const syncFormHints = () => {
+    const length = $("#event-title").value.trim().length;
+    const count = $("#event-title-count");
+    count.textContent = length > 80 ? `${length} karakter · lebih dari 80 bisa terpotong di kartu HP` : `${length}/80 karakter`;
+    count.classList.toggle("is-warning", length > 80);
+    const price = Number($("#event-price").value);
+    $("#event-price-hint").textContent = price > 0 ? `Rp${price.toLocaleString("id-ID")}` : "Gratis";
+  };
+  const syncJumpState = () => document.querySelectorAll(".form-jump a").forEach((link) => {
+    const section = document.getElementById(link.hash.slice(1))?.closest(".form-section");
+    if (!section) return;
+    const fields = [...section.querySelectorAll("input:not([type=hidden]):not([type=file]), select, textarea, input[type=hidden][name]")]
+      .filter((field) => !field.closest("[hidden]"));
+    const valid = fields.every((field) => field.checkValidity());
+    const filled = fields.some((field) => (field.type === "checkbox" ? field.checked : field.value.trim()));
+    link.classList.toggle("is-done", valid && filled);
+  });
+  const renderEventPreview = () => {
+    const title = $("#event-title").value.trim();
+    const poster = $("#preview-poster");
+    const image = $("#event-image-preview-img");
+    if (!$("#event-image-preview").hidden && image.getAttribute("src")) {
+      const img = document.createElement("img");
+      img.src = image.src;
+      img.alt = "";
+      poster.replaceChildren(img);
+    } else {
+      poster.textContent = (title || "?").charAt(0).toUpperCase();
+    }
+    const date = $("#event-date").value;
+    const time = $("#event-start-time").value;
+    $("#preview-when").textContent = date
+      ? `${new Intl.DateTimeFormat("id-ID", { weekday: "long", day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Jakarta" }).format(new Date(`${date}T12:00:00+07:00`))}${time ? ` · ${time.replace(":", ".")} WIB` : ""}`
+      : "Tanggal belum diisi";
+    $("#preview-title").textContent = title || "Judul kegiatan";
+    $("#preview-where").textContent = $("#event-location").value.trim() || "Lokasi belum diisi";
+    const price = Number($("#event-price").value);
+    const selection = $("#event-registration-mode").value === "selection";
+    $("#preview-price").textContent = `${price > 0 ? `Rp${price.toLocaleString("id-ID")}` : "Gratis"}${selection ? " · Seleksi" : ""}`;
+    $("#preview-state").textContent = $("#event-public").checked
+      ? `Tampil di website · ${statusLabels[$("#event-status").value] || ""}`
+      : "Belum tampil di website";
+  };
+  const refreshEventForm = () => {
+    pillSyncs.forEach((sync) => sync());
+    syncFormHints();
+    syncJumpState();
+    renderEventPreview();
+  };
+  eventForm.addEventListener("input", refreshEventForm);
+  eventForm.addEventListener("change", refreshEventForm);
+  // Uploads and removals change the photo preview without an input event.
+  new MutationObserver(renderEventPreview).observe($("#event-image-preview"), { attributes: true, subtree: true, attributeFilter: ["hidden", "src"] });
+
+  // "Belum disimpan" marker and a confirm before leaving a changed form.
+  const dirtyForms = new Set();
+  const markDirty = (form, dirty) => {
+    if (dirty) dirtyForms.add(form);
+    else dirtyForms.delete(form);
+    form.querySelector("[data-form-dirty]").hidden = !dirty;
+  };
+  [eventForm, storyForm].forEach((form) => {
+    form.addEventListener("input", () => markDirty(form, true));
+    form.addEventListener("change", () => markDirty(form, true));
+  });
+  const confirmLeaveForm = () => {
+    const open = [...dirtyForms].filter((form) => !form.closest("[hidden]"));
+    if (open.length && !window.confirm("Perubahan belum disimpan. Tetap tinggalkan formulir?")) return false;
+    open.forEach((form) => markDirty(form, false));
+    return true;
+  };
+  window.addEventListener("beforeunload", (event) => {
+    if ([...dirtyForms].some((form) => !form.closest("[hidden]"))) event.preventDefault();
+  });
 
   // Beranda: what needs attention today, computed from events + active registrations.
   const home = { registrations: [], loadedAt: 0, request: null, checks: new Map(), checksAt: 0 };
@@ -1784,6 +1895,7 @@
 
   const showStoryForm = (story = null) => {
     fillStoryForm(story);
+    markDirty(storyForm, false);
     eventsView.hidden = true;
     homeView.hidden = true;
     formView.hidden = true;
@@ -3167,7 +3279,7 @@
         || (view === "stories" && !storiesView.hidden)
         || (view === "admins" && !adminsView.hidden)
         || (view === "certificates" && !certificatesView.hidden);
-      if (alreadyVisible) return;
+      if (alreadyVisible || !confirmLeaveForm()) return;
       if (view === "home") showHome();
       else if (view === "certificates") showCertificates();
       else if (view === "registrations") showRegistrations();
@@ -3437,6 +3549,7 @@
     try {
       await adminRequest(originalSlug ? "PATCH" : "POST", originalSlug, payload);
       invalidateEventsCache();
+      markDirty(eventForm, false);
       await loadEvents();
       showEvents();
       setFeedback($("#events-feedback"), "Kegiatan berhasil disimpan.", "success");
@@ -3467,6 +3580,7 @@
     try {
       await adminStoriesRequest(originalSlug ? "PATCH" : "POST", originalSlug, payload);
       invalidateStoriesCache();
+      markDirty(storyForm, false);
       await showStories();
       setFeedback($("#stories-feedback"), "Kisah berhasil disimpan.", "success");
     } catch (error) {
@@ -3609,11 +3723,11 @@
   };
 
   $("#add-event-button").addEventListener("click", () => showForm());
-  $("#back-button").addEventListener("click", showEvents);
-  $("#cancel-button").addEventListener("click", showEvents);
+  $("#back-button").addEventListener("click", () => { if (confirmLeaveForm()) showEvents(); });
+  $("#cancel-button").addEventListener("click", () => { if (confirmLeaveForm()) showEvents(); });
   $("#add-story-button").addEventListener("click", () => showStoryForm());
-  $("#story-back-button").addEventListener("click", showStories);
-  $("#story-cancel-button").addEventListener("click", showStories);
+  $("#story-back-button").addEventListener("click", () => { if (confirmLeaveForm()) showStories(); });
+  $("#story-cancel-button").addEventListener("click", () => { if (confirmLeaveForm()) showStories(); });
   $("#logout-button").addEventListener("click", logout);
   $("#mobile-logout-button").addEventListener("click", logout);
 
