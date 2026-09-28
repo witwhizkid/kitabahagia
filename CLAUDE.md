@@ -242,7 +242,10 @@ Lainnya:
   (`choicePills`; `<select>` tetap sumber data, disembunyikan), "Tampilkan di website"
   jadi saklar, penghitung judul (/80) + harga "Rp150.000/Gratis", tanda "Belum disimpan"
   + konfirmasi saat meninggalkan form, dan pratinjau kartu langsung di kanan hanya di
-  layar ≥1240px. Bagian di tab Sertifikat dan Kelola Admin juga jadi kartu.
+  layar ≥1240px. Bagian di tab Sertifikat dan Kelola Admin juga jadi kartu. Semua konfirmasi
+  memakai dialog sendiri `confirmAction(pesan, {title, confirmLabel, danger, requireText})`
+  (`<dialog>` native, Promise), bukan `window.confirm/prompt`; hapus permanen wajib
+  mengetik judul. Hanya peringatan tutup tab/refresh (`beforeunload`) yang tetap bawaan browser.
 - Admin di HP (≤768px): tab bar bawah dengan ikon (disembunyikan saat form
   kegiatan/kisah terbuka), logo di header, judul + tombol Tambah satu baris,
   kartu kegiatan ringkas tanpa label. Tablet (769–900px) tetap tab atas. Form

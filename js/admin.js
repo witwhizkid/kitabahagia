@@ -128,6 +128,34 @@
   }[status] || "is-neutral");
 
   // Success messages pop up as a toast; errors and progress stay next to the form they belong to.
+  // Styled replacement for window.confirm/prompt. Resolves true only on the confirm button;
+  // requireText keeps it disabled until that exact text is typed (permanent deletes).
+  const confirmDialog = $("#confirm-dialog");
+  const confirmAction = (message, { title = "Yakin?", confirmLabel = "Lanjutkan", danger = false, requireText = "" } = {}) => new Promise((resolve) => {
+    const ok = $("#confirm-ok");
+    const input = $("#confirm-input");
+    $("#confirm-title").textContent = title;
+    $("#confirm-message").textContent = message;
+    ok.textContent = confirmLabel;
+    ok.classList.toggle("is-danger", danger);
+    $("#confirm-input-label").hidden = !requireText;
+    $("#confirm-input-hint").textContent = requireText ? `Ketik "${requireText}" untuk melanjutkan.` : "";
+    input.value = "";
+    const sync = () => { ok.disabled = Boolean(requireText) && input.value.trim() !== requireText.trim(); };
+    input.oninput = sync;
+    sync();
+    confirmDialog.returnValue = "";
+    confirmDialog.addEventListener("close", () => resolve(confirmDialog.returnValue === "ok"), { once: true });
+    confirmDialog.showModal();
+    (requireText ? input : ok).focus();
+  });
+  confirmDialog.addEventListener("click", (event) => { if (event.target === confirmDialog) confirmDialog.close("cancel"); });
+  $("#confirm-input").addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    if (!$("#confirm-ok").disabled) confirmDialog.close("ok");
+  });
+
   const showToast = (message) => {
     const region = document.getElementById("toast-region");
     if (!region) return;
@@ -1498,9 +1526,9 @@
     form.addEventListener("input", () => markDirty(form, true));
     form.addEventListener("change", () => markDirty(form, true));
   });
-  const confirmLeaveForm = () => {
+  const confirmLeaveForm = async () => {
     const open = [...dirtyForms].filter((form) => !form.closest("[hidden]"));
-    if (open.length && !window.confirm("Perubahan belum disimpan. Tetap tinggalkan formulir?")) return false;
+    if (open.length && !(await confirmAction("Perubahan yang belum disimpan akan hilang.", { title: "Tinggalkan formulir?", confirmLabel: "Tinggalkan", danger: true }))) return false;
     open.forEach((form) => markDirty(form, false));
     return true;
   };
@@ -2550,7 +2578,7 @@
     const deleteId = button.dataset.deleteSigner;
     if (deleteId) {
       const name = signers.find((signer) => signer.id === deleteId)?.name || "tanda tangan ini";
-      if (!window.confirm(`Hapus permanen tanda tangan ${name}? Sertifikat yang sudah terbit tidak berubah.`)) return;
+      if (!(await confirmAction(`Tanda tangan ${name} dihapus permanen. Sertifikat yang sudah terbit tidak berubah.`, { title: "Hapus tanda tangan?", confirmLabel: "Hapus", danger: true }))) return;
     }
     signerPending = true;
     renderSigners();
@@ -3318,7 +3346,7 @@
   });
 
   document.querySelectorAll("[data-admin-view]").forEach((link) => {
-    link.addEventListener("click", (event) => {
+    link.addEventListener("click", async (event) => {
       event.preventDefault();
       const view = link.dataset.adminView;
       const alreadyVisible = (view === "home" && !homeView.hidden)
@@ -3327,7 +3355,7 @@
         || (view === "stories" && !storiesView.hidden)
         || (view === "admins" && !adminsView.hidden)
         || (view === "certificates" && !certificatesView.hidden);
-      if (alreadyVisible || !confirmLeaveForm()) return;
+      if (alreadyVisible || !(await confirmLeaveForm())) return;
       if (view === "home") showHome();
       else if (view === "certificates") showCertificates();
       else if (view === "registrations") showRegistrations();
@@ -3375,7 +3403,7 @@
     button.textContent = "Mengirim…";
     setFeedback($("#invite-admin-feedback"));
     try {
-      if ($("#invite-admin-role").value === "super_admin" && !window.confirm("Undangan ini memberi akses Super Admin. Lanjutkan?")) return;
+      if ($("#invite-admin-role").value === "super_admin" && !(await confirmAction("Undangan ini memberi akses Super Admin.", { title: "Undang Super Admin?", confirmLabel: "Kirim undangan" }))) return;
       await adminUsersRequest("POST", {
         email: $("#invite-admin-email").value.trim(),
         role: $("#invite-admin-role").value,
@@ -3399,7 +3427,7 @@
     const selected = admins.find((admin) => admin.user_id === row.dataset.adminId);
     const role = row.querySelector("select[name='role']").value;
     if (!selected || role === selected.role) return setFeedback($("#admins-feedback"), "Tidak ada perubahan peran.");
-    if (!window.confirm(`Ubah peran ${selected.email} menjadi ${adminRoleLabels[role]}?`)) {
+    if (!(await confirmAction(`${selected.email} akan menjadi ${adminRoleLabels[role]}.`, { title: "Ubah peran?", confirmLabel: "Ubah peran" }))) {
       row.querySelector("select[name='role']").value = selected.role;
       return;
     }
@@ -3430,7 +3458,7 @@
     if (linkButton) {
       const row = linkButton.closest("[data-admin-id]");
       const selected = admins.find((admin) => admin.user_id === row?.dataset.adminId);
-      if (!selected || !window.confirm(`Salin tautan akses untuk ${selected.email}?`)) return;
+      if (!selected || !(await confirmAction(`Tautan akses untuk ${selected.email} akan disalin. Kirim hanya ke orangnya langsung.`, { title: "Salin tautan akses?", confirmLabel: "Salin" }))) return;
       linkButton.disabled = true;
       setFeedback($("#admins-feedback"));
       try {
@@ -3449,7 +3477,7 @@
     if (recoveryButton) {
       const row = recoveryButton.closest("[data-admin-id]");
       const selected = admins.find((admin) => admin.user_id === row?.dataset.adminId);
-      if (!selected || !window.confirm(`Kirim ulang akses ke ${selected.email}?`)) return;
+      if (!selected || !(await confirmAction(`Email akses baru akan dikirim ke ${selected.email}.`, { title: "Kirim ulang akses?", confirmLabel: "Kirim" }))) return;
       recoveryButton.disabled = true;
       setFeedback($("#admins-feedback"));
       try {
@@ -3469,7 +3497,7 @@
     if (!selected) return;
     const nextActive = button.dataset.nextActive === "true";
     const action = nextActive ? "aktifkan kembali" : "nonaktifkan";
-    if (!window.confirm(`${action[0].toUpperCase()}${action.slice(1)} akses ${selected.email}?`)) return;
+    if (!(await confirmAction(`Akses ${selected.email} akan ${nextActive ? "diaktifkan kembali" : "dinonaktifkan"}.`, { title: `${action[0].toUpperCase()}${action.slice(1)} akses?`, confirmLabel: `${action[0].toUpperCase()}${action.slice(1)}`, danger: action === "nonaktifkan" }))) return;
     button.disabled = true;
     setFeedback($("#admins-feedback"));
     try {
@@ -3588,7 +3616,7 @@
       : ["cancelled", "completed"].includes(payload.status) && payload.status !== original?.status
         ? `Status kegiatan akan diubah menjadi ${statusLabels[payload.status]}. Lanjutkan?`
         : "";
-    if (riskyChange && !window.confirm(riskyChange)) return;
+    if (riskyChange && !(await confirmAction(riskyChange, { title: "Simpan perubahan ini?", confirmLabel: "Simpan" }))) return;
 
     const button = $("#save-button");
     button.disabled = true;
@@ -3619,7 +3647,7 @@
     const originalSlug = $("#original-story-slug").value;
     const original = stories.find((item) => item.slug === originalSlug);
     if (payload.status === "published" && original?.status !== "published"
-      && !window.confirm("Kisah akan diterbitkan dan tampil melalui API publik. Lanjutkan?")) return;
+      && !(await confirmAction("Kisah akan diterbitkan dan langsung tampil di website.", { title: "Terbitkan kisah?", confirmLabel: "Terbitkan" }))) return;
 
     const button = $("#save-story-button");
     button.disabled = true;
@@ -3663,7 +3691,7 @@
     const message = archived
       ? "Pulihkan kegiatan ini agar dapat tampil kembali sesuai pengaturan publikasinya?"
       : "Kegiatan ini akan disembunyikan dari website, tetapi data pendaftar tetap tersimpan.";
-    if (!window.confirm(message)) return;
+    if (!(await confirmAction(message, { title: archived ? "Pulihkan kegiatan?" : "Arsipkan kegiatan?", confirmLabel: archived ? "Pulihkan" : "Arsipkan" }))) return;
     button.disabled = true;
     try {
       await adminRequest("PATCH", slug, undefined, archived ? "restore" : "archive");
@@ -3681,11 +3709,10 @@
     if (!button) return;
     const selected = events.find((item) => item.slug === button.dataset.eventDelete);
     if (!selected?.archived_at) return;
-    const confirmation = window.prompt(`Ketik judul kegiatan untuk menghapus permanen:\n${selected.title}`);
-    if (confirmation !== selected.title) {
-      if (confirmation !== null) setFeedback($("#events-feedback"), "Judul kegiatan belum cocok. Kegiatan tidak dihapus.", "error");
-      return;
-    }
+    const confirmed = await confirmAction(`Kegiatan “${selected.title}” dan datanya dihapus permanen. Tindakan ini tidak bisa dibatalkan.`, {
+      title: "Hapus permanen?", confirmLabel: "Hapus permanen", danger: true, requireText: selected.title,
+    });
+    if (!confirmed) return;
     button.disabled = true;
     try {
       await adminRequest("DELETE", selected.slug);
@@ -3708,7 +3735,7 @@
     const message = archived
       ? "Pulihkan kisah ini agar dapat tampil kembali sesuai statusnya?"
       : "Kisah ini akan disembunyikan dari website dan dapat dipulihkan kembali.";
-    if (!window.confirm(message)) return;
+    if (!(await confirmAction(message, { title: archived ? "Pulihkan kisah?" : "Arsipkan kisah?", confirmLabel: archived ? "Pulihkan" : "Arsipkan" }))) return;
     button.disabled = true;
     try {
       await adminStoriesRequest("PATCH", slug, undefined, archived ? "restore" : "archive");
@@ -3726,11 +3753,10 @@
     if (!button) return;
     const selected = stories.find((item) => item.slug === button.dataset.storyDelete);
     if (!selected?.archived_at) return;
-    const confirmation = window.prompt(`Ketik judul kisah untuk menghapus permanen:\n${selected.title}`);
-    if (confirmation !== selected.title) {
-      if (confirmation !== null) setFeedback($("#stories-feedback"), "Judul kisah belum cocok. Kisah tidak dihapus.", "error");
-      return;
-    }
+    const confirmed = await confirmAction(`Kisah “${selected.title}” dan datanya dihapus permanen. Tindakan ini tidak bisa dibatalkan.`, {
+      title: "Hapus permanen?", confirmLabel: "Hapus permanen", danger: true, requireText: selected.title,
+    });
+    if (!confirmed) return;
     button.disabled = true;
     try {
       await adminStoriesRequest("DELETE", selected.slug);
@@ -3771,11 +3797,11 @@
   };
 
   $("#add-event-button").addEventListener("click", () => showForm());
-  $("#back-button").addEventListener("click", () => { if (confirmLeaveForm()) showEvents(); });
-  $("#cancel-button").addEventListener("click", () => { if (confirmLeaveForm()) showEvents(); });
+  $("#back-button").addEventListener("click", async () => { if (await confirmLeaveForm()) showEvents(); });
+  $("#cancel-button").addEventListener("click", async () => { if (await confirmLeaveForm()) showEvents(); });
   $("#add-story-button").addEventListener("click", () => showStoryForm());
-  $("#story-back-button").addEventListener("click", () => { if (confirmLeaveForm()) showStories(); });
-  $("#story-cancel-button").addEventListener("click", () => { if (confirmLeaveForm()) showStories(); });
+  $("#story-back-button").addEventListener("click", async () => { if (await confirmLeaveForm()) showStories(); });
+  $("#story-cancel-button").addEventListener("click", async () => { if (await confirmLeaveForm()) showStories(); });
   $("#logout-button").addEventListener("click", logout);
   $("#mobile-logout-button").addEventListener("click", logout);
 

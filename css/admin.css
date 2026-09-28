@@ -440,6 +440,21 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
 .skeleton-line { height: 22px; border-radius: 999px; }
 @keyframes skeleton-shimmer { to { background-position: -200% 0; } }
 
+/* Confirm dialog (replaces window.confirm/prompt). */
+.confirm-dialog { width: min(440px, calc(100vw - 32px)); padding: 0; color: var(--ink); background: transparent; border: 0; }
+.confirm-dialog::backdrop { background: rgba(36, 31, 29, .45); }
+.confirm-dialog[open] { animation: confirm-in 200ms var(--ease) both; }
+.confirm-panel { display: grid; gap: 12px; padding: 26px 26px 22px; background: var(--paper); border-radius: 24px; box-shadow: var(--shadow-lift); }
+.confirm-panel h2 { margin: 0; font-size: 1.35rem; line-height: 1.2; }
+.confirm-panel p { margin: 0; color: var(--muted); line-height: 1.55; overflow-wrap: anywhere; }
+.confirm-input-label { gap: 6px; font-size: .84rem; font-weight: 400; color: var(--muted); overflow-wrap: anywhere; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+.confirm-actions .button { min-height: 42px; }
+.button.is-danger { background: var(--error); border-color: var(--error); box-shadow: 0 6px 16px -8px rgba(162, 32, 32, .7); }
+.button.is-danger:hover { background: #7f1818; }
+.button:disabled.is-danger { cursor: not-allowed; }
+@keyframes confirm-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+
 /* Success messages slide in as a toast (bottom right; above the phone tab bar). */
 .toast-region { position: fixed; right: 24px; bottom: 24px; z-index: 60; display: grid; justify-items: end; gap: 8px; pointer-events: none; }
 .toast { max-width: min(420px, calc(100vw - 32px)); padding: 13px 18px 13px 16px; color: #fffaf2; background: #2b2420; border-radius: 14px; box-shadow: var(--shadow-lift); font-size: .9rem; font-weight: 600; line-height: 1.4; animation: toast-in 260ms var(--ease) both; }
@@ -740,6 +755,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
   .home-event { grid-template-columns: 72px minmax(0, 1fr); gap: 14px; padding: 12px; }
   .toast-region { right: 16px; left: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); justify-items: stretch; }
   .toast { max-width: none; }
+  .confirm-actions { display: grid; grid-template-columns: 1fr 1fr; }
   .event-row h2 { font-size: 1.12rem; }
   .form-actions { display: grid; }
   .registrations-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 16px; margin-bottom: 22px; }
@@ -787,6 +803,6 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
 
 @media (prefers-reduced-motion: reduce) {
   .applicant-dialog[open] { animation: none; }
-  .skeleton, .toast { animation: none; }
+  .skeleton, .toast, .confirm-dialog[open] { animation: none; }
   .capacity-bar > span { transition: none; }
 }

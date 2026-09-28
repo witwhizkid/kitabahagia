@@ -695,6 +695,17 @@
         </section>
       </div>
     </div>
+    <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+      <form method="dialog" class="confirm-panel">
+        <h2 id="confirm-title">Yakin?</h2>
+        <p id="confirm-message"></p>
+        <label id="confirm-input-label" class="confirm-input-label" hidden><span id="confirm-input-hint"></span><input id="confirm-input" autocomplete="off" /></label>
+        <div class="confirm-actions">
+          <button class="button button-secondary" value="cancel">Batal</button>
+          <button id="confirm-ok" class="button button-primary" value="ok">Lanjutkan</button>
+        </div>
+      </form>
+    </dialog>
     <div id="toast-region" class="toast-region" role="status" aria-live="polite"></div>
     <script src="../js/vendor/qrcode-generator.min.js"></script>
     <script src="../js/certificate.js"></script>
