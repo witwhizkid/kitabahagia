@@ -224,7 +224,7 @@ const eventSlotNote = (event) => {
   return `<span class="event-slot">${escapeHTML(event.capacity)}</span>`;
 };
 const eventPhoto = (event, className) => `<figure class="${className}${event.image ? '' : ' is-empty'}">${event.image
-  ? `<img class="event-photo-backdrop" src="${escapeHTML(event.image)}" alt="" aria-hidden="true" loading="lazy" decoding="async"><img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}" loading="lazy" decoding="async">` : ''}</figure>`;
+  ? `<img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}" loading="lazy" decoding="async">` : ''}</figure>`;
 const eventCta = (event) => {
   const { available } = eventRegistrationAvailability(event);
   return eventRegistrationLink(event, `event-cta${available ? '' : ' is-quiet'}`,
