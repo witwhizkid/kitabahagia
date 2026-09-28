@@ -151,15 +151,16 @@ Lainnya:
   token `--radius-photo` 2px, `--radius-card` 4px, `--ease`; tekstur kertas
   `img/grain.png` (4 KB) via `body::after` (bukan di pendaftaran); foto `main`
   fade saat selesai dimuat (`.img-fade`, hero dikecualikan).
-- Foto disajikan sebagai WebP yang sudah diperkecil (originalnya 2–7 MB).
+- Foto disajikan sebagai WebP yang sudah diperkecil; berkas mentah yang tidak
+  dirujuk halaman publik tidak disimpan di `img/`.
 - Upload foto di admin dikompres di browser sebelum dikirim (`compressImage`
   di `js/admin.js`): kegiatan maks. 1200×1500, kisah maks. 1600×1600, WebP
   (JPEG di browser tanpa WebP). File sumber boleh sampai 25 MB.
 - Hero beranda di HP/tablet setinggi layar (`max(560px,100svh)`). HP (≤767px)
-  memakai crop potret `img/hero-*-mobile.webp` lewat `<picture>`. Slide 1 =
-  foto relawan + adik-adik (`hero-volunteer-*`, dari `IMG_20260815_011030.jpg`,
-  dicerahkan sedikit saat ekspor); slide 2 dari `DSCF6787.webp` (diberi
-  grade hangat saat ekspor); crop slide 3 dari `DSC01930.JPG.jpeg`.
+  memakai crop potret `img/hero-*-mobile.webp` lewat `<picture>`. Slide 1
+  memakai `hero-volunteer-*`; slide 2 memakai `hero-slide-2-*` dengan grade
+  hangat; slide 3 memakai `hero-slide-3-*`. Berkas sumber mentahnya tidak
+  disimpan di folder aset publik.
 - Foto yang tampil dengan `object-fit: cover` di bingkai yang lebih "kotak"
   dari fotonya butuh file lebih lebar dari bingkainya: atur `sizes` ke lebar
   foto yang benar-benar dirender (contoh foto Jejak di beranda:
