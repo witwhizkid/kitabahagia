@@ -226,7 +226,8 @@ Lainnya:
   Seleksi → Data pendaftar → Kegiatan & pembayaran; WA hasil di footer (tersembunyi
   bila belum ada hasil). Pintasan: ← → pindah, T/C/X = Terima/Cadangan/Tolak.
 - Tampilan admin "playful" (Sep 2026, keputusan user): halaman pertama setelah login =
-  **Beranda** (`#home-view`): sapaan WIB + nama (dari `user_metadata`/email di token),
+  **Beranda** (`#home-view`): sapaan WIB + nama panggilan (klik nama untuk ganti; disimpan
+  di Supabase Auth `user_metadata.nickname` per admin; kalau kosong ditebak dari email),
   4 angka yang bisa diklik (pendaftar baru 24 jam, menunggu bayar, menunggu seleksi,
   kursi terisi), "Kegiatan terdekat" (maks. 3, countdown + bar kapasitas), dan
   "Perlu ditindaklanjuti" (tandai hadir ≤7 hari setelah kegiatan, sertifikat H+7–30,

@@ -453,6 +453,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
 .home-hero h1 em { padding-right: .06em; }
 .home-hero #home-summary { margin: 14px 0 0; color: var(--muted); font-size: 1.02rem; }
 .home-wave { display: inline-block; transform-origin: 70% 80%; }
+.home-name-button { padding: 0; font: inherit; letter-spacing: inherit; background: none; border: 0; border-bottom: 2px dashed transparent; cursor: text; }
+.home-name-button:hover { border-bottom-color: rgba(122, 31, 43, .35); }
+.home-name-input { width: 4.5em; field-sizing: content; min-width: 2.5em; max-width: 8em; min-height: 0; padding: 0 .1em; color: var(--maroon); font: italic 400 1em/1.1 "Newsreader", serif; letter-spacing: -.02em; background: transparent; border: 0; border-bottom: 2px dashed var(--maroon); border-radius: 0; vertical-align: baseline; }
+.home-name-input:focus { box-shadow: none; }
 .home-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 18px 0 34px; }
 .home-stat { position: relative; display: grid; justify-items: start; gap: 4px; min-width: 0; padding: 20px 20px 18px; color: var(--ink); text-align: left; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); cursor: pointer; transition: box-shadow 200ms var(--ease), transform 200ms var(--ease); }
 .home-stat:hover { box-shadow: var(--shadow-lift); transform: translateY(-2px); }

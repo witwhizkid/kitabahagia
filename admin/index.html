@@ -88,7 +88,7 @@
           <div class="home-hero">
             <div>
               <p id="home-date" class="eyebrow"></p>
-              <h1 id="home-title"><span id="home-greeting">Halo</span>, <em id="home-name">tim</em> <span class="home-wave" aria-hidden="true">👋</span></h1>
+              <h1 id="home-title"><span id="home-greeting">Halo</span>, <button id="home-name-edit" class="home-name-button" type="button" title="Ganti nama panggilan"><em id="home-name">tim</em></button><input id="home-name-input" class="home-name-input" maxlength="24" aria-label="Nama panggilan" hidden /> <span class="home-wave" aria-hidden="true">👋</span></h1>
               <p id="home-summary">Ini ringkasan yang perlu diurus hari ini.</p>
             </div>
             <button class="button button-primary" type="button" data-home-add-event>Tambah Kegiatan</button>
@@ -216,7 +216,7 @@
                 <p>Langsung: tempat untuk pendaftar tercepat. Seleksi: tim memilih peserta dari pendaftar (khusus kegiatan gratis).</p>
               </div>
               <div class="form-grid">
-                <label>Mode
+                <label class="span-2">Mode
                   <select id="event-registration-mode" name="registration_mode">
                     <option value="first_come" selected>Langsung (siapa cepat)</option>
                     <option value="selection">Seleksi</option>

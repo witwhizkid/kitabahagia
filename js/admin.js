@@ -1633,20 +1633,68 @@
     return tasks.slice(0, 7);
   };
 
+  const tokenClaims = (session) => {
+    try { return JSON.parse(atob(String(session?.access_token || "").split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))); }
+    catch { return {}; }
+  };
+  // Nickname set on Beranda wins; otherwise a guess from the profile name or email.
   const homeName = () => {
     const session = readSession();
-    const meta = session?.user?.user_metadata || {};
+    // Invite/recovery sessions carry no user object; the access token itself holds the claims.
+    const claims = tokenClaims(session);
+    const meta = { ...claims.user_metadata, ...session?.user?.user_metadata };
+    if (String(meta.nickname || "").trim()) return String(meta.nickname).trim();
     const fromMeta = String(meta.full_name || meta.name || "").trim().split(/\s+/)[0];
-    let email = session?.user?.email || "";
-    // Invite/recovery sessions carry no user object; the access token itself holds the email.
-    if (!email) {
-      try { email = JSON.parse(atob(String(session?.access_token || "").split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).email || ""; }
-      catch { email = ""; }
-    }
+    const email = session?.user?.email || claims.email || "";
     const fromEmail = String(email).split("@")[0].split(/[._\-\d]/)[0];
     const name = fromMeta || fromEmail;
     return name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "tim";
   };
+  // Stored per admin in Supabase Auth user_metadata (no table needed).
+  const saveNickname = async (nickname) => {
+    const token = await validAccessToken();
+    if (!token) throw new Error("Sesi berakhir. Silakan masuk kembali.");
+    const response = await fetch(`${CONFIG.supabaseUrl}/auth/v1/user`, {
+      method: "PUT",
+      headers: { apikey: CONFIG.publishableKey, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ data: { nickname } }),
+    });
+    const user = await response.json().catch(() => null);
+    if (!response.ok || !user) throw new Error("Nama panggilan belum dapat disimpan.");
+    const session = readSession();
+    if (session) localStorage.setItem(CONFIG.sessionKey, JSON.stringify({ ...session, user }));
+  };
+  const nameButton = $("#home-name-edit");
+  const nameInput = $("#home-name-input");
+  const closeNameEdit = () => { nameInput.hidden = true; nameButton.hidden = false; };
+  nameButton.addEventListener("click", () => {
+    nameInput.value = homeName() === "tim" ? "" : homeName();
+    nameButton.hidden = true;
+    nameInput.hidden = false;
+    nameInput.focus();
+    nameInput.select();
+  });
+  nameInput.addEventListener("keydown", async (event) => {
+    if (event.key === "Escape") { closeNameEdit(); nameButton.focus(); return; }
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    const nickname = nameInput.value.trim().replace(/\s+/g, " ");
+    if (!nickname || nickname === homeName()) { closeNameEdit(); return; }
+    nameInput.disabled = true;
+    try {
+      await saveNickname(nickname);
+      $("#home-name").textContent = homeName();
+      closeNameEdit();
+      setFeedback($("#home-feedback"), `Oke, mulai sekarang kamu dipanggil ${nickname}.`, "success");
+    } catch (error) {
+      setFeedback($("#home-feedback"), error.message, "error");
+      nameInput.disabled = false;
+      nameInput.focus();
+      return;
+    }
+    nameInput.disabled = false;
+  });
+  nameInput.addEventListener("blur", () => { if (!nameInput.disabled) closeNameEdit(); });
 
   const renderHomeHeader = () => {
     const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: "Asia/Jakarta" }).format(new Date()));
