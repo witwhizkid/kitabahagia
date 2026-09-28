@@ -6535,9 +6535,48 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 /* Program — one ecosystem, expressed as an equal editorial index. */
 .program-page > .section.section-soft { padding-block: 72px 104px; }
 
+.program-page .program-chapters {
+  border-top: 1px solid var(--ink);
+}
+
+.program-page .program-family {
+  padding-block: 56px 72px;
+  border-bottom: 1px solid var(--ink);
+}
+
+.program-page .program-family:first-child { padding-top: 40px; }
+.program-page .program-family:last-child { padding-bottom: 0; border-bottom: 0; }
+
+.program-page .program-family-heading {
+  display: grid;
+  grid-template-columns: minmax(220px, 3fr) minmax(0, 9fr);
+  gap: 40px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.program-page .program-family-index {
+  color: var(--maroon);
+  font: 700 12px/1 "DM Sans", sans-serif;
+  letter-spacing: .12em;
+}
+
+.program-page .program-family-heading h2 {
+  margin: -7px 0 10px;
+  font-size: clamp(36px, 4.4vw, 58px);
+}
+
+.program-page .program-family-heading p {
+  max-width: 48ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .program-page .program-detail-grid {
   display: block;
-  border-top: 1px solid var(--ink);
+  border-top: 1px solid var(--line);
 }
 
 .program-page .program-detail-card,
@@ -6731,6 +6770,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .program-page .program-detail-card .program-flow { grid-column: 1; }
 
   .program-page .program-detail-card .program-meta { margin-top: 18px; }
+  .program-page .program-family-heading { grid-template-columns: minmax(180px, .8fr) minmax(0, 1.2fr); gap: 28px; }
   .schedule-page .schedule-intro-grid { grid-template-columns: 1fr; gap: 24px; }
   .schedule-page .schedule-intro-grid > p { max-width: 620px; }
   .schedule-page .schedule-discovery { grid-template-columns: 1fr; gap: 18px; }
@@ -6754,6 +6794,18 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .about-page .about-closing-section { padding-block: 40px 48px; }
 
   .program-page > .section.section-soft { padding-block: 48px 72px; }
+  .program-page .program-family { padding-block: 44px 52px; }
+  .program-page .program-family:first-child { padding-top: 32px; }
+  .program-page .program-family-heading {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .program-page .program-family-heading h2 {
+    margin-top: -5px;
+    font-size: clamp(30px, 9vw, 38px);
+  }
+  .program-page .program-family-heading p { font-size: 13px; }
   .program-page .program-detail-card,
   .program-page .program-featured,
   .program-page .program-supporting {
@@ -7057,6 +7109,75 @@ h3 {
   .kisah-page .kisah-archive-grid .kisah-image-link > img { object-position: center 42%; }
 
   .kisah-page .kisah-archive-grid .kisah-image-link > img { aspect-ratio: 3 / 2; }
+}
+
+/* Field-journal craft: page-scoped refinements only. */
+.home-page .impact-editorial-meta { counter-reset: impact-evidence; }
+.home-page .impact-editorial-stat { position: relative; padding-top: 30px; }
+.home-page .impact-editorial-stat::before {
+  counter-increment: impact-evidence;
+  content: "0" counter(impact-evidence);
+  position: absolute;
+  top: 12px;
+  left: 24px;
+  color: rgba(122, 31, 43, .62);
+  font: 700 9px/1 "DM Sans", sans-serif;
+  letter-spacing: .12em;
+}
+.home-page .impact-editorial-stat:first-child::before,
+.home-page .impact-editorial-stat:nth-child(3)::before { left: 0; }
+
+.about-page .about-story-section .text-block { border-top: 1px solid var(--ink); padding-top: 28px; }
+
+.kisah-page .kisah-meta,
+.kisah-page .kisah-entry time {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+}
+
+.schedule-page .event-where { color: var(--ink); }
+.schedule-page .schedule-empty {
+  display: grid;
+  grid-template-columns: minmax(220px, .7fr) minmax(0, 1.3fr);
+  gap: 32px;
+  align-items: baseline;
+  padding-block: 32px;
+}
+.schedule-page .schedule-empty.hidden { display: none; }
+.schedule-page .schedule-empty strong,
+.schedule-page .schedule-empty span { margin: 0; }
+
+/* Quiet motion is limited to the five public editorial pages. */
+:is(.home-page, .about-page, .program-page, .schedule-page, .kisah-page) .reveal {
+  transform: translateY(7px);
+  transition: opacity 220ms var(--ease), transform 220ms var(--ease);
+}
+
+@media (hover: hover) {
+  :is(.home-page, .about-page, .program-page, .schedule-page, .kisah-page) :is(.text-link, .kisah-text-link) {
+    transition: text-decoration-color 200ms var(--ease);
+  }
+
+  .program-page .program-detail-card .program-image img,
+  .kisah-page .kisah-image-link > img {
+    transition: transform 220ms var(--ease);
+  }
+
+  .program-page .program-detail-card:hover .program-image img,
+  .kisah-page .kisah-entry:hover .kisah-image-link > img { transform: scale(1.012); }
+}
+
+@media (max-width: 640px) {
+  .home-page .impact-editorial-stat::before { left: 16px; }
+  .home-page .impact-editorial-stat:first-child::before,
+  .home-page .impact-editorial-stat:nth-child(3)::before { left: 0; }
+  .schedule-page .schedule-empty { grid-template-columns: 1fr; gap: 8px; padding-block: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.home-page, .about-page, .program-page, .schedule-page, .kisah-page) .reveal,
+  .program-page .program-detail-card .program-image img,
+  .kisah-page .kisah-image-link > img { transform: none; transition: none; }
 }
 
 /* Transactional radius exception: welcoming registration flow, isolated from editorial cards. */
