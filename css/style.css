@@ -6557,8 +6557,8 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 
 .program-page .program-family-index {
   color: var(--maroon);
-  font: 700 12px/1 "DM Sans", sans-serif;
-  letter-spacing: .12em;
+  font: 600 clamp(36px, 4.2vw, 54px)/.9 "Instrument Sans", "DM Sans", sans-serif;
+  letter-spacing: -.045em;
 }
 
 .program-page .program-family-heading h2 {
@@ -6806,6 +6806,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
     font-size: clamp(30px, 9vw, 38px);
   }
   .program-page .program-family-heading p { font-size: 13px; }
+  .program-page .program-family-index { font-size: 28px; line-height: 1; }
   .program-page .program-detail-card,
   .program-page .program-featured,
   .program-page .program-supporting {
