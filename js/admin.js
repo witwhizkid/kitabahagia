@@ -1768,6 +1768,65 @@
         }
       }
     }
+    // Ruled lines inside the photo (a printed signature box, a line to sign on, another sheet's
+    // edge): long, perfectly straight and thin horizontal/vertical runs. A pen stroke can be
+    // straight for a while but is thicker, so thickness is checked across each run.
+    const minRunX = Math.max(150, Math.round(width * 0.25));
+    const minRunY = Math.max(150, Math.round(height * 0.25));
+    const MAX_LINE = 5;
+    const solidAt = (x, y) => x >= 0 && y >= 0 && x < width && y < height && pixels[(y * width + x) * 4 + 3] > SOLID;
+    // Median thickness across the run, measured perpendicular to it at 15 points.
+    const thin = (horizontal, fixed, from, to) => {
+      const samples = [];
+      for (let step = 1; step <= 15; step += 1) {
+        const along = Math.round(from + ((to - from) * step) / 16);
+        let size = 1;
+        for (let offset = 1; offset <= MAX_LINE + 1; offset += 1) {
+          if (horizontal ? solidAt(along, fixed - offset) : solidAt(fixed - offset, along)) size += 1; else break;
+        }
+        for (let offset = 1; offset <= MAX_LINE + 1; offset += 1) {
+          if (horizontal ? solidAt(along, fixed + offset) : solidAt(fixed + offset, along)) size += 1; else break;
+        }
+        samples.push(size);
+      }
+      samples.sort((a, b) => a - b);
+      return samples[7] <= MAX_LINE;
+    };
+    const ruled = [];
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width;) {
+        if (!solidAt(x, y)) { x += 1; continue; }
+        const start = x;
+        while (x < width && solidAt(x, y)) x += 1;
+        if (x - start >= minRunX && thin(true, y, start, x - 1)) ruled.push([start, x - 1, y, y]);
+      }
+    }
+    for (let x = 0; x < width; x += 1) {
+      for (let y = 0; y < height;) {
+        if (!solidAt(x, y)) { y += 1; continue; }
+        const start = y;
+        while (y < height && solidAt(x, y)) y += 1;
+        if (y - start >= minRunY && thin(false, x, start, y - 1)) ruled.push([x, x, start, y - 1]);
+      }
+    }
+    // Clear each line only where it is thin; where a pen stroke crosses it (thicker there),
+    // the stroke stays whole.
+    const clearAcross = (horizontal, fixed, along) => {
+      let before = 0;
+      let after = 0;
+      while (before <= MAX_LINE && (horizontal ? solidAt(along, fixed - before - 1) : solidAt(fixed - before - 1, along))) before += 1;
+      while (after <= MAX_LINE && (horizontal ? solidAt(along, fixed + after + 1) : solidAt(fixed + after + 1, along))) after += 1;
+      if (before + after + 1 > MAX_LINE) return;
+      for (let offset = -before - 1; offset <= after + 1; offset += 1) {
+        const x = horizontal ? along : fixed + offset;
+        const y = horizontal ? fixed + offset : along;
+        if (x >= 0 && y >= 0 && x < width && y < height) pixels[(y * width + x) * 4 + 3] = 0;
+      }
+    };
+    ruled.forEach(([x0, x1, y0, y1]) => {
+      if (y0 === y1) for (let x = x0; x <= x1; x += 1) clearAcross(true, y0, x);
+      else for (let y = y0; y <= y1; y += 1) clearAcross(false, x0, y);
+    });
     // Soft shadow left on the paper is dropped, then tiny isolated specks (dust, JPEG noise).
     for (let index = 3; index < pixels.length; index += 4) if (pixels[index] < 28) pixels[index] = 0;
     const MIN_SPECK = 24;

@@ -287,7 +287,8 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   tangan (tabel `certificate_signers`, bucket privat `certificate-signatures`,
   Edge Function `admin-certificates`). Foto tanda tangan/stempel diubah jadi PNG
   transparan di browser (canvas, tanpa blob URL karena CSP; coretan yang
-  menyentuh tepi foto, mis. tepi kertas/meja, dibuang otomatis), pratinjau bergaya
+  menyentuh tepi foto, garis lurus tipis panjang (kotak/garis tanda tangan
+  tercetak), bayangan tipis, dan bintik kecil dibuang otomatis), pratinjau bergaya
   kolom tanda tangan, centang izin wajib, bisa dinonaktifkan; yang nonaktif bisa
   **dihapus** (konfirmasi; ditolak kalau masih dipilih di pengaturan kegiatan;
   PDF sertifikat yang sudah terbit tidak berubah).
