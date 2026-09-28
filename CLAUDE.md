@@ -285,7 +285,19 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   membangun). Sistem menggambar latar/ornamen/logo, judul, nomor, nama (panjang
   otomatis mengecil), "Sebagai Relawan Tingkat Nasional", deskripsi kegiatan
   (judul/tanggal/lokasi dari data event), tanda tangan Founder + Project Leader,
-  dan QR (area kosong kanan tanda tangan Project Leader). A4 landscape.
+  dan QR (area kosong kanan tanda tangan Project Leader). A4 landscape
+  (2000×1414). Mockup disetujui arah umumnya (Sep 2026): layout, posisi, warna
+  diukur dari contoh (kuning judul `#EFB635`, maroon nama `#780C06`, logo
+  `assets/logo/2. Logo Gabungan/Logo Kita Bahagiaa.png`; logo putih `20.png` di
+  ornamen gelap); font sementara Plus Jakarta Sans (judul/nama/tanda tangan) +
+  Lexend (nomor/PENGHARGAAN/deskripsi) sampai Desain memberi font asli.
+  Deskripsi: kalimat pertama otomatis dari data event, kalimat berikutnya ditulis
+  admin per kegiatan. Nama panjang mengecil (belum diputuskan: atau pecah 2 baris).
+- **Ornamen kanan per kegiatan (keputusan user, "cara 3")**: default pilih
+  **preset** (kelopak, balok, bisa ditambah; dengan pilihan warna), atau admin
+  **upload ornamen khusus** dari Desain (PNG transparan ±700×1414, hanya panel
+  kanan ± sepertiga) yang menggantikan preset. Area kiri (teks) selalu bersih;
+  ada pratinjau sebelum terbit.
 - Nomor (format `13.044/KB/VII/2026`) **sama untuk semua relawan dalam satu
   kegiatan** dan **diketik admin** saat menerbitkan; arti "13" dan "044" rahasia
   internal, jadi sistem tidak menghitung atau menafsirkannya (cukup simpan teks
