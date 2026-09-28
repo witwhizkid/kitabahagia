@@ -330,6 +330,19 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .signer-row.is-inactive .signer-block { opacity: .45; }
 .signer-meta { min-width: 0; display: grid; justify-items: start; gap: 5px; }
 .signer-meta strong, .signer-meta span { overflow-wrap: anywhere; }
+.certificate-settings { padding: 28px 0; border-top: 1px solid var(--line); }
+.certificate-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: end; }
+.certificate-wide, .certificate-form > .button { grid-column: 1 / -1; }
+.certificate-form > .button { justify-self: start; }
+.certificate-form textarea { min-height: 96px; }
+.certificate-form small { color: var(--muted); font-size: .8rem; font-weight: 400; line-height: 1.45; }
+.certificate-file { display: grid; gap: 4px; }
+.certificate-file .text-button { min-height: 28px; justify-self: start; font-size: .82rem; }
+.certificate-preview { margin: 18px 0 0; }
+.certificate-preview canvas { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: var(--radius-card, 4px); box-shadow: 0 10px 30px rgba(36, 31, 29, .08); }
+.certificate-preview figcaption { display: grid; gap: 6px; margin-top: 10px; }
+.certificate-warnings { margin: 0; padding-left: 18px; color: #8c3030; font-size: .85rem; }
+.certificate-warnings:empty { display: none; }
 
 @media (max-width: 900px) {
   .admin-shell { display: block; }
@@ -367,6 +380,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
   .admin-row { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
   .admin-row-actions { grid-column: 1 / -1; }
   .signer-row { grid-template-columns: 200px minmax(0, 1fr); }
+  .certificate-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .signer-row > .button { grid-column: 2; justify-self: start; }
 }
 
@@ -583,7 +597,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
   .admin-list-heading p { text-align: left; }
   .admin-invite-form { grid-template-columns: 1fr; }
   .admin-invite-form .button, .admin-row-actions { grid-column: auto; }
-  .signer-form { grid-template-columns: 1fr; }
+  .signer-form, .certificate-form { grid-template-columns: 1fr; }
+  .certificate-form > .button { justify-self: stretch; min-height: 46px; }
   .signer-form > .button { justify-self: stretch; min-height: 46px; }
   .signer-row { grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .signer-row > .button { grid-column: auto; justify-self: stretch; min-height: 44px; }

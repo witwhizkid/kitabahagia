@@ -7,7 +7,7 @@
     <title>KB Admin — Kegiatan</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Instrument+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Instrument+Sans:wght@500;600;700&family=Lexend:wght@300;400;600&family=Plus+Jakarta+Sans:ital,wght@0,600;0,700;0,800;1,500&display=swap" rel="stylesheet" />
     <link rel="icon" href="../assets/logo/favicon.ico" />
     <link rel="stylesheet" href="../css/admin.css" />
   </head>
@@ -459,9 +459,64 @@
             <div>
               <p class="eyebrow">Sertifikat relawan</p>
               <h1 id="certificates-title">Sertifikat</h1>
-              <p>Simpan tanda tangan sekali per orang. Tanda tangan ini dipakai otomatis saat sertifikat kegiatan diterbitkan.</p>
+              <p>Atur sertifikat tiap kegiatan dan simpan tanda tangan sekali per orang. Semuanya dipakai otomatis saat sertifikat diterbitkan.</p>
             </div>
           </div>
+
+          <section class="certificate-settings" aria-labelledby="certificate-settings-title">
+            <div class="section-heading admin-list-heading">
+              <h2 id="certificate-settings-title">Pengaturan per kegiatan</h2>
+              <p>Pratinjau di bawah memakai nama contoh. Tanda tangan dipilih dari daftar di bawah halaman ini.</p>
+            </div>
+            <div id="certificate-no-events" class="state-panel" hidden>Belum ada kegiatan.</div>
+            <form id="certificate-settings-form" class="certificate-form" novalidate>
+              <label class="certificate-wide">Kegiatan<select id="certificate-event"></select></label>
+              <label>Nomor sertifikat<input id="certificate-number" type="text" maxlength="40" placeholder="13.044/KB/VII/2026" autocomplete="off" /></label>
+              <label>Nama contoh (hanya pratinjau)<input id="certificate-sample-name" type="text" maxlength="120" value="Muhammad Rizky Aditya Pratama" autocomplete="off" /></label>
+              <label>Founder<select id="certificate-founder"></select></label>
+              <label>Project Leader<select id="certificate-leader"></select></label>
+              <label>Mitra kolaborasi<select id="certificate-partner"></select></label>
+              <div id="certificate-partner-logo-field" class="certificate-file" hidden>
+                <label>Logo mitra<input id="certificate-partner-logo" type="file" accept="image/png,image/webp,image/jpeg" /></label>
+                <button id="certificate-partner-logo-remove" class="text-button" type="button" hidden>Hapus logo mitra</button>
+              </div>
+              <label>Ornamen kanan
+                <select id="certificate-ornament">
+                  <option value="kelopak">Kelopak</option>
+                  <option value="balok">Balok</option>
+                  <option value="custom">Khusus (PNG dari Desain)</option>
+                </select>
+              </label>
+              <label id="certificate-color-field">Warna ornamen
+                <select id="certificate-color">
+                  <option value="maroon">Maroon</option>
+                  <option value="emas">Emas</option>
+                  <option value="hijau">Hijau</option>
+                  <option value="biru">Biru</option>
+                </select>
+              </label>
+              <label id="certificate-ornament-field" hidden>File ornamen (PNG transparan, panel kanan)<input id="certificate-ornament-file" type="file" accept="image/png" /></label>
+              <label>Logo Kita Bahagia
+                <select id="certificate-logo">
+                  <option value="color">Berwarna</option>
+                  <option value="white">Putih (untuk ornamen gelap)</option>
+                </select>
+              </label>
+              <label class="certificate-wide">Deskripsi lanjutan
+                <textarea id="certificate-description" rows="3" maxlength="500" placeholder="Kegiatan ini menjadi wujud kepedulian dan kebersamaan melalui …"></textarea>
+                <small>Kalimat pertama dibuat otomatis: <span id="certificate-opening"></span></small>
+              </label>
+              <button id="certificate-save" class="button button-primary" type="submit">Simpan pengaturan</button>
+            </form>
+            <p id="certificate-settings-feedback" class="feedback" role="status" aria-live="polite"></p>
+            <figure id="certificate-preview" class="certificate-preview" hidden>
+              <canvas id="certificate-canvas" width="2000" height="1414" role="img" aria-label="Pratinjau sertifikat"></canvas>
+              <figcaption>
+                <ul id="certificate-warnings" class="certificate-warnings"></ul>
+                <span id="certificate-meta" class="registration-sub"></span>
+              </figcaption>
+            </figure>
+          </section>
 
           <section class="admin-invite-section" aria-labelledby="signer-add-title">
             <div class="section-heading">
@@ -547,6 +602,8 @@
         </section>
       </div>
     </div>
+    <script src="../js/vendor/qrcode-generator.min.js"></script>
+    <script src="../js/certificate.js"></script>
     <script src="../js/admin.js"></script>
   </body>
 </html>

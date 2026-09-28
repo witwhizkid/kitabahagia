@@ -279,9 +279,15 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   Edge Function `admin-certificates`). Foto tanda tangan/stempel diubah jadi PNG
   transparan di browser (canvas, tanpa blob URL karena CSP), pratinjau bergaya
   kolom tanda tangan, centang izin wajib, bisa dinonaktifkan (tidak dihapus).
-  Detail: "Certificate signers" di `supabase/README.md`. Tahap berikutnya:
-  pengaturan sertifikat per kegiatan (nomor, deskripsi, ornamen, PL, mitra) →
-  terbitkan + email → halaman cek keaslian.
+  Detail: "Certificate signers" di `supabase/README.md`.
+- Tahap 3 **dibangun (Sep 2026)**: di tab Sertifikat, "Pengaturan per kegiatan"
+  (tabel `event_certificates`, bucket privat `certificate-assets`): nomor,
+  Founder/PL/mitra dari daftar tanda tangan, logo mitra, ornamen Kelopak/Balok +
+  4 warna atau PNG khusus, logo KB berwarna/putih (Balok otomatis putih),
+  deskripsi lanjutan. Pratinjau langsung digambar `js/certificate.js` (canvas,
+  dipakai lagi saat terbit) dengan nama contoh + peringatan (nomor/PL kosong,
+  deskripsi kepanjangan). Tahap berikutnya: terbitkan + email → halaman cek
+  keaslian.
 - Alur: admin klik "Terbitkan sertifikat" → semua yang hadir → pratinjau
   daftar nama (bisa dibetulkan; rapikan huruf kapital) → tiap sertifikat dapat
   **link pribadi** acak (`sertifikat?k=...`, sama dengan isi QR) yang

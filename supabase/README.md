@@ -293,6 +293,32 @@ consent checkbox. **Deploy order:** migration, then `admin-certificates`, then
 the site. Rollback: deploy the previous site, empty the bucket in the
 dashboard, then `supabase/rollback/20261007010000_certificate_signers.down.sql`.
 
+## Certificate settings per event (sertifikat tahap 3)
+
+Migration `20261008010000_event_certificate_settings.sql` adds
+`event_certificates` (one row per event: `certificate_number` typed by the
+admin, `description` = the admin's sentences after the automatic first
+sentence, `ornament_preset` kelopak/balok + `ornament_color`
+maroon/emas/hijau/biru, optional custom `ornament_path`, `logo_variant`
+color/white, `founder_id` / `project_leader_id` / `partner_signer_id` from
+`certificate_signers`, optional `partner_logo_path`, `updated_by`) and the
+private bucket `certificate-assets` (PNG, 2 MB, no policies).
+`admin-certificates` handles it with `?event=<slug>`: `GET` returns
+`{ settings | null, signers }` with signed `ornament_url` / `partner_logo_url`;
+`POST` (multipart) saves every field at once, optional `ornament` /
+`partner_logo` PNGs (stored under a new name each time; the replaced file is
+deleted only after the row is saved) and `remove_ornament` /
+`remove_partner_logo = "true"`. Signer ids must match their role; an inactive
+signer can stay on the event it was already chosen for but cannot be newly
+picked (`INVALID_SIGNER`). Settings may be incomplete; issuing will require a
+number, founder and Project Leader.
+The certificate itself is drawn by `js/certificate.js` (canvas 2000×1414,
+`KBCertificate.render`), which admin → Sertifikat uses for the live preview
+with a sample name. Fonts are Plus Jakarta Sans + Lexend (Google Fonts) until
+Garet is self-hosted. **Deploy order:** migration, `admin-certificates`, site.
+Rollback: previous site + function, empty the bucket, then
+`supabase/rollback/20261008010000_event_certificate_settings.down.sql`.
+
 ## Event location link ("Petunjuk arah")
 
 Migration `20261005010000_event_location_url.sql` adds optional

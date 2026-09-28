@@ -1777,6 +1777,7 @@
   };
 
   const renderSigners = () => {
+    fillCertificateSigners();
     $("#signers-loading").hidden = true;
     $("#signers-empty").hidden = signers.length > 0;
     const list = $("#signers-list");
@@ -1826,8 +1827,11 @@
     certificatesView.hidden = false;
     setActiveNavigation("certificates");
     window.scrollTo({ top: 0, behavior: "instant" });
-    // Signed preview URLs last 10 minutes, so the list is fetched fresh on every visit.
-    await loadSigners();
+    // Signed preview URLs last 10 minutes, so everything is fetched fresh on every visit.
+    await loadEvents();
+    fillCertificateEvents();
+    if ($("#certificate-event").value) await loadCertificateSettings();
+    else await loadSigners();
   };
 
   let signerTitleEdited = false;
@@ -1900,6 +1904,318 @@
     } finally {
       signerPending = false;
       renderSigners();
+    }
+  });
+
+  // Sertifikat → per-event settings with a live preview drawn by js/certificate.js.
+  const logoUrls = {
+    color: "../assets/logo/2.%20Logo%20Gabungan/Logo%20Kita%20Bahagiaa.png",
+    white: "../assets/logo/2.%20Logo%20Gabungan/20.png",
+  };
+  const certificate = {
+    // Slug whose settings fill the form; saving is blocked until it matches the selected event.
+    loadedSlug: "",
+    settings: null,
+    ornamentUpload: null,
+    logoUpload: null,
+    removePartnerLogo: false,
+    loadSeq: 0,
+    renderSeq: 0,
+    uploadReads: { ornament: 0, logo: 0 },
+    pending: false,
+  };
+  const imageCache = new Map();
+  const loadImage = (url) => {
+    if (!url) return Promise.resolve(null);
+    if (!imageCache.has(url)) {
+      imageCache.set(url, new Promise((resolve) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => resolve(null);
+        image.src = url;
+      }));
+    }
+    return imageCache.get(url);
+  };
+
+  const certificateEvents = () => events.filter((event) => !event.archived_at)
+    .sort((a, b) => String(b.event_date).localeCompare(String(a.event_date)));
+  const selectedCertificateEvent = () => events.find((event) => event.slug === $("#certificate-event").value) || null;
+  const signerById = (id) => signers.find((signer) => signer.id === id) || null;
+
+  const fillCertificateEvents = () => {
+    const select = $("#certificate-event");
+    const current = select.value;
+    const list = certificateEvents();
+    select.innerHTML = list.map((event) =>
+      `<option value="${escapeHtml(event.slug)}">${escapeHtml(formatDate(event.event_date))} · ${escapeHtml(event.title)}</option>`).join("");
+    if (list.some((event) => event.slug === current)) select.value = current;
+    $("#certificate-no-events").hidden = list.length > 0;
+    $("#certificate-settings-form").hidden = list.length === 0;
+  };
+
+  // Active signers of a role, plus the one already saved even if it was deactivated since.
+  const fillCertificateSigners = () => {
+    [["#certificate-founder", "founder", "founder_id", "Pilih Founder"],
+      ["#certificate-leader", "project_leader", "project_leader_id", "Pilih Project Leader"],
+      ["#certificate-partner", "partner", "partner_signer_id", "Tanpa mitra"]].forEach(([selector, role, field, empty]) => {
+      const select = $(selector);
+      const current = select.value || certificate.settings?.[field] || "";
+      const options = signers.filter((signer) => signer.role === role && (signer.is_active || signer.id === current));
+      select.innerHTML = `<option value="">${empty}</option>${options.map((signer) =>
+        `<option value="${escapeHtml(signer.id)}">${escapeHtml(signer.name)}${signer.organization ? ` · ${escapeHtml(signer.organization)}` : ""}${signer.is_active ? "" : " (nonaktif)"}</option>`).join("")}`;
+      select.value = options.some((signer) => signer.id === current) ? current : "";
+      // A single active founder is the obvious default.
+      if (!select.value && role === "founder" && options.length === 1) select.value = options[0].id;
+    });
+  };
+
+  const syncCertificateForm = () => {
+    const custom = $("#certificate-ornament").value === "custom";
+    $("#certificate-color-field").hidden = custom;
+    $("#certificate-ornament-field").hidden = !custom;
+    const partner = Boolean($("#certificate-partner").value);
+    $("#certificate-partner-logo-field").hidden = !partner;
+    $("#certificate-partner-logo-remove").hidden = !(certificate.logoUpload
+      || (certificate.settings?.partner_logo_url && !certificate.removePartnerLogo));
+    $("#certificate-save").disabled = certificate.pending || certificate.loadedSlug !== $("#certificate-event").value;
+  };
+
+  const certificateSpecImages = async () => {
+    const pick = (id) => signerById(id);
+    const founder = pick($("#certificate-founder").value);
+    const partner = pick($("#certificate-partner").value);
+    const leader = pick($("#certificate-leader").value);
+    const column = async (signer, fallbackTitle) => ({
+      title: signer?.title || fallbackTitle,
+      name: signer?.name || "",
+      signature: await loadImage(signer?.signature_url),
+      stamp: await loadImage(signer?.stamp_url),
+    });
+    const columns = [await column(founder, "Founder Kita Bahagia")];
+    if (partner) columns.push(await column(partner, "Mitra"));
+    columns.push(await column(leader, "Project Leader"));
+    const custom = $("#certificate-ornament").value === "custom";
+    const ornament = custom
+      ? certificate.ornamentUpload?.canvas || await loadImage(certificate.settings?.ornament_url)
+      : null;
+    const partnerLogo = partner
+      ? certificate.logoUpload?.canvas || (certificate.removePartnerLogo ? null : await loadImage(certificate.settings?.partner_logo_url))
+      : null;
+    const [color, white] = await Promise.all([loadImage(logoUrls.color), loadImage(logoUrls.white)]);
+    return { columns, ornament, partnerLogo, partner, logos: { color, white } };
+  };
+
+  const renderCertificatePreview = async () => {
+    const event = selectedCertificateEvent();
+    if (!event || !window.KBCertificate) return;
+    const seq = ++certificate.renderSeq;
+    syncCertificateForm();
+    const opening = KBCertificate.openingRuns({
+      category: event.category, title: event.title, eventDate: event.event_date, endAt: event.end_at,
+      location: event.location, partner: signerById($("#certificate-partner").value)?.organization,
+    });
+    $("#certificate-opening").textContent = opening.map((run) => run.text).join("");
+    const [images] = await Promise.all([certificateSpecImages(), KBCertificate.loadFonts()]);
+    if (seq !== certificate.renderSeq) return;
+    const description = $("#certificate-description").value.trim();
+    const layout = KBCertificate.render($("#certificate-canvas"), {
+      number: $("#certificate-number").value.trim(),
+      name: $("#certificate-sample-name").value.trim() || "Nama Relawan",
+      opening,
+      description,
+      ornament: { preset: $("#certificate-ornament").value, color: $("#certificate-color").value, image: images.ornament },
+      logoVariant: $("#certificate-logo").value,
+      logos: images.logos,
+      partnerLogo: images.partnerLogo,
+      signers: images.columns,
+      qrUrl: "https://kitabahagia.id/sertifikat?k=CONTOH",
+    });
+    $("#certificate-preview").hidden = false;
+    const warnings = [
+      !$("#certificate-number").value.trim() && "Nomor sertifikat belum diisi.",
+      !$("#certificate-founder").value && "Founder belum dipilih.",
+      !$("#certificate-leader").value && "Project Leader belum dipilih.",
+      images.partner && !images.partnerLogo && "Logo mitra belum diunggah.",
+      $("#certificate-ornament").value === "custom" && !images.ornament && "File ornamen khusus belum dipilih.",
+      layout.overflow && "Deskripsi terlalu panjang untuk sertifikat. Persingkat deskripsi lanjutan.",
+    ].filter(Boolean);
+    $("#certificate-warnings").innerHTML = warnings.map((warning) => `<li>${escapeHtml(warning)}</li>`).join("");
+    const saved = certificate.settings;
+    $("#certificate-meta").textContent = saved
+      ? `Disimpan ${formatDateTime(saved.updated_at)} oleh ${String(saved.updated_by || "").split("@")[0]}`
+      : "Belum disimpan untuk kegiatan ini.";
+  };
+  let certificateFrame = 0;
+  const scheduleCertificatePreview = () => {
+    cancelAnimationFrame(certificateFrame);
+    certificateFrame = requestAnimationFrame(() => { void renderCertificatePreview(); });
+  };
+
+  const applyCertificateSettings = (settings) => {
+    certificate.settings = settings;
+    certificate.ornamentUpload = null;
+    certificate.logoUpload = null;
+    certificate.removePartnerLogo = false;
+    certificate.uploadReads.ornament += 1;
+    certificate.uploadReads.logo += 1;
+    $("#certificate-ornament-file").value = "";
+    $("#certificate-partner-logo").value = "";
+    $("#certificate-number").value = settings?.certificate_number || "";
+    $("#certificate-description").value = settings?.description || "";
+    $("#certificate-ornament").value = settings?.ornament_url ? "custom" : settings?.ornament_preset || "kelopak";
+    $("#certificate-color").value = settings?.ornament_color || "maroon";
+    $("#certificate-logo").value = settings?.logo_variant || "color";
+    ["#certificate-founder", "#certificate-leader", "#certificate-partner"].forEach((selector) => { $(selector).value = ""; });
+    fillCertificateSigners();
+  };
+
+  const loadCertificateSettings = async () => {
+    const slug = $("#certificate-event").value;
+    if (!slug) return;
+    const seq = ++certificate.loadSeq;
+    certificate.loadedSlug = "";
+    syncCertificateForm();
+    const feedback = $("#certificate-settings-feedback");
+    setFeedback(feedback, "Memuat pengaturan…");
+    try {
+      const url = new URL(adminCertificatesUrl);
+      url.searchParams.set("event", slug);
+      const data = await authorizedRequest(url);
+      if (seq !== certificate.loadSeq) return;
+      signers = Array.isArray(data.signers) ? data.signers : signers;
+      applyCertificateSettings(data.settings || null);
+      certificate.loadedSlug = slug;
+      renderSigners();
+      setFeedback(feedback);
+      scheduleCertificatePreview();
+    } catch (error) {
+      if (seq === certificate.loadSeq) setFeedback(feedback, error.message, "error");
+    }
+  };
+
+  // Uploaded images are redrawn as PNG in the browser (size cap, no metadata).
+  const imageToPng = async (file, maxWidth, maxHeight, types) => {
+    if (!types.includes(file.type)) throw new Error("Format gambar tidak didukung.");
+    if (file.size > MAX_SOURCE_BYTES) throw new Error("Ukuran gambar maksimal 25 MB.");
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      throw new Error("Gambar tidak dapat dibaca.");
+    }
+    let scale = Math.min(1, maxWidth / bitmap.width, maxHeight / bitmap.height);
+    try {
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        const blob = await encodeCanvas(canvas, "image/png");
+        if (blob && blob.size <= 2 * 1024 * 1024) return { canvas, blob };
+        scale *= 0.75;
+      }
+    } finally {
+      bitmap.close();
+    }
+    throw new Error("Gambar terlalu besar setelah diperkecil. Minta versi yang lebih ringan ke Desain.");
+  };
+
+  const readCertificateUpload = async (input, key, maxWidth, maxHeight, types) => {
+    const feedback = $("#certificate-settings-feedback");
+    const read = ++certificate.uploadReads[key];
+    const field = key === "ornament" ? "ornamentUpload" : "logoUpload";
+    certificate[field] = null;
+    const file = input.files?.[0];
+    if (!file) return scheduleCertificatePreview();
+    setFeedback(feedback, "Memproses gambar…");
+    try {
+      const result = await imageToPng(file, maxWidth, maxHeight, types);
+      if (read !== certificate.uploadReads[key]) return;
+      certificate[field] = result;
+      if (key === "logo") certificate.removePartnerLogo = false;
+      setFeedback(feedback);
+    } catch (error) {
+      if (read !== certificate.uploadReads[key]) return;
+      input.value = "";
+      setFeedback(feedback, error.message, "error");
+    }
+    scheduleCertificatePreview();
+  };
+
+  $("#certificate-event").addEventListener("change", () => { void loadCertificateSettings(); });
+  ["#certificate-number", "#certificate-sample-name", "#certificate-description"].forEach((selector) => {
+    $(selector).addEventListener("input", scheduleCertificatePreview);
+  });
+  ["#certificate-founder", "#certificate-leader", "#certificate-partner", "#certificate-color", "#certificate-logo"].forEach((selector) => {
+    $(selector).addEventListener("change", scheduleCertificatePreview);
+  });
+  $("#certificate-ornament").addEventListener("change", (event) => {
+    // Dark blocks read better with the white logo; petals with the colour logo.
+    if (event.currentTarget.value !== "custom") $("#certificate-logo").value = event.currentTarget.value === "balok" ? "white" : "color";
+    scheduleCertificatePreview();
+  });
+  $("#certificate-ornament-file").addEventListener("change", (event) => {
+    void readCertificateUpload(event.currentTarget, "ornament", 1000, KBCertificate.HEIGHT, ["image/png"]);
+  });
+  $("#certificate-partner-logo").addEventListener("change", (event) => {
+    void readCertificateUpload(event.currentTarget, "logo", 800, 800, ["image/png", "image/webp", "image/jpeg"]);
+  });
+  $("#certificate-partner-logo-remove").addEventListener("click", () => {
+    certificate.uploadReads.logo += 1;
+    certificate.logoUpload = null;
+    certificate.removePartnerLogo = true;
+    $("#certificate-partner-logo").value = "";
+    scheduleCertificatePreview();
+  });
+  $("#certificate-settings-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const slug = $("#certificate-event").value;
+    const feedback = $("#certificate-settings-feedback");
+    if (!slug || certificate.pending || certificate.loadedSlug !== slug) return;
+    const custom = $("#certificate-ornament").value === "custom";
+    if (custom && !certificate.ornamentUpload && !certificate.settings?.ornament_url) {
+      return setFeedback(feedback, "Pilih file ornamen khusus, atau pakai ornamen Kelopak/Balok.", "error");
+    }
+    const form = new FormData();
+    form.append("certificate_number", $("#certificate-number").value.trim());
+    form.append("description", $("#certificate-description").value.trim());
+    form.append("ornament_preset", custom ? certificate.settings?.ornament_preset || "kelopak" : $("#certificate-ornament").value);
+    form.append("ornament_color", $("#certificate-color").value);
+    form.append("logo_variant", $("#certificate-logo").value);
+    form.append("founder_id", $("#certificate-founder").value);
+    form.append("project_leader_id", $("#certificate-leader").value);
+    form.append("partner_signer_id", $("#certificate-partner").value);
+    if (custom && certificate.ornamentUpload) {
+      form.append("ornament", new File([certificate.ornamentUpload.blob], "ornament.png", { type: "image/png" }));
+    } else if (!custom && certificate.settings?.ornament_url) {
+      form.append("remove_ornament", "true");
+    }
+    if (certificate.logoUpload) {
+      form.append("partner_logo", new File([certificate.logoUpload.blob], "partner-logo.png", { type: "image/png" }));
+    } else if (certificate.removePartnerLogo) {
+      form.append("remove_partner_logo", "true");
+    }
+    certificate.pending = true;
+    syncCertificateForm();
+    setFeedback(feedback, "Menyimpan pengaturan…");
+    try {
+      const url = new URL(adminCertificatesUrl);
+      url.searchParams.set("event", slug);
+      const data = await authorizedRequest(url, { method: "POST", body: form });
+      // Apply only if the admin is still on this event (a newer load then becomes stale).
+      if (slug === $("#certificate-event").value && certificate.loadedSlug === slug) {
+        certificate.loadSeq += 1;
+        signers = Array.isArray(data.signers) ? data.signers : signers;
+        applyCertificateSettings(data.settings || null);
+        renderSigners();
+      }
+      setFeedback(feedback, "Pengaturan sertifikat tersimpan.", "success");
+    } catch (error) {
+      setFeedback(feedback, error.message, "error");
+    } finally {
+      certificate.pending = false;
+      scheduleCertificatePreview();
     }
   });
 
