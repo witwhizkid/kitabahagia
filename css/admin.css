@@ -190,10 +190,11 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .form-actions { position: sticky; bottom: 0; display: flex; justify-content: flex-end; gap: 12px; padding: 18px 0; background: linear-gradient(to bottom, rgba(247,242,234,0), var(--cream) 20%); }
 
 .registrations-heading { align-items: center; }
-.registration-lifecycle-tabs { display: flex; gap: 0; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+.registration-lifecycle-tabs { display: flex; gap: 0; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
 .registration-lifecycle-tabs button { min-height: 42px; padding: 8px 18px; color: var(--muted); background: transparent; border: 0; border-bottom: 2px solid transparent; font-weight: 700; cursor: pointer; }
 .registration-lifecycle-tabs button.is-active { color: var(--maroon); border-bottom-color: var(--maroon); }
 .registration-lifecycle-tabs span { margin-left: 5px; color: inherit; font-size: .8em; font-variant-numeric: tabular-nums; }
+.registration-lifecycle-note { margin: 0 0 18px; color: var(--muted); font-size: .82rem; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 /* Pendaftar: one calm toolbar, dense rows under a single header (Linear-like density, KB look). */
 .registration-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px 0; border-top: 1px solid var(--line); }

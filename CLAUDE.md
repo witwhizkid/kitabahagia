@@ -229,6 +229,11 @@ Lainnya:
   Middleware) hanya untuk bot preview di `pendaftaran.html?event=...`: bot
   mendapat HTML kecil dengan judul/tanggal/lokasi/harga/poster kegiatan dari
   `public-events`; pengunjung biasa tetap dapat halaman statis.
+- Admin → Pendaftar punya tab "Pendaftar aktif" / "Riwayat" (`lifecycle` di
+  `admin-registrations`). Aktif = kegiatan belum selesai (`end_at`, atau akhir
+  hari kegiatan WIB) **dan** pembayaran belum kedaluwarsa; selain itu Riwayat
+  (keputusan user Sep 2026, sebelumnya 30 hari setelah kegiatan). Tandai hadir
+  tetap bisa dari Riwayat (ikut filter kegiatan, bukan tab).
 - Status "Kedaluwarsa" di admin tidak disimpan di database: `admin-registrations`
   menurunkannya (`payment_expired`) dari `pending_payment` + `payment_deadline`
   yang sudah lewat, sama dengan aturan pelepasan kursi. "Lunas" selalu menang.

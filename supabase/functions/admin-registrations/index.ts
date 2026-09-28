@@ -114,11 +114,18 @@ const eventFinishedAt = (event: { end_at?: string | null; event_date?: string | 
   return Number.isNaN(endOfEventDay.getTime()) ? null : endOfEventDay;
 };
 
-const isActiveRegistration = (event: { end_at?: string | null; event_date?: string | null; start_time?: string | null }, now: Date) => {
+// "Pendaftar aktif" = registrations still worth acting on before the event: the event has
+// not finished (end_at, or the end of the event day in WIB) and an unpaid registration has
+// not passed its payment deadline. Everything else is "Riwayat"; attendance and
+// certificates still work there (they follow the event filter, not the tab).
+const isActiveRegistration = (
+  event: { end_at?: string | null; event_date?: string | null; start_time?: string | null },
+  paymentExpired: boolean,
+  now: Date,
+) => {
+  if (paymentExpired) return false;
   const finishedAt = eventFinishedAt(event);
-  if (!finishedAt) return true;
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  return finishedAt >= thirtyDaysAgo;
+  return !finishedAt || finishedAt > now;
 };
 
 Deno.serve(async (request) => {
@@ -275,7 +282,8 @@ Deno.serve(async (request) => {
     if (paymentStatus === "expired" && !expired && registration.payment_status !== "expired") return false;
     if (["unpaid", "pending", "failed"].includes(paymentStatus || "") && expired) return false;
     const event = (registration.events || {}) as { end_at?: string | null; event_date?: string | null; start_time?: string | null };
-    return lifecycle === "active" ? isActiveRegistration(event, now) : !isActiveRegistration(event, now);
+    const active = isActiveRegistration(event, Boolean(expired), now);
+    return lifecycle === "active" ? active : !active;
   });
 
   // With one event selected, add the selection counts and each applicant's history.
