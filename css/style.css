@@ -7208,3 +7208,185 @@ h3 {
 @media (prefers-reduced-motion: reduce) {
   .registration-page .registration-card .check-row { transition: none; }
 }
+
+/* Registration confirmation: a warm KB receipt, not an administrative table. */
+.registration-page .registration-review {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(122, 31, 43, .08);
+  background:
+    linear-gradient(180deg, rgba(247, 229, 233, .5) 0, rgba(255, 255, 255, 0) 190px),
+    var(--white);
+  box-shadow: 0 18px 50px rgba(83, 20, 29, .09);
+}
+
+.registration-page .registration-review::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -82px;
+  right: -66px;
+  width: 220px;
+  height: 220px;
+  background: url("../assets/logo/0. Pictorial/1.png") center / contain no-repeat;
+  opacity: .035;
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+
+.registration-page .registration-review-heading {
+  margin-bottom: 24px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(122, 31, 43, .12);
+}
+
+.registration-page .registration-review-heading h2 {
+  margin: 0;
+  font-size: clamp(30px, 3.4vw, 38px);
+  letter-spacing: -.04em;
+}
+
+.registration-page .registration-review-heading p {
+  display: inline-flex;
+  margin: 10px 0 0;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--maroon-soft);
+  color: var(--maroon);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.registration-page .registration-review-grid {
+  grid-template-columns: minmax(0, 1.35fr) minmax(240px, .65fr);
+  gap: 16px;
+}
+
+.registration-page .registration-review-participant,
+.registration-page .registration-review-event {
+  border: 1px solid rgba(122, 31, 43, .09);
+  border-radius: 18px;
+}
+
+.registration-page .registration-review-participant {
+  padding: 22px;
+  background: rgba(252, 248, 244, .78);
+}
+
+.registration-page .registration-review-participant h3 {
+  margin: 0 0 16px;
+  color: var(--maroon);
+  font-size: 18px;
+}
+
+.registration-page .registration-review-participant dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.registration-page .registration-review-participant dl div {
+  display: block;
+  min-width: 0;
+  padding: 13px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--white);
+  box-shadow: inset 0 0 0 1px rgba(122, 31, 43, .08);
+}
+
+.registration-page .registration-review-participant dl div:has(> [data-review-happiness]),
+.registration-page .registration-review-participant dl div[data-review-selection],
+.registration-page .registration-review-participant dl div[data-review-portfolio] { grid-column: 1 / -1; }
+
+.registration-page .registration-review-participant dt,
+.registration-page .registration-review-event dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.registration-page .registration-review-participant dd {
+  margin-top: 5px;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.registration-page .registration-review-event {
+  align-self: stretch;
+  padding: 22px;
+  background: var(--maroon-soft);
+}
+
+.registration-page .registration-review-event > span {
+  display: inline-flex;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(122, 31, 43, .1);
+}
+
+.registration-page .registration-review-event h3 {
+  margin: 14px 0 18px;
+  color: var(--maroon);
+  font-size: clamp(23px, 2.4vw, 30px);
+  letter-spacing: -.03em;
+}
+
+.registration-page .registration-review-event dl div {
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 12px;
+  padding: 11px 0;
+  border-top-color: rgba(122, 31, 43, .13);
+}
+
+.registration-page .registration-review-consequence {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--sand);
+}
+
+.registration-page .registration-review-actions {
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top-color: rgba(122, 31, 43, .12);
+}
+
+.registration-page .registration-review-actions .btn-secondary {
+  border-color: transparent;
+  background: var(--maroon-soft);
+  color: var(--maroon);
+}
+
+.registration-page .registration-review-actions .btn-primary {
+  box-shadow: 0 10px 24px rgba(83, 20, 29, .16);
+}
+
+.registration-page .registration-review-actions .btn:active { transform: translateY(1px) scale(.985); }
+
+@media (max-width: 767px) {
+  .registration-page .registration-review::before {
+    top: -52px;
+    right: -46px;
+    width: 155px;
+    height: 155px;
+  }
+
+  .registration-page .registration-review-heading { padding-bottom: 18px; }
+  .registration-page .registration-review-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .registration-page .registration-review-participant,
+  .registration-page .registration-review-event { padding: 18px; border-radius: 16px; }
+  .registration-page .registration-review-participant dl { grid-template-columns: minmax(0, 1fr); }
+  .registration-page .registration-review-participant dl div:has(> [data-review-happiness]),
+  .registration-page .registration-review-participant dl div[data-review-selection],
+  .registration-page .registration-review-participant dl div[data-review-portfolio] { grid-column: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .registration-page .registration-review-actions .btn { transition: none; }
+}
