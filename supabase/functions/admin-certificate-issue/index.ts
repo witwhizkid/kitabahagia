@@ -310,20 +310,19 @@ Deno.serve(async (request) => {
   const name = String(certificate.recipient_name);
   const link = linkFor(emailCode);
   const dateText = formatDate(event.event_date);
-  const html = `<!doctype html><html lang="id"><body style="margin:0;background:#f6f1ea;font-family:Arial,Helvetica,sans-serif;color:#241f1d">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px">
-<tr><td style="padding:32px 28px">
-<p style="margin:0 0 6px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#780c06">Kita Bahagia</p>
-<h1 style="margin:0 0 16px;font-size:24px;line-height:1.25">Sertifikat relawanmu sudah terbit</h1>
-<p style="margin:0 0 14px;font-size:15px;line-height:1.6">Halo ${escapeHtml(name)},</p>
-<p style="margin:0 0 22px;font-size:15px;line-height:1.6">Terima kasih sudah hadir sebagai relawan di <strong>${escapeHtml(event.title)}</strong> (${dateText}). Sertifikatmu bisa dilihat dan diunduh lewat tombol di bawah.</p>
-<p style="margin:0 0 22px"><a href="${link}" style="display:inline-block;padding:13px 22px;border-radius:999px;background:#780c06;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px">Lihat &amp; unduh sertifikat</a></p>
-<p style="margin:0 0 6px;font-size:13px;line-height:1.6;color:#6b6164">Link ini khusus untukmu dan sama dengan QR di sertifikat, jadi siapa pun bisa mengecek keasliannya. Jangan bagikan kalau tidak perlu.</p>
-<p style="margin:0;font-size:13px;line-height:1.6;color:#6b6164;word-break:break-all">${link}</p>
-</td></tr></table>
-<p style="margin:16px 0 0;font-size:12px;color:#8a7f7a">Kita Bahagia · kitabahagia.id</p>
-</td></tr></table></body></html>`;
+  // Written like a personal note (plain paragraphs, one inline link, no banner or button):
+  // Gmail files newsletter-looking mail under Promotions/Updates instead of Primary.
+  const firstWord = name.trim().split(/\s+/)[0] || name;
+  const greetingName = firstWord === firstWord.toUpperCase() || firstWord === firstWord.toLowerCase()
+    ? firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase()
+    : firstWord;
+  const html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#222222">
+<p>Halo ${escapeHtml(greetingName)},</p>
+<p>Terima kasih sudah hadir sebagai relawan di ${escapeHtml(event.title)} pada ${dateText}. Sertifikatmu atas nama ${escapeHtml(name)} sudah terbit dan bisa kamu lihat serta unduh di sini: <a href="${link}">${link}</a></p>
+<p>Link ini khusus untukmu dan sama dengan QR di sertifikat, jadi siapa pun yang memindai QR-nya bisa mengecek keasliannya.</p>
+<p>Kalau ada nama yang salah tulis, balas saja email ini.</p>
+<p>Salam hangat,<br>Tim Kita Bahagia</p>
+</div>`;
   const send = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: { "api-key": apiKey, "Content-Type": "application/json", Accept: "application/json" },
@@ -331,10 +330,9 @@ Deno.serve(async (request) => {
       sender: { name: "Kita Bahagia", email: Deno.env.get("CERTIFICATE_EMAIL_FROM") || "noreply@kitabahagia.id" },
       replyTo: { email: "halo@kitabahagia.id", name: "Kita Bahagia" },
       to: [{ email, name }],
-      subject: `Sertifikat relawan: ${event.title}`,
+      subject: `${greetingName}, sertifikat relawanmu sudah terbit`,
       htmlContent: html,
-      textContent: `Halo ${name},\n\nTerima kasih sudah hadir sebagai relawan di ${event.title} (${dateText}). Sertifikatmu bisa dilihat dan diunduh di:\n${link}\n\nKita Bahagia`,
-      tags: ["sertifikat"],
+      textContent: `Halo ${greetingName},\n\nTerima kasih sudah hadir sebagai relawan di ${event.title} pada ${dateText}. Sertifikatmu atas nama ${name} sudah terbit dan bisa kamu lihat serta unduh di sini:\n${link}\n\nLink ini khusus untukmu dan sama dengan QR di sertifikat, jadi siapa pun yang memindai QR-nya bisa mengecek keasliannya.\n\nKalau ada nama yang salah tulis, balas saja email ini.\n\nSalam hangat,\nTim Kita Bahagia`,
     }),
   }).catch(() => null);
   if (!send?.ok) {
