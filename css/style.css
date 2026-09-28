@@ -6960,3 +6960,102 @@ h3 {
     font-size: 16px;
   }
 }
+
+/* Stage 3: KB documentary photo authority. Treatment follows editorial role. */
+
+/* Homepage: immersive hero, observational supporting photographs. */
+.home-page .hero-slide img {
+  object-fit: cover;
+  object-position: center center;
+}
+
+.home-page .home-about-teaser .editorial-photo img {
+  object-fit: cover;
+  object-position: center 44%;
+}
+
+.home-page .home-program-section .program-image img,
+.home-page .home-program-section .program-stage img {
+  object-fit: cover;
+}
+
+.home-page .kisah-preview .kisah-image-link > img {
+  object-fit: cover;
+  object-position: center 44%;
+}
+
+/* Tentang: wide collective evidence first, closer human observation second. */
+.about-page .about-documentary-image img {
+  object-fit: cover;
+  object-position: center 46%;
+}
+
+.about-page .about-story-section .story-image { aspect-ratio: 3 / 2; }
+.about-page .about-story-documentary img {
+  object-fit: cover;
+  object-position: center 42%;
+}
+
+/* Program: equal crops support the ecosystem without manufacturing a flagship. */
+.program-page .program-detail-card .program-image { background: var(--sand); }
+.program-page .program-detail-card .program-image img {
+  object-fit: cover;
+  object-position: center 45%;
+}
+
+/* Jadwal: event media is poster evidence, so preserve the complete frame. */
+.schedule-page .event-row-photo,
+.schedule-page .event-feature-photo { aspect-ratio: 4 / 5; }
+
+.schedule-page .event-row-photo img,
+.schedule-page .event-feature-photo img {
+  object-fit: contain;
+  object-position: center;
+  transform: none;
+}
+
+@media (hover:hover) {
+  .schedule-page .event-row:hover .event-row-photo img,
+  .schedule-page .event-feature:hover .event-feature-photo img { transform: none; }
+}
+
+/* Kisah: authoritative lead frames, consistent but less dominant archive crops. */
+.kisah-page .kisah-intro-image img {
+  object-fit: cover;
+  object-position: center 44%;
+}
+
+.kisah-page .kisah-latest-story > .kisah-image-link > img {
+  aspect-ratio: 16 / 10;
+  object-position: center 44%;
+}
+
+.kisah-page .kisah-archive-grid .kisah-image-link > img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center 44%;
+}
+
+.kisah-page .kisah-archive-grid .kisah-entry:nth-child(6n + 1) .kisah-image-link > img,
+.kisah-page .kisah-archive-grid .kisah-entry:nth-child(6n + 4) .kisah-image-link > img { aspect-ratio: 16 / 10; }
+
+@media (max-width: 640px) {
+  .home-page .hero-slide:nth-child(1) img { object-position: 50% 48%; }
+  .home-page .hero-slide:nth-child(2) img { object-position: 50% 50%; }
+  .home-page .hero-slide:nth-child(3) img { object-position: 50% 54%; }
+
+  .about-page .about-documentary-image img { object-position: center 45%; }
+  .about-page .about-story-section .story-image { aspect-ratio: 3 / 2; }
+
+  .program-page .program-detail-card .program-image,
+  .program-page .program-featured .program-image,
+  .program-page .program-supporting .program-image { aspect-ratio: 4 / 3; }
+
+  .program-page .program-detail-card .program-image img { object-position: center 44%; }
+
+  .kisah-page .kisah-intro-image img,
+  .kisah-page .kisah-latest-story > .kisah-image-link > img,
+  .kisah-page .kisah-archive-grid .kisah-image-link > img { object-position: center 42%; }
+
+  .kisah-page .kisah-archive-grid .kisah-image-link > img { aspect-ratio: 3 / 2; }
+}
