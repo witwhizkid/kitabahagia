@@ -439,7 +439,9 @@ kota"; angka disepakati owner, dibulatkan ke bawah).
 `SUPABASE_SERVICE_ROLE_KEY` hanya di server. Jangan pernah taruh di kode
 browser, log, atau commit.
 
-CSP di `_headers` (Cloudflare) dan `vercel.json` (cadangan) sudah **enforce** (bukan Report-Only). Artinya: tidak ada
+CSP di `_headers` (Cloudflare) dan `vercel.json` (cadangan) sudah **enforce** (bukan Report-Only). Cloudflare Web Analytics
+(beacon tanpa cookie, disebut di Privasi) diizinkan: `static.cloudflareinsights.com` di
+`script-src`, `cloudflareinsights.com` di `connect-src`. Artinya: tidak ada
 `<script>`/`<style>` inline, atribut `style="..."`, handler `on*=`, atau gambar
 `data:`/`blob:` di HTML/CSS. Host luar baru (font, gambar, API, iframe) harus
 ditambahkan ke CSP dulu. Cek dengan memuat halaman ber-header CSP di Playwright
