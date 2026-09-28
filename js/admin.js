@@ -1743,10 +1743,12 @@
         pixels[index + 3] = alpha;
       }
     }
-    // Marks touching the photo's edge are the paper edge, table or shadow, not the signature:
-    // flood-fill every ink stroke connected to the border and make it transparent.
+    // Solid marks touching the photo's edge are the paper edge, table or shadow, not the
+    // signature: flood-fill them (plus the faint pixels right beside them) to transparent.
+    // Only solid ink spreads the fill, so a soft shadow cannot link the edge to the signature.
+    const SOLID = 40;
     const stack = [];
-    const seed = (x, y) => { if (pixels[(y * width + x) * 4 + 3] > 0) stack.push(y * width + x); };
+    const seed = (x, y) => { if (pixels[(y * width + x) * 4 + 3] > SOLID) stack.push(y * width + x); };
     for (let x = 0; x < width; x += 1) { seed(x, 0); seed(x, height - 1); }
     for (let y = 0; y < height; y += 1) { seed(0, y); seed(width - 1, y); }
     while (stack.length) {
@@ -1759,13 +1761,41 @@
         for (let dx = -1; dx <= 1; dx += 1) {
           const nx = x + dx;
           const ny = y + dy;
-          if (nx >= 0 && ny >= 0 && nx < width && ny < height && pixels[(ny * width + nx) * 4 + 3] > 0) stack.push(ny * width + nx);
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+          const neighbour = (ny * width + nx) * 4 + 3;
+          if (pixels[neighbour] > SOLID) stack.push(ny * width + nx);
+          else pixels[neighbour] = 0;
         }
       }
     }
+    // Soft shadow left on the paper is dropped, then tiny isolated specks (dust, JPEG noise).
+    for (let index = 3; index < pixels.length; index += 4) if (pixels[index] < 28) pixels[index] = 0;
+    const MIN_SPECK = 24;
+    const seen = new Uint8Array(width * height);
+    for (let start = 0; start < width * height; start += 1) {
+      if (seen[start] || pixels[start * 4 + 3] <= SOLID) continue;
+      const component = [start];
+      seen[start] = 1;
+      for (let cursor = 0; cursor < component.length; cursor += 1) {
+        const point = component[cursor];
+        const x = point % width;
+        const y = (point - x) / width;
+        for (let dy = -1; dy <= 1; dy += 1) {
+          for (let dx = -1; dx <= 1; dx += 1) {
+            const nx = x + dx;
+            const ny = y + dy;
+            const next = ny * width + nx;
+            if (nx < 0 || ny < 0 || nx >= width || ny >= height || seen[next] || pixels[next * 4 + 3] <= SOLID) continue;
+            seen[next] = 1;
+            component.push(next);
+          }
+        }
+      }
+      if (component.length < MIN_SPECK) component.forEach((point) => { pixels[point * 4 + 3] = 0; });
+    }
     for (let y = 0; y < height; y += 1) {
       for (let x = 0; x < width; x += 1) {
-        if (pixels[(y * width + x) * 4 + 3] > 40) {
+        if (pixels[(y * width + x) * 4 + 3] > SOLID) {
           if (x < minX) minX = x;
           if (x > maxX) maxX = x;
           if (y < minY) minY = y;
