@@ -473,8 +473,32 @@
             <div id="certificate-no-events" class="state-panel" hidden>Belum ada kegiatan.</div>
             <form id="certificate-settings-form" class="certificate-form" novalidate>
               <label class="certificate-wide">Kegiatan<select id="certificate-event"></select></label>
+              <label class="certificate-wide">Jenis template
+                <select id="certificate-template-mode">
+                  <option value="system">Template sistem (otomatis)</option>
+                  <option value="canva">Template dari Canva</option>
+                </select>
+              </label>
               <label>Nomor sertifikat<input id="certificate-number" type="text" maxlength="40" placeholder="13.044/KB/VII/2026" autocomplete="off" /></label>
               <label>Nama contoh (hanya pratinjau)<input id="certificate-sample-name" type="text" maxlength="120" value="Muhammad Rizky Aditya Pratama" autocomplete="off" /></label>
+              <div id="certificate-canva-fields" class="certificate-group" hidden>
+                <label class="certificate-wide">Desain dari Canva (PNG/JPG, A4 landscape)
+                  <input id="certificate-template-file" type="file" accept="image/png,image/jpeg" />
+                  <small>Minta tim Desain export sertifikat lengkap (ornamen, logo, nomor, deskripsi, tanda tangan) dengan <strong>nama dan QR dikosongkan</strong>. Lalu geser kotak Nama dan QR di pratinjau ke tempatnya.</small>
+                </label>
+                <label>Warna nama<input id="certificate-name-color" type="color" value="#780c06" /></label>
+                <label>Perataan nama
+                  <select id="certificate-name-align">
+                    <option value="left">Rata kiri</option>
+                    <option value="center">Tengah</option>
+                  </select>
+                </label>
+                <label>Ukuran nama maksimal<input id="certificate-name-size" type="range" min="60" max="160" step="2" value="118" /></label>
+                <label>Lebar area nama<input id="certificate-name-width" type="range" min="200" max="2000" step="10" value="1300" /></label>
+                <label>Ukuran QR<input id="certificate-qr-size" type="range" min="100" max="400" step="5" value="180" /></label>
+                <label class="signer-consent"><input id="certificate-qr-caption" type="checkbox" checked /><span>Tulis "Pindai untuk cek keaslian sertifikat" di bawah QR</span></label>
+              </div>
+              <div id="certificate-system-fields" class="certificate-group">
               <label>Founder<select id="certificate-founder"></select></label>
               <label>Project Leader<select id="certificate-leader"></select></label>
               <label>Mitra kolaborasi<select id="certificate-partner"></select></label>
@@ -508,6 +532,7 @@
                 <textarea id="certificate-description" rows="3" maxlength="500" placeholder="Kegiatan ini menjadi wujud kepedulian dan kebersamaan melalui …"></textarea>
                 <small>Kalimat pertama dibuat otomatis: <span id="certificate-opening"></span></small>
               </label>
+              </div>
               <button id="certificate-save" class="button button-primary" type="submit">Simpan pengaturan</button>
             </form>
             <p id="certificate-settings-feedback" class="feedback" role="status" aria-live="polite"></p>
@@ -516,6 +541,7 @@
               <figcaption>
                 <ul id="certificate-warnings" class="certificate-warnings"></ul>
                 <span id="certificate-meta" class="registration-sub"></span>
+                <button id="certificate-sample-pdf" class="text-button" type="button">Unduh contoh PDF</button>
               </figcaption>
             </figure>
           </section>

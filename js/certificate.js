@@ -104,25 +104,27 @@
     context.drawImage(image, left, y + (height - drawHeight) / 2, drawWidth, drawHeight);
   };
 
-  // Long names shrink from 118px to 84px; if still too wide, two balanced lines.
-  const layoutName = (context, name, maxWidth) => {
+  // Long names shrink from 118px to 84px (or from a Canva layout's size to 71% of it);
+  // if still too wide, two balanced lines.
+  const layoutName = (context, name, maxWidth, maxSize = 118) => {
+    const minSize = Math.round(maxSize * 0.71);
     const widthAt = (text, size) => {
       setFont(context, `700 ${size}px ${DISPLAY}`, size * 0.005);
       return context.measureText(text).width;
     };
-    for (let size = 118; size >= 84; size -= 2) {
+    for (let size = maxSize; size >= minSize; size -= 2) {
       if (widthAt(name, size) <= maxWidth) return { size, lines: [name] };
     }
     const words = name.split(" ");
-    if (words.length < 2) return { size: 84, lines: [name] };
+    if (words.length < 2) return { size: minSize, lines: [name] };
     let best = null;
     for (let index = 1; index < words.length; index += 1) {
       const lines = [words.slice(0, index).join(" "), words.slice(index).join(" ")];
-      const widest = Math.max(...lines.map((line) => widthAt(line, 84)));
+      const widest = Math.max(...lines.map((line) => widthAt(line, minSize)));
       if (!best || widest < best.widest) best = { lines, widest };
     }
-    let size = 84;
-    while (size > 56 && Math.max(...best.lines.map((line) => widthAt(line, size))) > maxWidth) size -= 2;
+    let size = minSize;
+    while (size > Math.round((maxSize * 56) / 118) && Math.max(...best.lines.map((line) => widthAt(line, size))) > maxWidth) size -= 2;
     return { size, lines: best.lines };
   };
 
@@ -185,7 +187,7 @@
     });
   };
 
-  const drawQr = (context, url, x, y, size) => {
+  const drawQr = (context, url, x, y, size, caption = true) => {
     if (typeof window.qrcode !== "function") return;
     const qr = window.qrcode(0, "M");
     qr.addData(url);
@@ -203,12 +205,51 @@
         if (qr.isDark(row, column)) context.fillRect(x + offset + column * cell, y + offset + row * cell, cell, cell);
       }
     }
+    if (!caption) return;
     setFont(context, `400 17px ${BODY}`);
     context.fillStyle = "#6b6164";
     context.textAlign = "center";
     context.fillText("Pindai untuk cek", x + size / 2, y + size + 10);
     context.fillText("keaslian sertifikat", x + size / 2, y + size + 32);
     context.textAlign = "left";
+  };
+
+  // Canva template: the whole design comes from Desain; only the name and QR are written.
+  // spec.guides draws the draggable boxes for the admin preview (never in a PDF).
+  const renderTemplate = (context, spec) => {
+    const { image, name: box, qr } = spec.template;
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, WIDTH, HEIGHT);
+    if (image) context.drawImage(image, 0, 0, WIDTH, HEIGHT);
+    const name = layoutName(context, String(spec.name || "").trim().replace(/\s+/g, " "), box.width, box.size);
+    const line = Math.round(name.size * 1.1);
+    context.fillStyle = box.color;
+    setFont(context, `700 ${name.size}px ${DISPLAY}`, name.size * 0.005);
+    context.textAlign = box.align === "center" ? "center" : "left";
+    const anchor = box.align === "center" ? box.x + box.width / 2 : box.x;
+    name.lines.forEach((text, index) => context.fillText(text, anchor, box.y + index * line, box.width));
+    context.textAlign = "left";
+    drawQr(context, spec.qrUrl || "https://kitabahagia.id/sertifikat", qr.x, qr.y, qr.size, qr.caption);
+    if (spec.guides) {
+      context.save();
+      context.setLineDash([14, 10]);
+      context.lineWidth = 4;
+      context.strokeStyle = "rgba(120,12,6,.85)";
+      context.strokeRect(box.x, box.y, box.width, line * name.lines.length);
+      context.strokeRect(qr.x, qr.y, qr.size, qr.size);
+      context.setLineDash([]);
+      // Labels on a white tag so they stay readable over any design.
+      setFont(context, `600 26px ${BODY}`);
+      [["Nama · geser", box.x, box.y], ["QR · geser", qr.x, qr.y]].forEach(([label, x, y]) => {
+        const top = Math.max(0, y - 40);
+        context.fillStyle = "rgba(255,255,255,.92)";
+        context.fillRect(x, top, context.measureText(label).width + 16, 36);
+        context.fillStyle = "rgba(120,12,6,.95)";
+        context.fillText(label, x + 8, top + 5);
+      });
+      context.restore();
+    }
+    return { nameSize: name.size, nameLines: name.lines.length, descriptionSize: null, overflow: false };
   };
 
   const drawSigners = (context, signers) => {
@@ -278,6 +319,7 @@
     canvas.height = HEIGHT;
     const context = canvas.getContext("2d");
     context.textBaseline = "top";
+    if (spec.template) return renderTemplate(context, spec);
     drawBackground(context, spec.ornament || {});
 
     const logo = spec.logos?.[spec.logoVariant === "white" ? "white" : "color"];

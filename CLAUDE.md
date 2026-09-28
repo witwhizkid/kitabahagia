@@ -314,6 +314,16 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   function `public-certificate`. Belum: link sertifikat di Cek status,
   pengumuman grup WA (manual), font Garet. Detail: "Issuing certificates" di
   `supabase/README.md`.
+- **Template dari Canva (dibangun Sep 2026, keputusan user)**: di samping
+  template sistem (tetap default, tidak diubah), admin bisa memilih "Template dari
+  Canva" per kegiatan: tim Desain export sertifikat lengkap (ornamen, logo, nomor,
+  deskripsi, tanda tangan + stempel) dengan nama dan QR dikosongkan, admin unggah
+  (jadi JPEG 2000×1414), geser kotak Nama/QR di pratinjau, atur warna/perataan/
+  ukuran nama, ukuran QR, dan teks di bawah QR. Nomor tetap diketik (dipakai halaman
+  cek keaslian). Integrasi langsung ke Canva API sengaja tidak dibuat (Autofill butuh
+  Canva Enterprise; export+upload cukup sekali per kegiatan). Ada "Unduh contoh PDF"
+  di pratinjau (dua mode). Detail: "Certificate template from Canva" di
+  `supabase/README.md`.
 - Alur: admin klik "Terbitkan sertifikat" → semua yang hadir → pratinjau
   daftar nama (bisa dibetulkan; rapikan huruf kapital) → tiap sertifikat dapat
   **link pribadi** acak (`sertifikat?k=...`, sama dengan isi QR) yang
