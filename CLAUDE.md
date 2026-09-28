@@ -127,11 +127,17 @@ Lainnya:
   (sudah dicoba, user: terlalu kaku). Label kapital kecil (`.eyebrow`) di beranda maksimal 2
   (Jejak + Agenda berikutnya). Jangan pakai `font-style: italic` pada
   Instrument Sans/DM Sans: versi italic tidak dimuat, jadi browser memiringkan palsu.
-- Gerak halus ala Aesop: `.reveal` (fade + naik 16px, .8s) juga dipasang otomatis
+- Gerak halus ala Aesop: `.reveal` (fade + naik 16px, .8s; di Beranda/Tentang/Program/
+  Jadwal/Kisah dipersingkat jadi 7px, 220 ms oleh blok "Field-journal craft" dari Codex,
+  Sep 2026) juga dipasang otomatis
   oleh JS ke `main > section:not(:first-child) > .container > *` yang di bawah
   layar pertama (bukan di halaman pendaftaran, bukan saat reduced motion, bukan
   `sr-only`/tersembunyi). Zoom foto kisah/kegiatan pelan (1.2s/.9s) hanya di
-  `@media (hover:hover)` untuk kisah.
+  `@media (hover:hover)` untuk kisah (halaman Kisah/Program kini zoom tipis 1.012,
+  220 ms dari blok yang sama).
+- Halaman Program dikelompokkan jadi 3 bab bernomor (`.program-family`: 01 Masyarakat
+  Reguler, 02 Adventure & Unique, 03 Impactful Action); angka Jejak beranda diberi
+  nomor kecil 01–04 (Codex, Sep 2026).
 - Transisi antarhalaman: `@view-transition` fade .3s (mati saat reduced motion).
   Angka Jejak beranda 2×2 di semua lebar dan menghitung naik sekali saat terlihat
   (tahun tidak); label pakai `.impact-editorial-stat > span` supaya span di dalam
