@@ -20,7 +20,7 @@ Website komunitas sosial Kita Bahagia dengan halaman terpisah untuk setiap menu 
 
 1. Kontak dan sosial media: edit `SITE_CONFIG` di `js/script.js`.
 2. Agenda: edit kartu kegiatan di `jadwal.html`, termasuk kategori, tanggal, kuota, dan `data-event-name`.
-3. Foto hero: gunakan berkas `hero-*.webp`; JPG/JPEG sumber tetap disimpan sebagai cadangan.
+3. Foto hero: gunakan berkas `hero-*.webp` dan simpan hanya varian yang masih dirujuk oleh halaman publik.
 
 ## Menjalankan
 
