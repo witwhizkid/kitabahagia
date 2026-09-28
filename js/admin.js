@@ -1805,10 +1805,10 @@
       <li><button class="home-task is-${task.tone}" type="button" data-home-go="${task.go}" data-home-event="${escapeHtml(task.event)}"${task.lifecycle ? ` data-home-lifecycle="${task.lifecycle}"` : ""}>
         <span class="home-task-dot" aria-hidden="true"></span><span class="home-task-text">${task.text}</span><span class="home-task-arrow" aria-hidden="true">→</span>
       </button></li>`).join("")
-      : `<li class="home-all-done"><span aria-hidden="true">☕</span> Semua beres. Waktunya ngopi dulu.</li>`;
+      : `<li class="home-all-done"><span aria-hidden="true">☕</span> Aman semua. Ngopi dulu ges.</li>`;
     $("#home-summary").textContent = tasks.length
-      ? `Ada ${tasks.length} hal yang perlu diurus. Yuk, satu-satu.`
-      : "Semua aman terkendali. Mantap!";
+      ? `Ada ${tasks.length} hal yang perlu diurus. Gas, satu-satu.`
+      : "Semua aman terkendali. Mantap, bangga gua"; 
   };
 
   const showHome = async () => {
