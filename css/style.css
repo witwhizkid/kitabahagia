@@ -6492,6 +6492,312 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   }
 }
 
+/* Stage 2: page-level editorial grammar. Canonical tokens above stay locked. */
+
+/* Tentang — reflective manifesto with measured pauses. */
+.about-page .about-documentary-image img {
+  height: clamp(340px, 32vw, 440px);
+  object-position: center 48%;
+}
+
+.about-page .about-hero {
+  padding-block: 104px 112px;
+}
+
+.about-page .about-hero .page-hero-grid {
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, .65fr);
+  gap: 120px;
+}
+
+.about-page .about-hero h1 { max-width: 820px; }
+.about-page .about-hero p { max-width: 680px; margin-top: 32px; }
+
+.about-page .about-story-section {
+  padding-block: 112px 120px;
+}
+
+.about-page .about-story-section .story-grid {
+  grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+  gap: 96px;
+}
+
+.about-page .about-story-section .story-image { aspect-ratio: 4 / 3; }
+.about-page .about-story-section .text-block { max-width: 660px; }
+.about-page .about-story-section .text-block p { max-width: 58ch; line-height: 1.75; }
+.about-page .about-story-section .text-block p + p { margin-top: 24px; }
+
+.about-page .about-values-section { padding-block: 104px 112px; }
+.about-page .about-value-sequence { margin-top: 64px; }
+.about-page .about-value-sequence .value-card { padding-top: 32px; }
+.about-page .about-closing-section { padding-block: 56px 64px; }
+.about-page .about-closing { padding-block: 32px; }
+
+/* Program — one ecosystem, expressed as an equal editorial index. */
+.program-page > .section.section-soft { padding-block: 72px 104px; }
+
+.program-page .program-detail-grid {
+  display: block;
+  border-top: 1px solid var(--ink);
+}
+
+.program-page .program-detail-card,
+.program-page .program-featured,
+.program-page .program-supporting {
+  display: grid;
+  grid-template-columns: minmax(220px, 3fr) minmax(0, 9fr);
+  gap: 40px;
+  align-items: start;
+  margin: 0;
+  padding: 32px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.program-page .program-detail-card .program-image,
+.program-page .program-featured .program-image,
+.program-page .program-supporting .program-image {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
+.program-page .program-detail-card .program-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.program-page .program-detail-card .program-content,
+.program-page .program-featured .program-content,
+.program-page .program-supporting .program-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr);
+  column-gap: 48px;
+  padding: 0;
+}
+
+.program-page .program-detail-card .tag,
+.program-page .program-detail-card h2,
+.program-page .program-detail-card .program-content > p {
+  grid-column: 1;
+}
+
+.program-page .program-detail-card .program-meta,
+.program-page .program-detail-card .program-flow {
+  grid-column: 2;
+}
+
+.program-page .program-detail-card .tag {
+  align-self: start;
+  padding: 0;
+  background: none;
+  color: var(--maroon);
+  font-size: 11px;
+}
+
+.program-page .program-detail-card h2,
+.program-page .program-featured h2,
+.program-page .program-supporting h2 {
+  max-width: none;
+  margin: 12px 0 10px;
+  font-size: clamp(30px, 3vw, 40px);
+  line-height: 1.05;
+}
+
+.program-page .program-detail-card .program-content > p,
+.program-page .program-featured .program-content > p {
+  max-width: 52ch;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.program-page .program-detail-card .program-meta {
+  align-self: end;
+  gap: 6px 14px;
+  margin: 0 0 16px;
+}
+
+.program-page .program-detail-card .program-meta span {
+  padding: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.program-page .program-detail-card .program-flow,
+.program-page .program-supporting .program-flow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
+
+.program-page .program-detail-card .program-flow div,
+.program-page .program-supporting .program-flow div {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.program-page .program-detail-card .program-flow div:last-child { border-bottom: 0; }
+.program-page .program-detail-card .program-flow strong { margin: 0; }
+
+/* Jadwal — utility-first hierarchy with the decision controls kept central. */
+.schedule-page .schedule-intro { padding-block: 64px 52px; }
+.schedule-page .schedule-intro-grid { grid-template-columns: minmax(0, 1.5fr) minmax(300px, .5fr); gap: 64px; }
+.schedule-page .schedule-featured-section { padding-block: 64px 72px; }
+.schedule-page .schedule-section { padding-block: 64px 96px; }
+.schedule-page .schedule-section-heading { margin-bottom: 24px; }
+.schedule-page .schedule-explore-heading { margin-bottom: 20px; }
+
+.schedule-page .schedule-discovery {
+  grid-template-columns: minmax(300px, .72fr) minmax(0, 1.28fr);
+  gap: 40px;
+  margin-bottom: 14px;
+  padding-block: 20px;
+  border-top-color: var(--ink);
+}
+
+.schedule-page .schedule-count { margin-bottom: 16px; }
+.schedule-page .event-row { grid-template-columns: 92px 132px minmax(0, 1fr) 180px; gap: 24px; }
+.schedule-page .event-row-side { align-self: stretch; align-content: center; }
+.schedule-page .final-cta { align-items: center; }
+
+/* Kisah — image-led lead story and a scalable, non-uniform archive rhythm. */
+.kisah-page .kisah-intro { padding-block: 80px 64px; }
+
+.kisah-page .kisah-intro-grid {
+  grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr);
+  gap: 88px;
+}
+
+.kisah-page .kisah-intro-copy { padding-bottom: 32px; }
+.kisah-page .kisah-intro h1 { max-width: 18ch; }
+.kisah-page .kisah-intro-image { height: 470px; }
+.kisah-page .kisah-latest { padding-block: 32px 96px; }
+
+.kisah-page .kisah-latest-story {
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr);
+  gap: 72px;
+  padding-top: 40px;
+}
+
+.kisah-page .kisah-latest-story > .kisah-image-link > img { aspect-ratio: 16 / 10; }
+.kisah-page .kisah-latest-copy .kisah-meta { padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.kisah-page .kisah-archive { padding-bottom: 104px; }
+
+.kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 56px 28px;
+}
+
+.kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry { grid-column: span 4; }
+.kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry:nth-child(6n + 1),
+.kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry:nth-child(6n + 4) { grid-column: span 7; }
+.kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry:nth-child(6n + 2),
+.kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry:nth-child(6n + 5) { grid-column: span 5; }
+
+.kisah-page .kisah-archive-grid .kisah-entry .kisah-meta {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.kisah-page .kisah-archive-grid .kisah-entry:nth-child(6n + 1) .kisah-image-link > img,
+.kisah-page .kisah-archive-grid .kisah-entry:nth-child(6n + 4) .kisah-image-link > img { aspect-ratio: 16 / 10; }
+
+@media (max-width: 960px) {
+  .about-page .about-hero .page-hero-grid,
+  .about-page .about-story-section .story-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .program-page .program-detail-card,
+  .program-page .program-featured,
+  .program-page .program-supporting { grid-template-columns: minmax(180px, .8fr) minmax(0, 1.2fr); gap: 28px; }
+
+  .program-page .program-detail-card .program-content,
+  .program-page .program-featured .program-content,
+  .program-page .program-supporting .program-content { grid-template-columns: 1fr; }
+
+  .program-page .program-detail-card .program-meta,
+  .program-page .program-detail-card .program-flow { grid-column: 1; }
+
+  .program-page .program-detail-card .program-meta { margin-top: 18px; }
+  .schedule-page .schedule-intro-grid { grid-template-columns: 1fr; gap: 24px; }
+  .schedule-page .schedule-intro-grid > p { max-width: 620px; }
+  .schedule-page .schedule-discovery { grid-template-columns: 1fr; gap: 18px; }
+  .schedule-page .event-row { grid-template-columns: 76px 110px minmax(0, 1fr) 170px; gap: 20px; }
+
+  .kisah-page .kisah-intro-grid { gap: 48px; }
+  .kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry:nth-child(n) { grid-column: auto; }
+}
+
+@media (max-width: 640px) {
+  .about-page .about-documentary-image img { height: 240px; }
+  .about-page .about-hero { padding-block: 64px 72px; }
+  .about-page .about-hero .page-hero-grid { gap: 36px; }
+  .about-page .about-hero p { margin-top: 24px; }
+  .about-page .about-story-section { padding-block: 72px 80px; }
+  .about-page .about-story-section .story-grid { gap: 40px; }
+  .about-page .about-story-section .story-image { min-height: 0; aspect-ratio: 4 / 3; }
+  .about-page .about-values-section { padding-block: 72px 80px; }
+  .about-page .about-value-sequence { margin-top: 40px; }
+  .about-page .about-closing-section { padding-block: 40px 48px; }
+
+  .program-page > .section.section-soft { padding-block: 48px 72px; }
+  .program-page .program-detail-card,
+  .program-page .program-featured,
+  .program-page .program-supporting {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 18px;
+    padding: 24px 0 28px;
+  }
+
+  .program-page .program-detail-card .program-image,
+  .program-page .program-featured .program-image,
+  .program-page .program-supporting .program-image {
+    height: auto;
+    margin: 0;
+    aspect-ratio: 4 / 5;
+  }
+
+  .program-page .program-detail-card h2,
+  .program-page .program-featured h2,
+  .program-page .program-supporting h2 { font-size: 27px; }
+
+  .program-page .program-detail-card .program-content > p { grid-column: 1 / -1; margin-top: 18px; }
+  .program-page .program-detail-card .program-meta,
+  .program-page .program-detail-card .program-flow { grid-column: 1 / -1; }
+  .program-page .program-detail-card .program-meta { margin-top: 18px; }
+
+  .schedule-page .schedule-intro { padding-block: 48px 40px; }
+  .schedule-page .schedule-featured-section { padding-block: 48px 56px; }
+  .schedule-page .schedule-section { padding-block: 48px 72px; }
+  .schedule-page .schedule-section-heading { margin-bottom: 20px; }
+  .schedule-page .schedule-discovery { gap: 16px; padding-block: 16px; }
+  .schedule-page .event-row { grid-template-columns: minmax(0, 1fr) 104px; gap: 0 18px; }
+
+  .kisah-page .kisah-intro { padding-block: 48px 40px; }
+  .kisah-page .kisah-intro-grid { grid-template-columns: 1fr; gap: 32px; }
+  .kisah-page .kisah-intro-copy { padding-bottom: 0; }
+  .kisah-page .kisah-intro-image { height: clamp(260px, 72vw, 340px); }
+  .kisah-page .kisah-latest { padding-block: 24px 72px; }
+  .kisah-page .kisah-latest-story { grid-template-columns: 1fr; gap: 28px; padding-top: 24px; }
+  .kisah-page .kisah-archive { padding-bottom: 72px; }
+  .kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) { grid-template-columns: 1fr; gap: 40px; }
+  .kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry:nth-child(n) { grid-column: 1 / -1; }
+}
+
 .section { padding-block: var(--section-space); }
 
 h1,
