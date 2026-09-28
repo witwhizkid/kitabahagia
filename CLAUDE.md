@@ -244,7 +244,9 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   → `dist/` (menyalin semua kecuali isi `.vercelignore`, dotfile, file Vercel;
   jadi `_headers`/`_routes.json` jangan dimasukkan ke `.vercelignore`),
   `_headers` (header + CSP, samakan dengan `vercel.json` selama dua-duanya ada),
-  `functions/_middleware.js` (preview bot, dibatasi `_routes.json` ke
+  build juga menempelkan `?v=<commit>` ke link JS/CSS lokal di semua HTML
+  (Cloudflare membuat browser menyimpan JS/CSS 4 jam; tanpa ini HTML baru bisa
+  memakai `admin.js` lama setelah deploy), `functions/_middleware.js` (preview bot, dibatasi `_routes.json` ke
   `/pendaftaran(.html)` supaya kuota Functions tidak habis). Pages mengalihkan
   `x.html` → `/x`, jadi canonical/og:url/sitemap memakai URL tanpa `.html`;
   link di dalam situs tetap `.html` (tetap jalan lewat redirect). Supabase Auth:
