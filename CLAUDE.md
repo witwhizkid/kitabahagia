@@ -191,8 +191,8 @@ Lainnya:
   memakai `<dialog>` native, navigasi panah, dan layout layar penuh di HP.
   Semua baris pendaftar kini ringkas dan membuka dialog detail universal; data,
   status pembayaran, dan catatan tampil di dialog, sedangkan kontrol seleksi
-  hanya muncul untuk kegiatan mode Seleksi. Email otomatis masih belum
-  dikerjakan (butuh domain). Bukti follow Instagram hanya untuk event gratis +
+  hanya muncul untuk kegiatan mode Seleksi. Email otomatis ke pendaftar belum
+  dikerjakan (domain + SMTP Brevo sudah siap). Bukti follow Instagram hanya untuk event gratis +
   Seleksi: multipart hanya pada kondisi itu; JPG/PNG/WebP maksimal 2 MiB masuk
   ke bucket privat `instagram-proofs`, dan database hanya menyimpan object path.
   Admin mendapat signed URL 10 menit setelah verifikasi admin. Rate limit per IP
@@ -249,6 +249,12 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   `x.html` → `/x`, jadi canonical/og:url/sitemap memakai URL tanpa `.html`;
   link di dalam situs tetap `.html` (tetap jalan lewat redirect). Supabase Auth:
   Site URL + Redirect URLs `https://kitabahagia.id/admin/`.
+- Email (Sep 2026, semua lewat dashboard, tanpa kode): Supabase Auth mengirim via
+  SMTP **Brevo** dengan pengirim `Kita Bahagia <noreply@kitabahagia.id>`; domain
+  terautentikasi di Brevo (DKIM `brevo1/2._domainkey`, DMARC `p=none`). Email
+  masuk lewat **Cloudflare Email Routing**: `halo@` dan `noreply@kitabahagia.id`
+  → `kitabahagiaidn@gmail.com`. SPF hanya satu record (Cloudflare); jangan
+  tambah record `v=spf1` kedua. Jalur ini dipakai juga untuk email sertifikat.
 - Payment gateway: Midtrans tetap utama (owner mendaftar, perorangan). Xendit
   dan Duitku didaftarkan sebagai cadangan; pindah hanya kalau Midtrans belum
   approve sampai akhir Oktober. Yang diganti cuma `create-payment` +
