@@ -308,6 +308,17 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   bisa dipilih untuk kegiatan baru). Saat menerbitkan, admin memilih Project
   Leader dari daftar; scan baru hanya untuk PL yang belum ada. Sumber scan: file
   lama dari Desain, atau pulpen hitam tebal di HVS putih difoto/scan lurus.
+- **Font: Garet** (dari tim Desain; desain Canva "Sertifikat Volunteer Kita
+  Bahagia - Tidung", A4 1123×794). Tidak ada di Google Fonts: file font di-host
+  sendiri (aman untuk CSP `font-src 'self'`); cek lisensi + varian (tampaknya
+  Heavy untuk judul/nama, Book untuk teks) sebelum dipakai. Mockup sementara
+  pakai Plus Jakarta Sans + Lexend.
+- **Kegiatan kolaborasi** (opsional per kegiatan): logo mitra di kanan atas
+  sebelah logo KB (versi putih di ornamen gelap), kolom tanda tangan ketiga untuk
+  penanda tangan mitra dengan jabatan bebas (urutan Founder · Mitra · Project
+  Leader, QR tetap di kanan PL), dan kalimat pertama deskripsi otomatis memuat
+  "…berkolaborasi dengan {mitra}…". Daftar tanda tangan perlu peran "Mitra"
+  (nama + jabatan + organisasi).
 - **Ornamen kanan per kegiatan (keputusan user, "cara 3")**: default pilih
   **preset** (kelopak, balok, bisa ditambah; dengan pilihan warna), atau admin
   **upload ornamen khusus** dari Desain (PNG transparan ±700×1414, hanya panel
