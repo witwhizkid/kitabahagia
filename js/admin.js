@@ -1741,7 +1741,31 @@
           }
         }
         pixels[index + 3] = alpha;
-        if (alpha > 40) {
+      }
+    }
+    // Marks touching the photo's edge are the paper edge, table or shadow, not the signature:
+    // flood-fill every ink stroke connected to the border and make it transparent.
+    const stack = [];
+    const seed = (x, y) => { if (pixels[(y * width + x) * 4 + 3] > 0) stack.push(y * width + x); };
+    for (let x = 0; x < width; x += 1) { seed(x, 0); seed(x, height - 1); }
+    for (let y = 0; y < height; y += 1) { seed(0, y); seed(width - 1, y); }
+    while (stack.length) {
+      const point = stack.pop();
+      if (pixels[point * 4 + 3] === 0) continue;
+      pixels[point * 4 + 3] = 0;
+      const x = point % width;
+      const y = (point - x) / width;
+      for (let dy = -1; dy <= 1; dy += 1) {
+        for (let dx = -1; dx <= 1; dx += 1) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx >= 0 && ny >= 0 && nx < width && ny < height && pixels[(ny * width + nx) * 4 + 3] > 0) stack.push(ny * width + nx);
+        }
+      }
+    }
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        if (pixels[(y * width + x) * 4 + 3] > 40) {
           if (x < minX) minX = x;
           if (x > maxX) maxX = x;
           if (y < minY) minY = y;
@@ -1749,7 +1773,7 @@
         }
       }
     }
-    if (maxX < 0) throw new Error("Tanda tangan tidak terbaca. Pakai pulpen gelap di kertas putih polos.");
+    if (maxX < 0) throw new Error("Tanda tangan tidak terbaca. Pakai pulpen gelap di kertas putih polos, jangan sampai menyentuh tepi foto.");
     context.putImageData(image, 0, 0);
     const pad = 12;
     const sx = Math.max(0, minX - pad); const sy = Math.max(0, minY - pad);

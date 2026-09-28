@@ -286,7 +286,8 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
 - Tahap 2 **dibangun (Sep 2026)**: admin → tab **Sertifikat** = daftar tanda
   tangan (tabel `certificate_signers`, bucket privat `certificate-signatures`,
   Edge Function `admin-certificates`). Foto tanda tangan/stempel diubah jadi PNG
-  transparan di browser (canvas, tanpa blob URL karena CSP), pratinjau bergaya
+  transparan di browser (canvas, tanpa blob URL karena CSP; coretan yang
+  menyentuh tepi foto, mis. tepi kertas/meja, dibuang otomatis), pratinjau bergaya
   kolom tanda tangan, centang izin wajib, bisa dinonaktifkan (tidak dihapus).
   Detail: "Certificate signers" di `supabase/README.md`.
 - Tahap 3 **dibangun (Sep 2026)**: di tab Sertifikat, "Pengaturan per kegiatan"
