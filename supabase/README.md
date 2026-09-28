@@ -320,6 +320,28 @@ Garet is self-hosted. **Deploy order:** migration, `admin-certificates`, site.
 Rollback: previous site + function, empty the bucket, then
 `supabase/rollback/20261008010000_event_certificate_settings.down.sql`.
 
+## Certificate template from Canva
+
+Migration `20261010010000_certificate_canva_template.sql` adds
+`event_certificates.template_mode` (`system` default | `canva`),
+`template_path`, `name_layout` and `qr_layout` (jsonb, certificate pixels on
+2000×1414: name `{x, y, width, align, color, size}`, QR `{x, y, size, caption}`)
+and lets the `certificate-assets` bucket take JPEG up to 3 MB. In Canva mode
+Desain exports the whole certificate for the event (ornaments, logo, number,
+description, signatures) with the name and QR left empty; the admin uploads it
+(the browser redraws it as a 2000×1414 JPEG), drags the Nama/QR boxes on the
+preview and saves. `admin-certificates` takes `template_mode`, `template`,
+`name_layout`, `qr_layout` in the same multipart save (layouts are
+bounds-checked; Canva mode needs a design and both layouts) and returns a signed
+`template_url`. Switching back to the system template keeps the design.
+`admin-certificate-issue` then only requires the number and the design (no
+Founder/PL, they are in the design). `KBCertificate.render` with `spec.template`
+draws the design, the name (same shrink/two-line rule from `size`) and the QR.
+The number is still typed in admin: it is what the verification page shows.
+**Deploy order:** migration, `admin-certificates` + `admin-certificate-issue`,
+then the site. Rollback:
+`supabase/rollback/20261010010000_certificate_canva_template.down.sql`.
+
 ## Issuing certificates (sertifikat tahap 4)
 
 Migration `20261009010000_certificates.sql` adds `certificates` (one per

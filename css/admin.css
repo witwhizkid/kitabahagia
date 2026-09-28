@@ -336,6 +336,12 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .certificate-settings { padding: 28px 0; border-top: 1px solid var(--line); }
 .certificate-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: end; }
 .certificate-wide, .certificate-form > .button { grid-column: 1 / -1; }
+.certificate-group { display: contents; }
+.certificate-group .signer-consent { grid-column: 1 / -1; }
+.certificate-form input[type="color"] { width: 100%; min-height: 44px; padding: 4px; }
+.certificate-form input[type="range"] { width: 100%; accent-color: var(--maroon); }
+.certificate-preview canvas.is-draggable { cursor: move; touch-action: none; }
+.certificate-preview figcaption .text-button { justify-self: start; min-height: 36px; }
 .certificate-form > .button { justify-self: start; }
 .certificate-form textarea { min-height: 96px; }
 .certificate-form small { color: var(--muted); font-size: .8rem; font-weight: 400; line-height: 1.45; }

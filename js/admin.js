@@ -2083,11 +2083,44 @@
     settings: null,
     ornamentUpload: null,
     logoUpload: null,
+    templateUpload: null,
     removePartnerLogo: false,
     loadSeq: 0,
     renderSeq: 0,
-    uploadReads: { ornament: 0, logo: 0 },
+    uploadReads: { ornament: 0, logo: 0, template: 0 },
     pending: false,
+    // Canva template: top-left corners of the name and QR boxes (sizes come from the inputs).
+    namePos: { x: 170, y: 600 },
+    qrPos: { x: 1700, y: 1130 },
+    nameLines: 1,
+    drag: null,
+  };
+  const DEFAULT_NAME_LAYOUT = { x: 170, y: 600, width: 1300, align: "left", color: "#780c06", size: 118 };
+  const DEFAULT_QR_LAYOUT = { x: 1700, y: 1130, size: 180, caption: true };
+  const templateMode = () => $("#certificate-template-mode").value;
+  const clampNumber = (value, min, max) => Math.round(Math.min(max, Math.max(min, value)));
+  // Same bounds as admin-certificates checks.
+  const currentLayouts = () => {
+    const width = Number($("#certificate-name-width").value);
+    const qrSize = Number($("#certificate-qr-size").value);
+    return {
+      name: {
+        x: clampNumber(certificate.namePos.x, 0, Math.min(1800, 2000 - width)),
+        // Room for two lines, since a long name wraps.
+        y: clampNumber(certificate.namePos.y, 0, 1414 - Math.round(Number($("#certificate-name-size").value) * 1.1) * 2),
+        width,
+        align: $("#certificate-name-align").value,
+        color: $("#certificate-name-color").value.toLowerCase(),
+        size: Number($("#certificate-name-size").value),
+      },
+      qr: {
+        x: clampNumber(certificate.qrPos.x, 0, 2000 - qrSize),
+        // The caption under the QR needs about 56px more.
+        y: clampNumber(certificate.qrPos.y, 0, 1414 - qrSize - ($("#certificate-qr-caption").checked ? 56 : 0)),
+        size: qrSize,
+        caption: $("#certificate-qr-caption").checked,
+      },
+    };
   };
   const imageCache = new Map();
   // fetch + ImageBitmap (not <img>): the canvas stays exportable to PDF, and no blob: URL is needed under the CSP.
@@ -2140,6 +2173,10 @@
   };
 
   const syncCertificateForm = () => {
+    const canva = templateMode() === "canva";
+    $("#certificate-canva-fields").hidden = !canva;
+    $("#certificate-system-fields").hidden = canva;
+    $("#certificate-canvas").classList.toggle("is-draggable", canva);
     const custom = $("#certificate-ornament").value === "custom";
     $("#certificate-color-field").hidden = custom;
     $("#certificate-ornament-field").hidden = !custom;
@@ -2172,7 +2209,10 @@
       ? certificate.logoUpload?.canvas || (certificate.removePartnerLogo ? null : await loadImage(certificate.settings?.partner_logo_url))
       : null;
     const [color, white] = await Promise.all([loadImage(logoUrls.color), loadImage(logoUrls.white)]);
-    return { columns, ornament, partnerLogo, partner, logos: { color, white } };
+    const template = templateMode() === "canva"
+      ? certificate.templateUpload?.canvas || await loadImage(certificate.settings?.template_url)
+      : null;
+    return { columns, ornament, partnerLogo, partner, logos: { color, white }, template };
   };
 
   const certificateOpening = (event) => KBCertificate.openingRuns({
@@ -2181,11 +2221,13 @@
   });
 
   // The form (= saved settings when issuing) plus one name, number and QR link.
-  const certificateSpec = async (event, { name, number, qrUrl }) => {
+  const certificateSpec = async (event, { name, number, qrUrl, guides = false }) => {
     const [images] = await Promise.all([certificateSpecImages(), KBCertificate.loadFonts()]);
     return {
       images,
       spec: {
+        template: templateMode() === "canva" ? { image: images.template, ...currentLayouts() } : null,
+        guides,
         number,
         name,
         opening: certificateOpening(event),
@@ -2210,18 +2252,25 @@
       name: $("#certificate-sample-name").value.trim() || "Nama Relawan",
       number: $("#certificate-number").value.trim(),
       qrUrl: "https://kitabahagia.id/sertifikat?k=CONTOH",
+      guides: true,
     });
     if (seq !== certificate.renderSeq) return;
     const layout = KBCertificate.render($("#certificate-canvas"), spec);
+    certificate.nameLines = layout.nameLines;
     $("#certificate-preview").hidden = false;
-    const warnings = [
+    const canva = templateMode() === "canva";
+    const warnings = (canva ? [
+      !$("#certificate-number").value.trim() && "Nomor sertifikat belum diisi (dipakai di halaman cek keaslian; samakan dengan nomor di desain).",
+      !images.template && "Desain dari Canva belum diunggah.",
+      certificate.templateUpload?.stretched && "Ukuran desain bukan A4 landscape, jadi gambarnya diregangkan. Minta export ulang ukuran A4 ke Desain.",
+    ] : [
       !$("#certificate-number").value.trim() && "Nomor sertifikat belum diisi.",
       !$("#certificate-founder").value && "Founder belum dipilih.",
       !$("#certificate-leader").value && "Project Leader belum dipilih.",
       images.partner && !images.partnerLogo && "Logo mitra belum diunggah.",
       $("#certificate-ornament").value === "custom" && !images.ornament && "File ornamen khusus belum dipilih.",
       layout.overflow && "Deskripsi terlalu panjang untuk sertifikat. Persingkat deskripsi lanjutan.",
-    ].filter(Boolean);
+    ]).filter(Boolean);
     $("#certificate-warnings").innerHTML = warnings.map((warning) => `<li>${escapeHtml(warning)}</li>`).join("");
     const saved = certificate.settings;
     $("#certificate-meta").textContent = saved
@@ -2239,10 +2288,24 @@
     certificate.ornamentUpload = null;
     certificate.logoUpload = null;
     certificate.removePartnerLogo = false;
+    certificate.templateUpload = null;
     certificate.uploadReads.ornament += 1;
     certificate.uploadReads.logo += 1;
+    certificate.uploadReads.template += 1;
     $("#certificate-ornament-file").value = "";
     $("#certificate-partner-logo").value = "";
+    $("#certificate-template-file").value = "";
+    $("#certificate-template-mode").value = settings?.template_mode === "canva" ? "canva" : "system";
+    const nameLayout = settings?.name_layout || DEFAULT_NAME_LAYOUT;
+    const qrLayout = settings?.qr_layout || DEFAULT_QR_LAYOUT;
+    certificate.namePos = { x: nameLayout.x, y: nameLayout.y };
+    certificate.qrPos = { x: qrLayout.x, y: qrLayout.y };
+    $("#certificate-name-width").value = nameLayout.width;
+    $("#certificate-name-align").value = nameLayout.align;
+    $("#certificate-name-color").value = nameLayout.color;
+    $("#certificate-name-size").value = nameLayout.size;
+    $("#certificate-qr-size").value = qrLayout.size;
+    $("#certificate-qr-caption").checked = qrLayout.caption;
     $("#certificate-number").value = settings?.certificate_number || "";
     $("#certificate-description").value = settings?.description || "";
     $("#certificate-ornament").value = settings?.ornament_url ? "custom" : settings?.ornament_preset || "kelopak";
@@ -2307,16 +2370,44 @@
     throw new Error("Gambar terlalu besar setelah diperkecil. Minta versi yang lebih ringan ke Desain.");
   };
 
+  // A Canva design becomes a 2000×1414 JPEG (the size the certificate is drawn at).
+  const imageToTemplate = async (file) => {
+    if (!["image/png", "image/jpeg"].includes(file.type)) throw new Error("Desain harus PNG atau JPG.");
+    if (file.size > MAX_SOURCE_BYTES) throw new Error("Ukuran desain maksimal 25 MB.");
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      throw new Error("Desain tidak dapat dibaca.");
+    }
+    const ratio = bitmap.width / bitmap.height;
+    const canvas = document.createElement("canvas");
+    canvas.width = KBCertificate.WIDTH;
+    canvas.height = KBCertificate.HEIGHT;
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    for (const quality of [0.92, 0.85, 0.75]) {
+      const blob = await encodeCanvas(canvas, "image/jpeg", quality);
+      if (blob && blob.size <= 3 * 1024 * 1024) {
+        return { canvas, blob, stretched: Math.abs(ratio - canvas.width / canvas.height) > 0.03 };
+      }
+    }
+    throw new Error("Desain terlalu besar. Minta export ulang ke Desain.");
+  };
+
   const readCertificateUpload = async (input, key, maxWidth, maxHeight, types) => {
     const feedback = $("#certificate-settings-feedback");
     const read = ++certificate.uploadReads[key];
-    const field = key === "ornament" ? "ornamentUpload" : "logoUpload";
+    const field = { ornament: "ornamentUpload", logo: "logoUpload", template: "templateUpload" }[key];
     certificate[field] = null;
     const file = input.files?.[0];
     if (!file) return scheduleCertificatePreview();
     setFeedback(feedback, "Memproses gambar…");
     try {
-      const result = await imageToPng(file, maxWidth, maxHeight, types);
+      const result = key === "template" ? await imageToTemplate(file) : await imageToPng(file, maxWidth, maxHeight, types);
       if (read !== certificate.uploadReads[key]) return;
       certificate[field] = result;
       if (key === "logo") certificate.removePartnerLogo = false;
@@ -2341,6 +2432,78 @@
     if (event.currentTarget.value !== "custom") $("#certificate-logo").value = event.currentTarget.value === "balok" ? "white" : "color";
     scheduleCertificatePreview();
   });
+  $("#certificate-template-mode").addEventListener("change", scheduleCertificatePreview);
+  $("#certificate-template-file").addEventListener("change", (event) => {
+    void readCertificateUpload(event.currentTarget, "template");
+  });
+  ["#certificate-name-size", "#certificate-name-width", "#certificate-qr-size", "#certificate-name-color"].forEach((selector) => {
+    $(selector).addEventListener("input", scheduleCertificatePreview);
+  });
+  ["#certificate-name-align", "#certificate-qr-caption"].forEach((selector) => {
+    $(selector).addEventListener("change", scheduleCertificatePreview);
+  });
+  // Drag the Nama / QR boxes on the preview (Canva template). Canvas pixels = certificate pixels.
+  const canvasPoint = (event) => {
+    const box = $("#certificate-canvas").getBoundingClientRect();
+    return {
+      x: ((event.clientX - box.left) * KBCertificate.WIDTH) / box.width,
+      y: ((event.clientY - box.top) * KBCertificate.HEIGHT) / box.height,
+    };
+  };
+  $("#certificate-canvas").addEventListener("pointerdown", (event) => {
+    if (templateMode() !== "canva") return;
+    const point = canvasPoint(event);
+    const { name, qr } = currentLayouts();
+    const nameHeight = Math.round(name.size * 1.1) * certificate.nameLines;
+    const inside = (x, y, width, height) => point.x >= x && point.x <= x + width && point.y >= y && point.y <= y + height;
+    const target = inside(qr.x, qr.y, qr.size, qr.size) ? "qr" : inside(name.x, name.y, name.width, nameHeight) ? "name" : null;
+    if (!target) return;
+    const origin = target === "qr" ? qr : name;
+    certificate.drag = { target, dx: point.x - origin.x, dy: point.y - origin.y };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+  $("#certificate-canvas").addEventListener("pointermove", (event) => {
+    if (!certificate.drag) return;
+    const point = canvasPoint(event);
+    const position = { x: point.x - certificate.drag.dx, y: point.y - certificate.drag.dy };
+    if (certificate.drag.target === "qr") certificate.qrPos = position;
+    else certificate.namePos = position;
+    scheduleCertificatePreview();
+  });
+  ["pointerup", "pointercancel"].forEach((type) => $("#certificate-canvas").addEventListener(type, () => {
+    if (!certificate.drag) return;
+    // Keep the stored position inside the certificate.
+    const { name, qr } = currentLayouts();
+    certificate.namePos = { x: name.x, y: name.y };
+    certificate.qrPos = { x: qr.x, y: qr.y };
+    certificate.drag = null;
+    scheduleCertificatePreview();
+  }));
+  $("#certificate-sample-pdf").addEventListener("click", async () => {
+    const event = selectedCertificateEvent();
+    if (!event) return;
+    const feedback = $("#certificate-settings-feedback");
+    try {
+      const { spec } = await certificateSpec(event, {
+        name: $("#certificate-sample-name").value.trim() || "Nama Relawan",
+        number: $("#certificate-number").value.trim(),
+        qrUrl: "https://kitabahagia.id/sertifikat?k=CONTOH",
+      });
+      const canvas = document.createElement("canvas");
+      KBCertificate.render(canvas, spec);
+      const url = URL.createObjectURL(await KBCertificate.toPdf(canvas));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `contoh-sertifikat-${event.slug}.pdf`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      setFeedback(feedback, error.message, "error");
+    }
+  });
   $("#certificate-ornament-file").addEventListener("change", (event) => {
     void readCertificateUpload(event.currentTarget, "ornament", 1000, KBCertificate.HEIGHT, ["image/png"]);
   });
@@ -2360,10 +2523,21 @@
     const feedback = $("#certificate-settings-feedback");
     if (!slug || certificate.pending || certificate.loadedSlug !== slug) return;
     const custom = $("#certificate-ornament").value === "custom";
-    if (custom && !certificate.ornamentUpload && !certificate.settings?.ornament_url) {
+    const canva = templateMode() === "canva";
+    if (!canva && custom && !certificate.ornamentUpload && !certificate.settings?.ornament_url) {
       return setFeedback(feedback, "Pilih file ornamen khusus, atau pakai ornamen Kelopak/Balok.", "error");
     }
+    if (canva && !certificate.templateUpload && !certificate.settings?.template_url) {
+      return setFeedback(feedback, "Unggah desain dari Canva dulu.", "error");
+    }
     const form = new FormData();
+    const layouts = currentLayouts();
+    form.append("template_mode", templateMode());
+    form.append("name_layout", JSON.stringify(layouts.name));
+    form.append("qr_layout", JSON.stringify(layouts.qr));
+    if (certificate.templateUpload) {
+      form.append("template", new File([certificate.templateUpload.blob], "template.jpg", { type: "image/jpeg" }));
+    }
     form.append("certificate_number", $("#certificate-number").value.trim());
     form.append("description", $("#certificate-description").value.trim());
     form.append("ornament_preset", custom ? certificate.settings?.ornament_preset || "kelopak" : $("#certificate-ornament").value);
@@ -2418,11 +2592,23 @@
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
   });
 
+  // jsonb does not keep key order, so layouts are compared field by field.
+  const sameLayout = (current, saved) => Boolean(saved)
+    && Object.keys(current).every((key) => current[key] === saved[key]);
+
   // Issuing draws what the form shows, so the form must equal the saved settings.
   const certificateFormDirty = () => {
     const saved = certificate.settings;
     if (!saved) return true;
     const custom = $("#certificate-ornament").value === "custom";
+    const layouts = currentLayouts();
+    if (templateMode() !== (saved.template_mode || "system")) return true;
+    if (templateMode() === "canva") {
+      return ($("#certificate-number").value.trim() || null) !== (saved.certificate_number || null)
+        || !sameLayout(layouts.name, saved.name_layout)
+        || !sameLayout(layouts.qr, saved.qr_layout)
+        || Boolean(certificate.templateUpload);
+    }
     return ($("#certificate-number").value.trim() || null) !== (saved.certificate_number || null)
       || ($("#certificate-description").value.trim() || null) !== (saved.description || null)
       || custom !== Boolean(saved.ornament_url)
@@ -2513,6 +2699,10 @@
     certificate.loadedSlug = event.slug;
     const { images, spec } = await certificateSpec(event, { name: "", number: "", qrUrl: "" });
     const saved = data.settings || {};
+    if (saved.template_mode === "canva") {
+      if (!images.template) throw new Error("Desain Canva gagal dimuat. Periksa koneksi lalu coba lagi.");
+      return spec;
+    }
     const incomplete = images.columns.some((column) => column.name && !column.signature)
       || !images.logos.color || !images.logos.white
       || (saved.ornament_url && !images.ornament)

@@ -10,7 +10,8 @@
 //                                        body = the PDF; stores it, then saves the
 //                                        printed name/number snapshot + issued_at
 //   POST ?event=<slug>&action=email      JSON { code }: sends the link via Brevo
-// Rules: settings need a number, founder and Project Leader; issuing opens on the
+// Rules: settings need a number plus a founder and Project Leader (system template) or
+// an uploaded design (Canva template); issuing opens on the
 // 7th day after the event's last day (WIB).
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -105,7 +106,10 @@ const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, (character) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]!));
 
 type EventRow = { id: string; title: string; event_date: string; end_at: string | null };
-type Settings = { certificate_number: string | null; founder_id: string | null; project_leader_id: string | null };
+type Settings = {
+  certificate_number: string | null; founder_id: string | null; project_leader_id: string | null;
+  template_mode: string; template_path: string | null;
+};
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: responseHeaders });
@@ -142,15 +146,18 @@ Deno.serve(async (request) => {
   if (!event) return fail(404, "NOT_FOUND", "Kegiatan tidak ditemukan.");
   const opensOn = issueFrom(event.event_date, event.end_at);
   const settingsResult = await rest<Settings[]>(`event_certificates?${new URLSearchParams({
-    event_id: `eq.${event.id}`, select: "certificate_number,founder_id,project_leader_id",
+    event_id: `eq.${event.id}`, select: "certificate_number,founder_id,project_leader_id,template_mode,template_path",
   })}`);
   if (!settingsResult.ok || !Array.isArray(settingsResult.data)) return fail(500, "SERVER_ERROR", "Pengaturan sertifikat belum dapat dimuat.");
   const settings = settingsResult.data[0] || null;
-  const missing = [
-    !settings?.certificate_number && "nomor sertifikat",
-    !settings?.founder_id && "Founder",
-    !settings?.project_leader_id && "Project Leader",
-  ].filter(Boolean) as string[];
+  // A Canva design already carries the signatures; the system template needs them picked.
+  const missing = (settings?.template_mode === "canva"
+    ? [!settings?.certificate_number && "nomor sertifikat", !settings?.template_path && "desain Canva"]
+    : [
+      !settings?.certificate_number && "nomor sertifikat",
+      !settings?.founder_id && "Founder",
+      !settings?.project_leader_id && "Project Leader",
+    ]).filter(Boolean) as string[];
   const linkFor = (code: string) => `${siteUrl}/sertifikat?k=${code}`;
   const certificateProjection = "id,registration_id,verification_code,recipient_name,pdf_path,issued_at,email_sent_at,email_error";
 

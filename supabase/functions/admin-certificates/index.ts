@@ -9,7 +9,9 @@
 //                       (row + images); certificates already issued keep their PDF
 //   GET ?event=<slug>   the event's settings (null before the first save) + signers
 //   POST ?event=<slug>  (multipart) save settings; optional ornament / partner_logo
-//                       PNGs, remove_ornament / remove_partner_logo = "true"
+//                       PNGs, remove_ornament / remove_partner_logo = "true";
+//                       template_mode system|canva, template (JPEG/PNG of the whole
+//                       Canva design), name_layout / qr_layout (JSON)
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -34,12 +36,14 @@ const ASSET_BUCKET = "certificate-assets";
 const MAX_IMAGE_BYTES = 1024 * 1024;
 const MAX_ASSET_BYTES = 2 * 1024 * 1024;
 const MAX_MULTIPART_BYTES = 2 * MAX_IMAGE_BYTES + 64 * 1024;
-const MAX_SETTINGS_BYTES = 2 * MAX_ASSET_BYTES + 64 * 1024;
+const MAX_TEMPLATE_BYTES = 3 * 1024 * 1024;
+const MAX_SETTINGS_BYTES = 2 * MAX_ASSET_BYTES + MAX_TEMPLATE_BYTES + 64 * 1024;
 const SIGNED_URL_SECONDS = 600;
 const roles = new Set(["founder", "project_leader", "partner"]);
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const signerProjection = "id,name,role,title,organization,signature_path,stamp_path,is_active,consent_confirmed_at,created_by,created_at,updated_at";
-const settingsProjection = "certificate_number,description,ornament_preset,ornament_color,ornament_path,logo_variant,founder_id,project_leader_id,partner_signer_id,partner_logo_path,updated_by,updated_at";
+const settingsProjection = "certificate_number,description,ornament_preset,ornament_color,ornament_path,logo_variant,founder_id,project_leader_id,partner_signer_id,partner_logo_path,template_mode,template_path,name_layout,qr_layout,updated_by,updated_at";
+const templateModes = new Set(["system", "canva"]);
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const numberPattern = /^[0-9A-Za-z][0-9A-Za-z./ -]{0,39}$/;
 const ornamentPresets = new Set(["kelopak", "balok"]);
@@ -86,6 +90,43 @@ const cleanText = (value: unknown) => {
 
 const isPng = (bytes: Uint8Array) => bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50
   && bytes[2] === 0x4e && bytes[3] === 0x47 && bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a;
+
+const isJpeg = (bytes: Uint8Array) => bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+
+// Where the name and QR go on a Canva design, in certificate pixels (2000×1414).
+const integer = (value: unknown, min: number, max: number) =>
+  typeof value === "number" && Number.isInteger(value) && value >= min && value <= max;
+const parseLayout = (raw: string | null, kind: "name" | "qr") => {
+  if (!raw) return null;
+  let value: unknown;
+  try { value = JSON.parse(raw); } catch { return undefined; }
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const layout = value as Record<string, unknown>;
+  if (kind === "name") {
+    const ok = Object.keys(layout).every((key) => ["x", "y", "width", "align", "color", "size"].includes(key))
+      && integer(layout.size, 60, 160) && integer(layout.x, 0, 1800) && integer(layout.width, 200, 2000)
+      // Room for two lines at the bottom, since a long name wraps.
+      && integer(layout.y, 0, 1414 - Math.round((layout.size as number) * 1.1) * 2)
+      && (layout.x as number) + (layout.width as number) <= 2000
+      && (layout.align === "left" || layout.align === "center")
+      && typeof layout.color === "string" && /^#[0-9a-f]{6}$/i.test(layout.color);
+    return ok ? { x: layout.x, y: layout.y, width: layout.width, align: layout.align, color: layout.color, size: layout.size } : undefined;
+  }
+  const ok = Object.keys(layout).every((key) => ["x", "y", "size", "caption"].includes(key))
+    && integer(layout.size, 100, 400) && integer(layout.x, 0, 2000 - (layout.size as number))
+    && typeof layout.caption === "boolean"
+    // The caption under the QR needs about 56px more.
+    && integer(layout.y, 0, 1414 - (layout.size as number) - (layout.caption ? 56 : 0));
+  return ok ? { x: layout.x, y: layout.y, size: layout.size, caption: layout.caption } : undefined;
+};
+
+const readTemplate = async (value: FormDataEntryValue | null) => {
+  if (!(value instanceof File) || value.size < 1 || value.size > MAX_TEMPLATE_BYTES) return null;
+  const bytes = new Uint8Array(await value.arrayBuffer());
+  if (value.type === "image/jpeg" && isJpeg(bytes)) return { bytes, type: "image/jpeg", ext: "jpg" };
+  if (value.type === "image/png" && isPng(bytes)) return { bytes, type: "image/png", ext: "png" };
+  return null;
+};
 
 const readPng = async (value: FormDataEntryValue | null, maxBytes = MAX_IMAGE_BYTES) => {
   if (!(value instanceof File) || value.size < 1 || value.size > maxBytes || value.type !== "image/png") return null;
@@ -140,10 +181,10 @@ Deno.serve(async (request) => {
       body: JSON.stringify({ prefixes: paths }),
     }).catch(() => undefined);
   };
-  const uploadPng = async (path: string, bytes: Uint8Array, bucket: string) => {
+  const uploadPng = async (path: string, bytes: Uint8Array, bucket: string, type = "image/png") => {
     const response = await fetch(objectUrl(path, bucket), {
       method: "POST",
-      headers: serviceHeaders(serviceKey, { "Content-Type": "image/png", "x-upsert": "false" }),
+      headers: serviceHeaders(serviceKey, { "Content-Type": type, "x-upsert": "false" }),
       body: bytes,
     });
     return response.ok;
@@ -187,12 +228,13 @@ Deno.serve(async (request) => {
       const [current, signers] = await Promise.all([readSettings(), listSigners()]);
       if (!current || !signers) return fail(500, "SERVER_ERROR", "Pengaturan sertifikat belum dapat dimuat.");
       if (!current.row) return json(status, { settings: null, signers });
-      const { ornament_path, partner_logo_path, ...settings } = current.row;
+      const { ornament_path, partner_logo_path, template_path, ...settings } = current.row;
       return json(status, {
         settings: {
           ...settings,
           ornament_url: await signObject(ornament_path, ASSET_BUCKET),
           partner_logo_url: await signObject(partner_logo_path, ASSET_BUCKET),
+          template_url: await signObject(template_path, ASSET_BUCKET),
         },
         signers,
       });
@@ -202,7 +244,8 @@ Deno.serve(async (request) => {
     const form = await readForm(MAX_SETTINGS_BYTES);
     if (!form) return fail(400, "INVALID_REQUEST", "Data pengaturan tidak valid atau gambar terlalu besar.");
     const allowedKeys = new Set(["certificate_number", "description", "ornament_preset", "ornament_color", "logo_variant",
-      "founder_id", "project_leader_id", "partner_signer_id", "ornament", "partner_logo", "remove_ornament", "remove_partner_logo"]);
+      "founder_id", "project_leader_id", "partner_signer_id", "ornament", "partner_logo", "remove_ornament", "remove_partner_logo",
+      "template_mode", "template", "remove_template", "name_layout", "qr_layout"]);
     const keys = [...form.keys()];
     if (keys.some((key) => !allowedKeys.has(key)) || new Set(keys).size !== keys.length) {
       return fail(400, "INVALID_REQUEST", "Data pengaturan tidak valid.");
@@ -225,9 +268,23 @@ Deno.serve(async (request) => {
     if (!preset || !ornamentPresets.has(preset) || !color || !ornamentColors.has(color) || !variant || !logoVariants.has(variant)) {
       return fail(400, "INVALID_REQUEST", "Pilihan ornamen atau logo tidak valid.");
     }
+    const templateMode = text("template_mode") || "system";
+    if (!templateModes.has(templateMode)) return fail(400, "INVALID_REQUEST", "Jenis template tidak valid.");
+    const nameLayout = parseLayout(text("name_layout"), "name");
+    const qrLayout = parseLayout(text("qr_layout"), "qr");
+    if (nameLayout === undefined || qrLayout === undefined) return fail(400, "INVALID_REQUEST", "Posisi nama atau QR tidak valid.");
+    const templateEntry = form.get("template");
+    const template = templateEntry ? await readTemplate(templateEntry) : null;
+    if (templateEntry && !template) return fail(400, "INVALID_IMAGE", "Desain Canva harus JPG/PNG, maksimal 3 MB.");
+    const removeTemplate = form.get("remove_template");
+    if (removeTemplate !== null && removeTemplate !== "true") return fail(400, "INVALID_REQUEST", "Data pengaturan tidak valid.");
     const current = await readSettings();
     if (!current) return fail(500, "SERVER_ERROR", "Pengaturan sertifikat belum dapat dimuat.");
     const previous = current.row || {};
+    if (templateMode === "canva" && !template && (removeTemplate === "true" || !previous.template_path)) {
+      return fail(400, "TEMPLATE_REQUIRED", "Unggah desain dari Canva dulu.");
+    }
+    if (templateMode === "canva" && (!nameLayout || !qrLayout)) return fail(400, "INVALID_REQUEST", "Atur posisi nama dan QR dulu.");
     const signerIds: Record<string, string | null> = {};
     for (const field of Object.keys(signerFields)) {
       const value = text(field);
@@ -267,8 +324,19 @@ Deno.serve(async (request) => {
     const paths: Record<string, string | null> = {
       ornament_path: typeof previous.ornament_path === "string" ? previous.ornament_path : null,
       partner_logo_path: typeof previous.partner_logo_path === "string" ? previous.partner_logo_path : null,
+      template_path: typeof previous.template_path === "string" ? previous.template_path : null,
     };
     const replaced: string[] = [];
+    if (template || removeTemplate === "true") {
+      if (paths.template_path) replaced.push(paths.template_path);
+      paths.template_path = null;
+      if (template) {
+        const path = `${eventId}/template-${crypto.randomUUID()}.${template.ext}`;
+        if (!await uploadPng(path, template.bytes, ASSET_BUCKET, template.type)) return fail(500, "SERVER_ERROR", "Desain belum dapat disimpan.");
+        uploaded.push(path);
+        paths.template_path = path;
+      }
+    }
     for (const [field, bytes, removeKey, name] of [
       ["ornament_path", ornament, "remove_ornament", "ornament"],
       ["partner_logo_path", partnerLogo, "remove_partner_logo", "partner-logo"],
@@ -296,6 +364,9 @@ Deno.serve(async (request) => {
         ornament_preset: preset,
         ornament_color: color,
         logo_variant: variant,
+        template_mode: templateMode,
+        name_layout: nameLayout,
+        qr_layout: qrLayout,
         ...signerIds,
         ...paths,
         updated_by: adminEmail,
