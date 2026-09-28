@@ -279,15 +279,20 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   yang hadir (jalur utama) + 1 pengumuman di grup WA kegiatan; tombol "Kirim via
   WA" per orang (draf WA existing) sebagai cadangan. Sebelum ada domain → draf
   WA per orang. Cek status (kode pendaftaran + email) tetap ada sebagai cadangan.
-- Template per kegiatan dari divisi Desain: PNG 2000×1414 (A4 landscape) yang
-  sudah berisi latar, deskripsi kegiatan, tanda tangan Founder + Project Leader.
-  Sistem hanya menempel **nama dan QR**. Posisi nama harus sama di semua
-  template; nama panjang otomatis mengecil. QR di area kosong kanan tanda
-  tangan Project Leader. Font nama: tanyakan ke Desain.
+- **Template dinamis (keputusan user, Sep 2026, "Opsi A")**: sertifikat digambar
+  sistem, bukan PNG per kegiatan dari Desain. Desain meniru sertifikat lama KB
+  (user akan mengirim 1–2 contoh; buat **mockup** dulu untuk disetujui sebelum
+  membangun). Sistem menggambar latar/ornamen/logo, judul, nomor, nama (panjang
+  otomatis mengecil), "Sebagai Relawan Tingkat Nasional", deskripsi kegiatan
+  (judul/tanggal/lokasi dari data event), tanda tangan Founder + Project Leader,
+  dan QR (area kosong kanan tanda tangan Project Leader). A4 landscape.
 - Nomor (format `13.044/KB/VII/2026`) **sama untuk semua relawan dalam satu
-  kegiatan** dan dicetak Desain langsung di template; arti "13" dan "044"
-  rahasia internal, jadi sistem tidak menghitung atau menyimpan maknanya (boleh
-  simpan teks nomornya per kegiatan untuk ditampilkan di halaman "sah").
+  kegiatan** dan **diketik admin** saat menerbitkan; arti "13" dan "044" rahasia
+  internal, jadi sistem tidak menghitung atau menafsirkannya (cukup simpan teks
+  nomornya per kegiatan). Admin juga memilih Project Leader kegiatan itu.
+- Tanda tangan: PNG (latar transparan) Founder + tiap Project Leader, **hanya
+  dengan izin orangnya**, disimpan di bucket privat. Font: dari sertifikat lama
+  (kalau tidak diketahui, cari yang paling mirip di Google Fonts).
 - QR berisi kode verifikasi **acak** terpisah (tidak bisa ditebak/dienumerasi).
   Halaman link hanya menampilkan "sah", nama, kegiatan, tanggal, peran, dan
   PDF sertifikat itu sendiri; tanpa HP/email.
@@ -301,9 +306,8 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   **admin** (tim pelaksana absen manual lalu lapor ke admin); izin tanda tangan
   aman; anggap domain sudah ada (email jalur utama). Belum ada data lama untuk
   diimpor; kegiatan pertama Oktober 2026.
-- Template = sertifikat jadi (nomor sudah tercetak) dengan teks **nama** dihapus;
-  minta juga 1 contoh terisi untuk posisi/ukuran nama. Masih ditunggu dari
-  Desain: template pertama + font nama.
+- Masih ditunggu dari user: contoh sertifikat lama, scan tanda tangan (dengan
+  izin), nama font.
 - Data sebelum fitur ada dicatat di Google Sheet (template
   `Pencatatan-Kehadiran-Dampak-Kita-Bahagia.xlsx`): tab `Kegiatan` (slug,
   tanggal, durasi_jam, penerima_manfaat, hasil, dll.) dan `Kehadiran` (slug,
