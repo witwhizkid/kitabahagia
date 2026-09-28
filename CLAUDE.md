@@ -295,10 +295,15 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   admin per kegiatan. Nama panjang (keputusan user): mengecil dari 118px sampai
   batas ±84px; kalau masih tidak muat, pecah jadi 2 baris di spasi antarkata
   dengan panjang baris seimbang.
-- Tanda tangan: utamakan file yang dipakai Desain di sertifikat lama; kalau tidak
-  ada, tanda tangan pulpen hitam tebal di HVS putih, difoto/scan lurus, lalu latar
-  dihapus jadi PNG transparan. Stempel Founder file terpisah (ditumpuk di atas
-  tanda tangan seperti contoh).
+- **Daftar tanda tangan (keputusan user)**: admin sendiri mengunggah tanda tangan
+  lewat menu admin "Tanda tangan", sekali per orang (nama + peran Founder/Project
+  Leader) + stempel Founder (file terpisah, ditumpuk seperti contoh). Latar putih
+  dihapus otomatis di browser saat upload (PNG transparan), dengan pratinjau di
+  sertifikat. Wajib centang "Pemilik tanda tangan sudah mengizinkan"; catat
+  pengunggah + waktu. Bisa dinonaktifkan (sertifikat lama tetap sah, nama tidak
+  bisa dipilih untuk kegiatan baru). Saat menerbitkan, admin memilih Project
+  Leader dari daftar; scan baru hanya untuk PL yang belum ada. Sumber scan: file
+  lama dari Desain, atau pulpen hitam tebal di HVS putih difoto/scan lurus.
 - **Ornamen kanan per kegiatan (keputusan user, "cara 3")**: default pilih
   **preset** (kelopak, balok, bisa ditambah; dengan pilihan warna), atau admin
   **upload ornamen khusus** dari Desain (PNG transparan ±700×1414, hanya panel
