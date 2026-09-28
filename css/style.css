@@ -7058,3 +7058,20 @@ h3 {
 
   .kisah-page .kisah-archive-grid .kisah-image-link > img { aspect-ratio: 3 / 2; }
 }
+
+/* Transactional radius exception: welcoming registration flow, isolated from editorial cards. */
+.registration-page .registration-summary-sticky { border-radius: 26px; }
+
+.registration-page .registration-card,
+.registration-page .registration-review,
+.registration-page .registration-confirmation,
+.registration-page .payment-stage { border-radius: 20px; }
+
+@media (max-width: 640px) {
+  .registration-page .registration-summary-sticky { border-radius: 24px; }
+
+  .registration-page .registration-card,
+  .registration-page .registration-review,
+  .registration-page .registration-confirmation,
+  .registration-page .payment-stage { border-radius: 18px; }
+}
