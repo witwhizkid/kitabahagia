@@ -269,8 +269,12 @@ tim 1–3 dan 4–6 bergantian tiap bulan, + 1 kegiatan gratis akhir bulan).
 bilang "lanjut fitur sertifikat".
 
 Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
-- Fondasi: data kehadiran. Tambah "Tandai hadir" (bulk) di admin Pendaftar;
-  sekarang sistem hanya tahu siapa yang daftar.
+- Tahap 1 **dibangun (Sep 2026)**: "Tandai hadir"/"Batal hadir" (bulk) di admin
+  Pendaftar, checkbox muncul untuk semua mode saat 1 kegiatan dipilih; hanya
+  pendaftar `confirmed`, mulai hari kegiatan (WIB), 1 kegiatan per aksi;
+  `registrations.attended_at/attendance_marked_by`, RPC `mark_attendance`. Detail:
+  "Attendance" di `supabase/README.md`. Tahap berikutnya: daftar tanda tangan →
+  pengaturan sertifikat per kegiatan → terbitkan + email → halaman cek keaslian.
 - Alur: admin klik "Terbitkan sertifikat" → semua yang hadir → pratinjau
   daftar nama (bisa dibetulkan; rapikan huruf kapital) → tiap sertifikat dapat
   **link pribadi** acak (`sertifikat?k=...`, sama dengan isi QR) yang

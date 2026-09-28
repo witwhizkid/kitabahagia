@@ -222,6 +222,12 @@
     body: JSON.stringify({ registration_codes, decision }),
   });
 
+  const attendanceRequest = (registration_codes, attended) => authorizedRequest(adminRegistrationsUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ registration_codes, attended }),
+  });
+
   const adminUsersRequest = (method = "GET", body) => authorizedRequest(adminUsersUrl, {
     method,
     headers: { "Content-Type": "application/json" },
@@ -383,6 +389,14 @@
     $("#reset-registration-filters").hidden = !active;
   };
   const selectionEnabled = () => selectedRegistrationEvent()?.registration_mode === "selection";
+  // Rows get checkboxes whenever one event is chosen: for attendance (any event) and selection decisions.
+  const bulkEnabled = () => Boolean(selectedRegistrationEvent());
+  const todayInJakarta = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(new Date());
+  // Attendance can be marked from the event day on (the server checks the same rule).
+  const attendanceOpen = () => {
+    const eventDate = selectedRegistrationEvent()?.event_date;
+    return Boolean(eventDate) && eventDate <= todayInJakarta();
+  };
 
   const renderSelectionTools = () => {
     const tools = $("#selection-tools");
@@ -413,10 +427,11 @@
     $("#registrations-total").textContent = String(total);
     $(registrationLifecycle === "active" ? "#active-registrations-total" : "#history-registrations-total").textContent = String(total);
     const isSelectionEvent = selectionEnabled();
+    const isBulk = bulkEnabled();
     const head = $("#registrations-head");
     head.hidden = registrations.length === 0;
-    head.classList.toggle("is-selection", isSelectionEvent);
-    head.querySelector(".registration-select-all").hidden = !isSelectionEvent;
+    head.classList.toggle("is-selection", isBulk);
+    head.querySelector(".registration-select-all").hidden = !isBulk;
     // One header row names the columns, so rows carry values only (dense, easy to scan).
     registrationsList.innerHTML = registrations.map((registration) => {
       const linkedEvent = registration.events || {};
@@ -427,8 +442,8 @@
         ? "Diterima" : registrationStatusLabels[registrationStatus] || registrationStatus;
       const showPayment = paymentStatus && paymentStatus !== "not_required";
       return `
-        <article class="registration-row${isSelectionEvent ? " is-selection-row" : ""}" data-registration-code="${escapeHtml(registration.registration_code)}">
-          ${isSelectionEvent ? `<label class="registration-select"><input type="checkbox" data-applicant-select value="${escapeHtml(registration.registration_code)}" aria-label="Pilih ${escapeHtml(registration.name)}" /></label>` : ""}
+        <article class="registration-row${isBulk ? " is-selection-row" : ""}" data-registration-code="${escapeHtml(registration.registration_code)}">
+          ${isBulk ? `<label class="registration-select"><input type="checkbox" data-applicant-select value="${escapeHtml(registration.registration_code)}" aria-label="Pilih ${escapeHtml(registration.name)}" /></label>` : ""}
           <div class="registration-person">
             <strong class="registration-name">${escapeHtml(registration.name)}</strong>
             <span class="registration-sub">${escapeHtml(registration.email)}</span>
@@ -441,6 +456,7 @@
           <div class="registration-state">
             <span class="status-token ${statusTone(registrationStatus)}">${escapeHtml(selectionStatus)}</span>
             ${showPayment ? `<span class="registration-sub registration-payment ${statusTone(paymentStatus)}">${escapeHtml(paymentStatusLabels[paymentStatus] || paymentStatus)}</span>` : ""}
+            ${registration.attended_at && registrationStatus === "confirmed" ? '<span class="attendance-token">Hadir</span>' : ""}
             ${isSelectionEvent ? `<span class="applicant-history">${historyCount ? `Pernah ikut ${historyCount}×` : "Peserta baru"}</span>` : ""}
           </div>
           <div class="registration-date">
@@ -452,10 +468,18 @@
       `;
     }).join("");
     renderSelectionTools();
+    const confirmedRows = registrations.filter((item) => item.registration_status === "confirmed" && !item.payment_expired);
+    const attendedRows = confirmedRows.filter((item) => item.attended_at).length;
+    const attendanceSummary = $("#attendance-summary");
+    attendanceSummary.hidden = !isBulk;
+    // Counted from the rows shown, so say so when a search or status filter narrows them.
+    const narrowed = ["#registration-search", "#registration-status-filter", "#payment-status-filter"]
+      .some((selector) => $(selector).value.trim() !== "");
+    attendanceSummary.textContent = ` · Hadir ${attendedRows} dari ${confirmedRows.length} terkonfirmasi${narrowed ? " (sesuai filter)" : ""}`;
+    document.querySelectorAll("[data-selection-bulk]").forEach((button) => { button.hidden = !isSelectionEvent; });
     const selectAll = $("#selection-select-all");
     selectAll.checked = false;
-    selectAll.disabled = selectionDecisionPending || registrations.length === 0 || !selectionEnabled();
-    document.querySelectorAll("[data-selection-bulk]").forEach((button) => { button.disabled = selectionDecisionPending; });
+    syncSelectionDecisionControls();
     $("#registrations-export").disabled = registrations.length === 0;
     syncSelectionBar();
   };
@@ -645,8 +669,12 @@
         || (isSelectionApplicant && button.dataset.applicantDecision === (status === "confirmed" ? "accepted" : status));
     });
     document.querySelectorAll("[data-selection-bulk]").forEach((button) => { button.disabled = selectionDecisionPending; });
+    document.querySelectorAll("[data-attendance-bulk]").forEach((button) => {
+      button.disabled = selectionDecisionPending || !attendanceOpen();
+      button.title = attendanceOpen() ? "" : "Kehadiran baru bisa ditandai mulai hari kegiatan.";
+    });
     const selectAll = $("#selection-select-all");
-    selectAll.disabled = selectionDecisionPending || registrations.length === 0 || !selectionEnabled();
+    selectAll.disabled = selectionDecisionPending || registrations.length === 0 || !bulkEnabled();
   };
   const renderApplicantDialog = () => {
     const applicant = currentDialogApplicant();
@@ -692,6 +720,9 @@
       ? "Tidak perlu bayar" : paymentStatusLabels[paymentStatus] || paymentStatus || "-");
     if (applicant.payment_deadline && paymentStatus !== "not_required") {
       appendApplicantField("Batas pembayaran", formatDateTime(applicant.payment_deadline));
+    }
+    if (status === "confirmed") {
+      appendApplicantField("Kehadiran", applicant.attended_at ? `Hadir · ditandai ${formatDateTime(applicant.attended_at)}` : "Belum ditandai hadir");
     }
     const outcomes = isSelectionEvent && ["confirmed", "waitlisted", "rejected"].includes(status);
     applicantDialog.querySelector(".applicant-selection-actions").hidden = !isSelectionEvent;
@@ -775,14 +806,45 @@
     }
   };
 
+  const markAttendance = async (codes, attended) => {
+    const feedback = $("#registrations-feedback");
+    if (!codes.length) return setFeedback(feedback, "Pilih setidaknya satu pendaftar.", "error");
+    setFeedback(feedback, attended ? "Menandai hadir…" : "Membatalkan tanda hadir…");
+    selectionDecisionPending = true;
+    syncSelectionDecisionControls();
+    try {
+      const { attendance = {} } = await attendanceRequest(codes, attended);
+      const changed = Number(attendance.changed) || 0;
+      const skipped = Number(attendance.skipped) || 0;
+      const unchanged = Number(attendance.unchanged) || 0;
+      const parts = [`${changed} pendaftar ${attended ? "ditandai hadir" : "dibatalkan tanda hadirnya"}`];
+      if (unchanged) parts.push(`${unchanged} sudah ${attended ? "hadir" : "tidak bertanda hadir"} sebelumnya`);
+      if (skipped) parts.push(`${skipped} dilewati karena belum terkonfirmasi`);
+      $("#selection-select-all").checked = false;
+      try {
+        await refreshRegistrations();
+      } catch (refreshError) {
+        setFeedback(feedback, `Kehadiran tersimpan, tapi daftar belum bisa diperbarui: ${refreshError.message}`, "error");
+        return;
+      }
+      setFeedback(feedback, `${parts.join(" · ")}.`, "success");
+    } catch (error) {
+      setFeedback(feedback, error.message, "error");
+    } finally {
+      selectionDecisionPending = false;
+      syncSelectionDecisionControls();
+    }
+  };
+
   const csvCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
   const exportRegistrationsCsv = () => {
-    const columns = ["Kode", "Nama", "Email", "WhatsApp", "Domisili", "Instansi", "Definisi bahagia", "Jawaban seleksi", "Link portofolio", "Status", "Terdaftar"];
+    const columns = ["Kode", "Nama", "Email", "WhatsApp", "Domisili", "Instansi", "Definisi bahagia", "Jawaban seleksi", "Link portofolio", "Status", "Hadir", "Terdaftar"];
     const rows = registrations.map((applicant) => [
       applicant.registration_code, applicant.name, applicant.email, applicant.phone, applicant.domicile,
       applicant.institution, applicant.reason, applicant.selection_answer, applicant.portfolio_url,
       selectionEnabled() && applicant.registration_status === "confirmed"
         ? "Diterima" : registrationStatusLabels[applicant.registration_status] || applicant.registration_status,
+      applicant.attended_at && applicant.registration_status === "confirmed" ? "Ya" : "",
       formatDateTime(applicant.created_at),
     ]);
     const csv = `\uFEFF${[columns, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n")}`;
@@ -851,6 +913,10 @@
   document.querySelectorAll("[data-selection-bulk]").forEach((button) => button.addEventListener("click", () => {
     const codes = [...registrationsList.querySelectorAll("[data-applicant-select]:checked")].map((checkbox) => checkbox.value);
     void decideApplicants(codes, button.dataset.selectionBulk);
+  }));
+  document.querySelectorAll("[data-attendance-bulk]").forEach((button) => button.addEventListener("click", () => {
+    const codes = [...registrationsList.querySelectorAll("[data-applicant-select]:checked")].map((checkbox) => checkbox.value);
+    void markAttendance(codes, button.dataset.attendanceBulk === "true");
   }));
   $("#registrations-export").addEventListener("click", exportRegistrationsCsv);
   applicantDialog.querySelector(".applicant-dialog-close").addEventListener("click", () => applicantDialog.close());

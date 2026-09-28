@@ -257,7 +257,7 @@
             <div>
               <p class="eyebrow">Data peserta</p>
               <h1 id="registrations-title">Pendaftar</h1>
-              <p>Lihat data pendaftar dan, untuk kegiatan mode Seleksi, tinjau serta putuskan hasilnya.</p>
+              <p>Lihat data pendaftar, tandai siapa yang hadir (dasar sertifikat), dan untuk kegiatan mode Seleksi, putuskan hasilnya.</p>
             </div>
           </div>
 
@@ -300,7 +300,7 @@
               </select>
             </label>
             <button id="reset-registration-filters" class="text-button toolbar-reset" type="button" hidden>Reset</button>
-            <p class="registrant-total"><strong id="registrations-total">0</strong> pendaftar</p>
+            <p class="registrant-total"><strong id="registrations-total">0</strong> pendaftar<span id="attendance-summary" hidden></span></p>
             <button id="registrations-export" class="button button-secondary toolbar-export" type="button">Ekspor CSV</button>
             <button class="sr-only" type="submit">Terapkan filter</button>
           </form>
@@ -315,6 +315,8 @@
             <button class="button button-secondary" type="button" data-selection-bulk="accepted">Terima</button>
             <button class="button button-secondary" type="button" data-selection-bulk="waitlisted">Cadangan</button>
             <button class="button button-secondary" type="button" data-selection-bulk="rejected">Tolak</button>
+            <button class="button button-secondary" type="button" data-attendance-bulk="true">Tandai hadir</button>
+            <button class="button button-secondary" type="button" data-attendance-bulk="false">Batal hadir</button>
             <button id="selection-clear" class="text-button" type="button">Batal pilih</button>
           </div>
           <div id="registrations-head" class="registration-head" hidden>

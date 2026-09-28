@@ -31,6 +31,7 @@ const registrationProjection = [
   "commitment_text",
   "portfolio_url",
   "selection_decided_at",
+  "attended_at",
   "registration_status",
   "payment_status",
   "payment_deadline",
@@ -47,6 +48,10 @@ const decisionErrors: Record<string, [number, string]> = {
   CAPACITY_EXCEEDED: [409, "Kuota peserta sudah penuh. Pindahkan peserta lain ke cadangan dulu."],
   NOT_SELECTION_EVENT: [400, "Keputusan seleksi hanya untuk kegiatan mode Seleksi."],
   INVALID_DECISION: [400, "Keputusan tidak valid."],
+  INVALID_REQUEST: [400, "Pilih pendaftar dari satu kegiatan saja."],
+};
+const attendanceErrors: Record<string, [number, string]> = {
+  EVENT_NOT_STARTED: [409, "Kehadiran baru bisa ditandai mulai hari kegiatan."],
   INVALID_REQUEST: [400, "Pilih pendaftar dari satu kegiatan saja."],
 };
 const paymentStatuses = new Set(["not_required", "unpaid", "pending", "paid", "failed", "expired", "refunded"]);
@@ -135,15 +140,28 @@ Deno.serve(async (request) => {
     body: JSON.stringify(args),
   });
 
-  // POST: accept / waitlist / reject / reset one or more applicants of one selection event.
+  // POST: accept / waitlist / reject / reset applicants of one selection event, or
+  // mark / unmark attendance ({ attended: true | false }) for registrants of one event.
   if (request.method === "POST") {
     const body = await request.json().catch(() => null) as Record<string, unknown> | null;
     const codes = body?.registration_codes;
+    const validCodes = Array.isArray(codes) && codes.length >= 1 && codes.length <= 500
+      && codes.every((code) => typeof code === "string" && registrationCodePattern.test(code));
+    if (body && typeof body === "object" && !Array.isArray(body) && "attended" in body) {
+      if (Object.keys(body).some((key) => !["registration_codes", "attended"].includes(key))
+        || !validCodes || typeof body.attended !== "boolean") {
+        return fail(400, "INVALID_REQUEST", "Data kehadiran tidak valid.");
+      }
+      const response = await rpc("mark_attendance", { p_registration_codes: codes, p_attended: body.attended, p_actor: adminId });
+      const result = await response.json().catch(() => null) as Record<string, unknown> | null;
+      if (response.ok && result) return json(200, { registrations: [], total: 0, attendance: result });
+      const code = typeof result?.message === "string" ? result.message : "";
+      const [status, message] = attendanceErrors[code] ?? [500, "Kehadiran belum dapat disimpan."];
+      return fail(status, code in attendanceErrors ? code : "SERVER_ERROR", message);
+    }
     const decision = body?.decision;
     if (!body || Object.keys(body).some((key) => !["registration_codes", "decision"].includes(key))
-      || !Array.isArray(codes) || codes.length < 1 || codes.length > 500
-      || codes.some((code) => typeof code !== "string" || !registrationCodePattern.test(code))
-      || typeof decision !== "string" || !decisions.has(decision)) {
+      || !validCodes || typeof decision !== "string" || !decisions.has(decision)) {
       return fail(400, "INVALID_REQUEST", "Data keputusan tidak valid.");
     }
     const response = await rpc("decide_selection", { p_registration_codes: codes, p_decision: decision, p_actor: adminId });

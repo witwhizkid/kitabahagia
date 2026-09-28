@@ -248,6 +248,27 @@ Events edited before the migration show nothing until their next edit.
 function selects these columns). Rollback: deploy the previous `admin-events`,
 then `supabase/rollback/20261004010000_event_last_edited.down.sql`.
 
+## Attendance ("Tandai hadir")
+
+Migration `20261006010000_registration_attendance.sql` adds
+`registrations.attended_at` / `attendance_marked_by` and
+`mark_attendance(codes[], attended, actor)` (service_role only). It is the base
+for volunteer certificates: only registrants marked present get one.
+`admin-registrations` returns `attended_at` in the list and accepts
+`POST { registration_codes, attended: true | false }`. Rules, enforced in the
+database: one event per call (≤500 codes, all must exist), only `confirmed`
+registrations change (others are skipped and counted), and the event day (WIB)
+must have come (`EVENT_NOT_STARTED`, 409). The response is
+`{ attendance: { changed, unchanged, skipped, attended } }`.
+In admin → Pendaftar, choosing one event shows checkboxes for every event
+mode; the command bar has "Tandai hadir" / "Batal hadir" (disabled before the
+event day), rows show "✓ Hadir", the Detail panel shows when it was marked, and
+the CSV has a "Hadir" column. **Deploy order:** migration first, then
+`admin-registrations`, then the site. Rollback: deploy the previous
+`admin-registrations`, then
+`supabase/rollback/20261006010000_registration_attendance.down.sql` (this
+deletes the attendance marks).
+
 ## Event location link ("Petunjuk arah")
 
 Migration `20261005010000_event_location_url.sql` adds optional
