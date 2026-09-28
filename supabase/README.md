@@ -334,11 +334,10 @@ re-issues with the same code and link: new name/number snapshot);
 `action=pdf&code=` stores the PDF (`%PDF-`, ≤4 MB, overwrites) and sets
 `issued_at`; `action=email` sends the link through the Brevo API
 (`BREVO_API_KEY` secret, sender `CERTIFICATE_EMAIL_FROM` or
-`noreply@kitabahagia.id`, reply-to `halo@`) and records the result. The email
-is written like a personal note (subject "<first name>, sertifikat relawanmu
-sudah terbit", plain paragraphs, one inline link, no button or Brevo tag) so
-Gmail is more likely to file it under Primary; `CERTIFICATE_EMAIL_FROM =
-halo@kitabahagia.id` helps too. The PDF is
+`noreply@kitabahagia.id`, reply-to `halo@`) and records the result. The email is a
+card with a button (subject "<first name>, sertifikat relawanmu udah jadi!",
+no Brevo tag); sending from `CERTIFICATE_EMAIL_FROM = halo@kitabahagia.id`
+makes Gmail less likely to file it under Updates than `noreply@`. The PDF is
 drawn in the admin's browser with `js/certificate.js` from the **saved**
 settings (the page refuses while the form has unsaved changes) and wrapped as a
 one-page A4 PDF (`KBCertificate.toPdf`, no library). Images for the canvas are

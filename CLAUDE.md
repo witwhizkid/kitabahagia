@@ -274,7 +274,9 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
 - Tahap 1 **dibangun (Sep 2026)**: "Tandai hadir"/"Batal hadir" (bulk) di admin
   Pendaftar, checkbox muncul untuk semua mode saat 1 kegiatan dipilih; hanya
   pendaftar `confirmed`, mulai hari kegiatan (WIB), 1 kegiatan per aksi;
-  `registrations.attended_at/attendance_marked_by`, RPC `mark_attendance`. Detail:
+  `registrations.attended_at/attendance_marked_by`, RPC `mark_attendance`. Panel
+  Detail pendaftar juga punya tombol "Tandai hadir"/"Batal hadir" (satu orang,
+  aturan sama; nonaktif sebelum hari kegiatan). Detail:
   "Attendance" di `supabase/README.md`.
 - Tahap 2 **dibangun (Sep 2026)**: admin → tab **Sertifikat** = daftar tanda
   tangan (tabel `certificate_signers`, bucket privat `certificate-signatures`,
@@ -295,7 +297,9 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   "Rapikan huruf kapital", terbit mulai H+7 dan hanya jika nomor/Founder/PL
   lengkap dan form sudah disimpan. PDF digambar di browser admin
   (`KBCertificate.toPdf`, JPEG dalam PDF A4), email lewat Brevo API
-  (`BREVO_API_KEY`), per orang ada Lihat · Terbitkan ulang (kode/link tetap) ·
+  (`BREVO_API_KEY`; pengirim `CERTIFICATE_EMAIL_FROM`, disarankan `halo@`;
+  gaya kartu playful dengan tombol, dipilih user setelah dicoba versi polos;
+  subjek "<nama depan>, sertifikat relawanmu udah jadi!"), per orang ada Lihat · Terbitkan ulang (kode/link tetap) ·
   Kirim ulang email · WA. Halaman publik `sertifikat.html?k=` (noindex) +
   function `public-certificate`. Belum: link sertifikat di Cek status,
   pengumuman grup WA (manual), font Garet. Detail: "Issuing certificates" di

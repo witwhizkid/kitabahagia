@@ -310,19 +310,27 @@ Deno.serve(async (request) => {
   const name = String(certificate.recipient_name);
   const link = linkFor(emailCode);
   const dateText = formatDate(event.event_date);
-  // Written like a personal note (plain paragraphs, one inline link, no banner or button):
-  // Gmail files newsletter-looking mail under Promotions/Updates instead of Primary.
   const firstWord = name.trim().split(/\s+/)[0] || name;
   const greetingName = firstWord === firstWord.toUpperCase() || firstWord === firstWord.toLowerCase()
     ? firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase()
     : firstWord;
-  const html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#222222">
-<p>Halo ${escapeHtml(greetingName)},</p>
-<p>Terima kasih sudah hadir sebagai relawan di ${escapeHtml(event.title)} pada ${dateText}. Sertifikatmu atas nama ${escapeHtml(name)} sudah terbit dan bisa kamu lihat serta unduh di sini: <a href="${link}">${link}</a></p>
-<p>Link ini khusus untukmu dan sama dengan QR di sertifikat, jadi siapa pun yang memindai QR-nya bisa mengecek keasliannya.</p>
-<p>Kalau ada nama yang salah tulis, balas saja email ini.</p>
-<p>Salam hangat,<br>Tim Kita Bahagia</p>
-</div>`;
+  const html = `<!doctype html><html lang="id"><body style="margin:0;background:#f6f1ea;font-family:Arial,Helvetica,sans-serif;color:#241f1d">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:20px;overflow:hidden">
+<tr><td style="height:6px;background:#efb635;font-size:0;line-height:0">&nbsp;</td></tr>
+<tr><td style="padding:30px 28px 32px">
+<p style="margin:0 0 8px;font-size:12px;font-weight:bold;letter-spacing:.12em;text-transform:uppercase;color:#780c06">Kita Bahagia</p>
+<h1 style="margin:0 0 18px;font-size:26px;line-height:1.25">Sertifikatmu udah jadi!&nbsp;🎉</h1>
+<p style="margin:0 0 14px;font-size:15px;line-height:1.6">Halo ${escapeHtml(greetingName)}!</p>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.6">Makasih banyak udah hadir dan ikut nyebar bahagia di <strong>${escapeHtml(event.title)}</strong> (${dateText}). Ini sertifikat relawanmu, bisa dilihat dan diunduh lewat tombol di bawah.</p>
+<p style="margin:0 0 22px;padding:12px 16px;border-radius:12px;background:#fdf5e1;font-size:14px;line-height:1.5">Atas nama<br><strong style="font-size:16px;color:#780c06">${escapeHtml(name)}</strong></p>
+<p style="margin:0 0 24px"><a href="${link}" style="display:inline-block;padding:14px 24px;border-radius:999px;background:#780c06;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px">Lihat &amp; unduh sertifikat &rarr;</a></p>
+<p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#6b6164">Link ini khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.</p>
+<p style="margin:0 0 22px;font-size:13px;line-height:1.6;color:#6b6164;word-break:break-all">${link}</p>
+<p style="margin:0;font-size:15px;line-height:1.6">Sampai ketemu di kegiatan berikutnya 💛<br><strong>Tim Kita Bahagia</strong></p>
+</td></tr></table>
+<p style="margin:16px 0 0;font-size:12px;color:#8a7f7a"><a href="${siteUrl}/jadwal" style="color:#8a7f7a">Jadwal kegiatan</a> · <a href="https://instagram.com/kitabahagiaa_" style="color:#8a7f7a">Instagram</a> · kitabahagia.id</p>
+</td></tr></table></body></html>`;
   const send = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: { "api-key": apiKey, "Content-Type": "application/json", Accept: "application/json" },
@@ -330,9 +338,9 @@ Deno.serve(async (request) => {
       sender: { name: "Kita Bahagia", email: Deno.env.get("CERTIFICATE_EMAIL_FROM") || "noreply@kitabahagia.id" },
       replyTo: { email: "halo@kitabahagia.id", name: "Kita Bahagia" },
       to: [{ email, name }],
-      subject: `${greetingName}, sertifikat relawanmu sudah terbit`,
+      subject: `${greetingName}, sertifikat relawanmu udah jadi!`,
       htmlContent: html,
-      textContent: `Halo ${greetingName},\n\nTerima kasih sudah hadir sebagai relawan di ${event.title} pada ${dateText}. Sertifikatmu atas nama ${name} sudah terbit dan bisa kamu lihat serta unduh di sini:\n${link}\n\nLink ini khusus untukmu dan sama dengan QR di sertifikat, jadi siapa pun yang memindai QR-nya bisa mengecek keasliannya.\n\nKalau ada nama yang salah tulis, balas saja email ini.\n\nSalam hangat,\nTim Kita Bahagia`,
+      textContent: `Halo ${greetingName}!\n\nMakasih banyak udah hadir dan ikut nyebar bahagia di ${event.title} (${dateText}). Sertifikat relawanmu atas nama ${name} bisa dilihat dan diunduh di:\n${link}\n\nLink ini khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.\n\nSampai ketemu di kegiatan berikutnya!\nTim Kita Bahagia`,
     }),
   }).catch(() => null);
   if (!send?.ok) {

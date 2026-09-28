@@ -742,7 +742,16 @@
     syncSelectionDecisionControls();
     const waButton = applicantDialog.querySelector("[data-applicant-whatsapp]");
     waButton.hidden = !outcomes;
-    applicantDialog.querySelector(".applicant-dialog-footer").hidden = !outcomes;
+    // Same rules as the bulk "Tandai hadir": confirmed registrants, from the event day (WIB).
+    const attendanceButton = applicantDialog.querySelector("[data-applicant-attendance]");
+    const canMark = status === "confirmed";
+    const eventStarted = Boolean(event.event_date) && event.event_date <= todayInJakarta();
+    attendanceButton.hidden = !canMark;
+    attendanceButton.textContent = applicant.attended_at ? "Batal hadir" : "Tandai hadir";
+    attendanceButton.className = `button ${applicant.attended_at ? "button-secondary" : "button-primary"}`;
+    attendanceButton.disabled = !eventStarted;
+    attendanceButton.title = eventStarted ? "" : "Kehadiran baru bisa ditandai mulai hari kegiatan.";
+    applicantDialog.querySelector(".applicant-dialog-footer").hidden = !outcomes && !canMark;
     applicantDialog.querySelector('[data-applicant-nav="previous"]').disabled = applicantDialogIndex <= 0;
     applicantDialog.querySelector('[data-applicant-nav="next"]').disabled = applicantDialogIndex >= registrations.length - 1;
     setFeedback($("#applicant-dialog-feedback"));
@@ -934,6 +943,37 @@
   $("#registrations-export").addEventListener("click", exportRegistrationsCsv);
   applicantDialog.querySelector(".applicant-dialog-close").addEventListener("click", () => applicantDialog.close());
   applicantDialog.addEventListener("click", (event) => { if (event.target === applicantDialog) applicantDialog.close(); });
+  applicantDialog.querySelector("[data-applicant-attendance]").addEventListener("click", async (event) => {
+    const applicant = currentDialogApplicant();
+    if (!applicant) return;
+    const button = event.currentTarget;
+    const code = applicant.registration_code;
+    const attended = !applicant.attended_at;
+    const feedback = $("#applicant-dialog-feedback");
+    button.disabled = true;
+    setFeedback(feedback, attended ? "Menandai hadir…" : "Membatalkan tanda hadir…");
+    try {
+      await attendanceRequest([code], attended);
+    } catch (error) {
+      button.disabled = false;
+      setFeedback(feedback, error.message, "error");
+      return;
+    }
+    // Show the result right away; the list refresh below brings the server's timestamp.
+    applicant.attended_at = attended ? new Date().toISOString() : null;
+    const done = attended ? "Ditandai hadir." : "Tanda hadir dibatalkan.";
+    if (applicantDialog.open && currentDialogApplicant()?.registration_code === code) renderApplicantDialog();
+    setFeedback(feedback, done, "success");
+    try {
+      await refreshRegistrations();
+    } catch {
+      return;
+    }
+    if (applicantDialog.open && currentDialogApplicant()?.registration_code === code) {
+      showApplicant(code);
+      setFeedback($("#applicant-dialog-feedback"), done, "success");
+    }
+  });
   applicantDialog.querySelectorAll("[data-applicant-nav]").forEach((button) => button.addEventListener("click", () => moveApplicant(button.dataset.applicantNav === "previous" ? -1 : 1)));
   applicantDialog.querySelectorAll("[data-applicant-decision]").forEach((button) => button.addEventListener("click", () => {
     const applicant = currentDialogApplicant();
