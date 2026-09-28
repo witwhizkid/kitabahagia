@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://kitabahagia.vercel.app/</loc>
+    <loc>https://kitabahagia.id/</loc>
   </url>
   <url>
-    <loc>https://kitabahagia.vercel.app/tentang.html</loc>
+    <loc>https://kitabahagia.id/tentang</loc>
   </url>
   <url>
-    <loc>https://kitabahagia.vercel.app/program.html</loc>
+    <loc>https://kitabahagia.id/program</loc>
   </url>
   <url>
-    <loc>https://kitabahagia.vercel.app/jadwal.html</loc>
+    <loc>https://kitabahagia.id/jadwal</loc>
   </url>
   <url>
-    <loc>https://kitabahagia.vercel.app/kisah.html</loc>
+    <loc>https://kitabahagia.id/kisah</loc>
   </url>
   <url>
-    <loc>https://kitabahagia.vercel.app/kolaborasi.html</loc>
+    <loc>https://kitabahagia.id/kolaborasi</loc>
   </url>
   <url>
-    <loc>https://kitabahagia.vercel.app/kontak.html</loc>
+    <loc>https://kitabahagia.id/kontak</loc>
   </url>
   <url>
-    <loc>https://kitabahagia.vercel.app/relawan.html</loc>
+    <loc>https://kitabahagia.id/relawan</loc>
   </url>
-  <url><loc>https://kitabahagia.vercel.app/cek-status.html</loc></url>
+  <url><loc>https://kitabahagia.id/cek-status</loc></url>
   <url>
-    <loc>https://kitabahagia.vercel.app/faq.html</loc>
+    <loc>https://kitabahagia.id/faq</loc>
   </url>
 </urlset>

@@ -32,3 +32,8 @@ README.md
 scripts
 backups
 .claude
+
+# Cloudflare Pages-only sources. scripts/build-pages.sh reuses this list for dist/, so _headers
+# and _routes.json must NOT be listed here (Pages needs them in dist/).
+functions
+dist

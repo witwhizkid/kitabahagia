@@ -6,6 +6,8 @@ node_modules/
 anti-slop/
 .vercel
 .env*
+# Cloudflare Pages build output (scripts/build-pages.sh)
+dist/
 
 # Local editor workspace settings
 .vscode/

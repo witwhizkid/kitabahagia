@@ -1,6 +1,7 @@
 # Kita Bahagia — catatan kerja untuk Claude
 
-Situs statis multi-halaman (HTML/CSS/JS vanilla) di Vercel, backend Supabase
+Situs statis multi-halaman (HTML/CSS/JS vanilla) di Cloudflare Pages
+(`kitabahagia.id`; Vercel = cadangan sementara), backend Supabase
 (Postgres + Edge Functions), pembayaran Midtrans (QRIS). Detail backend:
 `supabase/README.md`.
 
@@ -230,13 +231,19 @@ Lainnya:
 ## Rencana fitur (belum dikerjakan)
 
 Hosting & pembayaran (keputusan user, Sep 2026):
-- Vercel Hobby tidak boleh untuk komersial (memproses pembayaran pengunjung).
-  Saat pasang domain, pindah hosting ke **Cloudflare Pages** (gratis, boleh
-  komersial) sebelum pendaftaran berbayar dibuka: `vercel.json` headers/CSP →
-  `_headers`, `middleware.js` → Pages Function, `.vercelignore` disesuaikan (termasuk `.claude/`, jangan ikut dipublikasikan),
-  ganti `kitabahagia.vercel.app` di semua HTML/sitemap/robots/middleware, dan
-  Site URL + Redirect URLs (`/admin/`) di Supabase Auth. DNS ke Vercel (selama
-  masih dipakai) harus "DNS only". Domain kemungkinan `.id`.
+- Domain **kitabahagia.id** (dibeli di Jagoan Hosting, Sep 2026), tanpa www
+  (www dialihkan ke apex lewat Redirect Rule Cloudflare). Hosting pindah ke
+  **Cloudflare Pages** (Vercel Hobby tidak boleh komersial); Vercel tetap hidup
+  sebagai cadangan sampai domain stabil, lalu `vercel.json`, `middleware.js`,
+  `.vercelignore` bisa dihapus. File Pages: build `bash scripts/build-pages.sh`
+  → `dist/` (menyalin semua kecuali isi `.vercelignore`, dotfile, file Vercel;
+  jadi `_headers`/`_routes.json` jangan dimasukkan ke `.vercelignore`),
+  `_headers` (header + CSP, samakan dengan `vercel.json` selama dua-duanya ada),
+  `functions/_middleware.js` (preview bot, dibatasi `_routes.json` ke
+  `/pendaftaran(.html)` supaya kuota Functions tidak habis). Pages mengalihkan
+  `x.html` → `/x`, jadi canonical/og:url/sitemap memakai URL tanpa `.html`;
+  link di dalam situs tetap `.html` (tetap jalan lewat redirect). Supabase Auth:
+  Site URL + Redirect URLs `https://kitabahagia.id/admin/`.
 - Payment gateway: Midtrans tetap utama (owner mendaftar, perorangan). Xendit
   dan Duitku didaftarkan sebagai cadangan; pindah hanya kalau Midtrans belum
   approve sampai akhir Oktober. Yang diganti cuma `create-payment` +
@@ -305,7 +312,7 @@ kota"; angka disepakati owner, dibulatkan ke bawah).
 `SUPABASE_SERVICE_ROLE_KEY` hanya di server. Jangan pernah taruh di kode
 browser, log, atau commit.
 
-CSP di `vercel.json` sudah **enforce** (bukan Report-Only). Artinya: tidak ada
+CSP di `_headers` (Cloudflare) dan `vercel.json` (cadangan) sudah **enforce** (bukan Report-Only). Artinya: tidak ada
 `<script>`/`<style>` inline, atribut `style="..."`, handler `on*=`, atau gambar
 `data:`/`blob:` di HTML/CSS. Host luar baru (font, gambar, API, iframe) harus
 ditambahkan ke CSP dulu. Cek dengan memuat halaman ber-header CSP di Playwright

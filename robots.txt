@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 
-Sitemap: https://kitabahagia.vercel.app/sitemap.xml
+Sitemap: https://kitabahagia.id/sitemap.xml

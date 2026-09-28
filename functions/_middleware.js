@@ -1,11 +1,9 @@
-// Vercel Routing Middleware: link previews for event registration links. Vercel is only the backup
-// host now; the live copy of this logic is functions/_middleware.js (Cloudflare Pages).
-// WhatsApp, Instagram/Facebook, Telegram and similar bots do not run JavaScript,
-// so they would only see the generic meta tags of the static pendaftaran.html.
-// For those bots only, answer with a small HTML page carrying the event's own
-// title, summary and poster. Everyone else gets the static page untouched.
-export const config = { matcher: '/pendaftaran.html' };
-
+// Cloudflare Pages Function: link previews for event registration links (port of the Vercel
+// middleware.js, which stays only while Vercel is the backup host). _routes.json limits this to
+// /pendaftaran(.html), so every other request is served as a plain static file.
+// WhatsApp, Instagram/Facebook, Telegram and similar bots do not run JavaScript, so they would only
+// see the generic meta tags of the static page. For those bots only, answer with a small HTML page
+// carrying the event's own title, summary and poster. Everyone else gets the static page untouched.
 const SITE = 'https://kitabahagia.id';
 const EVENTS_URL = 'https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1/public-events';
 const DEFAULT_IMAGE = `${SITE}/img/og/jadwal.jpg`;
@@ -42,11 +40,12 @@ const imageUrl = (value) => {
   }
 };
 
-export default async function middleware(request) {
+export async function onRequest(context) {
+  const { request } = context;
   const url = new URL(request.url);
   const slug = url.searchParams.get('event') || '';
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 120) return;
-  if (!PREVIEW_BOTS.test(request.headers.get('user-agent') || '')) return;
+  if (request.method !== 'GET' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 120
+    || !PREVIEW_BOTS.test(request.headers.get('user-agent') || '')) return context.next();
 
   let event = null;
   try {
@@ -60,9 +59,9 @@ export default async function middleware(request) {
     event = null;
   }
   // Unknown or unavailable event: let the bot read the static page's generic tags.
-  if (!event) return;
+  if (!event) return context.next();
 
-  const pageUrl = `${SITE}/pendaftaran.html?event=${encodeURIComponent(slug)}`;
+  const pageUrl = `${SITE}/pendaftaran?event=${encodeURIComponent(slug)}`;
   const title = `${event.title} | Kita Bahagia`;
   const description = describe(event);
   const image = imageUrl(event.image_url);
