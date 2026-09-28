@@ -6337,7 +6337,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .event-date span { margin-top:8px; font-size:13px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
 .event-date small { margin-top:4px; color:var(--muted); font-size:12px; }
 .event-row-photo, .event-feature-photo { position:relative; margin:0; overflow:hidden; background:var(--sand); aspect-ratio:4 / 5; }
-/* Posters are text-heavy 4:5 images: show them whole; other ratios sit on a blurred copy of themselves. */
+/* Posters are text-heavy 4:5 images: show them whole; other ratios sit on the plain sand background. */
 .event-row-photo img, .event-feature-photo img { position:relative; display:block; width:100%; height:100%; object-fit:contain; transition:transform .9s cubic-bezier(.2,.7,.2,1); }
 /* Whole row/feature is clickable through the title link; the button stays on top. */
 .event-row-link { color:inherit; text-decoration:none; }
@@ -6383,7 +6383,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .schedule-grid { border-top:0; }
 .event-month { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 12px; margin:40px 0 0; padding-bottom:10px; border-bottom:2px solid var(--ink); font:700 clamp(30px, 3.4vw, 44px)/1 "Instrument Sans", "DM Sans", sans-serif; letter-spacing:-.04em; }
 .event-month-group:first-child .event-month { margin-top:0; }
-.event-month em { color:var(--maroon); font-style:normal; }
+.event-month em { color:var(--maroon); font-family:inherit; font-style:normal; font-weight:inherit; letter-spacing:inherit; }
 .event-month small { color:var(--muted); font:600 14px/1 "DM Sans", sans-serif; letter-spacing:0; }
 .event-month-group .event-date span { display:none; }
 .event-closing b { margin-left:6px; padding:2px 8px; background:var(--maroon); color:var(--white); letter-spacing:.06em; }
