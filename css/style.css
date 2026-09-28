@@ -7343,6 +7343,18 @@ h3 {
   border-top-color: rgba(122, 31, 43, .13);
 }
 
+.registration-page .registration-review-event dl div:first-child {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 5px;
+  padding-top: 14px;
+}
+
+.registration-page .registration-review-event dl div:first-child dd {
+  margin-top: 0;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
 .registration-page .registration-review-consequence {
   margin: 16px 0 0;
   padding: 14px 16px;
