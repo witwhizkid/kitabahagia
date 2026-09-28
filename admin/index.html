@@ -7,7 +7,7 @@
     <title>KB Admin — Kegiatan</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Instrument+Sans:wght@500;600;700&family=Lexend:wght@300;400;600&family=Plus+Jakarta+Sans:ital,wght@0,600;0,700;0,800;1,500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Instrument+Sans:wght@500;600;700&family=Lexend:wght@300;400;600&family=Newsreader:ital,wght@1,400&family=Plus+Jakarta+Sans:ital,wght@0,600;0,700;0,800;1,500&display=swap" rel="stylesheet" />
     <link rel="icon" href="../assets/logo/favicon.ico" />
     <link rel="stylesheet" href="../css/admin.css" />
   </head>
@@ -60,7 +60,8 @@
           <span>Admin</span>
         </a>
         <nav aria-label="Navigasi admin">
-          <a class="nav-link is-active" href="#events" data-admin-view="events" aria-current="page">Kegiatan</a>
+          <a class="nav-link is-active" href="#home" data-admin-view="home" aria-current="page">Beranda</a>
+          <a class="nav-link" href="#events" data-admin-view="events">Kegiatan</a>
           <a class="nav-link" href="#registrations" data-admin-view="registrations">Pendaftar</a>
           <a class="nav-link" href="#stories" data-admin-view="stories">Kisah</a>
           <a class="nav-link" href="#certificates" data-admin-view="certificates">Sertifikat</a>
@@ -75,14 +76,47 @@
           <button id="mobile-logout-button" type="button">Keluar</button>
         </header>
         <nav class="mobile-nav" aria-label="Navigasi admin seluler">
-          <a class="is-active" href="#events" data-admin-view="events" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Kegiatan</span></a>
+          <a class="is-active" href="#home" data-admin-view="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"/></svg><span>Beranda</span></a>
+          <a href="#events" data-admin-view="events"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Kegiatan</span></a>
           <a href="#registrations" data-admin-view="registrations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.6c2.3.2 3.9 1.8 4.5 4.4"/></svg><span>Pendaftar</span></a>
           <a href="#stories" data-admin-view="stories"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5c2.8-1 5.4-.8 8 1 2.6-1.8 5.2-2 8-1V19c-2.8-1-5.4-.8-8 1-2.6-1.8-5.2-2-8-1z"/><path d="M12 6.5V20"/></svg><span>Kisah</span></a>
           <a href="#certificates" data-admin-view="certificates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="12" rx="1.5"/><path d="M7.5 9h9M7.5 12.5h5"/><circle cx="16.5" cy="17" r="2.5"/><path d="m15 19-.8 2.5 2.3-1 2.3 1-.8-2.5"/></svg><span>Sertifikat</span></a>
           <a href="#admins" data-admin-view="admins" data-super-admin-only hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 19 6v5.5c0 4.3-3 7.6-7 9-4-1.4-7-4.7-7-9V6z"/><path d="m9 12 2 2 4-4"/></svg><span>Admin</span></a>
         </nav>
 
-        <section id="events-view" class="content-view" aria-labelledby="events-title">
+        <section id="home-view" class="content-view home-view" aria-labelledby="home-title">
+          <div class="home-hero">
+            <div>
+              <p id="home-date" class="eyebrow"></p>
+              <h1 id="home-title"><span id="home-greeting">Halo</span>, <em id="home-name">tim</em> <span class="home-wave" aria-hidden="true">👋</span></h1>
+              <p id="home-summary">Ini ringkasan yang perlu diurus hari ini.</p>
+            </div>
+            <button class="button button-primary" type="button" data-home-add-event>Tambah Kegiatan</button>
+          </div>
+          <p id="home-feedback" class="feedback" role="status" aria-live="polite"></p>
+          <div id="home-stats" class="home-stats">
+            <span class="skeleton skeleton-stat"></span><span class="skeleton skeleton-stat"></span><span class="skeleton skeleton-stat"></span><span class="skeleton skeleton-stat"></span>
+          </div>
+          <div class="home-grid">
+            <section class="home-panel" aria-labelledby="home-upcoming-title">
+              <div class="home-panel-head">
+                <h2 id="home-upcoming-title">Kegiatan terdekat</h2>
+                <a class="text-button" href="#events" data-home-go="events">Semua kegiatan →</a>
+              </div>
+              <div id="home-upcoming" class="home-upcoming">
+                <span class="skeleton skeleton-card"></span><span class="skeleton skeleton-card"></span>
+              </div>
+            </section>
+            <section class="home-panel" aria-labelledby="home-tasks-title">
+              <div class="home-panel-head"><h2 id="home-tasks-title">Perlu ditindaklanjuti</h2></div>
+              <ul id="home-tasks" class="home-tasks">
+                <li><span class="skeleton skeleton-line"></span></li><li><span class="skeleton skeleton-line"></span></li><li><span class="skeleton skeleton-line"></span></li>
+              </ul>
+            </section>
+          </div>
+        </section>
+
+        <section id="events-view" class="content-view" aria-labelledby="events-title" hidden>
           <div class="view-heading">
             <div>
               <p class="eyebrow">Pengelolaan konten</p>
@@ -99,7 +133,7 @@
             </select>
           </div>
           <p id="events-feedback" class="feedback" role="status" aria-live="polite"></p>
-          <div id="events-loading" class="state-panel" role="status">Memuat kegiatan…</div>
+          <div id="events-loading" class="skeleton-list" role="status" aria-label="Memuat kegiatan"><span class="skeleton skeleton-row"></span><span class="skeleton skeleton-row"></span><span class="skeleton skeleton-row"></span></div>
           <div id="events-empty" class="state-panel" hidden>Belum ada kegiatan. Tambahkan kegiatan pertama untuk memulai.</div>
           <div id="events-list" class="event-list" hidden></div>
         </section>
@@ -330,8 +364,8 @@
             <span class="registration-head-label registration-head-date">Terdaftar</span>
             <span class="sr-only">Aksi</span>
           </div>
-          <div id="registrations-loading" class="state-panel" role="status" hidden>Memuat pendaftar…</div>
-          <div id="registrations-empty" class="state-panel" hidden>Tidak ada pendaftar yang cocok dengan filter ini.</div>
+          <div id="registrations-loading" class="skeleton-list" role="status" aria-label="Memuat pendaftar" hidden><span class="skeleton skeleton-row"></span><span class="skeleton skeleton-row"></span><span class="skeleton skeleton-row"></span></div>
+          <div id="registrations-empty" class="state-panel" hidden>Belum ada pendaftar yang cocok. Coba ubah filter, atau sebarkan link kegiatannya dulu 🙌</div>
           <div id="registrations-list" class="registration-list" hidden></div>
         </section>
 
@@ -382,7 +416,7 @@
             </select>
           </div>
           <p id="stories-feedback" class="feedback" role="status" aria-live="polite"></p>
-          <div id="stories-loading" class="state-panel" role="status" hidden>Memuat kisah…</div>
+          <div id="stories-loading" class="skeleton-list" role="status" aria-label="Memuat kisah" hidden><span class="skeleton skeleton-row"></span><span class="skeleton skeleton-row"></span><span class="skeleton skeleton-row"></span></div>
           <div id="stories-empty" class="state-panel" hidden>Belum ada kisah. Tambahkan kisah pertama untuk memulai.</div>
           <div id="stories-list" class="story-list" hidden></div>
         </section>
@@ -602,7 +636,7 @@
               <p>Tanda tangan yang dinonaktifkan tidak bisa dipilih untuk kegiatan baru. Sertifikat yang sudah terbit tetap sah.</p>
             </div>
             <p id="signers-feedback" class="feedback" role="status" aria-live="polite"></p>
-            <div id="signers-loading" class="state-panel" role="status" hidden>Memuat tanda tangan…</div>
+            <div id="signers-loading" class="skeleton-list" role="status" aria-label="Memuat tanda tangan" hidden><span class="skeleton skeleton-row"></span><span class="skeleton skeleton-row"></span><span class="skeleton skeleton-row"></span></div>
             <div id="signers-empty" class="state-panel" hidden>Belum ada tanda tangan. Mulai dari Founder dan Project Leader kegiatan terdekat.</div>
             <div id="signers-list" class="signer-list" hidden></div>
           </section>
@@ -648,6 +682,7 @@
         </section>
       </div>
     </div>
+    <div id="toast-region" class="toast-region" role="status" aria-live="polite"></div>
     <script src="../js/vendor/qrcode-generator.min.js"></script>
     <script src="../js/certificate.js"></script>
     <script src="../js/admin.js"></script>

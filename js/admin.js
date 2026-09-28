@@ -19,6 +19,7 @@
   const passwordSetupPanel = $("#password-setup-panel");
   const adminView = $("#admin-view");
   const eventsView = $("#events-view");
+  const homeView = $("#home-view");
   const formView = $("#form-view");
   const registrationsView = $("#registrations-view");
   const storiesView = $("#stories-view");
@@ -60,6 +61,8 @@
   const invalidateEventsCache = () => {
     tabCache.events.loadedAt = 0;
     tabCache.registrations.clear();
+    home.loadedAt = 0;
+    home.checksAt = 0;
   };
   const invalidateStoriesCache = () => { tabCache.stories.loadedAt = 0; };
   const invalidateAdminsCache = () => { tabCache.admins.loadedAt = 0; };
@@ -124,7 +127,29 @@
     refunded: "is-neutral",
   }[status] || "is-neutral");
 
+  // Success messages pop up as a toast; errors and progress stay next to the form they belong to.
+  const showToast = (message) => {
+    const region = document.getElementById("toast-region");
+    if (!region) return;
+    // A modal dialog sits in the top layer, so the toast has to live inside it to be seen.
+    const host = document.querySelector("dialog[open]") || document.body;
+    if (region.parentElement !== host) host.append(region);
+    // The same message can be reported to two feedback spots (list + dialog); show it once.
+    if ([...region.children].some((toast) => toast.textContent === message && !toast.classList.contains("is-leaving"))) return;
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    region.append(toast);
+    window.setTimeout(() => toast.classList.add("is-leaving"), 3200);
+    window.setTimeout(() => toast.remove(), 3700);
+  };
+  // Success inside the dashboard becomes a toast; the login screen keeps its message in place.
   const setFeedback = (element, message = "", type = "") => {
+    if (type === "success" && message && !element.closest(".login-shell")) {
+      showToast(message);
+      message = "";
+      type = "";
+    }
     element.textContent = message;
     element.className = `feedback${type ? ` is-${type}` : ""}`;
   };
@@ -327,10 +352,13 @@
     empty.hidden = visibleEvents.length > 0;
     empty.textContent = visibleEvents.length ? "" : eventArchiveFilter.value === "archived" ? "Belum ada kegiatan di arsip." : "Belum ada kegiatan aktif.";
     eventsList.hidden = visibleEvents.length === 0;
+    const counts = seatCounts();
     eventsList.innerHTML = visibleEvents.map((event) => `
       <article class="event-row">
+        ${posterMarkup(event, "event-thumb")}
         <div>
           <h2>${escapeHtml(event.title)}</h2>
+          ${capacityMarkup(event, counts[event.slug])}
           ${event.environment === "development" ? '<span class="status-token is-pending">Demo</span>' : ""}
           ${event.last_edited_at ? `<p class="event-edited">Diubah ${escapeHtml(formatDateTime(event.last_edited_at))}${event.last_edited_by ? ` oleh <span title="${escapeHtml(event.last_edited_by)}">${escapeHtml(event.last_edited_by.split("@")[0])}</span>` : ""}</p>` : ""}
         </div>
@@ -349,6 +377,7 @@
         </div>
       </article>
     `).join("");
+    applyCapacityBars(eventsList);
     const eventFilter = $("#registration-event-filter");
     const currentFilter = eventFilter.value;
     // Archived events stay out of the filter; their registrants are hidden too (see admin-registrations).
@@ -774,6 +803,8 @@
 
   const refreshRegistrations = async () => {
     tabCache.registrations.clear();
+    home.loadedAt = 0;
+    home.checksAt = 0;
     await loadRegistrations();
   };
 
@@ -849,7 +880,7 @@
         setFeedback(feedback, `Kehadiran tersimpan, tapi daftar belum bisa diperbarui: ${refreshError.message}`, "error");
         return;
       }
-      setFeedback(feedback, `${parts.join(" · ")}.`, "success");
+      setFeedback(feedback, `${parts.join(" · ")}.`, skipped ? "warning" : "success");
     } catch (error) {
       setFeedback(feedback, error.message, "error");
     } finally {
@@ -1355,6 +1386,7 @@
   const showForm = (event = null) => {
     fillForm(event);
     eventsView.hidden = true;
+    homeView.hidden = true;
     registrationsView.hidden = true;
     adminsView.hidden = true;
     certificatesView.hidden = true;
@@ -1365,6 +1397,305 @@
     $("#event-title").focus();
   };
 
+  // Beranda: what needs attention today, computed from events + active registrations.
+  const home = { registrations: [], loadedAt: 0, request: null, checks: new Map(), checksAt: 0 };
+  const loadHomeRegistrations = async (force = false) => {
+    if (!force && home.loadedAt && Date.now() - home.loadedAt < adminCacheTtl) return home.registrations;
+    if (home.request) return home.request;
+    home.request = registrationRequest({ lifecycle: "active" })
+      .then((data) => {
+        home.registrations = Array.isArray(data.registrations) ? data.registrations : [];
+        home.loadedAt = Date.now();
+        return home.registrations;
+      })
+      .finally(() => { home.request = null; });
+    return home.request;
+  };
+  // Seats per event: confirmed, plus unpaid holds still inside their payment window.
+  function seatCounts() {
+    const counts = {};
+    home.registrations.forEach((registration) => {
+      const slug = registration.events?.slug;
+      if (!slug) return;
+      counts[slug] ||= { confirmed: 0, held: 0, applied: 0 };
+      if (registration.registration_status === "confirmed") counts[slug].confirmed += 1;
+      else if (registration.registration_status === "pending_payment" && !registration.payment_expired) counts[slug].held += 1;
+      else if (registration.registration_status === "applied") counts[slug].applied += 1;
+    });
+    return counts;
+  }
+  // Relative paths in image_url are site paths; the admin page lives one folder down.
+  const posterSrc = (url) => (!url || /^(https?:)?\/\//.test(url) || url.startsWith("/") ? url : `../${url}`);
+  function posterMarkup(event, className) {
+    const src = posterSrc(event.image_url);
+    return `<span class="${className}" aria-hidden="true">${src
+      ? `<img src="${escapeHtml(src)}" alt="" loading="lazy" referrerpolicy="no-referrer" />`
+      : `<span>${escapeHtml((event.title || "?").trim().charAt(0).toUpperCase())}</span>`}</span>`;
+  }
+  function capacityMarkup(event, count) {
+    // Counts come from active registrations only, so finished events show none.
+    if (!home.loadedAt || event.archived_at || !event.event_date || daysFromToday(eventLastDay(event)) < 0) return "";
+    const current = count || { confirmed: 0, held: 0, applied: 0 };
+    if (event.registration_mode === "selection") {
+      return `<p class="capacity-line">${current.applied} menunggu seleksi · ${current.confirmed}/${escapeHtml(String(event.capacity || "?"))} diterima</p>`;
+    }
+    if (!event.capacity) return `<p class="capacity-line">${current.confirmed} terkonfirmasi</p>`;
+    const filled = current.confirmed + current.held;
+    const percent = Math.min(100, Math.round((filled / event.capacity) * 100));
+    const tone = percent >= 100 ? " is-full" : percent >= 80 ? " is-hot" : "";
+    return `<div class="capacity${tone}">
+      <span class="capacity-bar" data-fill="${percent}"><span></span></span>
+      <span class="capacity-text"><strong>${filled}/${escapeHtml(String(event.capacity))}</strong> kursi${current.held ? ` · ${current.held} menunggu bayar` : ""}</span>
+    </div>`;
+  }
+  // Widths are set through CSSOM (allowed by the CSP), not a style attribute.
+  function applyCapacityBars(root) {
+    root.querySelectorAll(".capacity-bar[data-fill]").forEach((bar) => bar.style.setProperty("--fill", `${bar.dataset.fill}%`));
+  }
+
+  const jakartaDay = (value) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(new Date(value));
+  const daysFromToday = (date) => Math.round((new Date(`${date}T12:00:00+07:00`) - new Date(`${todayInJakarta()}T12:00:00+07:00`)) / 864e5);
+  const eventLastDay = (event) => (event.end_at ? jakartaDay(event.end_at) : event.event_date);
+  const countdownLabel = (days) => (days === 0 ? "Hari ini" : days === 1 ? "Besok" : `${days} hari lagi`);
+  const shortDate = (event) => new Intl.DateTimeFormat("id-ID", { weekday: "long", day: "numeric", month: "short", timeZone: "Asia/Jakarta" })
+    .format(new Date(`${event.event_date}T12:00:00+07:00`));
+
+  // Attendance window: from the first day until 7 days after; certificates: 7 to 30 days after.
+  const homeWindow = (event) => {
+    const sinceEnd = -daysFromToday(eventLastDay(event));
+    if (daysFromToday(event.event_date) <= 0 && sinceEnd <= 7) return { kind: "attendance", lifecycle: sinceEnd > 0 ? "history" : "active" };
+    if (sinceEnd >= 7 && sinceEnd <= 30) return { kind: "certificate" };
+    return null;
+  };
+  // Per-event checks so these tasks disappear once the work is done: nobody marked
+  // present yet (with confirmed registrants), or present volunteers without a certificate.
+  const loadHomeChecks = async () => {
+    if (home.checksAt && Date.now() - home.checksAt < adminCacheTtl) return;
+    const checks = new Map();
+    await Promise.all(events.filter((event) => !event.archived_at && event.event_date).map(async (event) => {
+      const span = homeWindow(event);
+      if (!span) return;
+      try {
+        if (span.kind === "attendance") {
+          const data = await registrationRequest({ event: event.slug, lifecycle: span.lifecycle, registration_status: "confirmed" });
+          const rows = Array.isArray(data.registrations) ? data.registrations : [];
+          if (rows.length && !rows.some((row) => row.attended_at)) checks.set(event.slug, { ...span, count: rows.length });
+        } else {
+          const data = await authorizedRequest(issueUrl({ event: event.slug }));
+          const pending = (data.recipients || []).filter((recipient) => !recipient.certificate?.issued_at).length;
+          if (pending) checks.set(event.slug, { ...span, count: pending });
+        }
+      } catch {
+        // A failed check only hides that one reminder.
+      }
+    }));
+    home.checks = checks;
+    home.checksAt = Date.now();
+  };
+
+  const homeTasks = () => {
+    const counts = seatCounts();
+    const tasks = [];
+    events.filter((event) => !event.archived_at && event.event_date).forEach((event) => {
+      const title = `<strong>${escapeHtml(event.title)}</strong>`;
+      const untilStart = daysFromToday(event.event_date);
+      const check = home.checks.get(event.slug);
+      if (check?.kind === "attendance") {
+        tasks.push({ tone: "attendance", text: `Tandai hadir ${check.count} relawan ${title}`, go: "registrations", event: event.slug, lifecycle: check.lifecycle });
+      }
+      if (check?.kind === "certificate") {
+        tasks.push({ tone: "certificate", text: `${check.count} sertifikat ${title} belum diterbitkan`, go: "certificates", event: event.slug });
+      }
+      if (untilStart < 0) return;
+      if (!event.is_public) tasks.push({ tone: "draft", text: `${title} belum tampil di website`, go: "edit", event: event.slug });
+      const closesAt = event.registration_deadline ? new Date(event.registration_deadline).getTime() : NaN;
+      const deadline = closesAt > Date.now() ? daysFromToday(jakartaDay(event.registration_deadline)) : null;
+      if (event.is_public && event.status === "open" && deadline !== null && deadline <= 3) {
+        tasks.push({ tone: "deadline", text: `Pendaftaran ${title} tutup ${countdownLabel(deadline).toLowerCase()}`, go: "registrations", event: event.slug });
+      }
+      const count = counts[event.slug];
+      const filled = count ? count.confirmed + count.held : 0;
+      if (event.registration_mode !== "selection" && event.capacity && filled / event.capacity >= 0.8 && filled < event.capacity) {
+        tasks.push({ tone: "hot", text: `${title} hampir penuh (${filled}/${escapeHtml(String(event.capacity))})`, go: "registrations", event: event.slug });
+      }
+    });
+    return tasks.slice(0, 7);
+  };
+
+  const homeName = () => {
+    const session = readSession();
+    const meta = session?.user?.user_metadata || {};
+    const fromMeta = String(meta.full_name || meta.name || "").trim().split(/\s+/)[0];
+    let email = session?.user?.email || "";
+    // Invite/recovery sessions carry no user object; the access token itself holds the email.
+    if (!email) {
+      try { email = JSON.parse(atob(String(session?.access_token || "").split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).email || ""; }
+      catch { email = ""; }
+    }
+    const fromEmail = String(email).split("@")[0].split(/[._\-\d]/)[0];
+    const name = fromMeta || fromEmail;
+    return name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "tim";
+  };
+
+  const renderHomeHeader = () => {
+    const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: "Asia/Jakarta" }).format(new Date()));
+    $("#home-greeting").textContent = hour < 11 ? "Selamat pagi" : hour < 15 ? "Selamat siang" : hour < 18 ? "Selamat sore" : "Selamat malam";
+    $("#home-name").textContent = homeName();
+    $("#home-date").textContent = new Intl.DateTimeFormat("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" }).format(new Date());
+  };
+
+  const countUp = (root) => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    root.querySelectorAll("[data-count]").forEach((element) => {
+      const target = Number(element.dataset.count);
+      if (reduce || !target) { element.textContent = String(target); return; }
+      const start = performance.now();
+      const step = (now) => {
+        const progress = Math.min(1, (now - start) / 700);
+        element.textContent = String(Math.round(target * (1 - (1 - progress) ** 3)));
+        if (progress < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  };
+
+  const renderHome = () => {
+    const now = Date.now();
+    const registrations = home.registrations;
+    const counts = seatCounts();
+    const upcoming = events.filter((event) => !event.archived_at && event.event_date && daysFromToday(eventLastDay(event)) >= 0)
+      .sort((a, b) => String(a.event_date).localeCompare(String(b.event_date)));
+    const fresh = registrations.filter((registration) => now - new Date(registration.created_at).getTime() < 864e5).length;
+    const pending = registrations.filter((registration) => registration.registration_status === "pending_payment" && !registration.payment_expired).length;
+    const applied = registrations.filter((registration) => registration.registration_status === "applied").length;
+    const seats = upcoming.filter((event) => event.registration_mode !== "selection" && event.capacity)
+      .reduce((sum, event) => ({
+        filled: sum.filled + (counts[event.slug]?.confirmed || 0) + (counts[event.slug]?.held || 0),
+        total: sum.total + Number(event.capacity),
+      }), { filled: 0, total: 0 });
+    const stat = (key, value, label, hint, attention = false) => `
+      <button class="home-stat${attention ? " is-attention" : ""}" type="button" data-home-stat="${key}">
+        <span class="home-stat-value"><span data-count="${value}">0</span></span>
+        <span class="home-stat-label">${label}</span>
+        <span class="home-stat-hint">${hint}</span>
+      </button>`;
+    const stats = $("#home-stats");
+    stats.innerHTML = [
+      stat("new", fresh, "Pendaftar baru", "24 jam terakhir"),
+      stat("pending", pending, "Menunggu bayar", "QRIS belum lunas", pending > 0),
+      stat("applied", applied, "Menunggu seleksi", "belum diputuskan", applied > 0),
+      `<button class="home-stat" type="button" data-home-stat="seats">
+        <span class="home-stat-value"><span data-count="${seats.filled}">0</span><small>/${seats.total}</small></span>
+        <span class="home-stat-label">Kursi terisi</span>
+        <span class="home-stat-hint">kegiatan mendatang</span>
+      </button>`,
+    ].join("");
+    countUp(stats);
+
+    const upcomingList = $("#home-upcoming");
+    upcomingList.innerHTML = upcoming.length ? upcoming.slice(0, 3).map((event) => {
+      const days = daysFromToday(event.event_date);
+      const time = event.start_time ? ` · ${escapeHtml(String(event.start_time).slice(0, 5).replace(":", "."))}` : "";
+      return `
+      <article class="home-event">
+        ${posterMarkup(event, "home-event-poster")}
+        <div class="home-event-body">
+          <p class="home-event-when"><span class="home-countdown${days <= 3 ? " is-soon" : ""}">${days < 0 ? "Berlangsung" : countdownLabel(days)}</span>${escapeHtml(shortDate(event))}${time}</p>
+          <h3>${escapeHtml(event.title)}</h3>
+          <p class="home-event-meta">${escapeHtml(event.location || "Lokasi belum diatur")} · <span class="state-label${event.is_public ? " is-public" : ""}">${event.is_public ? "Tayang" : "Belum tayang"}</span></p>
+          ${capacityMarkup(event, counts[event.slug])}
+          <div class="home-event-actions">
+            <button class="text-button" type="button" data-home-go="registrations" data-home-event="${escapeHtml(event.slug)}">Lihat pendaftar →</button>
+            <button class="text-button" type="button" data-home-go="edit" data-home-event="${escapeHtml(event.slug)}">Edit</button>
+          </div>
+        </div>
+      </article>`;
+    }).join("") : `<div class="home-empty"><p>Belum ada kegiatan mendatang.</p><button class="button button-primary" type="button" data-home-add-event>Bikin kegiatan baru</button></div>`;
+    applyCapacityBars(upcomingList);
+
+    const tasks = homeTasks();
+    $("#home-tasks").innerHTML = tasks.length ? tasks.map((task) => `
+      <li><button class="home-task is-${task.tone}" type="button" data-home-go="${task.go}" data-home-event="${escapeHtml(task.event)}"${task.lifecycle ? ` data-home-lifecycle="${task.lifecycle}"` : ""}>
+        <span class="home-task-dot" aria-hidden="true"></span><span class="home-task-text">${task.text}</span><span class="home-task-arrow" aria-hidden="true">→</span>
+      </button></li>`).join("")
+      : `<li class="home-all-done"><span aria-hidden="true">☕</span> Semua beres. Waktunya ngopi dulu.</li>`;
+    $("#home-summary").textContent = tasks.length
+      ? `Ada ${tasks.length} hal yang perlu diurus. Yuk, satu-satu.`
+      : "Semua aman terkendali. Mantap!";
+  };
+
+  const showHome = async () => {
+    [formView, eventsView, registrationsView, storiesView, storyFormView, adminsView, certificatesView].forEach((view) => { view.hidden = true; });
+    homeView.hidden = false;
+    setActiveNavigation("home");
+    window.scrollTo({ top: 0, behavior: "instant" });
+    renderHomeHeader();
+    setFeedback($("#home-feedback"));
+    let problem = "";
+    try {
+      await Promise.all([loadEvents(), loadHomeRegistrations()]);
+      // loadEvents reports its own errors on the (hidden) Kegiatan tab.
+      if (!tabCache.events.loadedAt) problem = "Data kegiatan belum bisa dimuat.";
+      else await loadHomeChecks();
+    } catch (error) {
+      problem = error.message;
+    }
+    if (homeView.hidden) return;
+    if (problem) {
+      // Never show zeros and "all good" on top of missing data.
+      setFeedback($("#home-feedback"), `${problem} Coba muat ulang halaman.`, "error");
+      $("#home-summary").textContent = "Ringkasan belum lengkap.";
+      ["#home-stats", "#home-upcoming", "#home-tasks"].forEach((selector) => { $(selector).innerHTML = ""; });
+      return;
+    }
+    renderHome();
+  };
+
+  // Shortcuts from Beranda into a filtered tab.
+  const openRegistrations = async ({ event = "", status = "", lifecycle = "active" } = {}) => {
+    $("#registration-search").value = "";
+    $("#payment-status-filter").value = "";
+    $("#registration-status-filter").value = status;
+    registrationLifecycle = lifecycle;
+    document.querySelectorAll("[data-registration-lifecycle]").forEach((tab) => {
+      const active = tab.dataset.registrationLifecycle === lifecycle;
+      tab.classList.toggle("is-active", active);
+      tab.setAttribute("aria-selected", String(active));
+    });
+    if (!tabCache.events.loadedAt) await loadEvents();
+    $("#registration-event-filter").value = event;
+    await showRegistrations();
+  };
+  const openCertificates = async (slug) => {
+    await showCertificates();
+    const select = $("#certificate-event");
+    if (slug && select.value !== slug && [...select.options].some((option) => option.value === slug)) {
+      select.value = slug;
+      await loadCertificateSettings();
+    }
+  };
+
+  homeView.addEventListener("click", (event) => {
+    if (event.target.closest("[data-home-add-event]")) return showForm();
+    const stat = event.target.closest("[data-home-stat]");
+    if (stat) {
+      const key = stat.dataset.homeStat;
+      if (key === "seats") return showEvents();
+      return void openRegistrations({ status: key === "pending" ? "pending_payment" : key === "applied" ? "applied" : "" });
+    }
+    const go = event.target.closest("[data-home-go]");
+    if (!go) return;
+    event.preventDefault();
+    const slug = go.dataset.homeEvent || "";
+    if (go.dataset.homeGo === "events") return showEvents();
+    if (go.dataset.homeGo === "certificates") return void openCertificates(slug);
+    if (go.dataset.homeGo === "edit") {
+      const target = events.find((item) => item.slug === slug);
+      return target ? showForm(target) : showEvents();
+    }
+    return void openRegistrations({ event: slug, lifecycle: go.dataset.homeLifecycle || "active" });
+  });
+
   const showEvents = () => {
     formView.hidden = true;
     registrationsView.hidden = true;
@@ -1373,10 +1704,13 @@
     storiesView.hidden = true;
     storyFormView.hidden = true;
     eventsView.hidden = false;
+    homeView.hidden = true;
     setActiveNavigation("events");
     window.scrollTo({ top: 0, behavior: "instant" });
     $("#add-event-button").focus();
     void loadEvents();
+    // Seat counts for the capacity bars arrive separately; redraw once they do.
+    void loadHomeRegistrations().then(() => { if (!eventsView.hidden) renderEvents(); }).catch(() => undefined);
   };
 
   const setActiveNavigation = (view) => {
@@ -1391,6 +1725,7 @@
   const showRegistrations = async () => {
     formView.hidden = true;
     eventsView.hidden = true;
+    homeView.hidden = true;
     adminsView.hidden = true;
     certificatesView.hidden = true;
     storiesView.hidden = true;
@@ -1406,6 +1741,7 @@
     if (currentRole !== "super_admin") return showEvents();
     formView.hidden = true;
     eventsView.hidden = true;
+    homeView.hidden = true;
     registrationsView.hidden = true;
     storiesView.hidden = true;
     storyFormView.hidden = true;
@@ -1449,6 +1785,7 @@
   const showStoryForm = (story = null) => {
     fillStoryForm(story);
     eventsView.hidden = true;
+    homeView.hidden = true;
     formView.hidden = true;
     registrationsView.hidden = true;
     adminsView.hidden = true;
@@ -1461,6 +1798,7 @@
 
   const showStories = async () => {
     eventsView.hidden = true;
+    homeView.hidden = true;
     formView.hidden = true;
     registrationsView.hidden = true;
     adminsView.hidden = true;
@@ -1977,6 +2315,7 @@
   const showCertificates = async () => {
     formView.hidden = true;
     eventsView.hidden = true;
+    homeView.hidden = true;
     registrationsView.hidden = true;
     storiesView.hidden = true;
     storyFormView.hidden = true;
@@ -2770,6 +3109,7 @@
       stopped = error.message;
     } finally {
       issuance.running = false;
+      home.checksAt = 0;
       await loadRecipients();
     }
     const message = [
@@ -2778,7 +3118,8 @@
       failures.length ? `Gagal: ${failures.join("; ")}` : "",
       stopped,
     ].filter(Boolean).join(" ");
-    setFeedback(feedback, message, failures.length || stopped ? "error" : "success");
+    // Unsent emails need follow-up, so that message stays on screen instead of a passing toast.
+    setFeedback(feedback, message, failures.length || stopped ? "error" : emailProblems ? "warning" : "success");
   };
 
   $("#certificate-recipients").addEventListener("input", (event) => {
@@ -2820,13 +3161,15 @@
     link.addEventListener("click", (event) => {
       event.preventDefault();
       const view = link.dataset.adminView;
-      const alreadyVisible = (view === "events" && !eventsView.hidden)
+      const alreadyVisible = (view === "home" && !homeView.hidden)
+        || (view === "events" && !eventsView.hidden)
         || (view === "registrations" && !registrationsView.hidden)
         || (view === "stories" && !storiesView.hidden)
         || (view === "admins" && !adminsView.hidden)
         || (view === "certificates" && !certificatesView.hidden);
       if (alreadyVisible) return;
-      if (view === "certificates") showCertificates();
+      if (view === "home") showHome();
+      else if (view === "certificates") showCertificates();
       else if (view === "registrations") showRegistrations();
       else if (view === "stories") showStories();
       else if (view === "admins") showAdmins();
@@ -3001,7 +3344,7 @@
         setFeedback($("#login-feedback"), "Kata sandi berhasil diatur. Silakan masuk kembali.", "success");
       } else {
         showAdmin();
-        await loadEvents();
+        await showHome();
         prefetchAdminTabs();
       }
     } catch (error) {
@@ -3024,7 +3367,7 @@
       });
       saveSession(session);
       showAdmin();
-      await loadEvents();
+      await showHome();
       prefetchAdminTabs();
     } catch (error) {
       setFeedback($("#login-feedback"), error.message, "error");
@@ -3257,6 +3600,8 @@
     tabCache.admins.loadedAt = 0;
     tabCache.admins.request = null;
     tabCache.registrations.clear();
+    home.loadedAt = 0;
+    home.checksAt = 0;
     currentRole = "";
     loginForm.reset();
     passwordSetupForm.reset();
@@ -3277,7 +3622,7 @@
     const token = await validAccessToken();
     if (!token) return showLogin();
     showAdmin();
-    await loadEvents();
+    await showHome();
     prefetchAdminTabs();
   })();
 })();

@@ -219,6 +219,18 @@ Lainnya:
   nama, status (titik) + kode, dan tombol keputusan (khusus Seleksi); isi dikelompokkan
   Seleksi → Data pendaftar → Kegiatan & pembayaran; WA hasil di footer (tersembunyi
   bila belum ada hasil). Pintasan: ← → pindah, T/C/X = Terima/Cadangan/Tolak.
+- Tampilan admin "playful" (Sep 2026, keputusan user): halaman pertama setelah login =
+  **Beranda** (`#home-view`): sapaan WIB + nama (dari `user_metadata`/email di token),
+  4 angka yang bisa diklik (pendaftar baru 24 jam, menunggu bayar, menunggu seleksi,
+  kursi terisi), "Kegiatan terdekat" (maks. 3, countdown + bar kapasitas), dan
+  "Perlu ditindaklanjuti" (tandai hadir ≤7 hari setelah kegiatan, sertifikat H+7–30,
+  belum tayang, pendaftaran tutup ≤3 hari, ≥80% penuh). Angka dihitung di browser dari
+  `admin-registrations?lifecycle=active` (tanpa function baru), jadi kegiatan yang sudah
+  selesai tidak menampilkan kapasitas. Kegiatan/Kisah jadi kartu membulat (radius 18px,
+  bayangan hangat), tombol dan label status berbentuk pil, kata aksen `h1 em` Newsreader
+  italic, skeleton saat memuat, dan pesan sukses jadi toast (kecuali di layar login dan
+  hasil terbit sertifikat yang masih punya email gagal: tetap inline). Daftar Pendaftar
+  tetap padat ala Linear.
 - Admin di HP (≤768px): tab bar bawah dengan ikon (disembunyikan saat form
   kegiatan/kisah terbuka), logo di header, judul + tombol Tambah satu baris,
   kartu kegiatan ringkas tanpa label. Tablet (769–900px) tetap tab atas. Form
