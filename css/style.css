@@ -242,7 +242,13 @@
 .status-result { max-width: 760px; margin-top: 8px; padding-top: 24px; border-top: 2px solid var(--ink); }
 .status-result h2 { margin: 6px 0 10px; }
 .status-result .btn { margin-top: 12px; }
-@media (max-width: 640px) { .status-form { grid-template-columns: 1fr; } }
+.certificate-valid { display: flex; align-items: center; gap: 8px; margin: 0; color: #2f6b3a; font-weight: 700; }
+.certificate-valid svg { width: 22px; height: 22px; flex: none; }
+.certificate-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 28px; margin: 18px 0 8px; }
+.certificate-facts dt { color: var(--muted); font-size: 13px; }
+.certificate-facts dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.certificate-note { margin-top: 18px; color: var(--muted); font-size: 14px; }
+@media (max-width: 640px) { .status-form, .certificate-facts { grid-template-columns: 1fr; } }
 .event-detail-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; margin: 32px 0; }
 .event-detail-grid > img { border-radius: 20px; aspect-ratio: 3 / 2; height: auto; }
 .detail-checklist { padding: 28px; margin: 24px 0; background: white; border: 1px solid var(--line); border-radius: 20px; }

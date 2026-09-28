@@ -343,6 +343,18 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
 .certificate-preview figcaption { display: grid; gap: 6px; margin-top: 10px; }
 .certificate-warnings { margin: 0; padding-left: 18px; color: #8c3030; font-size: .85rem; }
 .certificate-warnings:empty { display: none; }
+.certificate-issue { padding: 28px 0; border-top: 1px solid var(--line); }
+.certificate-issue-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-bottom: 14px; }
+.certificate-issue-toolbar > span { margin-right: auto; color: var(--muted); font-size: .88rem; }
+.certificate-recipients { border-top: 1px solid var(--line); }
+.certificate-recipient { display: grid; grid-template-columns: minmax(220px, 1.2fr) minmax(0, 1fr) auto; gap: 6px 18px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.certificate-recipient input { min-width: 0; }
+.certificate-recipient-contact { grid-column: 1; }
+.certificate-recipient-state { grid-column: 2; grid-row: 1 / span 2; font-size: .86rem; overflow-wrap: anywhere; }
+.certificate-recipient-state.is-positive { color: #2f6b3a; }
+.certificate-recipient-state.is-warning { color: #8c5a00; }
+.certificate-recipient-actions { grid-column: 3; grid-row: 1 / span 2; display: flex; flex-wrap: wrap; justify-content: end; gap: 4px 16px; }
+.certificate-recipient-actions .text-button { min-height: 36px; font-size: .85rem; text-decoration: none; display: inline-flex; align-items: center; }
 
 @media (max-width: 900px) {
   .admin-shell { display: block; }
@@ -381,6 +393,9 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
   .admin-row-actions { grid-column: 1 / -1; }
   .signer-row { grid-template-columns: 200px minmax(0, 1fr); }
   .certificate-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .certificate-recipient { grid-template-columns: minmax(0, 1fr) auto; }
+  .certificate-recipient-state { grid-column: 1; grid-row: auto; }
+  .certificate-recipient-actions { grid-column: 2; grid-row: 1 / span 3; }
   .signer-row > .button { grid-column: 2; justify-self: start; }
 }
 
@@ -599,6 +614,9 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); }
   .admin-invite-form .button, .admin-row-actions { grid-column: auto; }
   .signer-form, .certificate-form { grid-template-columns: 1fr; }
   .certificate-form > .button { justify-self: stretch; min-height: 46px; }
+  .certificate-recipient { grid-template-columns: minmax(0, 1fr); }
+  .certificate-recipient-actions { grid-column: 1; grid-row: auto; justify-content: start; }
+  .certificate-issue-toolbar .button { width: 100%; min-height: 46px; }
   .signer-form > .button { justify-self: stretch; min-height: 46px; }
   .signer-row { grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .signer-row > .button { grid-column: auto; justify-self: stretch; min-height: 44px; }

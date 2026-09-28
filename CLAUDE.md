@@ -286,8 +286,18 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   4 warna atau PNG khusus, logo KB berwarna/putih (Balok otomatis putih),
   deskripsi lanjutan. Pratinjau langsung digambar `js/certificate.js` (canvas,
   dipakai lagi saat terbit) dengan nama contoh + peringatan (nomor/PL kosong,
-  deskripsi kepanjangan). Tahap berikutnya: terbitkan + email → halaman cek
-  keaslian.
+  deskripsi kepanjangan).
+- Tahap 4 **dibangun (Sep 2026)**: bagian "Terbitkan sertifikat" di tab
+  Sertifikat (Edge Function `admin-certificate-issue`, tabel `certificates`,
+  bucket privat `certificates`): daftar yang hadir, nama bisa diedit +
+  "Rapikan huruf kapital", terbit mulai H+7 dan hanya jika nomor/Founder/PL
+  lengkap dan form sudah disimpan. PDF digambar di browser admin
+  (`KBCertificate.toPdf`, JPEG dalam PDF A4), email lewat Brevo API
+  (`BREVO_API_KEY`), per orang ada Lihat · Terbitkan ulang (kode/link tetap) ·
+  Kirim ulang email · WA. Halaman publik `sertifikat.html?k=` (noindex) +
+  function `public-certificate`. Belum: link sertifikat di Cek status,
+  pengumuman grup WA (manual), font Garet. Detail: "Issuing certificates" di
+  `supabase/README.md`.
 - Alur: admin klik "Terbitkan sertifikat" → semua yang hadir → pratinjau
   daftar nama (bisa dibetulkan; rapikan huruf kapital) → tiap sertifikat dapat
   **link pribadi** acak (`sertifikat?k=...`, sama dengan isi QR) yang

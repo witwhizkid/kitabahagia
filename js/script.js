@@ -3008,6 +3008,65 @@ if (registrationForm) {
   });
 }
 
+// sertifikat.html?k=<code>: the link in the certificate QR and email. The PDF link is
+// signed for 10 minutes, so "Unduh PDF" asks for a fresh one on every click.
+const certificateCheck = document.querySelector('.certificate-check');
+if (certificateCheck) {
+  const message = document.getElementById('certificateMessage');
+  const result = document.getElementById('certificateResult');
+  const code = new URLSearchParams(window.location.search).get('k') || '';
+  const lookup = async () => {
+    const response = await fetch(`${SUPABASE_FUNCTIONS_BASE_URL}/public-certificate?k=${encodeURIComponent(code)}`, {
+      headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(10000)
+    });
+    if (response.status === 404) return null;
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.certificate) throw new Error('lookup failed');
+    return payload.certificate;
+  };
+  const dateText = (certificate) => {
+    const start = eventDateFormatter.format(new Date(`${certificate.event_date}T12:00:00+07:00`));
+    if (!certificate.event_end_at) return start;
+    const end = eventDateFormatter.format(new Date(certificate.event_end_at));
+    return end === start ? start : `${start} – ${end}`;
+  };
+  const show = (certificate) => {
+    const set = (key, value) => { result.querySelector(`[data-certificate-${key}]`).textContent = value; };
+    set('name', certificate.recipient_name);
+    set('role', certificate.role);
+    set('event', certificate.event_title);
+    set('date', dateText(certificate));
+    set('number', certificate.certificate_number);
+    set('issued', eventDateFormatter.format(new Date(certificate.issued_at)));
+    message.textContent = '';
+    message.hidden = true;
+    result.hidden = false;
+  };
+  const notFound = 'Sertifikat tidak ditemukan. Pastikan link atau QR-nya utuh. Kalau yakin sertifikatmu asli, hubungi Kita Bahagia lewat halaman Kontak.';
+  const failed = 'Sertifikat belum dapat diperiksa. Periksa koneksi lalu muat ulang halaman ini.';
+  if (!/^[A-Za-z0-9]{20,40}$/.test(code)) {
+    message.textContent = notFound;
+  } else {
+    lookup()
+      .then((certificate) => (certificate ? show(certificate) : (message.textContent = notFound)))
+      .catch(() => { message.textContent = failed; });
+  }
+  result.querySelector('[data-certificate-download]').addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      const certificate = await lookup();
+      if (!certificate?.pdf_url) throw new Error('no pdf');
+      window.location.href = certificate.pdf_url;
+    } catch {
+      message.hidden = false;
+      message.textContent = 'PDF belum dapat diunduh. Coba lagi sebentar lagi.';
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
 // cek-status.html: look up a registration by code + email (same endpoint as payment recovery).
 const statusForm = document.getElementById('statusForm');
 if (statusForm) {

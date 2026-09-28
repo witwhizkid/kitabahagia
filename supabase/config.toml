@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.admin-certificates]
 verify_jwt = false
+
+[functions.admin-certificate-issue]
+verify_jwt = false
+
+[functions.public-certificate]
+verify_jwt = false

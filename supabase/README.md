@@ -319,6 +319,36 @@ Garet is self-hosted. **Deploy order:** migration, `admin-certificates`, site.
 Rollback: previous site + function, empty the bucket, then
 `supabase/rollback/20261008010000_event_certificate_settings.down.sql`.
 
+## Issuing certificates (sertifikat tahap 4)
+
+Migration `20261009010000_certificates.sql` adds `certificates` (one per
+registration: random `verification_code` of 20 letters/digits, snapshot of
+`recipient_name`, `certificate_number`, `event_title`, `event_date`,
+`event_end_at`; `pdf_path`, `issued_at`, `issued_by`, `email_sent_at`,
+`email_error`) and the private bucket `certificates` (PDF, 4 MB).
+Edge Function `admin-certificate-issue` (admin/super_admin):
+`GET ?event=` lists confirmed registrants marked present with their certificate
+state, `opens_on` / `open` (H+7 after the event's last day, WIB), `missing`
+settings and `email_ready`; `POST ?event=&action=issue` creates the row (or
+re-issues with the same code and link: new name/number snapshot);
+`action=pdf&code=` stores the PDF (`%PDF-`, ≤4 MB, overwrites) and sets
+`issued_at`; `action=email` sends the link through the Brevo API
+(`BREVO_API_KEY` secret, sender `CERTIFICATE_EMAIL_FROM` or
+`noreply@kitabahagia.id`, reply-to `halo@`) and records the result. The PDF is
+drawn in the admin's browser with `js/certificate.js` from the **saved**
+settings (the page refuses while the form has unsaved changes) and wrapped as a
+one-page A4 PDF (`KBCertificate.toPdf`, no library). Images for the canvas are
+fetched as blobs → `ImageBitmap` so the canvas stays exportable.
+Public Edge Function `public-certificate` (`GET ?k=`) returns only name,
+number, event, dates, role and a 10-minute signed `pdf_url` (with `download`),
+and 404 for unknown or not-yet-stored certificates. `sertifikat.html?k=`
+(noindex, not in the sitemap) shows it; "Unduh PDF" asks for a fresh URL.
+**Deploy order:** migration, `supabase secrets set BREVO_API_KEY=...`, the two
+functions, then the site. Without the key, issuing works and the email status
+says "Email belum diaktifkan"; the WA button is the fallback. Rollback: see
+`supabase/rollback/20261009010000_certificates.down.sql` (breaks links already
+sent).
+
 ## Event location link ("Petunjuk arah")
 
 Migration `20261005010000_event_location_url.sql` adds optional

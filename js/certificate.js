@@ -310,14 +310,55 @@
 
     const descriptionTop = roleTop + 68;
     const runs = [...spec.opening, ...(spec.description ? [{ text: ` ${spec.description.replace(/\s+/g, " ").trim()}`, bold: false }] : [])];
-    const paragraph = layoutParagraph(context, runs, 1318, 1084 - descriptionTop);
+    const paragraph = layoutParagraph(context, runs, 1250, 1084 - descriptionTop);
     context.fillStyle = TEXT;
-    drawParagraph(context, paragraph, 130, descriptionTop, 1318);
+    drawParagraph(context, paragraph, 130, descriptionTop, 1250);
 
     const { qrX, qrSize } = drawSigners(context, spec.signers || []);
     drawQr(context, spec.qrUrl || "https://kitabahagia.id/sertifikat", qrX, 1150, qrSize);
     return { nameSize: name.size, nameLines: name.lines.length, descriptionSize: paragraph.size, overflow: paragraph.overflow };
   };
 
-  window.KBCertificate = { WIDTH, HEIGHT, loadFonts, render, openingRuns, formatDateRange };
+  // One-page A4 landscape PDF holding the canvas as a JPEG (no PDF library needed).
+  const toPdf = async (canvas, quality = 0.92) => {
+    const jpegBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+    if (!jpegBlob) throw new Error("Sertifikat tidak dapat diubah menjadi gambar.");
+    const jpeg = new Uint8Array(await jpegBlob.arrayBuffer());
+    const encoder = new TextEncoder();
+    const parts = [];
+    const offsets = [];
+    let length = 0;
+    const push = (chunk) => {
+      const bytes = typeof chunk === "string" ? encoder.encode(chunk) : chunk;
+      parts.push(bytes);
+      length += bytes.length;
+    };
+    const object = (number, dictionary, stream) => {
+      offsets[number] = length;
+      push(`${number} 0 obj\n${dictionary}\n`);
+      if (stream) {
+        push("stream\n");
+        push(stream);
+        push("\nendstream\n");
+      }
+      push("endobj\n");
+    };
+    const pageWidth = 841.89;
+    const pageHeight = 595.28;
+    const content = encoder.encode(`q ${pageWidth} 0 0 ${pageHeight} 0 0 cm /Im0 Do Q`);
+    push("%PDF-1.4\n");
+    push(new Uint8Array([37, 226, 227, 207, 211, 10]));
+    object(1, "<< /Type /Catalog /Pages 2 0 R >>");
+    object(2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+    object(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`);
+    object(4, `<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>`, jpeg);
+    object(5, `<< /Length ${content.length} >>`, content);
+    object(6, "<< /Title (Sertifikat Kita Bahagia) /Producer (kitabahagia.id) >>");
+    const xref = length;
+    push(`xref\n0 7\n0000000000 65535 f \n${offsets.slice(1).map((offset) => `${String(offset).padStart(10, "0")} 00000 n \n`).join("")}`);
+    push(`trailer\n<< /Size 7 /Root 1 0 R /Info 6 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+    return new Blob(parts, { type: "application/pdf" });
+  };
+
+  window.KBCertificate = { WIDTH, HEIGHT, loadFonts, render, openingRuns, formatDateRange, toPdf };
 })();

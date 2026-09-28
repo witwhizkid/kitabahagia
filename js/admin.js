@@ -11,6 +11,7 @@
   const adminUsersUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-users`;
   const adminStoriesUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-stories`;
   const adminCertificatesUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-certificates`;
+  const adminCertificateIssueUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-certificate-issue`;
 
   const $ = (selector) => document.querySelector(selector);
   const loginView = $("#login-view");
@@ -1925,14 +1926,18 @@
     pending: false,
   };
   const imageCache = new Map();
+  // fetch + ImageBitmap (not <img>): the canvas stays exportable to PDF, and no blob: URL is needed under the CSP.
   const loadImage = (url) => {
     if (!url) return Promise.resolve(null);
     if (!imageCache.has(url)) {
-      imageCache.set(url, new Promise((resolve) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = () => resolve(null);
-        image.src = url;
+      const request = fetch(url)
+        .then((response) => (response.ok ? response.blob() : null))
+        .then((blob) => (blob ? createImageBitmap(blob) : null))
+        .catch(() => null);
+      // Failures are not cached, so a later try (e.g. with a fresh signed URL) can succeed.
+      imageCache.set(url, request.then((image) => {
+        if (!image) imageCache.delete(url);
+        return image;
       }));
     }
     return imageCache.get(url);
@@ -2006,31 +2011,44 @@
     return { columns, ornament, partnerLogo, partner, logos: { color, white } };
   };
 
+  const certificateOpening = (event) => KBCertificate.openingRuns({
+    category: event.category, title: event.title, eventDate: event.event_date, endAt: event.end_at,
+    location: event.location, partner: signerById($("#certificate-partner").value)?.organization,
+  });
+
+  // The form (= saved settings when issuing) plus one name, number and QR link.
+  const certificateSpec = async (event, { name, number, qrUrl }) => {
+    const [images] = await Promise.all([certificateSpecImages(), KBCertificate.loadFonts()]);
+    return {
+      images,
+      spec: {
+        number,
+        name,
+        opening: certificateOpening(event),
+        description: $("#certificate-description").value.trim(),
+        ornament: { preset: $("#certificate-ornament").value, color: $("#certificate-color").value, image: images.ornament },
+        logoVariant: $("#certificate-logo").value,
+        logos: images.logos,
+        partnerLogo: images.partnerLogo,
+        signers: images.columns,
+        qrUrl,
+      },
+    };
+  };
+
   const renderCertificatePreview = async () => {
     const event = selectedCertificateEvent();
     if (!event || !window.KBCertificate) return;
     const seq = ++certificate.renderSeq;
     syncCertificateForm();
-    const opening = KBCertificate.openingRuns({
-      category: event.category, title: event.title, eventDate: event.event_date, endAt: event.end_at,
-      location: event.location, partner: signerById($("#certificate-partner").value)?.organization,
-    });
-    $("#certificate-opening").textContent = opening.map((run) => run.text).join("");
-    const [images] = await Promise.all([certificateSpecImages(), KBCertificate.loadFonts()]);
-    if (seq !== certificate.renderSeq) return;
-    const description = $("#certificate-description").value.trim();
-    const layout = KBCertificate.render($("#certificate-canvas"), {
-      number: $("#certificate-number").value.trim(),
+    $("#certificate-opening").textContent = certificateOpening(event).map((run) => run.text).join("");
+    const { images, spec } = await certificateSpec(event, {
       name: $("#certificate-sample-name").value.trim() || "Nama Relawan",
-      opening,
-      description,
-      ornament: { preset: $("#certificate-ornament").value, color: $("#certificate-color").value, image: images.ornament },
-      logoVariant: $("#certificate-logo").value,
-      logos: images.logos,
-      partnerLogo: images.partnerLogo,
-      signers: images.columns,
+      number: $("#certificate-number").value.trim(),
       qrUrl: "https://kitabahagia.id/sertifikat?k=CONTOH",
     });
+    if (seq !== certificate.renderSeq) return;
+    const layout = KBCertificate.render($("#certificate-canvas"), spec);
     $("#certificate-preview").hidden = false;
     const warnings = [
       !$("#certificate-number").value.trim() && "Nomor sertifikat belum diisi.",
@@ -2075,6 +2093,9 @@
     if (!slug) return;
     const seq = ++certificate.loadSeq;
     certificate.loadedSlug = "";
+    issuance.data = null;
+    issuance.names = {};
+    renderRecipients();
     syncCertificateForm();
     const feedback = $("#certificate-settings-feedback");
     setFeedback(feedback, "Memuat pengaturan…");
@@ -2089,6 +2110,7 @@
       renderSigners();
       setFeedback(feedback);
       scheduleCertificatePreview();
+      void loadRecipients();
     } catch (error) {
       if (seq === certificate.loadSeq) setFeedback(feedback, error.message, "error");
     }
@@ -2209,6 +2231,7 @@
         signers = Array.isArray(data.signers) ? data.signers : signers;
         applyCertificateSettings(data.settings || null);
         renderSigners();
+        void loadRecipients();
       }
       setFeedback(feedback, "Pengaturan sertifikat tersimpan.", "success");
     } catch (error) {
@@ -2217,6 +2240,223 @@
       certificate.pending = false;
       scheduleCertificatePreview();
     }
+  });
+
+  // Sertifikat → issuing. Each certificate is drawn here with the saved settings, wrapped
+  // in a PDF and uploaded; admin-certificate-issue owns the codes, the rules and the email.
+  const issuance = { data: null, names: {}, running: false, loadSeq: 0, busyCode: "" };
+  const issueUrl = (params) => {
+    const url = new URL(adminCertificateIssueUrl);
+    Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+    return url;
+  };
+  const issueJson = (params, body) => authorizedRequest(issueUrl(params), {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+
+  // Issuing draws what the form shows, so the form must equal the saved settings.
+  const certificateFormDirty = () => {
+    const saved = certificate.settings;
+    if (!saved) return true;
+    const custom = $("#certificate-ornament").value === "custom";
+    return ($("#certificate-number").value.trim() || null) !== (saved.certificate_number || null)
+      || ($("#certificate-description").value.trim() || null) !== (saved.description || null)
+      || custom !== Boolean(saved.ornament_url)
+      || (!custom && ($("#certificate-ornament").value !== saved.ornament_preset || $("#certificate-color").value !== saved.ornament_color))
+      || $("#certificate-logo").value !== saved.logo_variant
+      || ($("#certificate-founder").value || null) !== (saved.founder_id || null)
+      || ($("#certificate-leader").value || null) !== (saved.project_leader_id || null)
+      || ($("#certificate-partner").value || null) !== (saved.partner_signer_id || null)
+      || Boolean(certificate.ornamentUpload || certificate.logoUpload || certificate.removePartnerLogo);
+  };
+
+  const recipientName = (recipient) => issuance.names[recipient.registration_code]
+    ?? recipient.certificate?.recipient_name ?? recipient.name;
+
+  // "nadia putri LESTARI" → "Nadia Putri Lestari" (also after - and ').
+  const tidyName = (name) => name.trim().replace(/\s+/g, " ").toLocaleLowerCase("id-ID")
+    .replace(/(^|[\s'-])(\p{L})/gu, (match, before, letter) => before + letter.toLocaleUpperCase("id-ID"));
+
+  const renderRecipients = () => {
+    const data = issuance.data;
+    const section = $("#certificate-issue");
+    section.hidden = !data;
+    if (!data) return;
+    const recipients = data.recipients || [];
+    const issued = recipients.filter((recipient) => recipient.certificate?.issued_at);
+    const pending = recipients.filter((recipient) => !recipient.certificate?.issued_at);
+    const blocked = data.missing?.length ? `Lengkapi dulu di pengaturan: ${data.missing.join(", ")}.`
+      : !data.open ? `Sertifikat bisa diterbitkan mulai ${formatDate(data.opens_on)} (H+7 setelah kegiatan).`
+        : "";
+    const state = $("#certificate-issue-state");
+    state.textContent = blocked || (recipients.length ? "" : "Belum ada pendaftar yang ditandai hadir. Tandai hadir dulu di tab Pendaftar.");
+    state.hidden = !state.textContent;
+    $("#certificate-issue-toolbar").hidden = recipients.length === 0;
+    const emailed = recipients.filter((recipient) => recipient.certificate?.email_sent_at).length;
+    $("#certificate-issue-summary").textContent = `${issued.length}/${recipients.length} terbit · ${emailed} email terkirim${data.email_ready ? "" : " · email otomatis belum aktif"}`;
+    const allButton = $("#certificate-issue-all");
+    allButton.textContent = pending.length ? `Terbitkan ${pending.length} sertifikat` : "Semua sudah terbit";
+    allButton.disabled = issuance.running || Boolean(blocked) || pending.length === 0;
+    $("#certificate-tidy-names").disabled = issuance.running;
+    $("#certificate-recipients").innerHTML = recipients.map((recipient) => {
+      const cert = recipient.certificate;
+      const code = recipient.registration_code;
+      const busy = issuance.running || issuance.busyCode === code;
+      const status = !cert?.issued_at ? "Belum terbit"
+        : cert.email_sent_at ? `Terbit · email terkirim ${formatDateTime(cert.email_sent_at)}`
+          : cert.email_error ? `Terbit · ${cert.email_error}` : "Terbit · email belum dikirim";
+      const tone = !cert?.issued_at ? "" : cert.email_sent_at ? " is-positive" : " is-warning";
+      const phone = normalizeWhatsApp(recipient.phone);
+      const waText = cert?.issued_at ? `Halo ${recipientName(recipient)}, sertifikat relawan ${selectedCertificateEvent()?.title || ""} dari Kita Bahagia sudah terbit. Lihat dan unduh di sini: ${cert.url}` : "";
+      return `
+        <div class="certificate-recipient" data-recipient="${escapeHtml(code)}">
+          <input type="text" maxlength="120" value="${escapeHtml(recipientName(recipient))}" aria-label="Nama di sertifikat untuk ${escapeHtml(recipient.name)}" data-recipient-name="${escapeHtml(code)}"${busy ? " disabled" : ""} />
+          <span class="certificate-recipient-contact registration-sub">${escapeHtml(recipient.email || "-")} · ${escapeHtml(code)}</span>
+          <span class="certificate-recipient-state${tone}">${escapeHtml(status)}</span>
+          <div class="certificate-recipient-actions">
+            ${cert?.issued_at ? `<a class="text-button" href="${escapeHtml(cert.url)}" target="_blank" rel="noopener">Lihat</a>` : ""}
+            ${cert?.issued_at ? `<button class="text-button" type="button" data-reissue="${escapeHtml(code)}"${busy || blocked ? " disabled" : ""}>Terbitkan ulang</button>` : ""}
+            ${cert?.issued_at && data.email_ready ? `<button class="text-button" type="button" data-resend="${escapeHtml(code)}"${busy ? " disabled" : ""}>${cert.email_sent_at ? "Kirim ulang email" : "Kirim email"}</button>` : ""}
+            ${cert?.issued_at && phone ? `<a class="text-button" href="https://wa.me/${phone}?text=${encodeURIComponent(waText)}" target="_blank" rel="noopener noreferrer">WA</a>` : ""}
+          </div>
+        </div>`;
+    }).join("");
+  };
+
+  const loadRecipients = async () => {
+    const slug = $("#certificate-event").value;
+    if (!slug) return;
+    const seq = ++issuance.loadSeq;
+    try {
+      const data = await authorizedRequest(issueUrl({ event: slug }));
+      if (seq !== issuance.loadSeq || slug !== $("#certificate-event").value) return;
+      issuance.data = data;
+      renderRecipients();
+    } catch (error) {
+      if (seq === issuance.loadSeq) setFeedback($("#certificate-issue-feedback"), error.message, "error");
+    }
+  };
+
+  // One snapshot of the saved settings (fresh signed image URLs) for the whole run, so
+  // editing the form or switching events mid-run cannot change what gets printed.
+  const issueSnapshot = async (event) => {
+    const url = new URL(adminCertificatesUrl);
+    url.searchParams.set("event", event.slug);
+    const data = await authorizedRequest(url);
+    if (event.slug !== $("#certificate-event").value) throw new Error("Kegiatan berganti. Ulangi penerbitan.");
+    signers = Array.isArray(data.signers) ? data.signers : signers;
+    applyCertificateSettings(data.settings || null);
+    certificate.loadedSlug = event.slug;
+    const { images, spec } = await certificateSpec(event, { name: "", number: "", qrUrl: "" });
+    const saved = data.settings || {};
+    const incomplete = images.columns.some((column) => column.name && !column.signature)
+      || !images.logos.color || !images.logos.white
+      || (saved.ornament_url && !images.ornament)
+      || (saved.partner_signer_id && saved.partner_logo_url && !images.partnerLogo);
+    if (incomplete) throw new Error("Gambar tanda tangan/logo/ornamen gagal dimuat. Periksa koneksi lalu coba lagi.");
+    return spec;
+  };
+
+  // Resolves to { email } once the PDF is stored; an email problem never undoes the issue.
+  const issueCertificate = async (event, baseSpec, recipient, sendEmail) => {
+    const name = recipientName(recipient).trim().replace(/\s+/g, " ");
+    const slug = event.slug;
+    const { certificate: issued } = await issueJson({ event: slug, action: "issue" },
+      { registration_code: recipient.registration_code, recipient_name: name });
+    const canvas = document.createElement("canvas");
+    KBCertificate.render(canvas, { ...baseSpec, name, number: issued.certificate_number, qrUrl: issued.url });
+    const pdf = await KBCertificate.toPdf(canvas);
+    await authorizedRequest(issueUrl({ event: slug, action: "pdf", code: issued.verification_code, name, number: issued.certificate_number }), {
+      method: "POST", headers: { "Content-Type": "application/pdf" }, body: pdf,
+    });
+    if (!sendEmail) return { email: null };
+    try {
+      const { email } = await issueJson({ event: slug, action: "email" }, { code: issued.verification_code });
+      return { email };
+    } catch (error) {
+      return { email: { sent: false, error: error.message } };
+    }
+  };
+
+  const runIssue = async (recipients) => {
+    const event = selectedCertificateEvent();
+    const feedback = $("#certificate-issue-feedback");
+    if (!event || issuance.running || !recipients.length) return;
+    if (certificateFormDirty()) return setFeedback(feedback, "Simpan pengaturan dulu. Sertifikat digambar dari pengaturan yang tersimpan.", "error");
+    const badName = recipients.find((recipient) => recipientName(recipient).trim().length < 2);
+    if (badName) return setFeedback(feedback, `Nama untuk ${badName.name} masih kosong.`, "error");
+    issuance.running = true;
+    renderRecipients();
+    const failures = [];
+    let done = 0;
+    let emailProblems = 0;
+    let stopped = "";
+    try {
+      setFeedback(feedback, "Menyiapkan tanda tangan dan pengaturan…");
+      const baseSpec = await issueSnapshot(event);
+      for (const [index, recipient] of recipients.entries()) {
+        setFeedback(feedback, `Menerbitkan ${index + 1}/${recipients.length}: ${recipientName(recipient)}…`);
+        try {
+          const { email } = await issueCertificate(event, baseSpec, recipient, issuance.data?.email_ready);
+          done += 1;
+          if (email && !email.sent) emailProblems += 1;
+        } catch (error) {
+          failures.push(`${recipientName(recipient)}: ${error.message}`);
+          // Rules that apply to everyone (settings, date) stop the whole run.
+          if (["SETTINGS_INCOMPLETE", "TOO_EARLY", "SETTINGS_CHANGED"].includes(error.code)) {
+            stopped = `${recipients.length - index - 1} lainnya belum diproses.`;
+            break;
+          }
+        }
+      }
+    } catch (error) {
+      stopped = error.message;
+    } finally {
+      issuance.running = false;
+      await loadRecipients();
+    }
+    const message = [
+      `${done} sertifikat terbit.`,
+      emailProblems ? `${emailProblems} email belum terkirim (lihat status, bisa dikirim ulang atau lewat WA).` : "",
+      failures.length ? `Gagal: ${failures.join("; ")}` : "",
+      stopped,
+    ].filter(Boolean).join(" ");
+    setFeedback(feedback, message, failures.length || stopped ? "error" : "success");
+  };
+
+  $("#certificate-recipients").addEventListener("input", (event) => {
+    const input = event.target.closest("[data-recipient-name]");
+    if (input) issuance.names[input.dataset.recipientName] = input.value;
+  });
+  $("#certificate-recipients").addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-reissue], [data-resend]");
+    if (!button || issuance.running) return;
+    const code = button.dataset.reissue || button.dataset.resend;
+    const recipient = issuance.data?.recipients.find((item) => item.registration_code === code);
+    if (!recipient) return;
+    if (button.dataset.reissue) return runIssue([recipient]);
+    const feedback = $("#certificate-issue-feedback");
+    issuance.busyCode = code;
+    renderRecipients();
+    try {
+      const { email } = await issueJson({ event: $("#certificate-event").value, action: "email" }, { code: recipient.certificate.verification_code });
+      setFeedback(feedback, email.sent ? `Email terkirim ke ${recipient.email}.` : email.error, email.sent ? "success" : "error");
+    } catch (error) {
+      setFeedback(feedback, error.message, "error");
+    } finally {
+      issuance.busyCode = "";
+      await loadRecipients();
+    }
+  });
+  $("#certificate-tidy-names").addEventListener("click", () => {
+    // Only names not yet printed; issued ones change through "Terbitkan ulang".
+    (issuance.data?.recipients || []).filter((recipient) => !recipient.certificate?.issued_at).forEach((recipient) => {
+      issuance.names[recipient.registration_code] = tidyName(recipientName(recipient));
+    });
+    renderRecipients();
+  });
+  $("#certificate-issue-all").addEventListener("click", () => {
+    void runIssue((issuance.data?.recipients || []).filter((recipient) => !recipient.certificate?.issued_at));
   });
 
   document.querySelectorAll("[data-admin-view]").forEach((link) => {
