@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.admin-stories]
 verify_jwt = false
+
+[functions.admin-certificates]
+verify_jwt = false

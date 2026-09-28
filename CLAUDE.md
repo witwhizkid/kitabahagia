@@ -273,8 +273,15 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   Pendaftar, checkbox muncul untuk semua mode saat 1 kegiatan dipilih; hanya
   pendaftar `confirmed`, mulai hari kegiatan (WIB), 1 kegiatan per aksi;
   `registrations.attended_at/attendance_marked_by`, RPC `mark_attendance`. Detail:
-  "Attendance" di `supabase/README.md`. Tahap berikutnya: daftar tanda tangan →
-  pengaturan sertifikat per kegiatan → terbitkan + email → halaman cek keaslian.
+  "Attendance" di `supabase/README.md`.
+- Tahap 2 **dibangun (Sep 2026)**: admin → tab **Sertifikat** = daftar tanda
+  tangan (tabel `certificate_signers`, bucket privat `certificate-signatures`,
+  Edge Function `admin-certificates`). Foto tanda tangan/stempel diubah jadi PNG
+  transparan di browser (canvas, tanpa blob URL karena CSP), pratinjau bergaya
+  kolom tanda tangan, centang izin wajib, bisa dinonaktifkan (tidak dihapus).
+  Detail: "Certificate signers" di `supabase/README.md`. Tahap berikutnya:
+  pengaturan sertifikat per kegiatan (nomor, deskripsi, ornamen, PL, mitra) →
+  terbitkan + email → halaman cek keaslian.
 - Alur: admin klik "Terbitkan sertifikat" → semua yang hadir → pratinjau
   daftar nama (bisa dibetulkan; rapikan huruf kapital) → tiap sertifikat dapat
   **link pribadi** acak (`sertifikat?k=...`, sama dengan isi QR) yang

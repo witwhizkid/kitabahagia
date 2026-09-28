@@ -10,6 +10,7 @@
   const adminRegistrationsUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-registrations`;
   const adminUsersUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-users`;
   const adminStoriesUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-stories`;
+  const adminCertificatesUrl = `${CONFIG.supabaseUrl}/functions/v1/admin-certificates`;
 
   const $ = (selector) => document.querySelector(selector);
   const loginView = $("#login-view");
@@ -22,6 +23,7 @@
   const storiesView = $("#stories-view");
   const storyFormView = $("#story-form-view");
   const adminsView = $("#admins-view");
+  const certificatesView = $("#certificates-view");
   const loginForm = $("#login-form");
   const passwordSetupForm = $("#password-setup-form");
   const eventForm = $("#event-form");
@@ -221,6 +223,16 @@
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ registration_codes, decision }),
   });
+
+  const certificatesRequest = (method = "GET", { id = "", body, form } = {}) => {
+    const url = new URL(adminCertificatesUrl);
+    if (id) url.searchParams.set("id", id);
+    return authorizedRequest(url, {
+      method,
+      // FormData sets its own multipart boundary header.
+      ...(form ? { body: form } : body ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {}),
+    });
+  };
 
   const attendanceRequest = (registration_codes, attended) => authorizedRequest(adminRegistrationsUrl, {
     method: "POST",
@@ -1304,6 +1316,7 @@
     eventsView.hidden = true;
     registrationsView.hidden = true;
     adminsView.hidden = true;
+    certificatesView.hidden = true;
     storiesView.hidden = true;
     storyFormView.hidden = true;
     formView.hidden = false;
@@ -1315,6 +1328,7 @@
     formView.hidden = true;
     registrationsView.hidden = true;
     adminsView.hidden = true;
+    certificatesView.hidden = true;
     storiesView.hidden = true;
     storyFormView.hidden = true;
     eventsView.hidden = false;
@@ -1337,6 +1351,7 @@
     formView.hidden = true;
     eventsView.hidden = true;
     adminsView.hidden = true;
+    certificatesView.hidden = true;
     storiesView.hidden = true;
     storyFormView.hidden = true;
     registrationsView.hidden = false;
@@ -1354,6 +1369,7 @@
     storiesView.hidden = true;
     storyFormView.hidden = true;
     adminsView.hidden = false;
+    certificatesView.hidden = true;
     setActiveNavigation("admins");
     window.scrollTo({ top: 0, behavior: "instant" });
     await loadAdmins();
@@ -1395,6 +1411,7 @@
     formView.hidden = true;
     registrationsView.hidden = true;
     adminsView.hidden = true;
+    certificatesView.hidden = true;
     storiesView.hidden = true;
     storyFormView.hidden = false;
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -1406,6 +1423,7 @@
     formView.hidden = true;
     registrationsView.hidden = true;
     adminsView.hidden = true;
+    certificatesView.hidden = true;
     storyFormView.hidden = true;
     storiesView.hidden = false;
     setActiveNavigation("stories");
@@ -1626,6 +1644,265 @@
     storySlugManuallyEdited = true;
   });
 
+  // Sertifikat → signer list. Signatures are photos of pen on white paper: the paper is made
+  // transparent in the browser, so only the ink (PNG) is uploaded to the private bucket.
+  const signerRoleLabels = { founder: "Founder", project_leader: "Project Leader", partner: "Mitra kolaborasi" };
+  const signerDefaultTitles = { founder: "Founder Kita Bahagia", project_leader: "Project Leader", partner: "" };
+  const signerInk = { signature: null, stamp: null };
+  const signerReads = { signature: 0, stamp: 0 };
+  let signers = [];
+  let signerPending = false;
+
+  const extractInk = async (file) => {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) throw new Error("Gunakan foto JPG, PNG, atau WebP.");
+    if (file.size > MAX_SOURCE_BYTES) throw new Error("Ukuran foto maksimal 25 MB.");
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    } catch {
+      throw new Error("Foto tidak dapat dibaca. Coba simpan ulang sebagai JPG atau PNG.");
+    }
+    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const work = document.createElement("canvas");
+    work.width = width;
+    work.height = height;
+    const context = work.getContext("2d", { willReadFrequently: true });
+    context.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+    const image = context.getImageData(0, 0, width, height);
+    const pixels = image.data;
+    // Paper brightness = a high percentile of luminance, so ink and shadows do not skew it.
+    const histogram = new Uint32Array(256);
+    for (let index = 0; index < pixels.length; index += 4) {
+      const luminance = pixels[index + 3] < 10 ? 255 : Math.round(0.299 * pixels[index] + 0.587 * pixels[index + 1] + 0.114 * pixels[index + 2]);
+      histogram[luminance] += 1;
+    }
+    let paper = 255;
+    for (let level = 0, seen = 0; level < 256; level += 1) {
+      seen += histogram[level];
+      if (seen >= width * height * 0.75) { paper = level; break; }
+    }
+    const high = Math.max(60, paper - 18);
+    const low = Math.max(0, high - 90);
+    let minX = width; let minY = height; let maxX = -1; let maxY = -1;
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const index = (y * width + x) * 4;
+        const luminance = 0.299 * pixels[index] + 0.587 * pixels[index + 1] + 0.114 * pixels[index + 2];
+        const ink = luminance >= high ? 0 : luminance <= low ? 1 : (high - luminance) / (high - low);
+        const alpha = Math.round(ink * pixels[index + 3]);
+        if (alpha > 0) {
+          // Remove the paper tint from half-transparent edges so the ink does not get a grey halo.
+          for (let channel = 0; channel < 3; channel += 1) {
+            pixels[index + channel] = Math.max(0, Math.min(255, Math.round((pixels[index + channel] - paper * (1 - ink)) / ink)));
+          }
+        }
+        pixels[index + 3] = alpha;
+        if (alpha > 40) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    if (maxX < 0) throw new Error("Tanda tangan tidak terbaca. Pakai pulpen gelap di kertas putih polos.");
+    context.putImageData(image, 0, 0);
+    const pad = 12;
+    const sx = Math.max(0, minX - pad); const sy = Math.max(0, minY - pad);
+    const sw = Math.min(width, maxX + pad + 1) - sx; const sh = Math.min(height, maxY + pad + 1) - sy;
+    let fit = Math.min(1, 1200 / Math.max(sw, sh));
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const out = document.createElement("canvas");
+      out.width = Math.max(1, Math.round(sw * fit));
+      out.height = Math.max(1, Math.round(sh * fit));
+      const outContext = out.getContext("2d");
+      outContext.imageSmoothingQuality = "high";
+      outContext.drawImage(work, sx, sy, sw, sh, 0, 0, out.width, out.height);
+      const blob = await encodeCanvas(out, "image/png");
+      if (blob && blob.size <= 1024 * 1024) return { canvas: out, blob };
+      fit *= 0.7;
+    }
+    throw new Error("Foto tanda tangan terlalu besar. Coba foto yang lebih dekat.");
+  };
+
+  const syncSignerForm = () => {
+    const role = $("#signer-role").value;
+    $("#signer-organization-field").hidden = role !== "partner";
+    $("#signer-stamp-field").hidden = role !== "founder";
+    if (role !== "founder" && (signerInk.stamp || $("#signer-stamp-file").value)) {
+      $("#signer-stamp-file").value = "";
+      signerInk.stamp = null;
+      signerReads.stamp += 1;
+    }
+    const preview = $("#signer-preview");
+    preview.hidden = !signerInk.signature;
+    $("#signer-preview-title").textContent = $("#signer-title").value.trim() || "Jabatan";
+    $("#signer-preview-name").textContent = $("#signer-name").value.trim() || "Nama";
+    const ink = $("#signer-preview-ink");
+    ink.replaceChildren();
+    if (signerInk.stamp) {
+      signerInk.stamp.canvas.className = "signer-stamp";
+      ink.append(signerInk.stamp.canvas);
+    }
+    if (signerInk.signature) {
+      signerInk.signature.canvas.className = "signer-signature";
+      ink.append(signerInk.signature.canvas);
+    }
+    $("#signer-submit").disabled = signerPending;
+  };
+
+  const readSignerFile = async (input, key) => {
+    const feedback = $("#signer-form-feedback");
+    const file = input.files?.[0];
+    // A slower, older photo must not overwrite a newer pick (or a stamp cleared by a role change).
+    const read = ++signerReads[key];
+    signerInk[key] = null;
+    syncSignerForm();
+    if (!file) return;
+    setFeedback(feedback, "Memproses foto…");
+    try {
+      const ink = await extractInk(file);
+      if (read !== signerReads[key]) return;
+      signerInk[key] = ink;
+      setFeedback(feedback);
+    } catch (error) {
+      if (read !== signerReads[key]) return;
+      input.value = "";
+      setFeedback(feedback, error.message, "error");
+    }
+    syncSignerForm();
+  };
+
+  const renderSigners = () => {
+    $("#signers-loading").hidden = true;
+    $("#signers-empty").hidden = signers.length > 0;
+    const list = $("#signers-list");
+    list.hidden = signers.length === 0;
+    list.innerHTML = signers.map((signer) => `
+      <article class="signer-row${signer.is_active ? "" : " is-inactive"}">
+        <div class="signer-block">
+          <span class="signer-block-title">${escapeHtml(signer.title)}</span>
+          <div class="signer-ink">
+            ${signer.stamp_url ? `<img class="signer-stamp" src="${escapeHtml(signer.stamp_url)}" alt="" referrerpolicy="no-referrer" />` : ""}
+            ${signer.signature_url ? `<img class="signer-signature" src="${escapeHtml(signer.signature_url)}" alt="Tanda tangan ${escapeHtml(signer.name)}" referrerpolicy="no-referrer" />` : "<span class=\"registration-sub\">Gambar belum dapat dimuat</span>"}
+          </div>
+          <span class="signer-block-name">${escapeHtml(signer.name)}</span>
+        </div>
+        <div class="signer-meta">
+          <strong>${escapeHtml(signer.name)}</strong>
+          <span>${escapeHtml(signerRoleLabels[signer.role] || signer.role)}${signer.organization ? ` · ${escapeHtml(signer.organization)}` : ""}</span>
+          <span class="registration-sub">Ditambahkan ${escapeHtml(formatDateTime(signer.created_at))} oleh ${escapeHtml(String(signer.created_by || "").split("@")[0])}</span>
+          ${signer.is_active ? "" : "<span class=\"status-token is-negative\">Nonaktif</span>"}
+        </div>
+        <button class="button button-secondary" type="button" data-toggle-signer="${escapeHtml(signer.id)}" data-signer-active="${signer.is_active ? "false" : "true"}"${signerPending ? " disabled" : ""}>${signer.is_active ? "Nonaktifkan" : "Aktifkan lagi"}</button>
+      </article>
+    `).join("");
+  };
+
+  const loadSigners = async () => {
+    const feedback = $("#signers-feedback");
+    $("#signers-loading").hidden = signers.length > 0;
+    setFeedback(feedback);
+    try {
+      const data = await certificatesRequest();
+      signers = Array.isArray(data.signers) ? data.signers : [];
+      renderSigners();
+    } catch (error) {
+      $("#signers-loading").hidden = true;
+      setFeedback(feedback, error.message, "error");
+    }
+  };
+
+  const showCertificates = async () => {
+    formView.hidden = true;
+    eventsView.hidden = true;
+    registrationsView.hidden = true;
+    storiesView.hidden = true;
+    storyFormView.hidden = true;
+    adminsView.hidden = true;
+    certificatesView.hidden = false;
+    setActiveNavigation("certificates");
+    window.scrollTo({ top: 0, behavior: "instant" });
+    // Signed preview URLs last 10 minutes, so the list is fetched fresh on every visit.
+    await loadSigners();
+  };
+
+  let signerTitleEdited = false;
+  $("#signer-title").addEventListener("input", () => { signerTitleEdited = true; syncSignerForm(); });
+  $("#signer-name").addEventListener("input", syncSignerForm);
+  $("#signer-role").addEventListener("change", () => {
+    if (!signerTitleEdited) $("#signer-title").value = signerDefaultTitles[$("#signer-role").value] || "";
+    syncSignerForm();
+  });
+  $("#signer-signature-file").addEventListener("change", (event) => { void readSignerFile(event.currentTarget, "signature"); });
+  $("#signer-stamp-file").addEventListener("change", (event) => { void readSignerFile(event.currentTarget, "stamp"); });
+  $("#signer-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const signerForm = event.currentTarget;
+    const feedback = $("#signer-form-feedback");
+    const role = $("#signer-role").value;
+    const name = $("#signer-name").value.trim();
+    const title = $("#signer-title").value.trim();
+    const organization = $("#signer-organization").value.trim();
+    const problem = name.length < 2 ? "Isi nama lengkap penanda tangan."
+      : title.length < 2 ? "Isi jabatan yang dicetak di sertifikat."
+        : role === "partner" && organization.length < 2 ? "Isi nama organisasi mitra."
+          : !signerInk.signature ? "Pilih foto tanda tangan."
+            : !$("#signer-consent").checked ? "Centang izin dari pemilik tanda tangan." : "";
+    if (problem) return setFeedback(feedback, problem, "error");
+    const form = new FormData();
+    form.append("name", name);
+    form.append("role", role);
+    form.append("title", title);
+    if (role === "partner") form.append("organization", organization);
+    form.append("consent", "true");
+    form.append("signature", new File([signerInk.signature.blob], "signature.png", { type: "image/png" }));
+    if (role === "founder" && signerInk.stamp) form.append("stamp", new File([signerInk.stamp.blob], "stamp.png", { type: "image/png" }));
+    signerPending = true;
+    syncSignerForm();
+    setFeedback(feedback, "Menyimpan tanda tangan…");
+    try {
+      const data = await certificatesRequest("POST", { form });
+      if (Array.isArray(data.signers)) signers = data.signers;
+      else void loadSigners();
+      signerForm.reset();
+      signerInk.signature = null;
+      signerInk.stamp = null;
+      signerReads.signature += 1;
+      signerReads.stamp += 1;
+      signerTitleEdited = false;
+      $("#signer-title").value = signerDefaultTitles[$("#signer-role").value];
+      setFeedback(feedback, `Tanda tangan ${name} tersimpan.`, "success");
+    } catch (error) {
+      setFeedback(feedback, error.message, "error");
+    } finally {
+      signerPending = false;
+      syncSignerForm();
+      renderSigners();
+    }
+  });
+  $("#signers-list").addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-toggle-signer]");
+    if (!button || signerPending) return;
+    signerPending = true;
+    renderSigners();
+    const feedback = $("#signers-feedback");
+    try {
+      const data = await certificatesRequest("PATCH", { id: button.dataset.toggleSigner, body: { is_active: button.dataset.signerActive === "true" } });
+      if (Array.isArray(data.signers)) signers = data.signers;
+      else void loadSigners();
+      setFeedback(feedback);
+    } catch (error) {
+      setFeedback(feedback, error.message, "error");
+    } finally {
+      signerPending = false;
+      renderSigners();
+    }
+  });
+
   document.querySelectorAll("[data-admin-view]").forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
@@ -1633,9 +1910,11 @@
       const alreadyVisible = (view === "events" && !eventsView.hidden)
         || (view === "registrations" && !registrationsView.hidden)
         || (view === "stories" && !storiesView.hidden)
-        || (view === "admins" && !adminsView.hidden);
+        || (view === "admins" && !adminsView.hidden)
+        || (view === "certificates" && !certificatesView.hidden);
       if (alreadyVisible) return;
-      if (view === "registrations") showRegistrations();
+      if (view === "certificates") showCertificates();
+      else if (view === "registrations") showRegistrations();
       else if (view === "stories") showStories();
       else if (view === "admins") showAdmins();
       else showEvents();

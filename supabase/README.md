@@ -269,6 +269,30 @@ the CSV has a "Hadir" column. **Deploy order:** migration first, then
 `supabase/rollback/20261006010000_registration_attendance.down.sql` (this
 deletes the attendance marks).
 
+## Certificate signers ("Sertifikat" → daftar tanda tangan)
+
+Migration `20261007010000_certificate_signers.sql` adds
+`certificate_signers` (name, role `founder | project_leader | partner`, title
+printed above the signature, organization for partners, `signature_path`,
+`stamp_path` for the founder only, `is_active`, `consent_confirmed_at`,
+`created_by` email) and the private bucket `certificate-signatures` (PNG only,
+1 MB, no Storage policies). Only service_role touches either.
+Edge Function `admin-certificates` (admin/super_admin, `verify_jwt = false`,
+own auth check): `GET` lists signers with 10-minute signed `signature_url` /
+`stamp_url` (paths are never returned); `POST` multipart
+`name, role, title, organization?, consent=true, signature, stamp?` checks
+the PNG bytes and size, uploads to `{id}/signature.png` / `{id}/stamp.png`,
+then inserts (uploads are removed if the insert fails); `PATCH ?id=` JSON
+changes `name`, `title`, `organization` or `is_active`. Signers are never
+deleted, so issued certificates keep their signature; deactivated ones just
+cannot be picked for new events.
+In admin → Sertifikat, the browser turns a phone photo of the signature into a
+transparent PNG (paper brightness estimated from the photo, ink kept, cropped,
+≤1200 px) and previews it as a certificate signature column; saving needs the
+consent checkbox. **Deploy order:** migration, then `admin-certificates`, then
+the site. Rollback: deploy the previous site, empty the bucket in the
+dashboard, then `supabase/rollback/20261007010000_certificate_signers.down.sql`.
+
 ## Event location link ("Petunjuk arah")
 
 Migration `20261005010000_event_location_url.sql` adds optional

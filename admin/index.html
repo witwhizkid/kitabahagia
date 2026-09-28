@@ -63,6 +63,7 @@
           <a class="nav-link is-active" href="#events" data-admin-view="events" aria-current="page">Kegiatan</a>
           <a class="nav-link" href="#registrations" data-admin-view="registrations">Pendaftar</a>
           <a class="nav-link" href="#stories" data-admin-view="stories">Kisah</a>
+          <a class="nav-link" href="#certificates" data-admin-view="certificates">Sertifikat</a>
           <a class="nav-link" href="#admins" data-admin-view="admins" data-super-admin-only hidden>Kelola Admin</a>
         </nav>
         <button id="logout-button" class="logout-button" type="button">Keluar</button>
@@ -77,6 +78,7 @@
           <a class="is-active" href="#events" data-admin-view="events" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Kegiatan</span></a>
           <a href="#registrations" data-admin-view="registrations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.6c2.3.2 3.9 1.8 4.5 4.4"/></svg><span>Pendaftar</span></a>
           <a href="#stories" data-admin-view="stories"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5c2.8-1 5.4-.8 8 1 2.6-1.8 5.2-2 8-1V19c-2.8-1-5.4-.8-8 1-2.6-1.8-5.2-2-8-1z"/><path d="M12 6.5V20"/></svg><span>Kisah</span></a>
+          <a href="#certificates" data-admin-view="certificates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="12" rx="1.5"/><path d="M7.5 9h9M7.5 12.5h5"/><circle cx="16.5" cy="17" r="2.5"/><path d="m15 19-.8 2.5 2.3-1 2.3 1-.8-2.5"/></svg><span>Sertifikat</span></a>
           <a href="#admins" data-admin-view="admins" data-super-admin-only hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 19 6v5.5c0 4.3-3 7.6-7 9-4-1.4-7-4.7-7-9V6z"/><path d="m9 12 2 2 4-4"/></svg><span>Admin</span></a>
         </nav>
 
@@ -450,6 +452,59 @@
               <button id="save-story-button" class="button button-primary" type="submit">Simpan Kisah</button>
             </div>
           </form>
+        </section>
+
+        <section id="certificates-view" class="content-view" aria-labelledby="certificates-title" hidden>
+          <div class="view-heading">
+            <div>
+              <p class="eyebrow">Sertifikat relawan</p>
+              <h1 id="certificates-title">Sertifikat</h1>
+              <p>Simpan tanda tangan sekali per orang. Tanda tangan ini dipakai otomatis saat sertifikat kegiatan diterbitkan.</p>
+            </div>
+          </div>
+
+          <section class="admin-invite-section" aria-labelledby="signer-add-title">
+            <div class="section-heading">
+              <h2 id="signer-add-title">Tambah tanda tangan</h2>
+              <p>Foto tanda tangan pulpen hitam di kertas putih polos, diambil lurus dari atas tanpa bayangan. Latar putihnya dihapus otomatis.</p>
+            </div>
+            <form id="signer-form" class="signer-form" novalidate>
+              <label>Nama lengkap<input id="signer-name" type="text" maxlength="120" autocomplete="off" required /></label>
+              <label>Peran
+                <select id="signer-role">
+                  <option value="project_leader">Project Leader</option>
+                  <option value="founder">Founder</option>
+                  <option value="partner">Mitra kolaborasi</option>
+                </select>
+              </label>
+              <label>Jabatan di sertifikat<input id="signer-title" type="text" maxlength="120" value="Project Leader" required /></label>
+              <label id="signer-organization-field" hidden>Organisasi mitra<input id="signer-organization" type="text" maxlength="120" autocomplete="off" /></label>
+              <label>Foto tanda tangan<input id="signer-signature-file" type="file" accept="image/jpeg,image/png,image/webp" required /></label>
+              <label id="signer-stamp-field" hidden>Foto stempel (opsional)<input id="signer-stamp-file" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+              <div id="signer-preview" class="signer-preview" hidden>
+                <p>Pratinjau di sertifikat</p>
+                <div class="signer-block">
+                  <span id="signer-preview-title" class="signer-block-title"></span>
+                  <div id="signer-preview-ink" class="signer-ink"></div>
+                  <span id="signer-preview-name" class="signer-block-name"></span>
+                </div>
+              </div>
+              <label class="signer-consent"><input id="signer-consent" type="checkbox" /><span>Pemilik tanda tangan sudah mengizinkan tanda tangannya dipakai otomatis di sertifikat Kita Bahagia.</span></label>
+              <button id="signer-submit" class="button button-primary" type="submit">Simpan tanda tangan</button>
+            </form>
+            <p id="signer-form-feedback" class="feedback" role="status" aria-live="polite"></p>
+          </section>
+
+          <section class="admin-directory" aria-labelledby="signer-list-title">
+            <div class="section-heading admin-list-heading">
+              <h2 id="signer-list-title">Daftar tanda tangan</h2>
+              <p>Tanda tangan yang dinonaktifkan tidak bisa dipilih untuk kegiatan baru. Sertifikat yang sudah terbit tetap sah.</p>
+            </div>
+            <p id="signers-feedback" class="feedback" role="status" aria-live="polite"></p>
+            <div id="signers-loading" class="state-panel" role="status" hidden>Memuat tanda tangan…</div>
+            <div id="signers-empty" class="state-panel" hidden>Belum ada tanda tangan. Mulai dari Founder dan Project Leader kegiatan terdekat.</div>
+            <div id="signers-list" class="signer-list" hidden></div>
+          </section>
         </section>
 
         <section id="admins-view" class="content-view" aria-labelledby="admins-title" hidden>
