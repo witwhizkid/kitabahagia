@@ -1893,7 +1893,10 @@
           <span class="registration-sub">Ditambahkan ${escapeHtml(formatDateTime(signer.created_at))} oleh ${escapeHtml(String(signer.created_by || "").split("@")[0])}</span>
           ${signer.is_active ? "" : "<span class=\"status-token is-negative\">Nonaktif</span>"}
         </div>
-        <button class="button button-secondary" type="button" data-toggle-signer="${escapeHtml(signer.id)}" data-signer-active="${signer.is_active ? "false" : "true"}"${signerPending ? " disabled" : ""}>${signer.is_active ? "Nonaktifkan" : "Aktifkan lagi"}</button>
+        <div class="signer-actions">
+          <button class="button button-secondary" type="button" data-toggle-signer="${escapeHtml(signer.id)}" data-signer-active="${signer.is_active ? "false" : "true"}"${signerPending ? " disabled" : ""}>${signer.is_active ? "Nonaktifkan" : "Aktifkan lagi"}</button>
+          ${signer.is_active ? "" : `<button class="text-button delete-signer" type="button" data-delete-signer="${escapeHtml(signer.id)}"${signerPending ? " disabled" : ""}>Hapus</button>`}
+        </div>
       </article>
     `).join("");
   };
@@ -1984,16 +1987,24 @@
     }
   });
   $("#signers-list").addEventListener("click", async (event) => {
-    const button = event.target.closest("[data-toggle-signer]");
+    const button = event.target.closest("[data-toggle-signer], [data-delete-signer]");
     if (!button || signerPending) return;
+    const deleteId = button.dataset.deleteSigner;
+    if (deleteId) {
+      const name = signers.find((signer) => signer.id === deleteId)?.name || "tanda tangan ini";
+      if (!window.confirm(`Hapus permanen tanda tangan ${name}? Sertifikat yang sudah terbit tidak berubah.`)) return;
+    }
     signerPending = true;
     renderSigners();
     const feedback = $("#signers-feedback");
     try {
-      const data = await certificatesRequest("PATCH", { id: button.dataset.toggleSigner, body: { is_active: button.dataset.signerActive === "true" } });
+      const data = deleteId
+        ? await certificatesRequest("DELETE", { id: deleteId })
+        : await certificatesRequest("PATCH", { id: button.dataset.toggleSigner, body: { is_active: button.dataset.signerActive === "true" } });
       if (Array.isArray(data.signers)) signers = data.signers;
       else void loadSigners();
-      setFeedback(feedback);
+      if (deleteId) setFeedback(feedback, "Tanda tangan dihapus.", "success");
+      else setFeedback(feedback);
     } catch (error) {
       setFeedback(feedback, error.message, "error");
     } finally {

@@ -283,9 +283,10 @@ own auth check): `GET` lists signers with 10-minute signed `signature_url` /
 `name, role, title, organization?, consent=true, signature, stamp?` checks
 the PNG bytes and size, uploads to `{id}/signature.png` / `{id}/stamp.png`,
 then inserts (uploads are removed if the insert fails); `PATCH ?id=` JSON
-changes `name`, `title`, `organization` or `is_active`. Signers are never
-deleted, so issued certificates keep their signature; deactivated ones just
-cannot be picked for new events.
+changes `name`, `title`, `organization` or `is_active`; `DELETE ?id=` removes
+a **deactivated** signer (row + images) unless an `event_certificates` row still
+points at it (`SIGNER_ACTIVE` / `SIGNER_IN_USE`, 409). Issued certificates keep
+their PDF either way; deactivated signers cannot be picked for new events.
 In admin → Sertifikat, the browser turns a phone photo of the signature into a
 transparent PNG (paper brightness estimated from the photo, ink kept, cropped,
 ≤1200 px) and previews it as a certificate signature column; saving needs the

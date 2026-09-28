@@ -5,13 +5,15 @@
 //   POST (multipart)    add a signer: name, role, title, organization, consent,
 //                       signature (PNG), stamp (PNG, founder only)
 //   PATCH ?id=<uuid>    edit name / title / organization, or is_active
+//   DELETE ?id=<uuid>   delete a deactivated signer that no event's settings still use
+//                       (row + images); certificates already issued keep their PDF
 //   GET ?event=<slug>   the event's settings (null before the first save) + signers
 //   POST ?event=<slug>  (multipart) save settings; optional ornament / partner_logo
 //                       PNGs, remove_ornament / remove_partner_logo = "true"
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -93,7 +95,7 @@ const readPng = async (value: FormDataEntryValue | null, maxBytes = MAX_IMAGE_BY
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: responseHeaders });
-  if (!["GET", "POST", "PATCH"].includes(request.method)) return fail(405, "METHOD_NOT_ALLOWED", "Metode tidak didukung.");
+  if (!["GET", "POST", "PATCH", "DELETE"].includes(request.method)) return fail(405, "METHOD_NOT_ALLOWED", "Metode tidak didukung.");
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
@@ -162,7 +164,7 @@ Deno.serve(async (request) => {
 
   const eventSlug = new URL(request.url).searchParams.get("event");
   if (eventSlug !== null) {
-    if (request.method === "PATCH" || eventSlug.length > 120 || !slugPattern.test(eventSlug)) {
+    if (!["GET", "POST"].includes(request.method) || eventSlug.length > 120 || !slugPattern.test(eventSlug)) {
       return fail(400, "INVALID_REQUEST", "Kegiatan tidak valid.");
     }
     const eventResponse = await fetch(
@@ -311,6 +313,41 @@ Deno.serve(async (request) => {
   if (request.method === "GET") {
     const signers = await listSigners();
     return signers ? json(200, { signers }) : fail(500, "SERVER_ERROR", "Daftar tanda tangan belum dapat dimuat.");
+  }
+
+  if (request.method === "DELETE") {
+    const id = new URL(request.url).searchParams.get("id") || "";
+    if (!uuidPattern.test(id)) return fail(400, "INVALID_REQUEST", "Penanda tangan tidak valid.");
+    const found = await fetch(`${supabaseUrl}/rest/v1/certificate_signers?${new URLSearchParams({
+      id: `eq.${id}`, select: "id,is_active,signature_path,stamp_path",
+    })}`, { headers: serviceHeaders(serviceKey) });
+    const signerRows = await found.json().catch(() => null) as Array<{ is_active: boolean; signature_path: string; stamp_path: string | null }> | null;
+    if (!found.ok || !Array.isArray(signerRows)) return fail(500, "SERVER_ERROR", "Penanda tangan belum dapat diperiksa.");
+    const signer = signerRows[0];
+    if (!signer) return fail(404, "NOT_FOUND", "Penanda tangan tidak ditemukan.");
+    if (signer.is_active) return fail(409, "SIGNER_ACTIVE", "Nonaktifkan dulu tanda tangan ini sebelum menghapusnya.");
+    const used = await fetch(`${supabaseUrl}/rest/v1/event_certificates?${new URLSearchParams({
+      or: `(founder_id.eq.${id},project_leader_id.eq.${id},partner_signer_id.eq.${id})`,
+      select: "events(title)",
+    })}`, { headers: serviceHeaders(serviceKey) });
+    const usedRows = await used.json().catch(() => null) as Array<{ events?: { title?: string } | null }> | null;
+    if (!used.ok || !Array.isArray(usedRows)) return fail(500, "SERVER_ERROR", "Pemakaian tanda tangan belum dapat diperiksa.");
+    if (usedRows.length) {
+      const titles = usedRows.map((row) => row.events?.title).filter(Boolean).join(", ");
+      return fail(409, "SIGNER_IN_USE", `Masih dipilih di pengaturan sertifikat: ${titles || "kegiatan lain"}. Ganti penanda tangannya di sana dulu.`);
+    }
+    const removed = await fetch(`${supabaseUrl}/rest/v1/certificate_signers?${new URLSearchParams({ id: `eq.${id}`, is_active: "eq.false" })}`, {
+      method: "DELETE",
+      headers: serviceHeaders(serviceKey, { Prefer: "return=representation" }),
+    });
+    const removedRows = await removed.json().catch(() => null);
+    // 409 = a settings row started using it in the meantime (foreign key).
+    if (removed.status === 409) return fail(409, "SIGNER_IN_USE", "Tanda tangan ini baru saja dipilih di pengaturan kegiatan. Muat ulang lalu coba lagi.");
+    if (!removed.ok || !Array.isArray(removedRows)) return fail(500, "SERVER_ERROR", "Tanda tangan belum dapat dihapus.");
+    if (!removedRows.length) return fail(409, "SIGNER_ACTIVE", "Tanda tangan ini sudah diaktifkan lagi. Muat ulang daftar.");
+    await removeObjects([signer.signature_path, signer.stamp_path].filter(Boolean) as string[], BUCKET);
+    const signers = await listSigners();
+    return json(200, { signers });
   }
 
   if (request.method === "PATCH") {
