@@ -292,7 +292,13 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   ornamen gelap); font sementara Plus Jakarta Sans (judul/nama/tanda tangan) +
   Lexend (nomor/PENGHARGAAN/deskripsi) sampai Desain memberi font asli.
   Deskripsi: kalimat pertama otomatis dari data event, kalimat berikutnya ditulis
-  admin per kegiatan. Nama panjang mengecil (belum diputuskan: atau pecah 2 baris).
+  admin per kegiatan. Nama panjang (keputusan user): mengecil dari 118px sampai
+  batas ±84px; kalau masih tidak muat, pecah jadi 2 baris di spasi antarkata
+  dengan panjang baris seimbang.
+- Tanda tangan: utamakan file yang dipakai Desain di sertifikat lama; kalau tidak
+  ada, tanda tangan pulpen hitam tebal di HVS putih, difoto/scan lurus, lalu latar
+  dihapus jadi PNG transparan. Stempel Founder file terpisah (ditumpuk di atas
+  tanda tangan seperti contoh).
 - **Ornamen kanan per kegiatan (keputusan user, "cara 3")**: default pilih
   **preset** (kelopak, balok, bisa ditambah; dengan pilihan warna), atau admin
   **upload ornamen khusus** dari Desain (PNG transparan ±700×1414, hanya panel
