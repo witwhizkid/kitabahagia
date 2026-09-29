@@ -112,7 +112,7 @@ Halaman pendaftaran (`pendaftaran.html`):
 Halaman detail Kisah (`kisah-detail.html`, `js/stories.js`), gaya editorial ala Kinfolk:
 - Ringkasan tampil sebagai paragraf pembuka besar; baris info "tanggal · N menit
   baca" (200 kata/menit). Drop cap sudah dihapus (user: terlalu kuno).
-- Isi, pembuka, dan kutipan memakai serif **Newsreader** (Google Fonts, hanya di
+- Isi, pembuka, dan kutipan memakai serif **Newsreader** (di-host sendiri, hanya di
   halaman ini); judul/subjudul tetap font KB. Paragraf ber-indentasi baris
   pertama. Layar ≥900px: foto sampul menempel di kiri, teks di kanan
   (`.story-detail-layout.has-cover`); HP/tablet bertumpuk. Baris "Bagikan:
@@ -164,6 +164,10 @@ Lainnya:
   token `--radius-photo` 2px, `--radius-card` 4px, `--ease`; tekstur kertas
   `img/grain.png` (4 KB) via `body::after` (bukan di pendaftaran); foto `main`
   fade saat selesai dimuat (`.img-fade`, hero dikecualikan).
+- Font publik di-host sendiri (Sep 2026, PageSpeed): `fonts/*.woff2` (DM Sans, Instrument Sans,
+  Newsreader normal+italic; latin + latin-ext, variable) lewat `@font-face` di awal `css/style.css`;
+  HTML publik mem-preload `instrument-sans-latin` + `dm-sans-latin`, tanpa Google Fonts. Admin
+  masih memakai Google Fonts (Lexend/Plus Jakarta untuk sertifikat), jadi CSP gstatic tetap.
 - Logo header/footer semua halaman = `assets/logo/logo-kita-bahagia-320.webp` (13 KB); PNG
   2160px asli hanya untuk canvas (kalender, sertifikat). Foto Program beranda `loading="lazy"`.
 - Foto disajikan sebagai WebP yang sudah diperkecil; berkas mentah yang tidak
