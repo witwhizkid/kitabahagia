@@ -25,7 +25,7 @@ const adminProjection = "user_id,role,is_active,created_at";
 type AdminRole = "admin" | "super_admin";
 type AuthorizedAdmin = { userId: string; role: AdminRole };
 type AdminRow = { user_id: string; role: AdminRole; is_active: boolean; created_at: string };
-type AuthUser = { id: string; email?: string };
+type AuthUser = { id: string; email?: string; last_sign_in_at?: string | null };
 
 const serviceHeaders = (key: string, prefer?: string) => ({
   apikey: key,
@@ -138,12 +138,14 @@ const findAuthUserByEmail = async (supabaseUrl: string, serviceKey: string, emai
   throw new Error("AUTH_LIST_FAILED");
 };
 
-const presentAdmin = (row: AdminRow, email: string) => ({
+const presentAdmin = (row: AdminRow, email: string, signedIn = true) => ({
   user_id: row.user_id,
   email,
   role: row.role,
   is_active: row.is_active,
   created_at: row.created_at,
+  // Never signed in = invited but unused (e.g. a mistyped email); such accounts can be deleted.
+  signed_in: signedIn,
 });
 
 const adminSiteRedirect = (configuredOrigin: string | undefined) => {
@@ -187,11 +189,37 @@ Deno.serve(async (request) => {
 
     const users = await Promise.all(rows.map((row) => getAuthUser(supabaseUrl, serviceKey, row.user_id)));
     if (users.some((user) => !user?.email)) return fail(500, "SERVER_ERROR", "Email admin belum dapat dimuat.");
-    return json(200, { admins: rows.map((row, index) => presentAdmin(row, users[index]!.email!)) });
+    return json(200, { admins: rows.map((row, index) => presentAdmin(row, users[index]!.email!, Boolean(users[index]!.last_sign_in_at))) });
   }
 
   const payload = await request.json().catch(() => null) as Record<string, unknown> | null;
   if (!payload || Array.isArray(payload)) return fail(400, "INVALID_REQUEST", "Data admin tidak valid.");
+
+  // Permanent delete: only deactivated admins or invites never used, never yourself.
+  // Deleting the auth user cascades to admin_users; edit history keeps the email text.
+  if (request.method === "PATCH" && payload.action === "delete_admin") {
+    const unknown = Object.keys(payload).filter((key) => !["action", "user_id"].includes(key));
+    const userId = typeof payload.user_id === "string" ? payload.user_id.trim() : "";
+    if (unknown.length || !uuidPattern.test(userId)) return fail(400, "INVALID_ADMIN", "Admin yang akan dihapus tidak valid.");
+    if (userId === authorization.admin.userId) return fail(409, "SELF_DELETE", "Kamu tidak dapat menghapus akun sendiri.");
+    const targetQuery = new URLSearchParams({ select: adminProjection, user_id: `eq.${userId}`, limit: "1" });
+    const targetResponse = await fetch(`${supabaseUrl}/rest/v1/admin_users?${targetQuery}`, { headers: serviceHeaders(serviceKey) });
+    const targetRows = await targetResponse.json().catch(() => null) as AdminRow[] | null;
+    if (!targetResponse.ok || !Array.isArray(targetRows)) return fail(500, "SERVER_ERROR", "Admin belum dapat diperiksa.");
+    if (!targetRows.length) return fail(404, "ADMIN_NOT_FOUND", "Admin tidak ditemukan.");
+    const targetUser = await getAuthUser(supabaseUrl, serviceKey, userId);
+    // Unknown sign-in state must not look like an unused invite.
+    if (!targetUser) return fail(500, "SERVER_ERROR", "Data akun admin belum dapat diperiksa.");
+    if (targetRows[0].is_active && targetUser.last_sign_in_at) {
+      return fail(409, "ADMIN_STILL_ACTIVE", "Nonaktifkan admin ini dulu sebelum dihapus.");
+    }
+    const deleteResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
+      method: "DELETE",
+      headers: serviceHeaders(serviceKey),
+    });
+    if (!deleteResponse.ok && deleteResponse.status !== 404) return fail(500, "SERVER_ERROR", "Admin belum dapat dihapus.");
+    return json(200, { deleted: userId });
+  }
 
   if (request.method === "PATCH" && payload.action === "send_access_recovery") {
     const unknown = Object.keys(payload).filter((key) => !["action", "user_id"].includes(key));

@@ -387,14 +387,15 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
 .admin-list-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 18px; }
 .admin-list-heading p { max-width: 440px; text-align: right; }
 .admin-list { border-top: 1px solid var(--line); }
-.admin-row { display: grid; grid-template-columns: minmax(210px, 1.4fr) minmax(145px, .7fr) minmax(120px, .55fr) auto; gap: 18px; align-items: end; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.admin-row { display: grid; grid-template-columns: minmax(210px, 1.4fr) minmax(145px, .7fr) minmax(120px, .55fr); gap: 14px 18px; align-items: end; padding: 20px 0; border-bottom: 1px solid var(--line); }
 .admin-identity, .admin-access-state { min-width: 0; display: grid; justify-items: start; gap: 5px; }
 .admin-identity strong, .admin-identity span { overflow-wrap: anywhere; }
 .admin-identity span:not(.data-label) { color: var(--muted); font-size: .8rem; }
 .admin-row label { min-width: 0; }
 .admin-row select { min-width: 0; }
-.admin-row-actions { display: flex; gap: 8px; }
-.admin-row-actions .button { min-width: 88px; padding-inline: 13px; }
+/* Actions sit on their own line under the admin details, as compact pills. */
+.admin-row-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-row-actions .button { min-width: 88px; min-height: 38px; padding: 6px 14px; font-size: .85rem; white-space: nowrap; }
 .admin-row-actions .button[data-toggle-admin] { min-width: 118px; }
 .admin-row-actions .button:disabled { cursor: not-allowed; }
 .signer-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: end; }
@@ -763,9 +764,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
   .admin-row-actions .button,
   .admin-row-actions .button[data-toggle-admin] {
     min-width: 0;
-    min-height: 46px;
+    min-height: 44px;
     padding-inline: 10px;
-    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

@@ -221,6 +221,9 @@ Lainnya:
   Desain, Penulis Kisah) belum dibuat; buat hanya kalau dibutuhkan. Kartu
   kegiatan di admin menampilkan "Diubah <waktu> oleh <bagian email sebelum @>"
   (`events.last_edited_by/at`, hanya diisi `admin-events`; bukan riwayat lengkap).
+  Kelola Admin punya tombol **Hapus** (Super Admin; `admin-users` PATCH `delete_admin`)
+  hanya untuk admin yang sudah dinonaktifkan atau undangan yang belum pernah dipakai login,
+  bukan akun sendiri; menghapus user Auth (baris `admin_users` ikut terhapus).
 - Admin → Pendaftar (tahap 1 "ala Linear", tampilan tetap KB): toolbar satu baris
   (cari dengan jeda 300 ms, filter langsung berlaku, Reset hanya saat ada filter,
   total, Ekspor CSV untuk semua kegiatan); satu header kolom lalu baris padat tanpa

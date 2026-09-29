@@ -1088,6 +1088,7 @@
             <button class="button button-secondary" type="button" data-toggle-admin data-next-active="${admin.is_active ? "false" : "true"}"${isSelf && admin.is_active ? " disabled title=\"Akun sendiri tidak dapat dinonaktifkan\"" : ""}>${admin.is_active ? "Nonaktifkan" : "Aktifkan"}</button>
             <button class="button button-secondary" type="button" data-send-recovery>Kirim ulang akses</button>
             <button class="button button-secondary" type="button" data-generate-access-link>Salin tautan akses</button>
+            ${!isSelf && (!admin.is_active || admin.signed_in === false) ? `<button class="button button-secondary delete-button" type="button" data-delete-admin>Hapus</button>` : ""}
           </span>
         </form>
       `;
@@ -3672,6 +3673,27 @@
   });
 
   adminsList.addEventListener("click", async (event) => {
+    const deleteButton = event.target.closest("[data-delete-admin]");
+    if (deleteButton) {
+      const row = deleteButton.closest("[data-admin-id]");
+      const selected = admins.find((admin) => admin.user_id === row?.dataset.adminId);
+      if (!selected || !(await confirmAction(`${selected.email} dihapus permanen dari daftar admin dan tidak bisa masuk lagi. Riwayat "Diubah oleh" di kegiatan tetap ada.`, {
+        title: "Hapus admin?", confirmLabel: "Hapus", danger: true,
+      }))) return;
+      deleteButton.disabled = true;
+      setFeedback($("#admins-feedback"));
+      try {
+        await adminUsersRequest("PATCH", { action: "delete_admin", user_id: selected.user_id });
+        admins = admins.filter((admin) => admin.user_id !== selected.user_id);
+        invalidateAdminsCache();
+        renderAdmins();
+        setFeedback($("#admins-feedback"), `${selected.email} sudah dihapus.`, "success");
+      } catch (error) {
+        deleteButton.disabled = false;
+        setFeedback($("#admins-feedback"), error.message, "error");
+      }
+      return;
+    }
     const linkButton = event.target.closest("[data-generate-access-link]");
     if (linkButton) {
       const row = linkButton.closest("[data-admin-id]");
