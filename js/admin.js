@@ -1951,6 +1951,10 @@
     const relatedEvent = $("#story-event-id");
     relatedEvent.innerHTML = `<option value="">Tidak terkait kegiatan</option>${events.map((event) =>
       `<option value="${escapeHtml(event.id)}">${escapeHtml(`${event.title} · ${formatDate(event.event_date)}`)}</option>`).join("")}`;
+    // Keep a saved link even when that event is not in the loaded list, so saving never drops it.
+    if (story?.event_id && !events.some((event) => event.id === story.event_id)) {
+      relatedEvent.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(story.event_id)}">Kegiatan terkait (tersimpan)</option>`);
+    }
     relatedEvent.value = story?.event_id || "";
     $("#story-body").value = story?.body || "";
     $("#story-image-url").value = story?.cover_image_url || "";
@@ -2000,7 +2004,8 @@
     storiesView.hidden = false;
     setActiveNavigation("stories");
     window.scrollTo({ top: 0, behavior: "instant" });
-    await loadStories();
+    // The story form lists events for "Kegiatan terkait".
+    await Promise.all([loadStories(), tabCache.events.loadedAt ? null : loadEvents()]);
   };
 
   const prefetchAdminTabs = () => {
