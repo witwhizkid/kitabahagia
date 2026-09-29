@@ -233,11 +233,17 @@ const jakartaDayNumber = (date) => {
   return Date.UTC(year, month - 1, day) / 864e5;
 };
 const eventHref = (event) => `pendaftaran.html?event=${encodeURIComponent(event.slug)}`;
+// Calendar days until registration closes, or null without a deadline.
+const eventDaysLeft = (event) => {
+  const deadline = new Date(event.registrationDeadline || '');
+  return Number.isNaN(deadline.getTime()) ? null : jakartaDayNumber(deadline) - jakartaDayNumber(new Date());
+};
+const eventDaysLeftLabel = (days) => days <= 0 ? 'Hari ini' : days === 1 ? 'Besok' : `${days} hari lagi`;
 const eventClosingMarkup = (event) => {
   const deadline = new Date(event.registrationDeadline || '');
-  if (Number.isNaN(deadline.getTime())) return '';
-  const days = jakartaDayNumber(deadline) - jakartaDayNumber(new Date());
-  const relative = days <= 0 ? 'Hari ini' : days === 1 ? 'Besok' : `${days} hari lagi`;
+  const days = eventDaysLeft(event);
+  if (days === null) return '';
+  const relative = eventDaysLeftLabel(days);
   return `<p class="event-closing">Tutup ${escapeHTML(eventCalendarFormatters.closing.format(deadline))} <b>${relative}</b></p>`;
 };
 const eventDateBlock = (event) => {
@@ -257,6 +263,8 @@ const eventSlotNote = (event) => {
     return `<span class="event-slot is-low">Dibuka ${escapeHTML(eventOpensFormatter.format(new Date(availability.opensAt)))}</span>`;
   }
   if (event.applicantsFull) return '<span class="event-slot is-full">Pendaftaran ditutup</span>';
+  // Closed or finished events: the poster badge already says so, a seat count would mislead.
+  if (['closed', 'past'].includes(availability.reason)) return '';
   const remaining = event.remainingCapacity;
   if (event.statusKey === 'full' || remaining === 0) return '<span class="event-slot is-full">Kuota penuh</span>';
   if (Number.isInteger(remaining) && remaining <= 5 && eventRegistrationAvailability(event).available) {
@@ -264,8 +272,22 @@ const eventSlotNote = (event) => {
   }
   return `<span class="event-slot">${escapeHTML(event.capacity)}</span>`;
 };
-const eventPhoto = (event, className) => `<figure class="${className}${event.image ? '' : ' is-empty'}">${event.image
-  ? `<img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}" loading="lazy" decoding="async">` : ''}</figure>`;
+// Poster badge: unavailable events turn grayscale with their state; open ones closing
+// within a week get a countdown ("3 hari lagi"). The urgent feature already says it in text.
+const eventPhotoBadge = (event, { countdown = true } = {}) => {
+  const { available, reason } = eventRegistrationAvailability(event);
+  const closedLabels = { past: 'Selesai', full: 'Kuota penuh', closed: 'Ditutup', applicants_full: 'Ditutup' };
+  if (closedLabels[reason]) return { closed: true, label: closedLabels[reason] };
+  const days = eventDaysLeft(event);
+  if (countdown && available && days !== null && days >= 0 && days <= 7) return { closed: false, label: eventDaysLeftLabel(days) };
+  return null;
+};
+const eventPhoto = (event, className, options) => {
+  const badge = eventPhotoBadge(event, options);
+  return `<figure class="${className}${event.image ? '' : ' is-empty'}${badge?.closed ? ' is-closed' : ''}">${event.image
+    ? `<img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}" loading="lazy" decoding="async">` : ''}${badge
+    ? `<span class="event-photo-badge${badge.closed ? ' is-closed' : ''}">${escapeHTML(badge.label)}</span>` : ''}</figure>`;
+};
 const eventCta = (event) => {
   const { available } = eventRegistrationAvailability(event);
   return eventRegistrationLink(event, `event-cta${available ? '' : ' is-quiet'}`,
@@ -287,12 +309,30 @@ const eventRowMarkup = (event, { heading = 'h2', attributes = '' } = {}) => {
 </article>`;
 };
 const eventFeatureMarkup = (event) => `<article class="event-feature">
-  ${eventPhoto(event, 'event-feature-photo')}
+  ${eventPhoto(event, 'event-feature-photo', { countdown: false })}
   ${eventClosingMarkup(event)}
   <h3 class="event-title"><a class="event-row-link" href="${eventHref(event)}">${escapeHTML(event.name)}</a></h3>
   <p class="event-where">${escapeHTML(event.date)} · ${escapeHTML(event.location)}</p>
   ${event.description ? `<p class="event-summary-text">${escapeHTML(event.description)}</p>` : ''}
   <div class="event-feature-foot"><div><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}</div>${eventCta(event)}</div>
+</article>`;
+
+// Homepage "Kegiatan Terdekat": poster card with title, place, date and price; the whole card links.
+const eventCardIcon = {
+  place: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+  date: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
+};
+const eventCardMarkup = (event) => `<article class="event-card${eventIsPast(event) ? ' is-past' : ''}">
+  ${eventPhoto(event, 'event-card-photo')}
+  <div class="event-card-body">
+    <p class="event-kicker">${escapeHTML(event.category)}</p>
+    <h3 class="event-title"><a class="event-row-link" href="${eventHref(event)}">${escapeHTML(event.name)}</a></h3>
+    <ul class="event-card-meta">
+      <li>${eventCardIcon.place}<span>${escapeHTML(event.location)}</span></li>
+      <li>${eventCardIcon.date}<span>${escapeHTML(event.date)}</span></li>
+    </ul>
+    <div class="event-card-foot"><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}</div>
+  </div>
 </article>`;
 
 // Schedule rows grouped under a "Oktober 2026" heading; the count is kept in sync by the filters.
@@ -350,7 +390,7 @@ const renderHomepageEvents = async () => {
   };
 
   homepageEventsLoading = true;
-  list.innerHTML = `${eventCardSkeleton('event-row')}${eventCardSkeleton('event-row')}${eventCardSkeleton('event-row')}`;
+  list.innerHTML = `${eventCardSkeleton('event-card')}${eventCardSkeleton('event-card')}${eventCardSkeleton('event-card')}`;
   list.hidden = false;
   list.setAttribute('aria-busy', 'true');
   empty.hidden = true;
@@ -377,7 +417,7 @@ const renderHomepageEvents = async () => {
     return;
   }
 
-  list.innerHTML = events.map((event) => eventRowMarkup(event, { heading: 'h3' })).join('');
+  list.innerHTML = events.map(eventCardMarkup).join('');
   list.hidden = false;
   list.removeAttribute('aria-busy');
   empty.hidden = true;

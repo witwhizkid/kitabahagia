@@ -72,8 +72,13 @@ Daftar kegiatan (`jadwal.html` + beranda, dirender oleh `js/script.js`):
 - Judul kegiatan bisa ~80 karakter: ukuran judul `clamp(20px, 2vw, 26px)`.
 - HP: Jadwal = daftar ke bawah (tanggal "10 OKT · Sabtu" + kategori di atas,
   judul selebar penuh, lalu tempat/waktu/harga/Daftar di samping poster 104px);
-  beranda = kartu geser dengan poster besar, judul dipotong maks. 4 baris. Keduanya pakai `eventRowMarkup`
-  yang sama, beda di CSS `@media (max-width:640px)`. Efek hover baris hanya di
+  beranda = kartu geser. Jadwal pakai `eventRowMarkup`; beranda (Okt 2026, ala Kitabisa) pakai
+  `eventCardMarkup`: kartu poster 4:5 + kategori, judul (maks. 3–4 baris), ikon lokasi/tanggal, harga;
+  3 kolom di desktop/tablet, kartu geser di HP.
+- Badge poster (`eventPhotoBadge`, semua daftar): kuota penuh / ditutup / selesai = poster hitam-putih
+  + label gelap ("Kuota penuh", "Ditutup", "Selesai"); buka dan tutup ≤7 hari = label maroon
+  "N hari lagi"/"Besok"/"Hari ini" (tidak di fitur "Segera berakhir", teksnya sudah ada).
+  Kegiatan ditutup/selesai tidak menampilkan sisa slot. Efek hover baris hanya di
   `@media (hover:hover)` supaya tidak "nyangkut" setelah tap.
 
 Halaman pendaftaran (`pendaftaran.html`):
