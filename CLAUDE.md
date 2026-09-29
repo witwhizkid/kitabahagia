@@ -138,6 +138,10 @@ Lainnya:
 - Halaman Program dikelompokkan jadi 3 bab bernomor (`.program-family`: 01 Masyarakat
   Reguler, 02 Adventure & Unique, 03 Impactful Action); angka Jejak beranda diberi
   nomor kecil 01–04 (Codex, Sep 2026).
+- "Living Archive" (Codex, Sep 2026, migrasi `20261012010000`): `events.program_key`
+  (masyarakat_reguler / adventure_unique / impactful_action, diisi di form Kegiatan) dan
+  `stories.event_id` (Kegiatan terkait di form Kisah, `on delete set null`). Data lama
+  tidak diisi otomatis; halaman publik belum memakainya.
 - Transisi antarhalaman: `@view-transition` fade .3s (mati saat reduced motion).
   Angka Jejak beranda 2×2 di semua lebar dan menghitung naik sekali saat terlihat
   (tahun tidak); label pakai `.impact-editorial-stat > span` supaya span di dalam
