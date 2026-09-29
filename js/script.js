@@ -1317,6 +1317,61 @@ if (registrationForm) {
     if (selectedEvent.image) poster.src = selectedEvent.image;
   };
 
+  const showPaymentLoadingState = () => {
+    const stage = document.getElementById('paymentStage');
+    if (!stage || !selectedEvent || selectedEvent.price <= 0) return;
+    stage.classList.add('is-loading');
+    stage.setAttribute('aria-busy', 'true');
+    stage.querySelector('#paymentHeading').textContent = 'Menyiapkan QRIS...';
+    stage.querySelector('.payment-intro').textContent = 'Mengirim data pendaftaran...';
+    stage.querySelector('[data-payment-amount]').textContent = formatEventPrice(selectedEvent.price);
+    stage.querySelector('[data-result-code]').textContent = 'Menunggu dibuat';
+    stage.querySelector('[data-result-title]').textContent = selectedEvent.name;
+    const orderRow = stage.querySelector('[data-result-order]');
+    if (orderRow) orderRow.textContent = 'Menunggu dibuat';
+    stage.querySelectorAll('[data-payment-state]').forEach((container) => { container.hidden = true; });
+    const qr = stage.querySelector('.payment-qr-placeholder');
+    const qrCode = qr?.querySelector('[data-payment-qr-code]');
+    const qrImage = qr?.querySelector('[data-payment-qr]');
+    if (qr) {
+      qr.hidden = false;
+      qr.setAttribute('aria-label', 'QRIS belum tersedia');
+    }
+    if (qrCode) {
+      qrCode.hidden = true;
+      qrCode.innerHTML = '';
+    }
+    if (qrImage) {
+      qrImage.hidden = true;
+      qrImage.removeAttribute('src');
+      qrImage.alt = '';
+    }
+    stage.querySelector('.payment-countdown').hidden = false;
+    const pendingState = stage.querySelector('[data-payment-state="payment_pending"]');
+    if (pendingState) pendingState.hidden = false;
+    stage.querySelector('.payment-guide').hidden = false;
+    stage.querySelector('.payment-details').hidden = false;
+    stage.querySelector('[data-payment-download]').hidden = false;
+    stage.querySelector('[data-payment-check]').hidden = false;
+    stage.querySelector('[data-payment-retry]').hidden = true;
+    document.getElementById('freeRegistrationConfirmation').hidden = true;
+    registrationContent?.classList.add('hidden');
+    setRegistrationStep('payment');
+    stage.hidden = false;
+    focusRegistrationStep(stage);
+  };
+
+  const hidePaymentLoadingState = () => {
+    const stage = document.getElementById('paymentStage');
+    if (!stage?.classList.contains('is-loading')) return;
+    stage.classList.remove('is-loading');
+    stage.removeAttribute('aria-busy');
+    stage.hidden = true;
+    registrationContent?.classList.remove('hidden');
+    setRegistrationStep('confirmation');
+    focusRegistrationStep(registrationReview);
+  };
+
   const renderPaymentState = (state, incoming) => {
     const stage = document.getElementById('paymentStage');
     if (!stage || !Object.hasOwn(paymentStates, state)) return;
@@ -1326,6 +1381,8 @@ if (registrationForm) {
       if (value !== undefined && value !== null && value !== '') data[key] = value;
     });
     activePayment = data;
+    stage.classList.remove('is-loading');
+    stage.removeAttribute('aria-busy');
     const stateChanged = stage.hidden || lastRenderedPaymentState !== state;
     lastRenderedPaymentState = state;
     hidePaymentCheckNote();
@@ -2935,6 +2992,8 @@ if (registrationForm) {
     editRegistrationButton.disabled = true;
     confirmRegistrationButton.textContent = 'Memproses...';
     showRegistrationMessage('Mengirim data pendaftaran...', 'pending');
+    const isPaidEvent = selectedEvent.price > 0;
+    if (isPaidEvent) showPaymentLoadingState();
 
     try {
       const registration = await submitRegistration(registrationForm, selectedEvent.slug);
@@ -2988,6 +3047,7 @@ if (registrationForm) {
       }
       window.KBReceipt?.actions(isPaidPending ? document.getElementById('paymentStage') : resultStage, registration);
     } catch (error) {
+      if (isPaidEvent) hidePaymentLoadingState();
       const code = typeof error?.code === 'string' ? error.code : 'SERVER_ERROR';
       showRegistrationMessage(registrationErrorMessages[code] || registrationErrorMessages.SERVER_ERROR, 'error');
       // This device still has the earlier registration for this event: offer the existing recovery flow.

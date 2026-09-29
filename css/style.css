@@ -6167,6 +6167,24 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .payment-qris-badge { padding:5px 14px; border-radius:999px; background:var(--maroon); color:var(--white); font-size:12px; font-weight:800; letter-spacing:.12em; }
 .registration-page .payment-qr-heading p { font-size:13px; }
 .registration-page .payment-qr-placeholder { width:min(100%, 280px); padding:10px; border:0; border-radius:24px; background:var(--white); box-shadow:var(--shadow-soft); }
+.registration-page .payment-stage.is-loading { min-height:1333px; }
+.registration-page .payment-stage.is-loading .payment-qr-placeholder { position:relative; overflow:hidden; }
+.registration-page .payment-stage.is-loading :is(.payment-countdown, [data-payment-state="payment_pending"], [data-payment-download], [data-payment-check]) {
+  visibility:hidden;
+  pointer-events:none;
+}
+.registration-page .payment-stage.is-loading .payment-qr-placeholder::before {
+  content:"";
+  width:72%;
+  aspect-ratio:1;
+  border-radius:18px;
+  background:var(--sand);
+  animation:payment-skeleton-pulse 1.4s ease-in-out infinite;
+}
+@keyframes payment-skeleton-pulse {
+  0%, 100% { opacity:.55; }
+  50% { opacity:1; }
+}
 .registration-page .payment-qr-code svg { display:block; width:100%; height:auto; border-radius:14px; }
 .registration-page .payment-qr-code[hidden], .registration-page .payment-qr-placeholder img[hidden] { display:none; }
 .registration-page .payment-download { display:inline-flex; align-items:center; gap:8px; margin-top:16px; padding:10px 20px; border:0; border-radius:999px; background:var(--rose); color:var(--maroon); font-weight:700; transition:transform .15s var(--ease), background-color .15s var(--ease); }
@@ -6305,11 +6323,13 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .registration-review-actions { gap:12px; }
 
 @media (prefers-reduced-motion: reduce) {
+  .registration-page .payment-stage.is-loading .payment-qr-placeholder::before { animation:none; }
   .registration-page .registration-progress li span,
   .registration-page .field input,
   .registration-page .field textarea { transition:none; }
 }
 @media (max-width:640px) {
+  .registration-page .payment-stage.is-loading { min-height:1507px; }
   .registration-page .registration-summary-sticky { padding:18px 18px 20px; border-radius:var(--radius-lg); }
   .registration-page .registration-card,
   .registration-page .registration-review { border-radius:var(--radius-lg); }
