@@ -161,6 +161,8 @@ Lainnya:
   token `--radius-photo` 2px, `--radius-card` 4px, `--ease`; tekstur kertas
   `img/grain.png` (4 KB) via `body::after` (bukan di pendaftaran); foto `main`
   fade saat selesai dimuat (`.img-fade`, hero dikecualikan).
+- Logo header/footer semua halaman = `assets/logo/logo-kita-bahagia-320.webp` (13 KB); PNG
+  2160px asli hanya untuk canvas (kalender, sertifikat). Foto Program beranda `loading="lazy"`.
 - Foto disajikan sebagai WebP yang sudah diperkecil; berkas mentah yang tidak
   dirujuk halaman publik tidak disimpan di `img/`.
 - Upload foto di admin dikompres di browser sebelum dikirim (`compressImage`
