@@ -27,9 +27,10 @@ const formatEventPrice = (price) => price === 0 ? 'Gratis' : new Intl.NumberForm
   style: 'currency', currency: 'IDR', maximumFractionDigits: 0
 }).format(price);
 
-const fetchPublicEvents = async ({ slug = null, limit = null } = {}) => {
+const fetchPublicEvents = async ({ slug = null, limit = null, past = false } = {}) => {
   const url = new URL(`${SUPABASE_FUNCTIONS_BASE_URL}/public-events`);
   if (PUBLIC_EVENTS_CONFIG.demo) url.searchParams.set('demo', 'true');
+  if (past) url.searchParams.set('past', 'true');
   if (slug) url.searchParams.set('slug', slug);
   if (limit !== null) url.searchParams.set('limit', String(limit));
 
@@ -270,16 +271,21 @@ const eventCta = (event) => {
   return eventRegistrationLink(event, `event-cta${available ? '' : ' is-quiet'}`,
     'Daftar <span aria-hidden="true">&rarr;</span>', 'Lihat detail <span aria-hidden="true">&rarr;</span>');
 };
-const eventRowMarkup = (event, { heading = 'h2', attributes = '' } = {}) => `<article class="event-row"${attributes}>
+const eventIsPast = (event) => eventRegistrationAvailability(event).reason === 'past';
+const eventRowMarkup = (event, { heading = 'h2', attributes = '' } = {}) => {
+  // Finished events (schedule's "Sudah selesai" tab) show no price or seats.
+  const past = eventIsPast(event);
+  return `<article class="event-row${past ? ' is-past' : ''}"${attributes}>
   ${eventDateBlock(event)}
   ${eventPhoto(event, 'event-row-photo')}
   <div class="event-row-copy">
-    <p class="event-kicker">${escapeHTML(event.category)}${event.statusKey === 'open' ? '' : ` <span>· ${escapeHTML(event.status)}</span>`}</p>
+    <p class="event-kicker">${escapeHTML(event.category)}${past ? ' <span>· Selesai</span>' : event.statusKey === 'open' ? '' : ` <span>· ${escapeHTML(event.status)}</span>`}</p>
     <${heading} class="event-title"><a class="event-row-link" href="${eventHref(event)}">${escapeHTML(event.name)}</a></${heading}>
     <p class="event-where"><span class="visually-hidden">${escapeHTML(event.date)}, </span><span class="event-where-place">${escapeHTML(event.location)}</span><span class="event-where-sep"> · </span>${escapeHTML(event.time)}</p>
   </div>
-  <div class="event-row-side"><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}${eventCta(event)}</div>
+  <div class="event-row-side">${past ? '' : `<strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}`}${eventCta(event)}</div>
 </article>`;
+};
 const eventFeatureMarkup = (event) => `<article class="event-feature">
   ${eventPhoto(event, 'event-feature-photo')}
   ${eventClosingMarkup(event)}
@@ -420,11 +426,21 @@ const renderScheduleEvents = async () => {
   grid.setAttribute('aria-busy', 'true');
 
   let scheduleEvents;
+  let pastEvents;
   try {
-    scheduleEvents = (await fetchPublicEvents())
-      .map(normalizeScheduleEvent)
-      .filter(Boolean)
+    // Finished events are extra: if they fail to load, the schedule still shows.
+    const [upcoming, finished] = await Promise.all([
+      fetchPublicEvents(),
+      fetchPublicEvents({ past: true, limit: 12 }).catch((error) => {
+        console.error('Kegiatan selesai gagal dimuat', error);
+        return [];
+      })
+    ]);
+    const all = [...upcoming, ...finished].map(normalizeScheduleEvent).filter(Boolean)
+      .filter((event, index, list) => list.findIndex((other) => other.slug === event.slug) === index);
+    scheduleEvents = all.filter((event) => !eventIsPast(event))
       .sort((a, b) => new Date(a.start) - new Date(b.start));
+    pastEvents = all.filter(eventIsPast).sort((a, b) => new Date(b.start) - new Date(a.start));
   } catch (error) {
     console.error('Jadwal kegiatan gagal dimuat', error);
     grid.removeAttribute('aria-busy');
@@ -438,7 +454,7 @@ const renderScheduleEvents = async () => {
   }
   scheduleEventsLoading = false;
 
-  if (!scheduleEvents.length) {
+  if (!scheduleEvents.length && !pastEvents.length) {
     grid.removeAttribute('aria-busy');
     if (count) {
       count.classList.remove('visually-hidden');
@@ -465,10 +481,11 @@ const renderScheduleEvents = async () => {
     featuredSection.hidden = true;
   }
 
-  grid.innerHTML = eventMonthGroupsMarkup(scheduleEvents, (event) => ({
+  const rowOptions = (event) => ({
     heading: 'h3',
-    attributes: ` data-category="${escapeHTML(event.categoryKey)}" data-date="${escapeHTML(event.start)}" data-search="${escapeHTML(`${event.name} ${event.location} ${event.category}`.toLocaleLowerCase('id-ID'))}"`
-  }));
+    attributes: ` data-category="${escapeHTML(event.categoryKey)}"${eventIsPast(event) ? ' data-past' : ''} data-date="${escapeHTML(event.start)}" data-search="${escapeHTML(`${event.name} ${event.location} ${event.category}`.toLocaleLowerCase('id-ID'))}"`
+  });
+  grid.innerHTML = eventMonthGroupsMarkup(scheduleEvents, rowOptions) + eventMonthGroupsMarkup(pastEvents, rowOptions);
   grid.removeAttribute('aria-busy');
   if (count) {
     count.classList.remove('visually-hidden');
@@ -482,15 +499,25 @@ const renderScheduleEvents = async () => {
     .map((button) => button.dataset.scheduleFilter));
   scheduleEvents.forEach((event) => {
     if (!filterContainer || knownFilters.has(event.categoryKey)) return;
+    // Category tabs sit before the "Sudah selesai" tab.
     const button = document.createElement('button');
     button.className = 'filter-btn';
     button.type = 'button';
     button.dataset.scheduleFilter = event.categoryKey;
     button.setAttribute('aria-pressed', 'false');
     button.textContent = event.category;
-    filterContainer.append(button);
+    filterContainer.insertBefore(button, filterContainer.querySelector('[data-schedule-filter="past"]'));
     knownFilters.add(event.categoryKey);
   });
+  if (filterContainer && pastEvents.length && !knownFilters.has('past')) {
+    const button = document.createElement('button');
+    button.className = 'filter-btn';
+    button.type = 'button';
+    button.dataset.scheduleFilter = 'past';
+    button.setAttribute('aria-pressed', 'false');
+    button.textContent = 'Sudah selesai';
+    filterContainer.append(button);
+  }
   initializeScheduleFilters();
 };
 
@@ -936,7 +963,10 @@ function initializeScheduleFilters() {
     const query = scheduleSearch?.value.trim().toLocaleLowerCase('id-ID') || '';
     let visible = 0;
     eventCards.forEach((card) => {
-      const categoryMatches = activeFilter === 'all' || card.dataset.category === activeFilter;
+      // "Sudah selesai" shows only finished events; every other tab shows only upcoming ones.
+      const past = card.hasAttribute('data-past');
+      const categoryMatches = activeFilter === 'past' ? past
+        : !past && (activeFilter === 'all' || card.dataset.category === activeFilter);
       const searchMatches = !query || card.dataset.search?.includes(query);
       const match = categoryMatches && searchMatches;
       card.classList.toggle('hidden', !match);
@@ -964,6 +994,7 @@ function initializeScheduleFilters() {
     });
   });
   scheduleSearch?.addEventListener('input', applyFilters);
+  applyFilters();
 }
 
 function initScheduleCountdown() {

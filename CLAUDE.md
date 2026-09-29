@@ -54,7 +54,10 @@ Edge Functions (waktu deploy terakhir) sebelum menyimpulkan kodenya salah.
 ## Keputusan desain yang sudah dibuat
 
 Daftar kegiatan (`jadwal.html` + beranda, dirender oleh `js/script.js`):
-- Filter berupa tab, kolom cari bergaris bawah.
+- Filter berupa tab, kolom cari bergaris bawah. Tab terakhir "Sudah selesai" (hanya muncul kalau ada)
+  = 12 kegiatan selesai terbaru (`public-events?past=true`: status Selesai atau tanggal
+  lewat, bukan draf/batal, terbaru dulu), baris tanpa harga/slot, ikut kolom cari; tab
+  lain hanya kegiatan mendatang. Semua kegiatan selesai tampil walau belum ada dokumentasi.
 - Dikelompokkan per bulan ("Oktober 2026 · 3 kegiatan"); jumlah ikut
   filter/pencarian, bulan kosong disembunyikan.
 - Status default "Pendaftaran dibuka" disembunyikan; hanya status penting

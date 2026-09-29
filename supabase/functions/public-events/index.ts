@@ -179,6 +179,8 @@ Deno.serve(async (request) => {
   const requestUrl = new URL(request.url);
   const demo = requestUrl.searchParams.get("demo") === "true";
   const slug = requestUrl.searchParams.get("slug")?.trim().toLowerCase() ?? null;
+  // past=true lists finished events (newest first) for the schedule's "Sudah selesai" tab.
+  const past = requestUrl.searchParams.get("past") === "true";
   if (slug !== null && (slug.length > 120 || !slugPattern.test(slug))) {
     return errorResponse(400, "INVALID_SLUG", "Slug kegiatan tidak valid.");
   }
@@ -205,12 +207,15 @@ Deno.serve(async (request) => {
     "seats.or": `(registration_status.eq.confirmed,and(registration_status.eq.pending_payment,or(payment_deadline.is.null,payment_deadline.gt."${new Date().toISOString()}")))`,
     // Same rule as create_registration's applicant_limit: every application except cancelled ones.
     "applicants.registration_status": "neq.cancelled",
-    order: "event_date.asc,start_time.asc,slug.asc",
+    order: past ? "event_date.desc,start_time.desc,slug.asc" : "event_date.asc,start_time.asc,slug.asc",
     limit: String(slug ? 1 : limit),
   });
   if (slug) {
     query.set("slug", `eq.${slug}`);
     query.set("status", "neq.draft");
+  } else if (past) {
+    query.set("status", "not.in.(draft,cancelled)");
+    query.set("or", `(status.eq.completed,event_date.lt.${jakartaDate()})`);
   } else {
     query.set("event_date", `gte.${jakartaDate()}`);
     query.set("status", "in.(open,full)");
