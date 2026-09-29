@@ -34,7 +34,7 @@ const fail = (status: number, code: string, message: string) =>
 
 const BUCKET = "certificates";
 const MAX_PDF_BYTES = 4 * 1024 * 1024;
-const ISSUE_AFTER_DAYS = 7;
+const ISSUE_AFTER_DAYS = 3;
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const codePattern = /^[A-Za-z0-9]{20,40}$/;
 const registrationCodePattern = /^[A-Za-z0-9-]{4,60}$/;

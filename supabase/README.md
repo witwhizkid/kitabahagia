@@ -351,7 +351,7 @@ registration: random `verification_code` of 20 letters/digits, snapshot of
 `email_error`) and the private bucket `certificates` (PDF, 4 MB).
 Edge Function `admin-certificate-issue` (admin/super_admin):
 `GET ?event=` lists confirmed registrants marked present with their certificate
-state, `opens_on` / `open` (H+7 after the event's last day, WIB), `missing`
+state, `opens_on` / `open` (H+3 after the event's last day, WIB; `ISSUE_AFTER_DAYS`), `missing`
 settings and `email_ready`; `POST ?event=&action=issue` creates the row (or
 re-issues with the same code and link: new name/number snapshot);
 `action=pdf&code=` stores the PDF (`%PDF-`, ≤4 MB, overwrites) and sets

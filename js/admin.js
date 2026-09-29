@@ -1599,12 +1599,13 @@
   const shortDate = (event) => new Intl.DateTimeFormat("id-ID", { weekday: "long", day: "numeric", month: "short", timeZone: "Asia/Jakarta" })
     .format(new Date(`${event.event_date}T12:00:00+07:00`));
 
-  // Attendance window: from the first day until 7 days after; certificates: 7 to 30 days after.
+  // Same rule as admin-certificate-issue (ISSUE_AFTER_DAYS): certificates open H+3.
+  const CERTIFICATE_AFTER_DAYS = 3;
+  // Reminders run from the first day until 30 days after the event.
   const homeWindow = (event) => {
     const sinceEnd = -daysFromToday(eventLastDay(event));
-    if (daysFromToday(event.event_date) <= 0 && sinceEnd <= 7) return { kind: "attendance", lifecycle: sinceEnd > 0 ? "history" : "active" };
-    if (sinceEnd >= 7 && sinceEnd <= 30) return { kind: "certificate" };
-    return null;
+    if (daysFromToday(event.event_date) > 0 || sinceEnd > 30) return null;
+    return { lifecycle: sinceEnd > 0 ? "history" : "active", certificates: sinceEnd >= CERTIFICATE_AFTER_DAYS };
   };
   // Per-event checks so these tasks disappear once the work is done: nobody marked
   // present yet (with confirmed registrants), or present volunteers without a certificate.
@@ -1615,14 +1616,15 @@
       const span = homeWindow(event);
       if (!span) return;
       try {
-        if (span.kind === "attendance") {
-          const data = await registrationRequest({ event: event.slug, lifecycle: span.lifecycle, registration_status: "confirmed" });
-          const rows = Array.isArray(data.registrations) ? data.registrations : [];
-          if (rows.length && !rows.some((row) => row.attended_at)) checks.set(event.slug, { ...span, count: rows.length });
-        } else {
-          const data = await authorizedRequest(issueUrl({ event: event.slug }));
-          const pending = (data.recipients || []).filter((recipient) => !recipient.certificate?.issued_at).length;
-          if (pending) checks.set(event.slug, { ...span, count: pending });
+        // Attendance first: until someone is marked present there is nothing to certify.
+        const data = await registrationRequest({ event: event.slug, lifecycle: span.lifecycle, registration_status: "confirmed" });
+        const rows = Array.isArray(data.registrations) ? data.registrations : [];
+        if (rows.length && !rows.some((row) => row.attended_at)) {
+          checks.set(event.slug, { kind: "attendance", lifecycle: span.lifecycle, count: rows.length });
+        } else if (span.certificates && rows.length) {
+          const issue = await authorizedRequest(issueUrl({ event: event.slug }));
+          const pending = (issue.recipients || []).filter((recipient) => !recipient.certificate?.issued_at).length;
+          if (pending) checks.set(event.slug, { kind: "certificate", count: pending });
         }
       } catch {
         // A failed check only hides that one reminder.
@@ -3166,7 +3168,7 @@
     const issued = recipients.filter((recipient) => recipient.certificate?.issued_at);
     const pending = recipients.filter((recipient) => !recipient.certificate?.issued_at);
     const blocked = data.missing?.length ? `Lengkapi dulu di pengaturan: ${data.missing.join(", ")}.`
-      : !data.open ? `Sertifikat bisa diterbitkan mulai ${formatDate(data.opens_on)} (H+7 setelah kegiatan).`
+      : !data.open ? `Sertifikat bisa diterbitkan mulai ${formatDate(data.opens_on)} (H+${CERTIFICATE_AFTER_DAYS} setelah kegiatan).`
         : "";
     const state = $("#certificate-issue-state");
     state.textContent = blocked || (recipients.length ? "" : "Belum ada pendaftar yang ditandai hadir. Tandai hadir dulu di tab Pendaftar.");

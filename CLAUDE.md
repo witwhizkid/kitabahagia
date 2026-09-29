@@ -234,7 +234,7 @@ Lainnya:
   di Supabase Auth `user_metadata.nickname` per admin; kalau kosong ditebak dari email),
   4 angka yang bisa diklik (pendaftar baru 24 jam, menunggu bayar, menunggu seleksi,
   kursi terisi), "Kegiatan terdekat" (maks. 3, countdown + bar kapasitas), dan
-  "Perlu ditindaklanjuti" (tandai hadir ≤7 hari setelah kegiatan, sertifikat H+7–30,
+  "Perlu ditindaklanjuti" (tandai hadir selama belum ada yang ditandai, sertifikat H+3–30,
   belum tayang, pendaftaran tutup ≤3 hari, ≥80% penuh). Angka dihitung di browser dari
   `admin-registrations?lifecycle=active` (tanpa function baru), jadi kegiatan yang sudah
   selesai tidak menampilkan kapasitas. Kegiatan/Kisah jadi kartu membulat (radius 18px,
@@ -335,7 +335,7 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
 - Tahap 4 **dibangun (Sep 2026)**: bagian "Terbitkan sertifikat" di tab
   Sertifikat (Edge Function `admin-certificate-issue`, tabel `certificates`,
   bucket privat `certificates`): daftar yang hadir, nama bisa diedit +
-  "Rapikan huruf kapital", terbit mulai H+7 dan hanya jika nomor/Founder/PL
+  "Rapikan huruf kapital", terbit mulai H+3 (keputusan user Sep 2026, dulu H+7) dan hanya jika nomor/Founder/PL
   lengkap dan form sudah disimpan. PDF digambar di browser admin
   (`KBCertificate.toPdf`, JPEG dalam PDF A4), email lewat Brevo API
   (`BREVO_API_KEY`; pengirim `CERTIFICATE_EMAIL_FROM`, disarankan `halo@`;
@@ -420,7 +420,7 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
 - Keputusan user: sertifikat **hanya untuk relawan yang hadir di lapangan**
   (tanpa panitia/"Tambah panitia"; peran selalu "Sebagai Relawan Tingkat
   Nasional", jadi baris ini boleh tetap di template); kegiatan gratis akhir
-  bulan juga dapat; terbit **H+7**; "Tandai hadir" dan "Terbitkan" hanya oleh
+  bulan juga dapat; terbit **H+3** (tim pelaksana lapor absen paling lambat H+2); "Tandai hadir" dan "Terbitkan" hanya oleh
   **admin** (tim pelaksana absen manual lalu lapor ke admin); izin tanda tangan
   aman; anggap domain sudah ada (email jalur utama). Belum ada data lama untuk
   diimpor; kegiatan pertama Oktober 2026.
