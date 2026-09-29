@@ -399,6 +399,17 @@
       };
       const body = document.querySelector("[data-story-detail-body]");
       body.replaceChildren(...storyBlocks(story.body));
+      // Related event's documentation (renderEventGallery lives in script.js, loaded first).
+      const gallery = document.querySelector("[data-story-gallery]");
+      if (gallery && typeof renderEventGallery === "function") {
+        if (story.event) {
+          renderEventGallery(gallery, {
+            title: story.event.title, documentationUrl: story.event.documentation_url, photos: story.event.documentation_photos,
+          });
+        } else {
+          gallery.hidden = true;
+        }
+      }
       const words = story.body.trim().split(/\s+/).length;
       document.querySelector("[data-story-detail-reading]").textContent = `${Math.max(1, Math.round(words / 200))} menit baca`;
       void renderMoreStories(story.slug);

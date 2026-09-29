@@ -436,8 +436,10 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   kode_pendaftaran, nama_lengkap, no_hp, peran, hadir, dll.). Diimpor sekali
   saat fitur dibangun (cocokkan slug + kode/no. HP).
 
-Dokumentasi kegiatan (usulan tim dokum, disepakati user Sep 2026, belum dibangun;
-bangun setelah kegiatan Oktober punya foto): foto asli tetap di Google Drive (folder
+Dokumentasi kegiatan (usulan tim dokum, disepakati user Sep 2026, **dibangun Sep 2026**
+sebelum kegiatan Oktober; migrasi `20261013010000`, `events.documentation_url` +
+`documentation_photos` jsonb maks. 5 `{url, alt}` dari bucket `event-images`; renderer
+`renderEventGallery` di `js/script.js`; kegiatan selesai dianggap "past" walau penuh/ditutup): foto asli tetap di Google Drive (folder
 "siapa saja yang punya link: Pelihat", isinya sudah dikurasi). Form Kegiatan dapat bagian
 "Dokumentasi": link folder Drive + maks. **5 foto pilihan** (dikompres di browser seperti
 foto Kisah; tidak mengambil gambar langsung dari Drive). Tampil publik (siapa saja, bukan

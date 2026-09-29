@@ -105,7 +105,7 @@ const cleanName = (value: unknown) => {
 const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, (character) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]!));
 
-type EventRow = { id: string; title: string; event_date: string; end_at: string | null };
+type EventRow = { id: string; title: string; event_date: string; end_at: string | null; documentation_url?: string | null };
 type Settings = {
   certificate_number: string | null; founder_id: string | null; project_leader_id: string | null;
   template_mode: string; template_path: string | null;
@@ -140,7 +140,7 @@ Deno.serve(async (request) => {
     return { ok: response.ok, status: response.status, data };
   };
 
-  const events = await rest<EventRow[]>(`events?${new URLSearchParams({ slug: `eq.${slug}`, select: "id,title,event_date,end_at", limit: "1" })}`);
+  const events = await rest<EventRow[]>(`events?${new URLSearchParams({ slug: `eq.${slug}`, select: "id,title,event_date,end_at,documentation_url", limit: "1" })}`);
   if (!events.ok || !Array.isArray(events.data)) return fail(500, "SERVER_ERROR", "Kegiatan belum dapat dimuat.");
   const event = events.data[0];
   if (!event) return fail(404, "NOT_FOUND", "Kegiatan tidak ditemukan.");
@@ -321,19 +321,27 @@ Deno.serve(async (request) => {
   const greetingName = firstWord === firstWord.toUpperCase() || firstWord === firstWord.toLowerCase()
     ? firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase()
     : firstWord;
+  // The documentation folder rides along when the team has filled it in.
+  const photos = typeof event.documentation_url === "string" && event.documentation_url.startsWith("https://") ? event.documentation_url : null;
+  const photosBlock = photos ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border-radius:14px;background:#f6f1ea"><tr><td style="padding:16px 18px">
+<p style="margin:0 0 6px;font-size:15px;font-weight:bold">📸 Foto-foto kegiatannya juga udah ada!</p>
+<p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#4a4140">Momen-momen seru di ${escapeHtml(event.title)} udah dikumpulin tim dokumentasi. Bebas diunduh buat kenang-kenangan atau diposting. Kalau upload, tag @kitabahagiaa_ ya, biar kami ikut senyum lihatnya.</p>
+<a href="${escapeHtml(photos)}" style="display:inline-block;padding:11px 20px;border-radius:999px;border:2px solid #780c06;color:#780c06;text-decoration:none;font-weight:bold;font-size:14px">Lihat foto kegiatan &nearr;</a>
+</td></tr></table>` : "";
   const html = `<!doctype html><html lang="id"><body style="margin:0;background:#f6f1ea;font-family:Arial,Helvetica,sans-serif;color:#241f1d">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:20px;overflow:hidden">
 <tr><td style="height:6px;background:#efb635;font-size:0;line-height:0">&nbsp;</td></tr>
 <tr><td style="padding:30px 28px 32px">
 <p style="margin:0 0 8px;font-size:12px;font-weight:bold;letter-spacing:.12em;text-transform:uppercase;color:#780c06">Kita Bahagia</p>
-<h1 style="margin:0 0 18px;font-size:26px;line-height:1.25">Sertifikatmu udah jadi!&nbsp;🎉</h1>
+<h1 style="margin:0 0 18px;font-size:26px;line-height:1.25">${photos ? "Sertifikat &amp; foto kegiatanmu udah siap!" : "Sertifikatmu udah jadi!"}&nbsp;🎉</h1>
 <p style="margin:0 0 14px;font-size:15px;line-height:1.6">Halo ${escapeHtml(greetingName)}!</p>
-<p style="margin:0 0 18px;font-size:15px;line-height:1.6">Makasih banyak udah hadir dan ikut nyebar bahagia di <strong>${escapeHtml(event.title)}</strong> (${dateText}). Ini sertifikat relawanmu, bisa dilihat dan diunduh lewat tombol di bawah.</p>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.6">Makasih banyak udah hadir dan ikut nyebar bahagia di <strong>${escapeHtml(event.title)}</strong> (${dateText}). Ini sertifikat relawanmu, bisa dilihat dan diunduh lewat tombol di bawah${photos ? ", plus foto-foto kegiatan buat kenang-kenangan" : ""}.</p>
 <p style="margin:0 0 22px;padding:12px 16px;border-radius:12px;background:#fdf5e1;font-size:14px;line-height:1.5">Atas nama<br><strong style="font-size:16px;color:#780c06">${escapeHtml(name)}</strong></p>
 <p style="margin:0 0 24px"><a href="${link}" style="display:inline-block;padding:14px 24px;border-radius:999px;background:#780c06;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px">Lihat &amp; unduh sertifikat &rarr;</a></p>
 <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#6b6164">Link ini khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.</p>
 <p style="margin:0 0 22px;font-size:13px;line-height:1.6;color:#6b6164;word-break:break-all">${link}</p>
+${photosBlock}
 <p style="margin:0;font-size:15px;line-height:1.6">Sampai ketemu di kegiatan berikutnya 💛<br><strong>Tim Kita Bahagia</strong></p>
 </td></tr></table>
 <p style="margin:16px 0 0;font-size:12px;color:#8a7f7a"><a href="${siteUrl}/jadwal" style="color:#8a7f7a">Jadwal kegiatan</a> · <a href="https://instagram.com/kitabahagiaa_" style="color:#8a7f7a">Instagram</a> · kitabahagia.id</p>
@@ -345,9 +353,9 @@ Deno.serve(async (request) => {
       sender: { name: "Kita Bahagia", email: Deno.env.get("CERTIFICATE_EMAIL_FROM") || "noreply@kitabahagia.id" },
       replyTo: { email: "halo@kitabahagia.id", name: "Kita Bahagia" },
       to: [{ email, name }],
-      subject: `${greetingName}, sertifikat relawanmu udah jadi!`,
+      subject: photos ? `${greetingName}, sertifikat & foto kegiatanmu udah jadi!` : `${greetingName}, sertifikat relawanmu udah jadi!`,
       htmlContent: html,
-      textContent: `Halo ${greetingName}!\n\nMakasih banyak udah hadir dan ikut nyebar bahagia di ${event.title} (${dateText}). Sertifikat relawanmu atas nama ${name} bisa dilihat dan diunduh di:\n${link}\n\nLink ini khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.\n\nSampai ketemu di kegiatan berikutnya!\nTim Kita Bahagia`,
+      textContent: `Halo ${greetingName}!\n\nMakasih banyak udah hadir dan ikut nyebar bahagia di ${event.title} (${dateText}). Sertifikat relawanmu atas nama ${name} bisa dilihat dan diunduh di:\n${link}\n\nLink ini khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.\n\n${photos ? `Foto-foto kegiatannya juga udah ada, bebas diunduh buat kenang-kenangan (kalau diposting, tag @kitabahagiaa_ ya):\n${photos}\n\n` : ""}Sampai ketemu di kegiatan berikutnya!\nTim Kita Bahagia`,
     }),
   }).catch(() => null);
   if (!send?.ok) {

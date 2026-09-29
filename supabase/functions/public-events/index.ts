@@ -40,6 +40,8 @@ type EventRow = {
   price: number;
   payment_window_minutes: number | null;
   image_url: string | null;
+  documentation_url: string | null;
+  documentation_photos: Array<{ url: string; alt: string }> | null;
   image_alt: string | null;
   registration_mode: "first_come" | "selection";
   registration_opens_at: string | null;
@@ -77,6 +79,8 @@ const eventProjection = [
   "payment_window_minutes",
   "image_url",
   "image_alt",
+  "documentation_url",
+  "documentation_photos",
   "registration_mode",
   "registration_opens_at",
   "applicant_limit",
@@ -265,6 +269,8 @@ Deno.serve(async (request) => {
         payment_window_minutes: event.payment_window_minutes ?? null,
         image_url: event.image_url,
         image_alt: event.image_alt,
+        documentation_url: event.documentation_url ?? null,
+        documentation_photos: Array.isArray(event.documentation_photos) ? event.documentation_photos : [],
       };
     });
 

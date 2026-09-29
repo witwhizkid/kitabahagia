@@ -439,6 +439,17 @@ registration or the webhook. Accepting a selection applicant in
 wording (same claim column, so re-accepting never sends twice; batches of 5).
 Waitlist/reject send nothing (admins use the WhatsApp draft). Migration: `20261011010000`.
 
+## Event documentation
+
+`events.documentation_url` (https, a view-only Google Drive folder) and
+`events.documentation_photos` (jsonb array, max 5 `{ url, alt }`; `admin-events` only
+accepts URLs in the public `event-images` bucket) are filled in the event form's
+"Dokumentasi" section. `public-events` returns both; a finished event page shows them as a
+slide gallery with a Drive button, and `public-stories?slug=` embeds the related public
+event's documentation for the same gallery on Kisah. `admin-certificate-issue` adds the
+Drive link (and "sertifikat & foto" wording) to the certificate email when it is set.
+Migration: `20261013010000`.
+
 ## Local and deployment commands
 
 The function requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in its server environment.

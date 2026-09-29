@@ -19,7 +19,7 @@ const fail = (status: number, code: string, message: string) =>
 
 const eventProjection = [
   "id", "slug", "title", "description", "registration_description", "activities", "benefits",
-  "program_key",
+  "program_key", "documentation_url", "documentation_photos",
   "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location", "location_url",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "is_demo", "payment_window_minutes",
@@ -31,7 +31,7 @@ const eventProjection = [
 
 const writableFields = new Set([
   "title", "slug", "description", "registration_description", "activities", "benefits",
-  "program_key",
+  "program_key", "documentation_url", "documentation_photos",
   "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location", "location_url",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "payment_window_minutes",
@@ -127,6 +127,26 @@ const validatePayload = (input: unknown, creating: boolean) => {
       } else if (field === "registration_mode") {
         if (typeof value !== "string" || !registrationModes.has(value)) return { error: "Mode pendaftaran tidak valid." } as const;
         data[field] = value;
+      } else if (field === "documentation_url") {
+        if (value === null || value === "") data[field] = null;
+        else {
+          try {
+            const url = new URL(String(value).trim());
+            if (url.protocol !== "https:") throw new Error();
+            data[field] = url.toString();
+          } catch {
+            return { error: "Link dokumentasi harus berupa link https (folder Google Drive)." } as const;
+          }
+        }
+      } else if (field === "documentation_photos") {
+        // Only highlight photos uploaded to our own public event-images bucket.
+        const prefix = `${Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "")}/storage/v1/object/public/event-images/`;
+        if (!Array.isArray(value) || value.length > 5 || !value.every((photo) =>
+          photo && typeof photo === "object" && typeof photo.url === "string" && photo.url.startsWith(prefix)
+          && photo.url.length <= 2048 && (photo.alt === undefined || photo.alt === null || (typeof photo.alt === "string" && photo.alt.length <= 200)))) {
+          return { error: "Foto dokumentasi tidak valid (maksimal 5 foto)." } as const;
+        }
+        data[field] = value.map((photo: { url: string; alt?: string | null }) => ({ url: photo.url, alt: String(photo.alt ?? "").trim() }));
       } else if (field === "program_key") {
         if (value === null) data[field] = null;
         else if (typeof value !== "string" || !programKeys.has(value)) return { error: "Program family tidak valid." } as const;

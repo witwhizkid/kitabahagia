@@ -152,17 +152,57 @@ const normalizeRegistrationEvent = (event) => {
     cvNote: event.cv_note || '',
     remainingCapacity: event.remaining_capacity,
     registrationDeadline: event.registration_deadline || null,
-    paymentWindowMinutes: Number.isInteger(event.payment_window_minutes) ? event.payment_window_minutes : null
+    paymentWindowMinutes: Number.isInteger(event.payment_window_minutes) ? event.payment_window_minutes : null,
+    documentationUrl: event.documentation_url || null,
+    documentationPhotos: Array.isArray(event.documentation_photos) ? event.documentation_photos : []
   };
+};
+
+// Documentation gallery (finished event page + related Kisah): up to 5 photos and the Drive folder.
+const renderEventGallery = (container, { title, documentationUrl, photos }) => {
+  const slides = (Array.isArray(photos) ? photos : [])
+    .filter((photo) => typeof photo?.url === 'string' && photo.url.startsWith('https://')).slice(0, 5);
+  let drive = null;
+  try {
+    const url = new URL(documentationUrl || '');
+    if (url.protocol === 'https:') drive = url.toString();
+  } catch { drive = null; }
+  container.hidden = !slides.length && !drive;
+  if (container.hidden) {
+    container.replaceChildren();
+    return;
+  }
+  container.innerHTML = `
+    <div class="event-gallery-head"><p class="event-gallery-kicker">Dokumentasi</p><h2>Momen dari <em>${escapeHTML(title)}</em></h2></div>
+    ${slides.length ? `<div class="event-gallery-track" tabindex="0" aria-label="Foto kegiatan, geser untuk melihat">${slides.map((photo, index) => `
+      <figure class="event-gallery-slide"><img src="${escapeHTML(photo.url)}" alt="${escapeHTML(photo.alt || `Foto kegiatan ${index + 1}`)}" loading="lazy" decoding="async">${photo.alt ? `<figcaption>${escapeHTML(photo.alt)}</figcaption>` : ''}</figure>`).join('')}
+    </div>` : ''}
+    <div class="event-gallery-foot">
+      ${slides.length > 1 ? `<div class="event-gallery-nav"><button type="button" data-gallery-step="-1" aria-label="Foto sebelumnya">&larr;</button><span data-gallery-count>1 / ${slides.length}</span><button type="button" data-gallery-step="1" aria-label="Foto berikutnya">&rarr;</button></div>` : ''}
+      ${drive ? `<a class="btn btn-secondary event-gallery-drive" href="${escapeHTML(drive)}" target="_blank" rel="noopener noreferrer">Lihat semua foto di Drive <span aria-hidden="true">&nearr;</span></a>` : ''}
+    </div>`;
+  const track = container.querySelector('.event-gallery-track');
+  if (!track) return;
+  const count = container.querySelector('[data-gallery-count]');
+  const current = () => Math.round(track.scrollLeft / Math.max(track.clientWidth, 1));
+  track.addEventListener('scroll', () => {
+    if (count) count.textContent = `${current() + 1} / ${slides.length}`;
+  }, { passive: true });
+  container.querySelectorAll('[data-gallery-step]').forEach((button) => button.addEventListener('click', () => {
+    const next = Math.min(slides.length - 1, Math.max(0, current() + Number(button.dataset.galleryStep)));
+    const instant = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    track.scrollTo({ left: next * track.clientWidth, behavior: instant ? 'auto' : 'smooth' });
+  }));
 };
 
 const eventRegistrationAvailability = (event) => {
   const availabilityEnd = new Date(event.end || event.start).getTime();
-  if (event.statusKey === 'full') return { available: false, reason: 'full' };
-  if (event.statusKey === 'closed') return { available: false, reason: 'closed' };
+  // A finished event is "past" even if it was full or closed (it then shows its documentation).
   if (event.statusKey === 'completed' || (!Number.isNaN(availabilityEnd) && availabilityEnd < Date.now())) {
     return { available: false, reason: 'past' };
   }
+  if (event.statusKey === 'full') return { available: false, reason: 'full' };
+  if (event.statusKey === 'closed') return { available: false, reason: 'closed' };
   if (Number.isNaN(availabilityEnd) || event.statusKey !== 'open') {
     return { available: false, reason: 'unavailable' };
   }
@@ -2279,6 +2319,16 @@ if (registrationForm) {
     document.querySelector('.registration-summary-cta')?.toggleAttribute('hidden', !registrationAvailable);
     registrationFormPanel?.classList.toggle('hidden', !registrationAvailable);
     registrationUnavailable?.classList.toggle('hidden', registrationAvailable);
+    const eventGallery = document.getElementById('eventGallery');
+    if (eventGallery) {
+      if (availability.reason === 'past') {
+        renderEventGallery(eventGallery, {
+          title: selectedEvent.name, documentationUrl: selectedEvent.documentationUrl, photos: selectedEvent.documentationPhotos
+        });
+      } else {
+        eventGallery.hidden = true;
+      }
+    }
     window.clearInterval(registrationOpensTimer);
     if (registrationAvailable) {
       setRegistrationStep('data');

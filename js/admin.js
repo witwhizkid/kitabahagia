@@ -46,7 +46,11 @@
   let selectionOverview = null;
   let applicantDialogIndex = -1;
   let selectionDecisionPending = false;
-  let imageUploading = false;
+  // Uploads in flight (poster + documentation photos); Save stays disabled until all finish.
+  let imageUploading = 0;
+  // Documentation highlight photos of the event being edited: [{ url, alt }], max 5.
+  let docPhotos = [];
+  const DOC_PHOTO_LIMIT = 5;
   let storyImageUploading = false;
   let storySlugManuallyEdited = false;
   let passwordSetupRecovery = false;
@@ -1371,6 +1375,9 @@
     $("#event-category").value = event?.category || "";
     $("#event-category-key").value = event?.category_key || "";
     $("#event-program-key").value = event?.program_key || "";
+    $("#event-documentation-url").value = event?.documentation_url || "";
+    docPhotos = Array.isArray(event?.documentation_photos) ? event.documentation_photos.map((photo) => ({ url: photo.url, alt: photo.alt || "" })) : [];
+    renderDocPhotos();
     $("#event-description").value = event?.description || "";
     $("#event-registration-description").value = event?.registration_description || "";
     $("#event-date").value = event?.event_date || "";
@@ -2027,6 +2034,8 @@
     category: $("#event-category").value.trim() || null,
     category_key: $("#event-category-key").value.trim() || null,
     program_key: $("#event-program-key").value || null,
+    documentation_url: $("#event-documentation-url").value.trim() || null,
+    documentation_photos: docPhotos.map((photo) => ({ url: photo.url, alt: photo.alt.trim() })),
     event_date: $("#event-date").value,
     start_time: $("#event-start-time").value || null,
     end_at: endAtFromForm(),
@@ -2164,12 +2173,78 @@
     toggleSelectionFields();
   });
 
+  function renderDocPhotos() {
+    const list = $("#doc-photos");
+    list.replaceChildren(...docPhotos.map((photo, index) => {
+      const item = document.createElement("li");
+      item.className = "doc-photo";
+      const img = document.createElement("img");
+      img.src = photo.url;
+      img.alt = "";
+      img.loading = "lazy";
+      const alt = document.createElement("input");
+      alt.value = photo.alt;
+      alt.maxLength = 200;
+      alt.placeholder = "Keterangan singkat (opsional)";
+      alt.setAttribute("aria-label", `Keterangan foto ${index + 1}`);
+      alt.dataset.docAlt = String(index);
+      const actions = document.createElement("div");
+      actions.className = "doc-photo-actions";
+      actions.innerHTML = `${index > 0 ? `<button class="text-button" type="button" data-doc-move="${index}" aria-label="Geser foto ${index + 1} ke kiri">← Geser</button>` : ""}<button class="text-button delete-signer" type="button" data-doc-remove="${index}" aria-label="Hapus foto ${index + 1}">Hapus</button>`;
+      item.append(img, alt, actions);
+      return item;
+    }));
+    const left = DOC_PHOTO_LIMIT - docPhotos.length;
+    $("#doc-photo-status").textContent = docPhotos.length ? `${docPhotos.length}/${DOC_PHOTO_LIMIT} foto${left ? "" : " · sudah maksimal"}` : "Belum ada foto.";
+    document.querySelector('label[for="doc-photo-file"]').hidden = left <= 0;
+  }
+  $("#doc-photos").addEventListener("input", (event) => {
+    const index = event.target.dataset.docAlt;
+    if (index !== undefined && docPhotos[index]) docPhotos[index].alt = event.target.value;
+  });
+  $("#doc-photos").addEventListener("click", (event) => {
+    const move = event.target.closest("[data-doc-move]");
+    const remove = event.target.closest("[data-doc-remove]");
+    if (!move && !remove) return;
+    const index = Number((move || remove).dataset[move ? "docMove" : "docRemove"]);
+    if (move) [docPhotos[index - 1], docPhotos[index]] = [docPhotos[index], docPhotos[index - 1]];
+    else docPhotos.splice(index, 1);
+    markDirty(eventForm, true);
+    renderDocPhotos();
+  });
+  $("#doc-photo-file").addEventListener("change", async (event) => {
+    const files = [...(event.target.files || [])].slice(0, DOC_PHOTO_LIMIT - docPhotos.length);
+    event.target.value = "";
+    if (!files.length) return;
+    const button = $("#save-button");
+    const status = $("#doc-photo-status");
+    imageUploading += 1;
+    button.disabled = true;
+    status.classList.remove("is-error");
+    try {
+      for (const [index, file] of files.entries()) {
+        status.textContent = `Mengompres dan mengunggah foto ${index + 1}/${files.length}…`;
+        const url = await uploadImage(file, { bucket: "event-images", slugInput: "#event-slug", maxWidth: 1600, maxHeight: 1600 });
+        docPhotos.push({ url, alt: "" });
+        markDirty(eventForm, true);
+      }
+      renderDocPhotos();
+    } catch (error) {
+      renderDocPhotos();
+      status.classList.add("is-error");
+      status.textContent = error.message;
+    } finally {
+      imageUploading -= 1;
+      button.disabled = imageUploading > 0;
+    }
+  });
+
   $("#event-image-file").addEventListener("change", async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
     const button = $("#save-button");
     const status = $("#image-upload-status");
-    imageUploading = true;
+    imageUploading += 1;
     button.disabled = true;
     status.classList.remove("is-error");
     event.target.removeAttribute("aria-invalid");
@@ -2184,8 +2259,8 @@
       status.classList.add("is-error");
       status.textContent = error.message;
     } finally {
-      imageUploading = false;
-      button.disabled = false;
+      imageUploading -= 1;
+      button.disabled = imageUploading > 0;
     }
   });
 

@@ -50,7 +50,11 @@ Deno.serve(async (request) => {
     order: "published_at.desc.nullslast,slug.asc",
     limit: String(slug ? 1 : limit),
   });
-  if (slug) query.set("slug", `eq.${slug}`);
+  if (slug) {
+    query.set("slug", `eq.${slug}`);
+    // A single story also brings its related event's documentation (Living Archive).
+    query.set("select", `${storyProjection},event:events(slug,title,is_public,archived_at,documentation_url,documentation_photos)`);
+  }
 
   const response = await fetch(`${supabaseUrl}/rest/v1/stories?${query}`, {
     headers: {
@@ -59,7 +63,21 @@ Deno.serve(async (request) => {
       Accept: "application/json",
     },
   });
-  const stories = await response.json().catch(() => null);
-  if (!response.ok || !Array.isArray(stories)) return fail(500, "SERVER_ERROR", "Kisah belum dapat dimuat.");
+  const rows = await response.json().catch(() => null);
+  if (!response.ok || !Array.isArray(rows)) return fail(500, "SERVER_ERROR", "Kisah belum dapat dimuat.");
+  // Only a public, unarchived event is exposed, and only what the gallery needs.
+  const stories = rows.map(({ event, ...story }: Record<string, unknown>) => {
+    const related = event as Record<string, unknown> | null | undefined;
+    if (!slug) return story;
+    return {
+      ...story,
+      event: related && related.is_public === true && !related.archived_at ? {
+        slug: related.slug,
+        title: related.title,
+        documentation_url: related.documentation_url ?? null,
+        documentation_photos: Array.isArray(related.documentation_photos) ? related.documentation_photos : [],
+      } : null,
+    };
+  });
   return json(200, { stories });
 });

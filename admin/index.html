@@ -149,6 +149,7 @@
               <a href="#detail-heading">Detail</a>
               <a href="#mode-heading">Pendaftaran</a>
               <a href="#media-heading">Foto</a>
+              <a href="#documentation-heading">Dokumentasi</a>
               <a href="#publish-heading">Publikasi</a>
             </nav>
           </div>
@@ -265,6 +266,25 @@
                 </div>
                 <label class="span-2">Teks alternatif foto<input id="event-image-alt" name="image_alt" /></label>
                 <label class="span-2">Link grup WhatsApp peserta<input id="event-whatsapp" name="whatsapp_group_url" type="url" pattern="https://chat\.whatsapp\.com/.+" placeholder="https://chat.whatsapp.com/…" /></label>
+              </div>
+            </section>
+
+            <section class="form-section" aria-labelledby="documentation-heading">
+              <div class="section-heading">
+                <h2 id="documentation-heading">Dokumentasi</h2>
+                <p>Diisi setelah kegiatan. Tampil di halaman kegiatan yang sudah selesai dan di Kisah terkait; link Drive ikut di email sertifikat.</p>
+              </div>
+              <div class="form-grid">
+                <label class="span-2">Link folder Google Drive <span class="label-note">Atur akses "Siapa saja yang memiliki link: Pelihat" dan isi hanya foto yang sudah dikurasi.</span><input id="event-documentation-url" name="documentation_url" type="url" inputmode="url" placeholder="https://drive.google.com/drive/folders/…" /></label>
+                <div class="span-2 doc-photos-field">
+                  <span class="field-label">Foto pilihan <span class="label-note">Maksimal 5, tampil sebagai slide. Pilih foto yang aman ditampilkan, terutama foto anak.</span></span>
+                  <ul id="doc-photos" class="doc-photos"></ul>
+                  <input id="doc-photo-file" type="file" accept="image/jpeg,image/png,image/webp" multiple class="visually-hidden" />
+                  <div class="image-upload-actions">
+                    <label class="button button-secondary upload-button" for="doc-photo-file">Tambah foto</label>
+                    <span id="doc-photo-status" class="field-help-inline" role="status"></span>
+                  </div>
+                </div>
               </div>
             </section>
 
