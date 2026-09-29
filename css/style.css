@@ -1214,7 +1214,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   left: -40px;
   bottom: -80px;
 }
-.join-copy p { color:#e8cbd0; max-width:560px; margin:18px 0 25px; }.join-copy h2 em { color:#f3a9b2; }.join-actions { display:flex; align-items:center; gap:22px; flex-wrap:wrap; }.join-social { color:white; font-weight:800; font-size:14px; }.join-note { align-self:center; justify-self:end; width:min(320px,100%); padding:25px; border:1px solid rgba(255,255,255,.18); border-radius:22px; background:rgba(255,255,255,.06); transform:rotate(-2deg); }.join-note span { font-family:"Instrument Sans","DM Sans",sans-serif; font-size:54px; color:#eaa1aa; line-height:1; }.join-note p { font-family:"Instrument Sans","DM Sans",sans-serif; font-size:23px; line-height:1.28; margin:5px 0 18px; }.join-note small { color:#e8cbd0; }
+.join-copy p { color:#e8cbd0; max-width:560px; margin:18px 0 25px; }.join-copy p a { color:inherit; text-decoration:underline; text-underline-offset:3px; }.join-copy h2 em { color:#f3a9b2; }.join-actions { display:flex; align-items:center; gap:22px; flex-wrap:wrap; }.join-social { color:white; font-weight:800; font-size:14px; }.join-note { align-self:center; justify-self:end; width:min(320px,100%); padding:25px; border:1px solid rgba(255,255,255,.18); border-radius:22px; background:rgba(255,255,255,.06); transform:rotate(-2deg); }.join-note span { font-family:"Instrument Sans","DM Sans",sans-serif; font-size:54px; color:#eaa1aa; line-height:1; }.join-note p { font-family:"Instrument Sans","DM Sans",sans-serif; font-size:23px; line-height:1.28; margin:5px 0 18px; }.join-note small { color:#e8cbd0; }
 
 .home-closing-section {
   padding: 76px 0;
