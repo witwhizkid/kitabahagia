@@ -417,6 +417,26 @@ and its payment status is `paid` or `not_required`. The URL is returned only whe
 it is an HTTPS link on `chat.whatsapp.com`; pending, failed, expired, refunded,
 cancelled, invalid, and malformed-link cases return `null`.
 
+## Registration emails
+
+`supabase/functions/_shared/registration-email.ts` sends two Brevo emails (same
+`BREVO_API_KEY`; sender `REGISTRATION_EMAIL_FROM`, falling back to
+`CERTIFICATE_EMAIL_FROM`, then `noreply@kitabahagia.id`; reply-to `halo@`):
+
+- **Confirmed** ("Kamu resmi terdaftar"): free first-come sign-ups from
+  `create-registration`, paid sign-ups from `midtrans-webhook` on
+  settlement/capture. Code, date/time, location (Maps link), WhatsApp group
+  link and a Cek status button. `registrations.confirmation_email_sent_at` is
+  claimed with a conditional PATCH before sending, so repeated Midtrans
+  notifications never send twice; `confirmation_email_error` keeps the last
+  Brevo failure (not retried automatically).
+- **Applied** ("Pendaftaranmu udah masuk"): selection sign-ups, with the
+  announcement date. Not recorded.
+
+Emails run in `EdgeRuntime.waitUntil` when available and never fail the
+registration or the webhook. Selection acceptance does not send an email yet
+(admins use the WhatsApp draft). Migration: `20261011010000`.
+
 ## Local and deployment commands
 
 The function requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in its server environment.

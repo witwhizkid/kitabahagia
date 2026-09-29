@@ -198,8 +198,11 @@ Lainnya:
   memakai `<dialog>` native, navigasi panah, dan layout layar penuh di HP.
   Semua baris pendaftar kini ringkas dan membuka dialog detail universal; data,
   status pembayaran, dan catatan tampil di dialog, sedangkan kontrol seleksi
-  hanya muncul untuk kegiatan mode Seleksi. Email otomatis ke pendaftar belum
-  dikerjakan (domain + SMTP Brevo sudah siap). Bukti follow Instagram hanya untuk event gratis +
+  hanya muncul untuk kegiatan mode Seleksi. Email otomatis ke pendaftar (Sep 2026):
+  "Kamu resmi terdaftar" saat terkonfirmasi (gratis langsung / lunas via webhook, sekali
+  per pendaftaran) dan "Pendaftaranmu udah masuk" untuk Seleksi; gaya kartu sama dengan
+  email sertifikat. Diterima lewat seleksi belum dikirimi email. Detail: "Registration
+  emails" di `supabase/README.md`. Bukti follow Instagram hanya untuk event gratis +
   Seleksi: multipart hanya pada kondisi itu; JPG/PNG/WebP maksimal 2 MiB masuk
   ke bucket privat `instagram-proofs`, dan database hanya menyimpan object path.
   Admin mendapat signed URL 10 menit setelah verifikasi admin. Rate limit per IP

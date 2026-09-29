@@ -1,3 +1,12 @@
+import { sendConfirmationEmail } from "../_shared/registration-email.ts";
+
+// Emails run after the response when the runtime allows it (Supabase EdgeRuntime).
+const inBackground = async (task: Promise<void>) => {
+  const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (promise: Promise<unknown>) => void } }).EdgeRuntime;
+  if (runtime?.waitUntil) runtime.waitUntil(task);
+  else await task;
+};
+
 type Notification = {
   order_id: string;
   status_code: string;
@@ -125,6 +134,10 @@ Deno.serve(async (request) => {
     }
     console.error("Webhook database update failed", { status: result.status });
     return response(503, "UNAVAILABLE");
+  }
+  // Only the first notification that finds the registration confirmed sends the email.
+  if (["settlement", "capture"].includes(input.transaction_status)) {
+    await inBackground(sendConfirmationEmail(url, serviceKey, { orderId: input.order_id }));
   }
   return response(200, "OK");
 });

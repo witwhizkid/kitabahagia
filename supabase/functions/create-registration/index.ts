@@ -1,3 +1,12 @@
+import { sendAppliedEmail, sendConfirmationEmail } from "../_shared/registration-email.ts";
+
+// Emails run after the response when the runtime allows it (Supabase EdgeRuntime).
+const inBackground = async (task: Promise<void>) => {
+  const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (promise: Promise<unknown>) => void } }).EdgeRuntime;
+  if (runtime?.waitUntil) runtime.waitUntil(task);
+  else await task;
+};
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -331,7 +340,13 @@ Deno.serve(async (request) => {
       }),
     });
     const result = await rpcResponse.json().catch(() => null) as Record<string, unknown> | null;
-    if (rpcResponse.ok && result) return jsonResponse(201, result);
+    if (rpcResponse.ok && result) {
+      const registration = result.registration as { registration_code?: string; registration_status?: string } | undefined;
+      const code = registration?.registration_code;
+      if (code && registration?.registration_status === "confirmed") await inBackground(sendConfirmationEmail(supabaseUrl, serviceRoleKey, { code }));
+      if (code && registration?.registration_status === "applied") await inBackground(sendAppliedEmail(supabaseUrl, serviceRoleKey, code));
+      return jsonResponse(201, result);
+    }
 
     const databaseCode = typeof result?.message === "string" ? result.message : "";
     if (databaseCode in errorMessages) {
