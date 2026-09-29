@@ -24,6 +24,7 @@ const storyProjection = [
   "body",
   "cover_image_url",
   "cover_image_alt",
+  "event_id",
   "status",
   "published_at",
   "archived_at",
@@ -36,12 +37,14 @@ const writableFields = new Set([
   "body",
   "cover_image_url",
   "cover_image_alt",
+  "event_id",
   "status",
   "published_at",
 ]);
 const requiredCreateFields = ["slug", "title", "body"];
 const statuses = new Set(["draft", "published"]);
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 type Admin = { userId: string; role: "admin" | "super_admin" };
 type StoryRow = Record<string, unknown> & { status: string; published_at: string | null };
@@ -111,6 +114,7 @@ const validatePayload = (input: unknown, creating: boolean) => {
       } else if (field === "excerpt") data.excerpt = cleanNullableText(value, 1200);
       else if (field === "cover_image_url") data.cover_image_url = cleanNullableText(value, 2048);
       else if (field === "cover_image_alt") data.cover_image_alt = cleanNullableText(value, 500);
+      else if (field === "event_id") data.event_id = value;
       else if (field === "status") data.status = value;
       else if (field === "published_at") data.published_at = value;
     }
@@ -133,6 +137,9 @@ const validatePayload = (input: unknown, creating: boolean) => {
   if (data.published_at !== undefined && data.published_at !== null && (
     typeof data.published_at !== "string" || !data.published_at.trim() || Number.isNaN(Date.parse(data.published_at))
   )) return { error: "Tanggal terbit tidak valid." } as const;
+  if (data.event_id !== undefined && data.event_id !== null && (
+    typeof data.event_id !== "string" || !uuidPattern.test(data.event_id)
+  )) return { error: "Kegiatan terkait tidak valid." } as const;
 
   return { data } as const;
 };
@@ -222,8 +229,11 @@ Deno.serve(async (request) => {
     headers: serviceHeaders(serviceKey, "return=representation"),
     body: JSON.stringify(data),
   });
-  const stories = await response.json().catch(() => null);
-  if (response.status === 409) return fail(409, "SLUG_EXISTS", "Slug sudah digunakan kisah lain.");
+  const stories = await response.json().catch(() => null) as StoryRow[] | { code?: string } | null;
+  if (response.status === 409 && !Array.isArray(stories)) {
+    if (stories?.code === "23503") return fail(400, "EVENT_NOT_FOUND", "Kegiatan terkait tidak ditemukan.");
+    return fail(409, "SLUG_EXISTS", "Slug sudah digunakan kisah lain.");
+  }
   if (!response.ok || !Array.isArray(stories)) return fail(500, "SERVER_ERROR", "Kisah belum dapat disimpan.");
   if (request.method === "PATCH" && stories.length === 0) return fail(404, "STORY_NOT_FOUND", "Kisah tidak ditemukan.");
   return json(request.method === "POST" ? 201 : 200, { stories });

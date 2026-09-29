@@ -18,7 +18,8 @@ const fail = (status: number, code: string, message: string) =>
   json(status, { events: [], error: { code, message } });
 
 const eventProjection = [
-  "slug", "title", "description", "registration_description", "activities", "benefits",
+  "id", "slug", "title", "description", "registration_description", "activities", "benefits",
+  "program_key",
   "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location", "location_url",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "is_demo", "payment_window_minutes",
@@ -30,6 +31,7 @@ const eventProjection = [
 
 const writableFields = new Set([
   "title", "slug", "description", "registration_description", "activities", "benefits",
+  "program_key",
   "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location", "location_url",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "payment_window_minutes",
@@ -38,6 +40,7 @@ const writableFields = new Set([
   "wa_message_accepted", "wa_message_waitlisted", "wa_message_rejected",
 ]);
 const registrationModes = new Set(["first_come", "selection"]);
+const programKeys = new Set(["masyarakat_reguler", "adventure_unique", "impactful_action"]);
 const requiredCreateFields = ["title", "slug", "event_date", "status"];
 const statuses = new Set(["draft", "open", "full", "closed", "completed", "cancelled"]);
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -124,6 +127,10 @@ const validatePayload = (input: unknown, creating: boolean) => {
       } else if (field === "registration_mode") {
         if (typeof value !== "string" || !registrationModes.has(value)) return { error: "Mode pendaftaran tidak valid." } as const;
         data[field] = value;
+      } else if (field === "program_key") {
+        if (value === null) data[field] = null;
+        else if (typeof value !== "string" || !programKeys.has(value)) return { error: "Program family tidak valid." } as const;
+        else data[field] = value;
       } else if (field === "applicant_limit") {
         if (value !== null && (!Number.isInteger(value) || Number(value) < 1 || Number(value) > 100000)) {
           return { error: "Batas pendaftar harus bilangan bulat positif." } as const;

@@ -166,6 +166,14 @@
                 <p id="slug-help" class="field-help">Huruf kecil, angka, dan tanda hubung.</p>
                 <label>Kategori<input id="event-category" name="category" /></label>
                 <label>Kunci kategori<input id="event-category-key" name="category_key" /></label>
+                <label class="span-2">Program Family
+                  <select id="event-program-key" name="program_key">
+                    <option value="">Belum ditentukan</option>
+                    <option value="masyarakat_reguler">Masyarakat Reguler</option>
+                    <option value="adventure_unique">Adventure &amp; Unique</option>
+                    <option value="impactful_action">Impactful Action</option>
+                  </select>
+                </label>
                 <label class="span-2">Deskripsi<textarea id="event-description" name="description" rows="4"></textarea></label>
                 <label class="span-2">Deskripsi pendaftaran<textarea id="event-registration-description" name="registration_description" rows="4"></textarea></label>
               </div>
@@ -452,6 +460,11 @@
                 <label>Slug<input id="story-slug" name="slug" required maxlength="140" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" aria-describedby="story-slug-help" /></label>
                 <p id="story-slug-help" class="field-help">Huruf kecil, angka, dan tanda hubung.</p>
                 <label class="span-2">Ringkasan<textarea id="story-excerpt" name="excerpt" rows="3" maxlength="1200"></textarea></label>
+                <label class="span-2">Kegiatan terkait
+                  <select id="story-event-id" name="event_id">
+                    <option value="">Tidak terkait kegiatan</option>
+                  </select>
+                </label>
                 <label class="span-2 story-body-field">Isi Kisah<textarea id="story-body" name="body" rows="16" required maxlength="100000" aria-describedby="story-body-hint"></textarea><small id="story-body-hint">Pisahkan paragraf dengan baris kosong. Paragraf diawali <code>&gt;</code> jadi kutipan besar; diawali <code>##</code> jadi subjudul. Ringkasan tampil sebagai paragraf pembuka.</small></label>
               </div>
             </section>
