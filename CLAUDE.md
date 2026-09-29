@@ -436,6 +436,16 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   kode_pendaftaran, nama_lengkap, no_hp, peran, hadir, dll.). Diimpor sekali
   saat fitur dibangun (cocokkan slug + kode/no. HP).
 
+Dokumentasi kegiatan (usulan tim dokum, disepakati user Sep 2026, belum dibangun;
+bangun setelah kegiatan Oktober punya foto): foto asli tetap di Google Drive (folder
+"siapa saja yang punya link: Pelihat", isinya sudah dikurasi). Form Kegiatan dapat bagian
+"Dokumentasi": link folder Drive + maks. **5 foto pilihan** (dikompres di browser seperti
+foto Kisah; tidak mengambil gambar langsung dari Drive). Tampil publik (siapa saja, bukan
+hanya peserta) di halaman kegiatan yang sudah selesai (`pendaftaran?event=`): slide foto +
+"Lihat semua foto di Drive ↗"; Kisah dengan "Kegiatan terkait" menampilkan galeri yang
+sama otomatis (satu sumber data). Link Drive ikut di email sertifikat. Tanpa foto/link =
+bagian disembunyikan. Foto anak: pilih yang aman/berizin (aturan tim dokum, bukan sistem).
+
 Dashboard dampak publik (setelah ± 6 laporan bulanan konsisten): angka total
 kegiatan, relawan hadir unik, jam relawan (durasi × hadir), penerima manfaat,
 lokasi, mitra, relawan yang ikut lagi; grafik per bulan. Sebagian otomatis dari
