@@ -647,7 +647,20 @@ if (heroSlider && heroTrack && heroSlides.length) {
   let touchDeltaX = 0;
   const reduceHeroMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+  // Slides 2-3 photos wait until the page has loaded so they don't slow the first photo.
+  const loadHeroPhotos = () => {
+    heroSlider.querySelectorAll('[data-srcset], [data-src]').forEach(el => {
+      if (el.dataset.srcset) el.srcset = el.dataset.srcset;
+      if (el.dataset.src) el.src = el.dataset.src;
+      delete el.dataset.srcset;
+      delete el.dataset.src;
+    });
+  };
+  if (document.readyState === 'complete') loadHeroPhotos();
+  else window.addEventListener('load', loadHeroPhotos, { once: true });
+
   const updateHeroSlider = () => {
+    if (heroIndex) loadHeroPhotos();
     heroSlides.forEach((slide, index) => {
       slide.classList.toggle('active', index === heroIndex);
     });

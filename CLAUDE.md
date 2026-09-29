@@ -169,7 +169,8 @@ Lainnya:
 - Hero beranda di HP/tablet setinggi layar (`max(560px,100svh)`). HP (≤767px)
   memakai crop potret `img/hero-*-mobile.webp` lewat `<picture>`. Slide 1
   memakai `hero-volunteer-*`; slide 2 memakai `hero-slide-2-*` dengan grade
-  hangat; slide 3 memakai `hero-slide-3-*`. Berkas sumber mentahnya tidak
+  hangat; slide 3 memakai `hero-slide-3-*`. Foto slide 1 di-preload (`fetchpriority` high); foto slide 2–3 memakai
+  `data-src`/`data-srcset` dan baru dimuat JS setelah `load` (PageSpeed HP: LCP). Berkas sumber mentahnya tidak
   disimpan di folder aset publik.
 - Foto yang tampil dengan `object-fit: cover` di bingkai yang lebih "kotak"
   dari fotonya butuh file lebih lebar dari bingkainya: atur `sizes` ke lebar
