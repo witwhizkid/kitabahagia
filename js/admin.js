@@ -1370,6 +1370,7 @@
     $("#event-slug").value = event?.slug || "";
     $("#event-category").value = event?.category || "";
     $("#event-category-key").value = event?.category_key || "";
+    $("#event-program-key").value = event?.program_key || "";
     $("#event-description").value = event?.description || "";
     $("#event-registration-description").value = event?.registration_description || "";
     $("#event-date").value = event?.event_date || "";
@@ -1949,6 +1950,14 @@
     $("#story-title").value = story?.title || "";
     $("#story-slug").value = story?.slug || "";
     $("#story-excerpt").value = story?.excerpt || "";
+    const relatedEvent = $("#story-event-id");
+    relatedEvent.innerHTML = `<option value="">Tidak terkait kegiatan</option>${events.map((event) =>
+      `<option value="${escapeHtml(event.id)}">${escapeHtml(`${event.title} · ${formatDate(event.event_date)}`)}</option>`).join("")}`;
+    // Keep a saved link even when that event is not in the loaded list, so saving never drops it.
+    if (story?.event_id && !events.some((event) => event.id === story.event_id)) {
+      relatedEvent.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(story.event_id)}">Kegiatan terkait (tersimpan)</option>`);
+    }
+    relatedEvent.value = story?.event_id || "";
     $("#story-body").value = story?.body || "";
     $("#story-image-url").value = story?.cover_image_url || "";
     $("#story-image-file").value = "";
@@ -1997,7 +2006,8 @@
     storiesView.hidden = false;
     setActiveNavigation("stories");
     window.scrollTo({ top: 0, behavior: "instant" });
-    await loadStories();
+    // The story form lists events for "Kegiatan terkait".
+    await Promise.all([loadStories(), tabCache.events.loadedAt ? null : loadEvents()]);
   };
 
   const prefetchAdminTabs = () => {
@@ -2016,6 +2026,7 @@
     benefits: splitLines($("#event-benefits").value),
     category: $("#event-category").value.trim() || null,
     category_key: $("#event-category-key").value.trim() || null,
+    program_key: $("#event-program-key").value || null,
     event_date: $("#event-date").value,
     start_time: $("#event-start-time").value || null,
     end_at: endAtFromForm(),
@@ -2050,6 +2061,7 @@
     title: $("#story-title").value.trim(),
     slug: $("#story-slug").value.trim().toLowerCase(),
     excerpt: $("#story-excerpt").value.trim() || null,
+    event_id: $("#story-event-id").value || null,
     body: $("#story-body").value.trim(),
     cover_image_url: $("#story-image-url").value.trim() || null,
     cover_image_alt: $("#story-image-alt").value.trim() || null,
