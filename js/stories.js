@@ -360,6 +360,8 @@
       }
       const story = stories[0];
       document.title = `${story.title} — Kita Bahagia`;
+      // Each story is its own page for search engines, not a copy of /kisah-detail.
+      document.querySelector('link[rel="canonical"]')?.setAttribute("href", `https://kitabahagia.id/kisah-detail?slug=${encodeURIComponent(story.slug)}`);
       document.querySelector("[data-story-detail-title]").textContent = story.title;
       const lead = document.querySelector("[data-story-detail-lead]");
       lead.textContent = story.excerpt?.trim() || "";

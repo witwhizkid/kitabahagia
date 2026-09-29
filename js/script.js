@@ -2384,6 +2384,8 @@ if (registrationForm) {
       const event = normalizeRegistrationEvent(events[0]);
       if (!event || event.slug !== eventSlug) throw new Error('Public event response does not match requested slug');
       selectedEvent = event;
+      // Each event is its own page for search engines, not a copy of /pendaftaran.
+      document.querySelector('link[rel="canonical"]')?.setAttribute('href', `https://kitabahagia.id/pendaftaran?event=${encodeURIComponent(event.slug)}`);
       renderSelectedEvent();
       if (detailViewRequested && readRegistrationRecovery()) {
         showPendingRegistrationDetail();
