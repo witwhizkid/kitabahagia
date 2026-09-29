@@ -434,8 +434,10 @@ cancelled, invalid, and malformed-link cases return `null`.
   announcement date. Not recorded.
 
 Emails run in `EdgeRuntime.waitUntil` when available and never fail the
-registration or the webhook. Selection acceptance does not send an email yet
-(admins use the WhatsApp draft). Migration: `20261011010000`.
+registration or the webhook. Accepting a selection applicant in
+`admin-registrations` sends the confirmed email with "Selamat, kamu lolos seleksi"
+wording (same claim column, so re-accepting never sends twice; batches of 5).
+Waitlist/reject send nothing (admins use the WhatsApp draft). Migration: `20261011010000`.
 
 ## Local and deployment commands
 

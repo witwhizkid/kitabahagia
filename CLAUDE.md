@@ -201,7 +201,8 @@ Lainnya:
   hanya muncul untuk kegiatan mode Seleksi. Email otomatis ke pendaftar (Sep 2026):
   "Kamu resmi terdaftar" saat terkonfirmasi (gratis langsung / lunas via webhook, sekali
   per pendaftaran) dan "Pendaftaranmu udah masuk" untuk Seleksi; gaya kartu sama dengan
-  email sertifikat. Diterima lewat seleksi belum dikirimi email. Detail: "Registration
+  email sertifikat. Diterima lewat seleksi dapat "Selamat, kamu lolos seleksi!" (sekali;
+  cadangan/tidak lolos tetap lewat draf WA). Detail: "Registration
   emails" di `supabase/README.md`. Bukti follow Instagram hanya untuk event gratis +
   Seleksi: multipart hanya pada kondisi itu; JPG/PNG/WebP maksimal 2 MiB masuk
   ke bucket privat `instagram-proofs`, dan database hanya menyimpan object path.

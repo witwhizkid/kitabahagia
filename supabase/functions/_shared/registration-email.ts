@@ -53,7 +53,7 @@ const rest = (supabaseUrl: string, serviceKey: string, path: string, init: Reque
 
 const projection = "registration_code,name,email,events(title,event_date,start_time,end_at,location,location_url,whatsapp_group_url,announcement_at)";
 
-const send = async (supabaseUrl: string, serviceKey: string, row: Row, kind: Kind) => {
+const send = async (supabaseUrl: string, serviceKey: string, row: Row, kind: Kind, accepted = false) => {
   const apiKey = Deno.env.get("BREVO_API_KEY");
   const event = row.events;
   if (!apiKey || !row.email || !event) return;
@@ -67,11 +67,16 @@ const send = async (supabaseUrl: string, serviceKey: string, row: Row, kind: Kin
   const announcement = kind === "applied" && event.announcement_at
     ? (() => { const at = jakarta(event.announcement_at); return dayText(at.toISOString().slice(0, 10)); })()
     : null;
-  const heading = kind === "confirmed" ? "Kamu resmi terdaftar!&nbsp;🎉" : "Pendaftaranmu udah masuk!&nbsp;✨";
-  const intro = kind === "confirmed"
+  const heading = accepted ? "Selamat, kamu lolos seleksi!&nbsp;🎉"
+    : kind === "confirmed" ? "Kamu resmi terdaftar!&nbsp;🎉" : "Pendaftaranmu udah masuk!&nbsp;✨";
+  const intro = accepted
+    ? `Kamu terpilih jadi relawan di <strong>${escapeHtml(event.title)}</strong>. Tempatmu udah aman. Simpan email ini ya, isinya kode pendaftaran dan info kegiatan.`
+    : kind === "confirmed"
     ? `Tempatmu di <strong>${escapeHtml(event.title)}</strong> udah aman. Simpan email ini ya, isinya kode pendaftaran dan info kegiatan.`
     : `Makasih udah daftar di <strong>${escapeHtml(event.title)}</strong>. Pendaftaranmu sekarang masuk tahap seleksi.${announcement ? ` Hasilnya diumumkan <strong>${announcement}</strong>.` : ""} Cek status kapan aja lewat tombol di bawah.`;
-  const subject = kind === "confirmed"
+  const subject = accepted
+    ? `${greeting}, kamu lolos seleksi ${event.title}!`
+    : kind === "confirmed"
     ? `${greeting}, kamu resmi terdaftar di ${event.title}!`
     : `${greeting}, pendaftaranmu di ${event.title} udah masuk`;
   const html = `<!doctype html><html lang="id"><body style="margin:0;background:#f6f1ea;font-family:Arial,Helvetica,sans-serif;color:#241f1d">
@@ -123,7 +128,7 @@ ${groupUrl ? `<p style="margin:0 0 12px"><a href="${escapeHtml(groupUrl)}" style
 
 // Claims the one confirmation email per registration (the column is set before
 // sending), then sends it. `filter` picks the registration: by code or by order.
-export const sendConfirmationEmail = async (supabaseUrl: string, serviceKey: string, filter: { code?: string; orderId?: string }) => {
+export const sendConfirmationEmail = async (supabaseUrl: string, serviceKey: string, filter: { code?: string; orderId?: string }, accepted = false) => {
   try {
     const where = new URLSearchParams({
       registration_status: "eq.confirmed",
@@ -136,7 +141,7 @@ export const sendConfirmationEmail = async (supabaseUrl: string, serviceKey: str
     });
     const rows = claim.ok ? await claim.json().catch(() => null) as Row[] | null : null;
     if (!rows?.length) return;
-    await send(supabaseUrl, serviceKey, rows[0], "confirmed");
+    await send(supabaseUrl, serviceKey, rows[0], "confirmed", accepted);
   } catch (error) {
     console.error("Confirmation email skipped", error instanceof Error ? error.message : "unknown");
   }

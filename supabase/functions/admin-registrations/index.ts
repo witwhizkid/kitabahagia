@@ -1,3 +1,12 @@
+import { sendConfirmationEmail } from "../_shared/registration-email.ts";
+
+// Emails run after the response when the runtime allows it (Supabase EdgeRuntime).
+const inBackground = async (task: Promise<void>) => {
+  const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (promise: Promise<unknown>) => void } }).EdgeRuntime;
+  if (runtime?.waitUntil) runtime.waitUntil(task);
+  else await task;
+};
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -173,7 +182,18 @@ Deno.serve(async (request) => {
     }
     const response = await rpc("decide_selection", { p_registration_codes: codes, p_decision: decision, p_actor: adminId });
     const result = await response.json().catch(() => null) as Record<string, unknown> | null;
-    if (response.ok && result) return json(200, { registrations: [], total: 0, selection: result });
+    if (response.ok && result) {
+      // "Selamat, kamu lolos" once per applicant (the claim column blocks repeats on re-accept).
+      if (decision === "accepted") {
+        await inBackground((async () => {
+          const accepted = codes as string[];
+          for (let index = 0; index < accepted.length; index += 5) {
+            await Promise.all(accepted.slice(index, index + 5).map((code) => sendConfirmationEmail(supabaseUrl, serviceKey, { code }, true)));
+          }
+        })());
+      }
+      return json(200, { registrations: [], total: 0, selection: result });
+    }
     const code = typeof result?.message === "string" ? result.message : "";
     const [status, message] = decisionErrors[code] ?? [500, "Keputusan belum dapat disimpan."];
     return fail(status, code in decisionErrors ? code : "SERVER_ERROR", message);
