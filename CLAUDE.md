@@ -168,6 +168,9 @@ Lainnya:
   Newsreader normal+italic; latin + latin-ext, variable) lewat `@font-face` di awal `css/style.css`;
   HTML publik mem-preload `instrument-sans-latin` + `dm-sans-latin`, tanpa Google Fonts. Admin
   masih memakai Google Fonts (Lexend/Plus Jakarta untuk sertifikat), jadi CSP gstatic tetap.
+- Peta footer = gambar statis `img/footer-map.webp` (620×320, dibuat sekali dari tile OSM +
+  kredit "© OpenStreetMap contributors", titik Kantor Kelurahan Kampung Melayu), bukan iframe
+  OSM (kena 429/rate limit); "Lihat di peta" tetap ke Google Maps.
 - Logo header/footer semua halaman = `assets/logo/logo-kita-bahagia-320.webp` (13 KB); PNG
   2160px asli hanya untuk canvas (kalender, sertifikat). Foto Program beranda `loading="lazy"`.
 - Foto disajikan sebagai WebP yang sudah diperkecil; berkas mentah yang tidak
