@@ -213,23 +213,12 @@ const eventRegistrationAvailability = (event) => {
   return { available: true, reason: null };
 };
 
-const eventRegistrationLink = (event, className, eligibleLabel, unavailableLabel = 'Lihat detail') => `<a class="${className}"
-  data-registration-link data-event-slug="${escapeHTML(event.slug)}"
-  href="pendaftaran.html?event=${encodeURIComponent(event.slug)}">${eventRegistrationAvailability(event).available
-    ? eligibleLabel : unavailableLabel}</a>`;
 
-// Editorial event layouts shared by the schedule page and the homepage.
-const eventCalendarFormatters = {
-  day: new Intl.DateTimeFormat('id-ID', { day: 'numeric', timeZone: 'Asia/Jakarta' }),
-  month: new Intl.DateTimeFormat('id-ID', { month: 'short', timeZone: 'Asia/Jakarta' }),
-  weekday: new Intl.DateTimeFormat('id-ID', { weekday: 'long', timeZone: 'Asia/Jakarta' }),
-  closing: new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', timeZone: 'Asia/Jakarta' }),
-  monthYear: new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' }),
-  isoDay: new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Jakarta' })
-};
+// Event cards shared by the schedule page and the homepage.
+const jakartaIsoDay = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Jakarta' });
 // Calendar-day number in Jakarta, so "N hari lagi" counts dates, not 24-hour blocks.
 const jakartaDayNumber = (date) => {
-  const [year, month, day] = eventCalendarFormatters.isoDay.format(date).split('-').map(Number);
+  const [year, month, day] = jakartaIsoDay.format(date).split('-').map(Number);
   return Date.UTC(year, month - 1, day) / 864e5;
 };
 const eventHref = (event) => `pendaftaran.html?event=${encodeURIComponent(event.slug)}`;
@@ -239,20 +228,6 @@ const eventDaysLeft = (event) => {
   return Number.isNaN(deadline.getTime()) ? null : jakartaDayNumber(deadline) - jakartaDayNumber(new Date());
 };
 const eventDaysLeftLabel = (days) => days <= 0 ? 'Hari ini' : days === 1 ? 'Besok' : `${days} hari lagi`;
-const eventClosingMarkup = (event) => {
-  const deadline = new Date(event.registrationDeadline || '');
-  const days = eventDaysLeft(event);
-  if (days === null) return '';
-  const relative = eventDaysLeftLabel(days);
-  return `<p class="event-closing">Tutup ${escapeHTML(eventCalendarFormatters.closing.format(deadline))} <b>${relative}</b></p>`;
-};
-const eventDateBlock = (event) => {
-  const start = new Date(event.start);
-  const end = event.end ? new Date(event.end) : null;
-  const days = end && !Number.isNaN(end.getTime()) ? jakartaDayNumber(end) - jakartaDayNumber(start) + 1 : 1;
-  return `<div class="event-date" aria-hidden="true"><b>${eventCalendarFormatters.day.format(start)}</b>
-    <span>${escapeHTML(eventCalendarFormatters.month.format(start).replace('.', ''))}</span><small>${escapeHTML(eventCalendarFormatters.weekday.format(start))}${days > 1 ? ` · ${days} hari` : ''}</small></div>`;
-};
 // Few seats left is the "siapa cepat" signal, so it gets the accent.
 const eventOpensFormatter = new Intl.DateTimeFormat('id-ID', {
   day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
@@ -273,56 +248,29 @@ const eventSlotNote = (event) => {
   return `<span class="event-slot">${escapeHTML(event.capacity)}</span>`;
 };
 // Poster badge: unavailable events turn grayscale with their state; open ones closing
-// within a week get a countdown ("3 hari lagi"). The urgent feature already says it in text.
-const eventPhotoBadge = (event, { countdown = true } = {}) => {
+// within a week get a countdown ("3 hari lagi").
+const eventPhotoBadge = (event) => {
   const { available, reason } = eventRegistrationAvailability(event);
   const closedLabels = { past: 'Selesai', full: 'Kuota penuh', closed: 'Ditutup', applicants_full: 'Ditutup' };
   if (closedLabels[reason]) return { closed: true, label: closedLabels[reason] };
   const days = eventDaysLeft(event);
-  if (countdown && available && days !== null && days >= 0 && days <= 7) return { closed: false, label: eventDaysLeftLabel(days) };
+  if (available && days !== null && days >= 0 && days <= 7) return { closed: false, label: eventDaysLeftLabel(days) };
   return null;
 };
-const eventPhoto = (event, className, options) => {
-  const badge = eventPhotoBadge(event, options);
+const eventPhoto = (event, className) => {
+  const badge = eventPhotoBadge(event);
   return `<figure class="${className}${event.image ? '' : ' is-empty'}${badge?.closed ? ' is-closed' : ''}">${event.image
     ? `<img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}" loading="lazy" decoding="async">` : ''}${badge
     ? `<span class="event-photo-badge${badge.closed ? ' is-closed' : ''}">${escapeHTML(badge.label)}</span>` : ''}</figure>`;
 };
-const eventCta = (event) => {
-  const { available } = eventRegistrationAvailability(event);
-  return eventRegistrationLink(event, `event-cta${available ? '' : ' is-quiet'}`,
-    'Daftar <span aria-hidden="true">&rarr;</span>', 'Lihat detail <span aria-hidden="true">&rarr;</span>');
-};
 const eventIsPast = (event) => eventRegistrationAvailability(event).reason === 'past';
-const eventRowMarkup = (event, { heading = 'h2', attributes = '' } = {}) => {
-  // Finished events (schedule's "Sudah selesai" tab) show no price or seats.
-  const past = eventIsPast(event);
-  return `<article class="event-row${past ? ' is-past' : ''}"${attributes}>
-  ${eventDateBlock(event)}
-  ${eventPhoto(event, 'event-row-photo')}
-  <div class="event-row-copy">
-    <p class="event-kicker">${escapeHTML(event.category)}${past ? ' <span>· Selesai</span>' : event.statusKey === 'open' ? '' : ` <span>· ${escapeHTML(event.status)}</span>`}</p>
-    <${heading} class="event-title"><a class="event-row-link" href="${eventHref(event)}">${escapeHTML(event.name)}</a></${heading}>
-    <p class="event-where"><span class="visually-hidden">${escapeHTML(event.date)}, </span><span class="event-where-place">${escapeHTML(event.location)}</span><span class="event-where-sep"> · </span>${escapeHTML(event.time)}</p>
-  </div>
-  <div class="event-row-side">${past ? '' : `<strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}`}${eventCta(event)}</div>
-</article>`;
-};
-const eventFeatureMarkup = (event) => `<article class="event-feature">
-  ${eventPhoto(event, 'event-feature-photo', { countdown: false })}
-  ${eventClosingMarkup(event)}
-  <h3 class="event-title"><a class="event-row-link" href="${eventHref(event)}">${escapeHTML(event.name)}</a></h3>
-  <p class="event-where">${escapeHTML(event.date)} · ${escapeHTML(event.location)}</p>
-  ${event.description ? `<p class="event-summary-text">${escapeHTML(event.description)}</p>` : ''}
-  <div class="event-feature-foot"><div><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}</div>${eventCta(event)}</div>
-</article>`;
 
-// Homepage "Kegiatan Terdekat": poster card with title, place, date and price; the whole card links.
+// Poster card (homepage "Kegiatan Terdekat" and the schedule grid) with title, place, date and price; the whole card links.
 const eventCardIcon = {
   place: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
   date: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
 };
-const eventCardMarkup = (event) => `<article class="event-card${eventIsPast(event) ? ' is-past' : ''}">
+const eventCardMarkup = (event, attributes = '') => `<article class="event-card${eventIsPast(event) ? ' is-past' : ''}"${attributes}>
   ${eventPhoto(event, 'event-card-photo')}
   <div class="event-card-body">
     <p class="event-kicker">${escapeHTML(event.category)}</p>
@@ -335,22 +283,6 @@ const eventCardMarkup = (event) => `<article class="event-card${eventIsPast(even
   </div>
 </article>`;
 
-// Schedule rows grouped under a "Oktober 2026" heading; the count is kept in sync by the filters.
-const eventMonthGroupsMarkup = (events, rowOptions) => {
-  const groups = [];
-  events.forEach((event) => {
-    const label = eventCalendarFormatters.monthYear.format(new Date(event.start));
-    if (groups.at(-1)?.label !== label) groups.push({ label, events: [] });
-    groups.at(-1).events.push(event);
-  });
-  return groups.map(({ label, events: monthEvents }) => {
-    const [month, year] = [label.replace(/\s*\d{4}$/, ''), (label.match(/\d{4}$/) || [''])[0]];
-    return `<section class="event-month-group" aria-label="${escapeHTML(label)}">
-      <h2 class="event-month"><span>${escapeHTML(month)}</span> <em>${escapeHTML(year)}</em> <small data-month-count>${monthEvents.length} kegiatan</small></h2>
-      ${monthEvents.map((event) => eventRowMarkup(event, rowOptions(event))).join('')}
-    </section>`;
-  }).join('');
-};
 
 const skeletonLine = (size = '') => `<span class="loading-line${size ? ` loading-line-${size}` : ''}"></span>`;
 const eventCardSkeleton = (className = 'schedule-card') => `<article class="${className} loading-card" aria-hidden="true">
@@ -425,15 +357,12 @@ const renderHomepageEvents = async () => {
 
 const renderScheduleEvents = async () => {
   const grid = document.getElementById('scheduleGrid');
-  const featuredSection = document.querySelector('[data-schedule-featured]');
-  const featured = document.getElementById('scheduleFeatured');
   const empty = document.getElementById('scheduleEmpty');
   const count = document.getElementById('scheduleCount');
-  if (!grid || !featuredSection || !featured) return;
+  if (!grid) return;
   if (scheduleEventsLoading) return;
 
   const setMessage = (title, detail, retry = null) => {
-    featuredSection.hidden = true;
     grid.replaceChildren();
     if (empty) {
       empty.replaceChildren();
@@ -460,9 +389,8 @@ const renderScheduleEvents = async () => {
     count.textContent = 'Jadwal kegiatan sedang dimuat';
     count.classList.add('visually-hidden');
   }
-  featuredSection.hidden = true;
   empty?.classList.add('hidden');
-  grid.innerHTML = `${eventCardSkeleton('event-row')}${eventCardSkeleton('event-row')}${eventCardSkeleton('event-row')}`;
+  grid.innerHTML = `${eventCardSkeleton('event-card')}${eventCardSkeleton('event-card')}${eventCardSkeleton('event-card')}`;
   grid.setAttribute('aria-busy', 'true');
 
   let scheduleEvents;
@@ -504,60 +432,15 @@ const renderScheduleEvents = async () => {
     return;
   }
 
-  const now = Date.now();
-  const urgencyWindow = 14 * 24 * 60 * 60 * 1000;
-  const urgentEvents = scheduleEvents.filter((event) => {
-    if (!event.registrationDeadline || !eventRegistrationAvailability(event).available) return false;
-    const remaining = new Date(event.registrationDeadline).getTime() - now;
-    return remaining > 0 && remaining <= urgencyWindow;
-  }).sort((a, b) => new Date(a.registrationDeadline) - new Date(b.registrationDeadline));
-
-  if (urgentEvents.length) {
-    featured.innerHTML = urgentEvents.map(eventFeatureMarkup).join('');
-    featured.classList.toggle('is-single', urgentEvents.length === 1);
-    featuredSection.hidden = false;
-  } else {
-    featured.replaceChildren();
-    featuredSection.hidden = true;
-  }
-
-  const rowOptions = (event) => ({
-    heading: 'h3',
-    attributes: ` data-category="${escapeHTML(event.categoryKey)}"${eventIsPast(event) ? ' data-past' : ''} data-date="${escapeHTML(event.start)}" data-search="${escapeHTML(`${event.name} ${event.location} ${event.category}`.toLocaleLowerCase('id-ID'))}"`
-  });
-  grid.innerHTML = eventMonthGroupsMarkup(scheduleEvents, rowOptions) + eventMonthGroupsMarkup(pastEvents, rowOptions);
+  // KB publishes a handful of events a month about a week ahead, so the schedule is one card grid
+  // with two tabs (Mendatang / Sudah selesai); poster badges carry "N hari lagi" and "Kuota penuh".
+  grid.innerHTML = [...scheduleEvents, ...pastEvents]
+    .map((event) => eventCardMarkup(event, eventIsPast(event) ? ' data-past' : '')).join('');
   grid.removeAttribute('aria-busy');
-  if (count) {
-    count.classList.remove('visually-hidden');
-    count.textContent = `Menampilkan ${scheduleEvents.length} kegiatan`;
-  }
-  empty?.classList.add('hidden');
+  count?.classList.remove('visually-hidden');
   if (empty && scheduleEmptyDefaultMarkup !== undefined) empty.innerHTML = scheduleEmptyDefaultMarkup;
-
-  const filterContainer = document.querySelector('.schedule-filters');
-  const knownFilters = new Set([...document.querySelectorAll('[data-schedule-filter]')]
-    .map((button) => button.dataset.scheduleFilter));
-  scheduleEvents.forEach((event) => {
-    if (!filterContainer || knownFilters.has(event.categoryKey)) return;
-    // Category tabs sit before the "Sudah selesai" tab.
-    const button = document.createElement('button');
-    button.className = 'filter-btn';
-    button.type = 'button';
-    button.dataset.scheduleFilter = event.categoryKey;
-    button.setAttribute('aria-pressed', 'false');
-    button.textContent = event.category;
-    filterContainer.insertBefore(button, filterContainer.querySelector('[data-schedule-filter="past"]'));
-    knownFilters.add(event.categoryKey);
-  });
-  if (filterContainer && pastEvents.length && !knownFilters.has('past')) {
-    const button = document.createElement('button');
-    button.className = 'filter-btn';
-    button.type = 'button';
-    button.dataset.scheduleFilter = 'past';
-    button.setAttribute('aria-pressed', 'false');
-    button.textContent = 'Sudah selesai';
-    filterContainer.append(button);
-  }
+  const pastTab = document.querySelector('[data-schedule-filter="past"]');
+  if (pastTab) pastTab.hidden = !pastEvents.length;
   initializeScheduleFilters();
 };
 
@@ -991,49 +874,36 @@ if (programCards.length && programPhotos.every(Boolean) && 'IntersectionObserver
 }
 
 function initializeScheduleFilters() {
-  const scheduleCards = [...document.querySelectorAll('[data-schedule-filter]')];
-  const eventCards = [...document.querySelectorAll('[data-category]')];
+  const tabs = [...document.querySelectorAll('[data-schedule-filter]')];
+  const cards = [...document.querySelectorAll('#scheduleGrid .event-card')];
   const scheduleCount = document.getElementById('scheduleCount');
   const scheduleEmpty = document.getElementById('scheduleEmpty');
-  const scheduleSearch = document.getElementById('scheduleSearch');
-  if (!scheduleCards.length || !eventCards.length) return;
+  if (!tabs.length) return;
 
-  let activeFilter = 'all';
+  let activeFilter = tabs.find((tab) => tab.classList.contains('active'))?.dataset.scheduleFilter || 'upcoming';
   const applyFilters = () => {
-    const query = scheduleSearch?.value.trim().toLocaleLowerCase('id-ID') || '';
     let visible = 0;
-    eventCards.forEach((card) => {
-      // "Sudah selesai" shows only finished events; every other tab shows only upcoming ones.
-      const past = card.hasAttribute('data-past');
-      const categoryMatches = activeFilter === 'past' ? past
-        : !past && (activeFilter === 'all' || card.dataset.category === activeFilter);
-      const searchMatches = !query || card.dataset.search?.includes(query);
-      const match = categoryMatches && searchMatches;
+    cards.forEach((card) => {
+      const match = (activeFilter === 'past') === card.hasAttribute('data-past');
       card.classList.toggle('hidden', !match);
       if (match) visible += 1;
-    });
-    document.querySelectorAll('.event-month-group').forEach((group) => {
-      const inGroup = group.querySelectorAll('[data-category]:not(.hidden)').length;
-      group.classList.toggle('hidden', inGroup === 0);
-      const label = group.querySelector('[data-month-count]');
-      if (label) label.textContent = `${inGroup} kegiatan`;
     });
     if (scheduleCount) scheduleCount.textContent = `Menampilkan ${visible} kegiatan`;
     scheduleEmpty?.classList.toggle('hidden', visible !== 0);
   };
 
-  scheduleCards.forEach((button) => {
-    button.addEventListener("click", () => {
+  tabs.forEach((button) => {
+    if (button.dataset.bound) return;
+    button.dataset.bound = 'true';
+    button.addEventListener('click', () => {
       activeFilter = button.dataset.scheduleFilter;
-      scheduleCards.forEach((item) => {
-        item.classList.remove("active");
-        item.setAttribute("aria-pressed", String(item === button));
+      tabs.forEach((item) => {
+        item.classList.toggle('active', item === button);
+        item.setAttribute('aria-pressed', String(item === button));
       });
-      button.classList.add("active");
       applyFilters();
     });
   });
-  scheduleSearch?.addEventListener('input', applyFilters);
   applyFilters();
 }
 

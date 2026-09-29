@@ -53,33 +53,21 @@ Edge Functions (waktu deploy terakhir) sebelum menyimpulkan kodenya salah.
 
 ## Keputusan desain yang sudah dibuat
 
-Daftar kegiatan (`jadwal.html` + beranda, dirender oleh `js/script.js`):
-- Filter berupa tab, kolom cari bergaris bawah. Tab terakhir "Sudah selesai" (hanya muncul kalau ada)
-  = 12 kegiatan selesai terbaru (`public-events?past=true`: status Selesai atau tanggal
-  lewat, bukan draf/batal, terbaru dulu), baris tanpa harga/slot, ikut kolom cari; tab
-  lain hanya kegiatan mendatang. Semua kegiatan selesai tampil walau belum ada dokumentasi.
-- Dikelompokkan per bulan ("Oktober 2026 · 3 kegiatan"); jumlah ikut
-  filter/pencarian, bulan kosong disembunyikan.
-- Status default "Pendaftaran dibuka" disembunyikan; hanya status penting
-  (mis. "Kuota penuh") yang tampil.
-- Seluruh baris bisa diklik (stretched link di judul) ke halaman pendaftaran;
-  tombol Daftar tetap di atas lapisan link.
-- Kalau hanya ada 1 kegiatan yang segera tutup, tampil sebagai fitur lebar
-  dengan poster lebih besar; di HP poster pindah ke atas dengan lebar dibatasi.
-- Label tutup: "Tutup 27 September · 3 hari lagi" / "Besok" / "Hari ini".
-- Bingkai poster 4:5 dengan `object-fit: contain` (poster tidak terpotong);
-  poster non-4:5 duduk di latar polos `--sand` (latar blur dihapus: keruh).
-- Judul kegiatan bisa ~80 karakter: ukuran judul `clamp(20px, 2vw, 26px)`.
-- HP: Jadwal = daftar ke bawah (tanggal "10 OKT · Sabtu" + kategori di atas,
-  judul selebar penuh, lalu tempat/waktu/harga/Daftar di samping poster 104px);
-  beranda = kartu geser. Jadwal pakai `eventRowMarkup`; beranda (Okt 2026, ala Kitabisa) pakai
-  `eventCardMarkup`: kartu poster 4:5 + kategori, judul (maks. 3–4 baris), ikon lokasi/tanggal, harga;
-  3 kolom di desktop/tablet, kartu geser di HP.
-- Badge poster (`eventPhotoBadge`, semua daftar): kuota penuh / ditutup / selesai = poster hitam-putih
-  + label gelap ("Kuota penuh", "Ditutup", "Selesai"); buka dan tutup ≤7 hari = label maroon
-  "N hari lagi"/"Besok"/"Hari ini" (tidak di fitur "Segera berakhir", teksnya sudah ada).
-  Kegiatan ditutup/selesai tidak menampilkan sisa slot. Efek hover baris hanya di
-  `@media (hover:hover)` supaya tidak "nyangkut" setelah tap.
+Daftar kegiatan (`jadwal.html` + beranda, dirender oleh `js/script.js`), dirombak Okt 2026 karena KB
+hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card Kitabisa):
+- Jadwal = grid kartu `eventCardMarkup` (sama dengan beranda) + 2 tab "Mendatang" / "Sudah selesai"
+  (tab kedua hanya muncul kalau ada; `public-events?past=true`, 12 terbaru, status Selesai atau tanggal
+  lewat, bukan draf/batal). Kolom cari, tab kategori, pengelompokan per bulan, dan fitur lebar
+  "Segera berakhir" dihapus (dulu semua kegiatan muncul dua kali). Hidupkan lagi hanya kalau kegiatan
+  sudah belasan per bulan (ada di riwayat git).
+- Kartu: poster 4:5 (`object-fit: contain`, latar `--sand`), kategori, judul (maks. 3–4 baris), ikon
+  lokasi/tanggal, harga + sisa slot; seluruh kartu bisa diklik (stretched link di judul). Desktop/tablet
+  3 kolom; HP: beranda kartu geser, Jadwal kartu mendatar (poster 118px di kiri). Hover hanya di
+  `@media (hover:hover)`.
+- Badge poster (`eventPhotoBadge`): kuota penuh / ditutup / selesai = poster hitam-putih + label gelap
+  ("Kuota penuh", "Ditutup", "Selesai"); buka dan tutup ≤7 hari = label maroon "N hari lagi"/"Besok"/
+  "Hari ini". Kegiatan ditutup/selesai tidak menampilkan sisa slot.
+- Status default "Pendaftaran dibuka" tidak ditampilkan.
 
 Halaman pendaftaran (`pendaftaran.html`):
 - Thumbnail poster ("Lihat poster") membuka `<dialog>` native; tutup via ×,

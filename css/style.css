@@ -3549,7 +3549,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .schedule-search { display:grid; gap:7px; color:var(--muted); font-size:12px; font-weight:700; }
 .schedule-search input { min-height:46px; padding:10px 13px; border:1px solid #cbbdb2; border-radius:2px; background:var(--white); color:var(--ink); }
 .schedule-search input:focus { border-color:var(--maroon); outline:3px solid rgba(122,31,43,.12); outline-offset:2px; }
-.schedule-filters { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:7px; }
+.schedule-filters { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:7px; }
 .filter-btn { min-height:42px; padding:9px 14px; border:1px solid var(--line); border-radius:3px; background:transparent; color:var(--ink); cursor:pointer; font-size:12px; font-weight:700; transition:background-color .18s var(--ease), border-color .18s var(--ease), color .18s var(--ease); }
 .filter-btn:hover { border-color:var(--maroon); color:var(--maroon); transform:none; }
 .filter-btn.active { background:var(--maroon); border-color:var(--maroon); color:var(--white); }
@@ -6387,7 +6387,9 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 /* Editorial event listing (schedule page + homepage "Kegiatan Terdekat"). */
 .schedule-grid { display:block; border-top:2px solid var(--ink); }
 /* Homepage: three poster cards (Kitabisa-style card: poster, title, place, date, price). */
-.home-upcoming-list { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:28px; padding-top:28px; border-top:2px solid var(--ink); }
+.home-upcoming-list, .schedule-grid.event-card-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:28px; padding-top:28px; border-top:2px solid var(--ink); }
+.schedule-grid.event-card-grid { border-top:0; }
+.event-card.hidden { display:none; }
 .home-upcoming-list[hidden] { display:none; }
 .event-card { position:relative; display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius-card); background:var(--cream); transition:border-color .2s var(--ease), box-shadow .2s var(--ease); }
 .event-card-photo { position:relative; margin:0; overflow:hidden; background:var(--sand); aspect-ratio:4 / 5; }
@@ -6411,7 +6413,6 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 /* Poster state badge: closed/full/finished posters go grayscale; open ones show "N hari lagi". */
 .event-photo-badge { position:absolute; top:10px; left:10px; z-index:1; max-width:calc(100% - 20px); padding:5px 11px; white-space:nowrap; border-radius:999px; background:var(--maroon); color:var(--white); font-size:12px; font-weight:700; letter-spacing:.02em; box-shadow:0 2px 8px rgba(0,0,0,.18); }
 .event-photo-badge.is-closed { background:rgba(24,20,21,.82); }
-.event-row-photo .event-photo-badge { top:6px; left:6px; max-width:calc(100% - 12px); padding:3px 8px; font-size:11px; }
 .is-closed > img { filter:grayscale(1); opacity:.82; }
 .event-row { position:relative; display:grid; grid-template-columns:104px 150px minmax(0, 1fr) 200px; gap:28px; align-items:center; padding:24px 0; border-bottom:1px solid var(--line); transition:background-color .2s var(--ease); }
 .event-row.hidden { display:none; }
@@ -6527,6 +6528,16 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .home-upcoming-list { --bleed:18px; display:flex; gap:16px; margin-inline:calc(var(--bleed) * -1); padding:24px var(--bleed) 6px; overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x mandatory; scroll-padding-inline:var(--bleed); scrollbar-width:none; }
   .home-upcoming-list::-webkit-scrollbar { display:none; }
   .home-upcoming-list .event-card { flex:0 0 min(300px, 82%); scroll-snap-align:start; }
+  /* Schedule on phones: compact horizontal cards (poster left, details right). */
+  .schedule-grid.event-card-grid { grid-template-columns:1fr; gap:14px; padding-top:20px; }
+  .event-card-grid .event-card { flex-direction:row; }
+  .event-card-grid .event-card-photo { flex:0 0 118px; align-self:flex-start; }
+  .event-card-grid .event-card-body { padding:12px 14px 14px; }
+  .event-card-grid .event-card .event-title { margin:6px 0 10px; font-size:17px; line-height:1.25; }
+  .event-card-grid .event-card-meta { gap:6px; font-size:13px; }
+  .event-card-grid .event-card-foot { padding-top:10px; }
+  .event-card-grid .event-card-foot .event-price { font-size:17px; }
+  .event-card-grid .event-photo-badge { top:6px; left:6px; max-width:calc(100% - 12px); padding:3px 8px; font-size:11px; }
   .event-card .event-title { -webkit-line-clamp:4; line-clamp:4; }
   .schedule-filters { flex-wrap:nowrap; justify-content:flex-start; gap:20px; overflow-x:auto; scrollbar-width:none; }
   .schedule-filters .filter-btn { flex:none; }
