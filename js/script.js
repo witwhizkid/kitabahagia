@@ -2226,9 +2226,11 @@ if (registrationForm) {
     }
     // The status line must not say "dibuka" while the form below is closed or not open yet.
     const statusReason = eventRegistrationAvailability(selectedEvent).reason;
-    const statusText = statusReason === 'not_yet' ? 'Pendaftaran belum dibuka'
+    const statusText = statusReason === 'past' ? 'Selesai'
+      : statusReason === 'not_yet' ? 'Pendaftaran belum dibuka'
       : statusReason === 'applicants_full' ? 'Pendaftaran ditutup' : selectedEvent.status;
-    setText('eventStatus', statusText === selectedEvent.capacity
+    // A finished event shows no seat count.
+    setText('eventStatus', statusReason === 'past' || statusText === selectedEvent.capacity
       ? statusText
       : `${statusText} · ${selectedEvent.capacity}`);
 
@@ -2304,7 +2306,8 @@ if (registrationForm) {
     const paymentWindowNote = document.getElementById('eventPaymentWindow');
     if (paymentWindowNote) {
       const minutes = selectedEvent.paymentWindowMinutes;
-      const showWindow = selectedEvent.price > 0 && Number.isInteger(minutes) && minutes > 0;
+      const showWindow = selectedEvent.price > 0 && Number.isInteger(minutes) && minutes > 0
+        && eventRegistrationAvailability(selectedEvent).reason !== 'past';
       paymentWindowNote.hidden = !showWindow;
       if (showWindow) {
         const registrationClose = Date.parse(selectedEvent.registrationDeadline || '');
