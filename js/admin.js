@@ -1469,6 +1469,135 @@
   };
   const pillSyncs = [choicePills($("#event-registration-mode")), choicePills($("#event-status"))];
 
+  // KB dropdown for every other <select>: the native select stays the source of truth
+  // (form values, change handlers, programmatic .value), only its UI is replaced.
+  const nativeValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value");
+  const nativeIndex = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "selectedIndex");
+  let openDropdown = null;
+  const closeDropdown = (focusButton = false) => {
+    if (!openDropdown) return;
+    const { list, button } = openDropdown;
+    list.hidden = true;
+    button.setAttribute("aria-expanded", "false");
+    if (focusButton) button.focus();
+    openDropdown = null;
+  };
+  const enhanceSelect = (select) => {
+    if (select.dataset.kbSelect || select.classList.contains("visually-hidden") || select.multiple) return;
+    select.dataset.kbSelect = "1";
+    const wrap = document.createElement("div");
+    wrap.className = "kb-select";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "kb-select-button";
+    button.setAttribute("aria-haspopup", "listbox");
+    button.setAttribute("aria-expanded", "false");
+    const label = select.getAttribute("aria-label") || select.closest("label")?.firstChild?.textContent.trim();
+    if (label) button.setAttribute("aria-label", label);
+    const text = document.createElement("span");
+    text.className = "kb-select-text";
+    button.append(text);
+    const list = document.createElement("ul");
+    list.className = "kb-select-list";
+    list.setAttribute("role", "listbox");
+    list.hidden = true;
+    wrap.append(button, list);
+    select.after(wrap);
+    select.classList.add("kb-select-native");
+    select.tabIndex = -1;
+    const sync = () => {
+      const option = select.options[nativeIndex.get.call(select)];
+      text.textContent = option?.textContent || "";
+      button.disabled = select.disabled;
+    };
+    const build = () => {
+      list.replaceChildren(...[...select.options].map((option, index) => {
+        const item = document.createElement("li");
+        item.setAttribute("role", "option");
+        item.dataset.index = String(index);
+        item.textContent = option.textContent;
+        item.setAttribute("aria-selected", String(option.selected));
+        if (option.disabled) item.setAttribute("aria-disabled", "true");
+        return item;
+      }));
+    };
+    const pick = (index) => {
+      const option = select.options[index];
+      if (!option || option.disabled) return;
+      if (nativeIndex.get.call(select) !== index) {
+        nativeIndex.set.call(select, index);
+        select.dispatchEvent(new Event("input", { bubbles: true }));
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      sync();
+      closeDropdown(true);
+    };
+    const highlight = (index) => {
+      const items = [...list.children];
+      items.forEach((item) => item.classList.toggle("is-active", Number(item.dataset.index) === index));
+      items.find((item) => Number(item.dataset.index) === index)?.scrollIntoView({ block: "nearest" });
+    };
+    const activeIndex = () => Number(list.querySelector(".is-active")?.dataset.index ?? nativeIndex.get.call(select));
+    const step = (delta) => {
+      const options = [...select.options];
+      let index = activeIndex();
+      do index += delta; while (options[index]?.disabled);
+      if (options[index]) highlight(index);
+    };
+    const open = () => {
+      if (select.disabled) return;
+      closeDropdown();
+      build();
+      // Open upwards when there is not enough room below.
+      const rect = button.getBoundingClientRect();
+      wrap.classList.toggle("is-up", window.innerHeight - rect.bottom < 260 && rect.top > 260);
+      list.hidden = false;
+      button.setAttribute("aria-expanded", "true");
+      openDropdown = { list, button };
+      highlight(nativeIndex.get.call(select));
+    };
+    button.addEventListener("click", () => (list.hidden ? open() : closeDropdown()));
+    button.addEventListener("keydown", (event) => {
+      if (["ArrowDown", "ArrowUp"].includes(event.key)) {
+        event.preventDefault();
+        if (list.hidden) open();
+        else step(event.key === "ArrowDown" ? 1 : -1);
+      } else if (["Enter", " "].includes(event.key) && !list.hidden) {
+        event.preventDefault();
+        pick(activeIndex());
+      } else if (event.key === "Escape" && !list.hidden) {
+        event.preventDefault();
+        closeDropdown(true);
+      } else if (event.key === "Tab") {
+        closeDropdown();
+      }
+    });
+    list.addEventListener("mousedown", (event) => event.preventDefault());
+    list.addEventListener("click", (event) => {
+      const item = event.target.closest("[role=option]");
+      if (item) pick(Number(item.dataset.index));
+    });
+    // Keep the button in step with code that sets .value/.selectedIndex directly, rebuilt
+    // options, disabled toggles, and form resets.
+    Object.defineProperty(select, "value", { configurable: true, get() { return nativeValue.get.call(this); }, set(value) { nativeValue.set.call(this, value); sync(); } });
+    Object.defineProperty(select, "selectedIndex", { configurable: true, get() { return nativeIndex.get.call(this); }, set(value) { nativeIndex.set.call(this, value); sync(); } });
+    select.addEventListener("change", sync);
+    select.addEventListener("focus", () => button.focus());
+    select.form?.addEventListener("reset", () => setTimeout(sync));
+    new MutationObserver(sync).observe(select, { childList: true, subtree: true, attributes: true, attributeFilter: ["disabled"] });
+    sync();
+  };
+  document.addEventListener("click", (event) => {
+    if (openDropdown && !event.target.closest(".kb-select")) closeDropdown();
+  });
+  document.querySelectorAll("select").forEach(enhanceSelect);
+  // Selects rendered later (e.g. the role picker in Kelola Admin) get the same dropdown.
+  new MutationObserver((records) => records.forEach((record) => record.addedNodes.forEach((node) => {
+    if (node.nodeType !== 1) return;
+    if (node.matches("select")) enhanceSelect(node);
+    node.querySelectorAll?.("select").forEach(enhanceSelect);
+  }))).observe(document.body, { childList: true, subtree: true });
+
   const syncFormHints = () => {
     const length = $("#event-title").value.trim().length;
     const count = $("#event-title-count");

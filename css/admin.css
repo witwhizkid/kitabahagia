@@ -200,6 +200,25 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
 .form-section .section-heading h2::before { counter-increment: form-section; content: counter(form-section, decimal-leading-zero); display: block; margin-bottom: 8px; color: var(--gold); font: 700 .78rem/1 "DM Sans", sans-serif; letter-spacing: .12em; }
 .field-count { color: var(--muted); font-size: .78rem; font-weight: 400; font-variant-numeric: tabular-nums; }
 .field-count.is-warning { color: #8c5a00; }
+/* KB dropdown replacing the native select UI (enhanceSelect in admin.js). */
+.kb-select-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; clip: rect(0 0 0 0); }
+.kb-select { position: relative; min-width: 0; }
+.kb-select-button { position: relative; width: 100%; min-height: 46px; padding: 11px 42px 11px 13px; overflow: hidden; color: var(--ink); text-align: left; text-overflow: ellipsis; white-space: nowrap; background: var(--paper); border: 1px solid #cdbdb1; border-radius: var(--radius-sm); font: inherit; font-weight: 500; cursor: pointer; }
+.kb-select-button::after { content: ""; position: absolute; top: 50%; right: 17px; width: 8px; height: 8px; border-right: 2px solid var(--maroon); border-bottom: 2px solid var(--maroon); transform: translateY(-70%) rotate(45deg); transition: transform 160ms var(--ease); }
+.kb-select-button:hover { border-color: #8e7770; }
+.kb-select-button[aria-expanded="true"], .kb-select-button:focus-visible { border-color: var(--maroon); box-shadow: 0 0 0 3px rgba(122, 31, 43, .12); outline: none; }
+.kb-select-button[aria-expanded="true"]::after { transform: translateY(-30%) rotate(-135deg); }
+.kb-select-button:disabled { cursor: not-allowed; opacity: .6; }
+.kb-select-list { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; min-width: max(100%, 200px); max-height: 264px; margin: 0; padding: 6px; overflow-y: auto; list-style: none; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-lift); }
+.kb-select.is-up .kb-select-list { top: auto; bottom: calc(100% + 6px); }
+.kb-select-list li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 12px; border-radius: 10px; font-size: .92rem; font-weight: 500; line-height: 1.35; cursor: pointer; }
+.kb-select-list li.is-active { background: #f6ece6; }
+.kb-select-list li[aria-selected="true"] { color: var(--maroon); font-weight: 700; }
+.kb-select-list li[aria-selected="true"]::after { content: "✓"; }
+.kb-select-list li[aria-disabled="true"] { color: var(--muted); cursor: default; opacity: .6; }
+.registration-toolbar .kb-select-button, .selection-commandbar .kb-select-button { min-height: 38px; padding-block: 6px; font-size: .88rem; }
+.content-filter .kb-select { min-width: 132px; }
+.content-filter .kb-select-button { min-height: 40px; padding-block: 7px; }
 .choice-pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .choice-pill { min-height: 40px; padding: 6px 16px; white-space: nowrap; color: var(--ink); background: var(--paper); border: 1px solid #cdbdb1; border-radius: 999px; font-weight: 600; cursor: pointer; transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease; }
 .choice-pill:hover { border-color: var(--maroon); }

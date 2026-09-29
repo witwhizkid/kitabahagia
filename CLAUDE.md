@@ -254,6 +254,10 @@ Lainnya:
   memakai dialog sendiri `confirmAction(pesan, {title, confirmLabel, danger, requireText})`
   (`<dialog>` native, Promise), bukan `window.confirm/prompt`; hapus permanen wajib
   mengetik judul. Hanya peringatan tutup tab/refresh (`beforeunload`) yang tetap bawaan browser.
+  Semua `<select>` admin (selain yang jadi pil) memakai dropdown KB `enhanceSelect`: select
+  asli disembunyikan tapi tetap sumber data (nilai, event `change`, `.value` dari kode tetap
+  jalan; select yang dibuat belakangan ikut otomatis). Label Program Family di admin:
+  Program Reguler / Program Unique / Impactful Action (kunci database tetap).
 - Admin di HP (≤768px): tab bar bawah dengan ikon (disembunyikan saat form
   kegiatan/kisah terbuka), logo di header, judul + tombol Tambah satu baris,
   kartu kegiatan ringkas tanpa label. Tablet (769–900px) tetap tab atas. Form
