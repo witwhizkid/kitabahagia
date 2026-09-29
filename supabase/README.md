@@ -479,13 +479,27 @@ The webhook accepts POST JSON notifications, checks Midtrans SHA-512 signatures 
 
 No code change or redeploy is needed to switch; secrets apply to the next request.
 
+### Sandbox rehearsal (before production)
+
+1. Create a paid test event (e.g. Rp10.000, capacity 2) and publish it.
+2. Register on the site; the QRIS screen appears and the seat is held.
+3. Copy the attempt's `qr_url` (Supabase Table Editor, `payment_attempts`, newest row)
+   and paste it into the sandbox QRIS simulator
+   (https://simulator.sandbox.midtrans.com/v2/qris/index), then pay.
+4. Within seconds the payment screen turns "Lunas", the registration is
+   `confirmed`/`paid`, and the "Kamu resmi terdaftar" email arrives once.
+   If not: Edge Functions, `midtrans-webhook`, Logs.
+5. Register again and let the QRIS expire: the seat is released after the
+   deadline and admin shows "Kedaluwarsa".
+6. Archive the test event.
+
 ### Switching to production
 
 1. Upgrade the Supabase project to a plan with daily backups before real money flows.
 2. In the Midtrans **Production** dashboard: enable QRIS/GoPay, copy the production server key, and set the Payment Notification URL above.
 3. Set the secrets (both in one command so the functions never see a mixed pair):
-   `supabase secrets set MIDTRANS_ENV=production MIDTRANS_SERVER_KEY=<production server key>`
+   `npx supabase secrets set MIDTRANS_ENV=production MIDTRANS_SERVER_KEY=<production server key> --project-ref cmrdapfuqtjlmpepfwfq`
 4. Make a real payment with a small-priced test event, confirm the registration becomes `confirmed`/`paid`, then refund it from the Midtrans dashboard and archive the test event.
 5. Registrations and payment attempts created in sandbox stay in the database; their order IDs do not exist in production, so do not try to re-check them.
 
-Rollback: `supabase secrets set MIDTRANS_ENV=sandbox MIDTRANS_SERVER_KEY=<sandbox server key>`.
+Rollback: `npx supabase secrets set MIDTRANS_ENV=sandbox MIDTRANS_SERVER_KEY=<sandbox server key> --project-ref cmrdapfuqtjlmpepfwfq`.
