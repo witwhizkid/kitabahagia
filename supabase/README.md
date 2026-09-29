@@ -514,3 +514,26 @@ No code change or redeploy is needed to switch; secrets apply to the next reques
 5. Registrations and payment attempts created in sandbox stay in the database; their order IDs do not exist in production, so do not try to re-check them.
 
 Rollback: `npx supabase secrets set MIDTRANS_ENV=sandbox MIDTRANS_SERVER_KEY=<sandbox server key> --project-ref cmrdapfuqtjlmpepfwfq`.
+
+## Database backup
+
+`.github/workflows/db-backup.yml` dumps schemas `public` and `auth` every Monday
+02:00 WIB (and on demand via **Actions → Database backup → Run workflow**),
+encrypts the dump with GPG (AES256) and keeps it as a workflow artifact for 90
+days. Storage files (posters, photos, certificate PDFs) are not included.
+
+Repository secrets (GitHub → Settings → Secrets and variables → Actions):
+
+- `SUPABASE_DB_URL`: Supabase → Connect → **Session pooler** URI (IPv4; the
+  direct `db.<ref>.supabase.co` host is IPv6-only and fails on GitHub runners),
+  with the database password filled in.
+- `BACKUP_PASSPHRASE`: long random passphrase. Keep a copy outside GitHub
+  (password manager); without it the backups cannot be opened.
+
+Restore (into a scratch database first, never straight over production):
+
+```
+gpg --decrypt kb-db-YYYYMMDD.dump.gpg > kb.dump
+pg_restore --list kb.dump
+pg_restore --no-owner --no-privileges --data-only --table=<table> -d "<target-db-url>" kb.dump
+```

@@ -479,6 +479,11 @@ angka rinci mulai Oktober 2026, ditambah satu kalimat sejarah yang bisa diedit
 (mis. "Sejak 2024, Kita Bahagia telah mengadakan lebih dari 20 kegiatan di 8
 kota"; angka disepakati owner, dibulatkan ke bawah).
 
+Backup database (Sep 2026, gratis, pengganti Supabase Pro): GitHub Actions
+`.github/workflows/db-backup.yml` tiap Senin 02.00 WIB, `pg_dump` schema public+auth,
+dienkripsi GPG, artifact 90 hari; secret `SUPABASE_DB_URL` (Session pooler) + `BACKUP_PASSPHRASE`.
+Storage tidak ikut. Supabase dijaga tetap aktif oleh monitor UptimeRobot ke `public-events`.
+
 ## Keamanan
 
 `SUPABASE_SERVICE_ROLE_KEY` hanya di server. Jangan pernah taruh di kode

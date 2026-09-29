@@ -1,0 +1,58 @@
+# Weekly encrypted backup of the Supabase database (schemas public + auth).
+# Needs two repository secrets:
+#   SUPABASE_DB_URL    Session pooler connection string (IPv4), with the database password filled in.
+#   BACKUP_PASSPHRASE  Long random passphrase used to encrypt the dump. Store it outside GitHub too.
+# Storage files (posters, photos, certificate PDFs) are not included.
+# Restore: see "Database backup" in supabase/README.md.
+name: Database backup
+
+on:
+  schedule:
+    - cron: "0 19 * * 0" # Monday 02:00 WIB
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Install pg_dump 17
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Dump and encrypt
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SUPABASE_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "Missing SUPABASE_DB_URL or BACKUP_PASSPHRASE secret" >&2
+            exit 1
+          fi
+          umask 077
+          name="kb-db-$(date -u +%Y%m%d)"
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
+            --schema=public --schema=auth \
+            --no-owner --no-privileges --format=custom \
+            --file="$name.dump"
+          test -s "$name.dump"
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" \
+            --symmetric --cipher-algo AES256 --output "$name.dump.gpg" "$name.dump"
+          rm -f "$name.dump"
+          echo "BACKUP_FILE=$name.dump.gpg" >> "$GITHUB_ENV"
+          ls -la "$name.dump.gpg"
+
+      - name: Upload encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BACKUP_FILE }}
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 90
+          if-no-files-found: error
