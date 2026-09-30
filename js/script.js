@@ -928,6 +928,8 @@ if (homeMotion) {
       depth += (target - depth) * .14;
       if (Math.abs(target - depth) < .0005) depth = target;
       hero.style.setProperty('--hero-depth', depth.toFixed(4));
+      // Never sink further than the page has scrolled, or a gap opens above the hero on the way back up.
+      hero.style.setProperty('--hero-shift', `${Math.min(depth * window.innerHeight * .3, window.scrollY).toFixed(1)}px`);
       frame = depth === target ? 0 : requestAnimationFrame(step);
     };
     window.addEventListener('scroll', () => { if (!frame) frame = requestAnimationFrame(step); }, { passive: true });
