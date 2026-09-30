@@ -6809,6 +6809,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .schedule-page .event-row { grid-template-columns: 92px 132px minmax(0, 1fr) 180px; gap: 24px; }
 .schedule-page .event-row-side { align-self: stretch; align-content: center; }
 .schedule-page .final-cta { align-items: center; }
+.schedule-page .final-cta-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 
 /* Kisah — image-led lead story and a scalable, non-uniform archive rhythm. */
 .kisah-page .kisah-intro { padding-block: 80px 64px; }
