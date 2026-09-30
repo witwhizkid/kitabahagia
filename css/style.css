@@ -4693,7 +4693,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .story-detail-cta { margin: 56px 0 0; font-size: clamp(17px,1.5vw,19px); padding-top: 30px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; }
 .story-detail-cta p { margin: 0; font-size: 1em; font-weight: 600; }
 /* Documentation gallery: finished event page + related Kisah (renderEventGallery). */
-.event-gallery { display: grid; gap: 16px; max-width: 880px; margin: 48px 0 0; }
+.event-gallery { display: grid; gap: 16px; max-width: 760px; margin: 48px 0 0; }
 .event-gallery-kicker { margin: 0 0 6px; color: var(--maroon); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .event-gallery-head h2 { margin: 0; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; }
 .event-gallery-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; border-radius: var(--radius-photo); background: var(--sand); scrollbar-width: none; }
