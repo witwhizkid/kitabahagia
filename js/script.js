@@ -176,7 +176,7 @@ const renderEventGallery = (container, { title, documentationUrl, photos }) => {
   container.innerHTML = `
     <div class="event-gallery-head"><p class="event-gallery-kicker">Dokumentasi</p><h2>Momen dari <em>${escapeHTML(title)}</em></h2></div>
     ${slides.length ? `<div class="event-gallery-track" tabindex="0" aria-label="Foto kegiatan, geser untuk melihat">${slides.map((photo, index) => `
-      <figure class="event-gallery-slide"><img class="event-gallery-backdrop" src="${escapeHTML(photo.url)}" alt="" aria-hidden="true" loading="lazy" decoding="async"><img src="${escapeHTML(photo.url)}" alt="${escapeHTML(photo.alt || `Foto kegiatan ${index + 1}`)}" loading="lazy" decoding="async">${photo.alt ? `<figcaption>${escapeHTML(photo.alt)}</figcaption>` : ''}</figure>`).join('')}
+      <figure class="event-gallery-slide"><img src="${escapeHTML(photo.url)}" alt="${escapeHTML(photo.alt || `Foto kegiatan ${index + 1}`)}" loading="lazy" decoding="async">${photo.alt ? `<figcaption>${escapeHTML(photo.alt)}</figcaption>` : ''}</figure>`).join('')}
     </div>` : ''}
     <div class="event-gallery-foot">
       ${slides.length > 1 ? `<div class="event-gallery-nav"><button type="button" data-gallery-step="-1" aria-label="Foto sebelumnya">&larr;</button><span data-gallery-count>1 / ${slides.length}</span><button type="button" data-gallery-step="1" aria-label="Foto berikutnya">&rarr;</button></div>` : ''}
