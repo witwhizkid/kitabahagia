@@ -223,18 +223,17 @@
   .home-page .hero-slide.active img { animation: hero-photo-settle 7s cubic-bezier(.2,.6,.2,1) both; }
 }
 
-/* Soft cross-fade between pages of this site; browsers without support just navigate normally. */
-/* Page-to-page "curtain" (Oct 2026, after dashdigital.studio): the old page lifts and dims over a
-   maroon backdrop, the new page wipes up from the bottom; the header stays put. Browsers without
-   cross-document view transitions (Firefox) just navigate. */
+/* Page-to-page "curtain" (Oct 2026, after dashdigital.studio): a maroon panel with the white KB
+   logo rises over the old page, holds a beat, then opens upward onto the new page. CSS-only view
+   transition, so navigation itself is not delayed; browsers without cross-document view
+   transitions (Firefox) just navigate. */
 @view-transition { navigation: auto; }
-.site-header { view-transition-name: site-header; }
-::view-transition { background: var(--maroon); }
-::view-transition-old(root) { animation: kb-page-out .55s cubic-bezier(.65, 0, .35, 1) both; }
-::view-transition-new(root) { animation: kb-page-in .75s .12s cubic-bezier(.24, .36, 0, 1) both; }
-::view-transition-group(site-header) { animation-duration: .3s; }
-@keyframes kb-page-out { to { transform: translateY(-6%); opacity: .35; } }
-@keyframes kb-page-in { from { transform: translateY(8%); clip-path: inset(100% 0 0 0); } to { transform: none; clip-path: inset(0); } }
+::view-transition { background: var(--maroon) url("../assets/logo/logo-kita-bahagia-white.webp") center / 128px auto no-repeat; }
+::view-transition-old(root) { animation: kb-curtain-cover .6s cubic-bezier(.65, 0, .35, 1) both; }
+::view-transition-new(root) { animation: kb-curtain-open .8s .85s cubic-bezier(.24, .36, 0, 1) both; }
+@keyframes kb-curtain-cover { to { clip-path: inset(0 0 100% 0); transform: translateY(-4%); } }
+@keyframes kb-curtain-open { from { clip-path: inset(100% 0 0 0); transform: translateY(6%); } to { clip-path: inset(0); transform: none; } }
+@media (min-width: 900px) { ::view-transition { background-size: 160px auto; } }
 
 @media (prefers-reduced-motion: reduce) {
   @view-transition { navigation: none; }
