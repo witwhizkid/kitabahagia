@@ -7382,7 +7382,9 @@ html.home-motion.footer-reveal .home-page .site-footer { position: sticky; botto
    of the scroll speed and its copy fades while Jejak slides over it as a rounded sheet; nothing
    scales, so it stays smooth on weak phones. A few photos drift inside their frames (CSS
    scroll-driven, where supported). Individual translate/scale leave hover zooms untouched. */
-html.home-motion .home-page .hero-campaign { translate: 0 var(--hero-shift, 0px); }
+/* On phones the compositor can scroll a frame ahead of the JS shift; the dark shadow above the hero
+   backs any momentary gap so it never flashes white. */
+html.home-motion .home-page .hero-campaign { translate: 0 var(--hero-shift, 0px); box-shadow: 0 -40vh 0 0 #1f1012; }
 html.home-motion .home-page :is(.hero-campaign-copy, .hero-campaign-dots, .hero-next) { opacity: calc(1 - var(--hero-depth, 0) * 2.2); translate: 0 calc(var(--hero-depth, 0) * -60px); }
 html.home-motion .home-page .hero-next { animation-fill-mode: backwards; }
 html.home-motion .home-page .impact-editorial { position: relative; z-index: 1; border-radius: 28px 28px 0 0; box-shadow: 0 -24px 60px rgba(33, 12, 16, .28); }
