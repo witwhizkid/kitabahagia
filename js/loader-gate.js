@@ -7,9 +7,11 @@
   try { seen = sessionStorage.getItem('kb_visit') === '1'; } catch { seen = true; }
   if (seen || !window.matchMedia('(prefers-reduced-motion: no-preference)').matches) return;
   root.classList.add('loader-on');
+  // Strong phones/laptops open Beranda through the logo; weak phones keep the plain upward panel.
+  if ((navigator.hardwareConcurrency || 4) >= 6 && (navigator.deviceMemory || 8) >= 4) root.classList.add('loader-portal');
   const skip = () => root.classList.add('loader-skip');
   window.addEventListener('pointerdown', skip, { once: true });
   window.addEventListener('keydown', skip, { once: true });
   // After the loader and the delayed hero entrance are over, drop the class so later slide changes run on time.
-  setTimeout(() => root.classList.remove('loader-on', 'loader-skip'), 3200);
+  setTimeout(() => root.classList.remove('loader-on', 'loader-skip', 'loader-portal'), 3200);
 })();
