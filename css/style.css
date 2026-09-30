@@ -7415,6 +7415,11 @@ html.loader-skip .kb-loader { animation: loader-open .4s cubic-bezier(.65, 0, .3
   100% { mask-size: 4200px auto, auto; opacity: 0; visibility: hidden; }
 }
 @keyframes loader-mark-hide { to { opacity: 0; } }
+html.loader-landing:not(.loader-skip) .kb-loader { animation: loader-fade .55s .25s ease forwards; }
+html.loader-landing:not(.loader-skip) .kb-loader-mark { animation: loader-land .6s cubic-bezier(.65, 0, .35, 1) forwards; }
+html.loader-land .home-page .hero-slide:first-child .hero-pill { animation-delay: 1.3s; }
+@keyframes loader-fade { to { opacity: 0; visibility: hidden; } }
+@keyframes loader-land { 80% { opacity: 1; } to { transform: translate(var(--land-x), var(--land-y)) scale(var(--land-s)); opacity: 0; } }
 @media (min-width: 900px) { @keyframes loader-portal { 0% { mask-size: 128px auto, auto; } 75% { opacity: 1; } 100% { mask-size: 5200px auto, auto; opacity: 0; visibility: hidden; } } }
 html.loader-on .home-page .hero-slide:first-child .hero-campaign-copy :is(h1, h2) { animation-delay: 1.15s; }
 html.loader-on .home-page .hero-slide:first-child .hero-campaign-copy p,

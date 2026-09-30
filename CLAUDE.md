@@ -197,7 +197,7 @@ Lainnya:
   di `<head>` index.html, sengaja) menambah `html.loader-on` hanya kalau Beranda halaman pertama kunjungan
   (`sessionStorage kb_visit`, diisi `script.js` di setiap halaman) dan motion diizinkan. `.kb-loader`: panel maroon,
   dua bulatan logo muncul (`loader-dots.webp`), badan logo tergambar kiri→kanan (`loader-body.webp`), lalu panel
-  terbuka ke atas (±1,55s); tap/tombol apa pun = skip (`loader-skip`). Perangkat kuat (≥6 core, RAM ≥4 GB; `loader-portal`) tidak membuka panel ke atas: setelah logo tergambar, panel di-mask bentuk logo (`loader-mask.webp`, `mask-composite: exclude`) dan lubangnya membesar ±0,75s sampai hero terlihat "tembus lewat logo"; HP lemah tetap panel naik. Entrance hero slide 1 + pil + strip ditunda
+  terbuka ke atas (±1,55s); tap/tombol apa pun = skip (`loader-skip`). Perangkat kuat (≥6 core, RAM ≥4 GB; `loader-portal`) tidak membuka panel ke atas: setelah logo tergambar, panel di-mask bentuk logo (`loader-mask.webp`, `mask-composite: exclude`) dan lubangnya membesar ±0,75s sampai hero terlihat "tembus lewat logo"; HP lemah (`loader-land`): logo yang sudah tergambar terbang dan mengecil ke pil "Makna" (posisi diukur JS di `loader-gate.js`, hanya transform) sementara panel memudar; pil terisi 1,3s. Kalau pil tidak terukur, tetap panel naik. Entrance hero slide 1 + pil + strip ditunda
   selama loader; kelas dilepas setelah 3,2s. Lighthouse lokal (4 run): tidak turun berarti; cek PageSpeed live.
 - Hero → Jejak (ref. ONTO): judul Jejak tidak dipecah per kata; masuk dengan `scale` 2 (HP 1.6) lalu mengecil ke
   ukuran asli (view timeline, `cover 0%–45%`); kicker, paragraf, tiap angka, dan foto Jejak naik + muncul menyusul.
