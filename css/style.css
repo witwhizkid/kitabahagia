@@ -2663,6 +2663,21 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-page .field select:focus,
 .registration-page .field textarea:focus { outline:3px solid rgba(122,31,43,.12); outline-offset:1px; border-color:var(--maroon); box-shadow:none; }
 .registration-page .field input[aria-invalid="true"] { border-color:var(--maroon-deep); }
+/* KB dropdown (same idea as the admin dropdown); the native select stays hidden as the value source. */
+.registration-page .kb-select { position:relative; min-width:0; }
+.registration-page .kb-select-native { position:absolute; bottom:0; left:24px; width:1px; height:1px; min-height:0; padding:0; border:0; opacity:0; pointer-events:none; }
+.registration-page .kb-select-button { position:relative; display:block; width:100%; min-height:50px; padding:13px 44px 13px 14px; overflow:hidden; border:1px solid #cfc4c5; border-radius:6px; background:var(--white); color:var(--ink); font:inherit; text-align:left; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+.registration-page .kb-select-button.is-placeholder { color:#8b7f80; }
+.registration-page .kb-select-button::after { content:""; position:absolute; top:50%; right:18px; width:8px; height:8px; border-right:2px solid var(--maroon); border-bottom:2px solid var(--maroon); transform:translateY(-70%) rotate(45deg); transition:transform .16s var(--ease); }
+.registration-page .kb-select-button[aria-expanded="true"]::after { transform:translateY(-30%) rotate(-135deg); }
+.registration-page .kb-select-button:hover { border-color:#a8999a; }
+.registration-page .kb-select-button[aria-expanded="true"], .registration-page .kb-select-button:focus-visible { outline:3px solid rgba(122,31,43,.12); outline-offset:1px; border-color:var(--maroon); }
+.registration-page .kb-select-button[aria-invalid="true"] { border-color:var(--maroon-deep); }
+.registration-page .kb-select-list { position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:30; margin:0; padding:6px; list-style:none; border:1px solid var(--line); border-radius:14px; background:var(--white); box-shadow:0 18px 40px -18px rgba(83,20,29,.35); }
+.registration-page .kb-select-list li { display:flex; justify-content:space-between; gap:12px; padding:11px 12px; border-radius:10px; font-size:15px; font-weight:500; cursor:pointer; }
+.registration-page .kb-select-list li.is-active { background:#f6ece6; }
+.registration-page .kb-select-list li[aria-selected="true"] { color:var(--maroon); font-weight:700; }
+.registration-page .kb-select-list li[aria-selected="true"]::after { content:"✓"; }
 .registration-page .field-error { color:var(--maroon-deep); font-size:12px; font-weight:600; }
 .registration-page .field-counter { color:var(--muted); font-size:12px; }
 .registration-page .check-row { display:flex; align-items:flex-start; gap:11px; color:var(--muted); font-size:13px; font-weight:400; line-height:1.55; }

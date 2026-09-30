@@ -2903,6 +2903,96 @@ if (registrationForm) {
     focusRegistrationStep(registrationReview);
   };
 
+  // KB-styled dropdown for the form's <select> (same look as the admin dropdown). The native
+  // select stays in the form as the value and validation source.
+  const enhanceFormSelect = (select) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'kb-select';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'kb-select-button';
+    button.setAttribute('aria-haspopup', 'listbox');
+    button.setAttribute('aria-expanded', 'false');
+    const labelText = document.querySelector(`label[for="${select.id}"]`)?.textContent.trim();
+    if (labelText) button.setAttribute('aria-label', labelText);
+    const list = document.createElement('ul');
+    list.className = 'kb-select-list';
+    list.setAttribute('role', 'listbox');
+    list.hidden = true;
+    select.after(wrap);
+    wrap.append(select, button, list);
+    select.classList.add('kb-select-native');
+    select.tabIndex = -1;
+    const options = () => [...select.options].map((option, index) => ({ option, index })).filter(({ option }) => !option.disabled);
+    const sync = () => {
+      const option = select.options[select.selectedIndex];
+      button.textContent = option?.textContent || '';
+      button.classList.toggle('is-placeholder', !select.value);
+      if (select.value) button.removeAttribute('aria-invalid');
+    };
+    const close = (focus = false) => {
+      list.hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+      if (focus) button.focus();
+    };
+    const highlight = (index) => [...list.children].forEach((item) => item.classList.toggle('is-active', Number(item.dataset.index) === index));
+    const open = () => {
+      list.replaceChildren(...options().map(({ option, index }) => {
+        const item = document.createElement('li');
+        item.setAttribute('role', 'option');
+        item.dataset.index = String(index);
+        item.textContent = option.textContent;
+        item.setAttribute('aria-selected', String(option.selected && Boolean(select.value)));
+        return item;
+      }));
+      list.hidden = false;
+      button.setAttribute('aria-expanded', 'true');
+      highlight(select.value ? select.selectedIndex : options()[0]?.index);
+    };
+    const pick = (index) => {
+      if (select.selectedIndex !== index) {
+        select.selectedIndex = index;
+        select.dispatchEvent(new Event('input', { bubbles: true }));
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      sync();
+      close(true);
+    };
+    const activeIndex = () => Number(list.querySelector('.is-active')?.dataset.index ?? -1);
+    button.addEventListener('click', () => (list.hidden ? open() : close()));
+    button.addEventListener('keydown', (event) => {
+      if (['ArrowDown', 'ArrowUp'].includes(event.key)) {
+        event.preventDefault();
+        if (list.hidden) { open(); return; }
+        const indexes = options().map(({ index }) => index);
+        const position = indexes.indexOf(activeIndex());
+        const next = indexes[Math.min(indexes.length - 1, Math.max(0, position + (event.key === 'ArrowDown' ? 1 : -1)))];
+        highlight(next);
+      } else if (['Enter', ' '].includes(event.key) && !list.hidden) {
+        event.preventDefault();
+        if (activeIndex() >= 0) pick(activeIndex());
+      } else if (event.key === 'Escape' && !list.hidden) {
+        event.preventDefault();
+        close(true);
+      } else if (event.key === 'Tab') {
+        close();
+      }
+    });
+    list.addEventListener('mousedown', (event) => event.preventDefault());
+    list.addEventListener('click', (event) => {
+      const item = event.target.closest('[role=option]');
+      if (item) pick(Number(item.dataset.index));
+    });
+    document.addEventListener('click', (event) => { if (!list.hidden && !wrap.contains(event.target)) close(); });
+    // The browser's "please select" check focuses the hidden select: hand focus to the button.
+    select.addEventListener('focus', () => button.focus());
+    select.addEventListener('invalid', () => button.setAttribute('aria-invalid', 'true'));
+    select.addEventListener('change', sync);
+    select.form?.addEventListener('reset', () => setTimeout(sync));
+    sync();
+  };
+  registrationForm.querySelectorAll('select').forEach(enhanceFormSelect);
+
   const telephoneInput = document.getElementById('telepon');
   // Optional "ingat data saya": prefills the next registration on this device only; never sent to the server.
   const profileStorageKey = 'kb_volunteer_profile';

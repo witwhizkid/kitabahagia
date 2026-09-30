@@ -543,7 +543,7 @@ pg_restore --no-owner --no-privileges --data-only --table=<table> -d "<target-db
 Migration `20261014010000_registration_profile_fields.sql` adds `registrations.age`
 (10–100), `referral_source` (`instagram`, `tiktok`, `whatsapp`, `teman`, `kampus`,
 `website`, `lainnya`) and `social_account` (2–100 chars). The public form requires all
-three. `create-registration` validates them and writes them with a PATCH right after the
+three and offers only `instagram`, `tiktok` and `teman` ("Informasi teman") as sources. `create-registration` validates them and writes them with a PATCH right after the
 `create_registration` RPC succeeds (the RPC signature is unchanged); a failed PATCH is
 logged and never undoes the registration. The server accepts requests without them so a
 page cached before the change still works. `admin-registrations` returns them for the

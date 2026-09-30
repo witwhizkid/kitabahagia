@@ -101,8 +101,10 @@ Halaman pendaftaran (`pendaftaran.html`):
   (`renderCalendar` di `renderOnboarding`). Cek status belum punya karena
   `payment-status` tidak mengirim tanggal kegiatan.
 - Form peserta (Okt 2026, permintaan owner) juga wajib: Usia (10–100), Akun Instagram/TikTok,
-  dan "Dari mana kamu tahu kegiatan ini?" (pilihan tetap: Instagram, TikTok, WhatsApp, Teman/keluarga,
-  Kampus/sekolah/komunitas, Website, Lainnya). Tampil di Konfirmasi, admin Detail + CSV, dan Privasi.
+  dan "Dari mana kamu tahu kegiatan ini?" (pilihan: Instagram, TikTok, Informasi teman; database
+  masih menerima kunci lama lain). Dropdown pakai gaya KB (`enhanceFormSelect` di `js/script.js`,
+  meniru `enhanceSelect` admin; select asli tersembunyi tetap sumber nilai + validasi). Tampil di
+  Konfirmasi, admin Detail + CSV, dan Privasi.
   Detail: "Registration profile fields" di `supabase/README.md`.
 - Centang "Ingat data saya" (tanpa `name`, tidak ikut terkirim) menyimpan nama,
   WA, email, domisili, instansi, usia, akun sosmed di `localStorage` `kb_volunteer_profile` saat

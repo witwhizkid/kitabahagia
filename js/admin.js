@@ -104,7 +104,7 @@
     instagram: "Instagram",
     tiktok: "TikTok",
     whatsapp: "Grup/pesan WhatsApp",
-    teman: "Teman atau keluarga",
+    teman: "Informasi teman",
     kampus: "Kampus, sekolah, atau komunitas",
     website: "Website Kita Bahagia",
     lainnya: "Lainnya",
