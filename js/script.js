@@ -247,19 +247,19 @@ const eventSlotNote = (event) => {
   }
   return `<span class="event-slot">${escapeHTML(event.capacity)}</span>`;
 };
-// Poster badge: unavailable events turn grayscale with their state; open ones closing
-// within a week get a countdown ("3 hari lagi").
+// Poster badge: unavailable events get a dark state label and only full ones turn grayscale
+// (finished events keep their colours); open ones closing within a week get "3 hari lagi".
 const eventPhotoBadge = (event) => {
   const { available, reason } = eventRegistrationAvailability(event);
   const closedLabels = { past: 'Selesai', full: 'Kuota penuh', closed: 'Ditutup', applicants_full: 'Ditutup' };
-  if (closedLabels[reason]) return { closed: true, label: closedLabels[reason] };
+  if (closedLabels[reason]) return { closed: true, grayscale: reason === 'full', label: closedLabels[reason] };
   const days = eventDaysLeft(event);
   if (available && days !== null && days >= 0 && days <= 7) return { closed: false, label: eventDaysLeftLabel(days) };
   return null;
 };
 const eventPhoto = (event, className) => {
   const badge = eventPhotoBadge(event);
-  return `<figure class="${className}${event.image ? '' : ' is-empty'}${badge?.closed ? ' is-closed' : ''}">${event.image
+  return `<figure class="${className}${event.image ? '' : ' is-empty'}${badge?.grayscale ? ' is-closed' : ''}">${event.image
     ? `<img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}" loading="lazy" decoding="async">` : ''}${badge
     ? `<span class="event-photo-badge${badge.closed ? ' is-closed' : ''}">${escapeHTML(badge.label)}</span>` : ''}</figure>`;
 };
