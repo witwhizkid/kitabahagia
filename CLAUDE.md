@@ -189,6 +189,14 @@ Lainnya:
   titik slider, dan strip "Berikutnya" memudar + naik 48px dalam 45vh pertama. Foto Jejak, foto Tentang, dan foto
   kisah utama bergeser ±5% di bingkainya (`scale` 1.12, `translate`; properti terpisah supaya zoom hover
   `transform` tetap jalan). Firefox/Safari lama: diam. Lenis/smooth scroll sengaja tidak dipakai.
+- Loader Beranda (Okt 2026, ref. studio-onto.com, disetujui dengan syarat): `js/loader-gate.js` (render-blocking
+  di `<head>` index.html, sengaja) menambah `html.loader-on` hanya kalau Beranda halaman pertama kunjungan
+  (`sessionStorage kb_visit`, diisi `script.js` di setiap halaman) dan motion diizinkan. `.kb-loader`: panel maroon,
+  dua bulatan logo muncul (`loader-dots.webp`), badan logo tergambar kiri→kanan (`loader-body.webp`), lalu panel
+  terbuka ke atas (±1,55s); tap/tombol apa pun = skip (`loader-skip`). Entrance hero slide 1 + pil + strip ditunda
+  selama loader; kelas dilepas setelah 3,2s. Lighthouse lokal (4 run): tidak turun berarti; cek PageSpeed live.
+- Hero → Jejak (ref. ONTO): judul Jejak tidak dipecah per kata; masuk dengan `scale` 2 (HP 1.6) lalu mengecil ke
+  ukuran asli (view timeline, `cover 0%–45%`); kicker, paragraf, tiap angka, dan foto Jejak naik + muncul menyusul.
 - Hero beranda: foto slide aktif zoom pelan 1.08→1 (7 s) dan judul muncul dengan
   wipe atas→bawah (`hero-title-in`); HP/tablet hanya teks slide pertama. Mati saat
   reduced motion.

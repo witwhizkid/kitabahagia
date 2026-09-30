@@ -7386,6 +7386,42 @@ h3 {
 @keyframes hero-copy-out { to { opacity: 0; translate: 0 -48px; } }
 @keyframes photo-drift { from { translate: 0 -5%; } to { translate: 0 5%; } }
 
+/* Beranda loader (Oct 2026, after studio-onto.com). js/loader-gate.js adds html.loader-on only when
+   Beranda opens a visit (not after other pages, not with reduced motion). The KB dots pop in, the
+   body draws left to right, then the maroon panel opens upward onto the hero (same motion as the
+   page curtain); about 1.5s, a tap or key skips it. The hero entrance waits for it. */
+.kb-loader { display: none; }
+html.loader-on .kb-loader { position: fixed; inset: 0; z-index: 1001; display: grid; place-items: center; background: var(--maroon); animation: loader-open .6s .95s cubic-bezier(.65, 0, .35, 1) forwards; }
+html.loader-skip .kb-loader { animation: loader-open .4s cubic-bezier(.65, 0, .35, 1) forwards; }
+.kb-loader-mark { position: relative; width: 104px; animation: loader-mark-out .5s .9s cubic-bezier(.65, 0, .35, 1) both; }
+.kb-loader-mark img { display: block; width: 100%; height: auto; }
+.kb-loader-dots { position: absolute; inset: 0; transform-origin: 50% 22%; animation: loader-dots-in .5s .05s cubic-bezier(.34, 1.56, .64, 1) both; }
+.kb-loader-body { animation: loader-body-draw .55s .3s cubic-bezier(.65, 0, .35, 1) both; }
+@media (min-width: 900px) { .kb-loader-mark { width: 128px; } }
+@keyframes loader-open { to { transform: translateY(-100%); visibility: hidden; } }
+@keyframes loader-mark-out { to { transform: translateY(-36px); opacity: 0; } }
+@keyframes loader-dots-in { from { transform: scale(.4); opacity: 0; } }
+@keyframes loader-body-draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 -2% 0 0); } }
+html.loader-on .home-page .hero-slide:first-child .hero-campaign-copy :is(h1, h2) { animation-delay: 1.15s; }
+html.loader-on .home-page .hero-slide:first-child .hero-campaign-copy p,
+html.loader-on .home-page .hero-slide:first-child .hero-campaign-actions { animation-delay: 1.6s; }
+html.loader-on .home-page .hero-slide:first-child .hero-pill { animation-delay: 1.9s; }
+html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
+
+/* Hero → Jejak (after studio-onto.com): as Jejak slides over the receding hero, its title arrives
+   oversized and shrinks into place while the rest of the block rises in after it. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .home-page .impact-editorial-copy h2 { transform-origin: 0 0; animation: jejak-title-settle linear both; animation-timeline: view(); animation-range: cover 0% cover 45%; }
+    .home-page .impact-editorial-copy > :is(.impact-editorial-kicker, p),
+    .home-page .impact-editorial-stat,
+    .home-page .impact-editorial-image { animation: jejak-rise linear both; animation-timeline: view(); animation-range: entry 30% cover 40%; }
+  }
+}
+@keyframes jejak-title-settle { from { scale: 2; } }
+@keyframes jejak-rise { from { opacity: 0; translate: 0 48px; } }
+@media (max-width: 767px) { @keyframes jejak-title-settle { from { scale: 1.6; } } }
+
 /* Transactional radius exception: welcoming registration flow, isolated from editorial cards. */
 .registration-page .registration-summary-sticky { border-radius: 26px; }
 
