@@ -100,8 +100,12 @@ Halaman pendaftaran (`pendaftaran.html`):
   kalender": link Google Calendar + file .ics (pengingat H-1) dari `selectedEvent`
   (`renderCalendar` di `renderOnboarding`). Cek status belum punya karena
   `payment-status` tidak mengirim tanggal kegiatan.
+- Form peserta (Okt 2026, permintaan owner) juga wajib: Usia (10–100), Akun Instagram/TikTok,
+  dan "Dari mana kamu tahu kegiatan ini?" (pilihan tetap: Instagram, TikTok, WhatsApp, Teman/keluarga,
+  Kampus/sekolah/komunitas, Website, Lainnya). Tampil di Konfirmasi, admin Detail + CSV, dan Privasi.
+  Detail: "Registration profile fields" di `supabase/README.md`.
 - Centang "Ingat data saya" (tanpa `name`, tidak ikut terkirim) menyimpan nama,
-  WA, email, domisili, instansi di `localStorage` `kb_volunteer_profile` saat
+  WA, email, domisili, instansi, usia, akun sosmed di `localStorage` `kb_volunteer_profile` saat
   submit valid dan mengisi otomatis pendaftaran berikutnya; tidak dicentang =
   data tersimpan dihapus.
 

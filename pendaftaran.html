@@ -151,6 +151,9 @@
                     <div class="field full"><label for="email">Email *</label><input id="email" name="email" type="email" autocomplete="email" placeholder="nama@email.com" required></div>
                     <div class="field"><label for="domicile">Domisili *</label><input id="domicile" name="domicile" type="text" autocomplete="address" placeholder="Tempat Tinggal kamu sekarang" maxlength="200" required></div>
                     <div class="field"><label for="institution">Asal Instansi *</label><input id="institution" name="institution" type="text" autocomplete="organization" placeholder="Nama instansi tempat kamu bekerja atau kuliah" maxlength="200" required></div>
+                    <div class="field"><label for="age">Usia *</label><input id="age" name="age" type="number" inputmode="numeric" min="10" max="100" step="1" placeholder="Contoh: 21" required></div>
+                    <div class="field"><label for="socialAccount">Akun Instagram/TikTok *</label><input id="socialAccount" name="social_account" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" minlength="2" maxlength="100" placeholder="@username" required></div>
+                    <div class="field full"><label for="referralSource">Dari mana kamu tahu kegiatan ini? *</label><select id="referralSource" name="referral_source" required><option value="" selected disabled>Pilih salah satu</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="whatsapp">Grup/pesan WhatsApp</option><option value="teman">Teman atau keluarga</option><option value="kampus">Kampus, sekolah, atau komunitas</option><option value="website">Website Kita Bahagia</option><option value="lainnya">Lainnya</option></select></div>
                     <div class="field full"><label for="bahagia">Apa definisi bahagia menurut kamu? *</label><textarea id="bahagia" name="bahagia" placeholder="Tulis definisi bahagia menurutmu..." required></textarea></div>
                     <div class="field full" id="selectionAnswerField" hidden><label for="selectionAnswer" id="selectionAnswerLabel"></label><textarea id="selectionAnswer" name="selection_answer" maxlength="2000" aria-describedby="selectionAnswerCount"></textarea><span id="selectionAnswerCount" class="field-counter" aria-live="polite"></span></div>
                     <div class="field full" id="selectionCommitmentField" hidden><label class="check-row" for="selectionCommitment"><input id="selectionCommitment" name="selection_commitment" type="checkbox" value="ya"><span id="selectionCommitmentText"></span></label></div>
@@ -182,7 +185,7 @@
                       <span id="instagramProofHint" class="field-counter">JPG, PNG, atau WebP. Maksimal 2 MB setelah diperkecil.</span>
                       <span id="instagramProofError" class="field-error" role="alert" hidden></span>
                     </div>
-                    <div class="field full"><label class="check-row" for="rememberProfile"><input id="rememberProfile" type="checkbox"><span>Ingat nama, nomor WhatsApp, email, domisili, dan instansi di perangkat ini untuk pendaftaran berikutnya.</span></label></div>
+                    <div class="field full"><label class="check-row" for="rememberProfile"><input id="rememberProfile" type="checkbox"><span>Ingat nama, nomor WhatsApp, email, domisili, instansi, usia, dan akun sosmed di perangkat ini untuk pendaftaran berikutnya.</span></label></div>
                     <div class="field full"><label class="check-row" for="consent"><input id="consent" name="consent" type="checkbox" value="setuju" required><span>Saya setuju untuk dihubungi oleh tim Kita Bahagia terkait pendaftaran ini.</span></label></div>
                   </div>
                   <div class="form-actions">
@@ -205,6 +208,9 @@
                   <div><dt>Email</dt><dd data-review-email></dd></div>
                   <div><dt>Domisili</dt><dd data-review-domicile></dd></div>
                   <div><dt>Asal Instansi</dt><dd data-review-institution></dd></div>
+                  <div><dt>Usia</dt><dd data-review-age></dd></div>
+                  <div><dt>Akun Instagram/TikTok</dt><dd data-review-social></dd></div>
+                  <div><dt>Tahu kegiatan dari</dt><dd data-review-referral></dd></div>
                   <div><dt>Definisi bahagia</dt><dd data-review-happiness></dd></div>
                   <div data-review-selection hidden><dt data-review-selection-question></dt><dd data-review-selection-answer></dd></div>
                   <div data-review-portfolio hidden><dt>CV/portofolio</dt><dd data-review-portfolio-value></dd></div>

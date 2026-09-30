@@ -2656,9 +2656,11 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-page .field.full { grid-column:1 / -1; }
 .registration-page .field label { color:var(--ink); font-size:13px; font-weight:700; letter-spacing:0; text-transform:none; }
 .registration-page .field input,
+.registration-page .field select,
 .registration-page .field textarea { width:100%; min-width:0; min-height:50px; padding:13px 14px; border:1px solid #cfc4c5; border-radius:6px; background:var(--white); color:var(--ink); font:inherit; resize:vertical; }
 .registration-page .field textarea { min-height:116px; }
 .registration-page .field input:focus,
+.registration-page .field select:focus,
 .registration-page .field textarea:focus { outline:3px solid rgba(122,31,43,.12); outline-offset:1px; border-color:var(--maroon); box-shadow:none; }
 .registration-page .field input[aria-invalid="true"] { border-color:var(--maroon-deep); }
 .registration-page .field-error { color:var(--maroon-deep); font-size:12px; font-weight:600; }

@@ -47,14 +47,16 @@ const errorMessages: Record<string, string> = {
 const conflictErrors = new Set(["EVENT_NOT_OPEN", "REGISTRATION_CLOSED", "EVENT_FULL", "ALREADY_REGISTERED", "REGISTRATION_NOT_OPEN", "APPLICANTS_FULL"]);
 const allowedFields = new Set([
   "event_slug", "name", "phone", "email", "domicile", "institution", "reason", "notes", "consent",
-  "selection_answer", "commitment", "portfolio_url",
+  "selection_answer", "commitment", "portfolio_url", "age", "referral_source", "social_account",
 ]);
+const referralSources = new Set(["instagram", "tiktok", "whatsapp", "teman", "kampus", "website", "lainnya"]);
 
 type RegistrationInput = {
   event_slug: string; name: string; phone: string; email: string;
   domicile: string | null; institution: string | null;
   reason: string; notes: string | null; consent: true;
   selection_answer: string | null; commitment: boolean | null; portfolio_url: string | null;
+  age: number | null; referral_source: string | null; social_account: string | null;
 };
 type ProofFile = { bytes: Uint8Array; contentType: string; extension: string };
 
@@ -72,7 +74,10 @@ const validateInput = (value: unknown): RegistrationInput | null => {
     || (body.notes !== undefined && body.notes !== null && typeof body.notes !== "string")
     || (body.selection_answer !== undefined && body.selection_answer !== null && typeof body.selection_answer !== "string")
     || (body.commitment !== undefined && body.commitment !== null && typeof body.commitment !== "boolean")
-    || (body.portfolio_url !== undefined && body.portfolio_url !== null && typeof body.portfolio_url !== "string")) return null;
+    || (body.portfolio_url !== undefined && body.portfolio_url !== null && typeof body.portfolio_url !== "string")
+    || (body.age !== undefined && body.age !== null && typeof body.age !== "number")
+    || (body.referral_source !== undefined && body.referral_source !== null && typeof body.referral_source !== "string")
+    || (body.social_account !== undefined && body.social_account !== null && typeof body.social_account !== "string")) return null;
 
   const eventSlug = body.event_slug.trim().toLowerCase();
   const name = body.name.trim();
@@ -89,6 +94,10 @@ const validateInput = (value: unknown): RegistrationInput | null => {
   const commitment = typeof body.commitment === "boolean" ? body.commitment : null;
   // Format is checked by the database (INVALID_PORTFOLIO_URL), which owns the rule.
   const portfolioUrl = typeof body.portfolio_url === "string" ? body.portfolio_url.trim() || null : null;
+  // Optional on the server so a page cached before these fields existed can still register.
+  const age = typeof body.age === "number" ? body.age : null;
+  const referralSource = typeof body.referral_source === "string" ? body.referral_source.trim() || null : null;
+  const socialAccount = typeof body.social_account === "string" ? body.social_account.trim() || null : null;
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(eventSlug) || eventSlug.length > 120
     || name.length < 2 || name.length > 150 || !/^\+?\d{8,20}$/.test(phone)
     || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -96,10 +105,14 @@ const validateInput = (value: unknown): RegistrationInput | null => {
     || (institution !== null && institution.length > 200)
     || reason.length < 1 || reason.length > 2000
     || (notes !== null && notes.length > 2000)
-    || (selectionAnswer !== null && [...selectionAnswer].length > 2000)) return null;
+    || (selectionAnswer !== null && [...selectionAnswer].length > 2000)
+    || (age !== null && (!Number.isInteger(age) || age < 10 || age > 100))
+    || (referralSource !== null && !referralSources.has(referralSource))
+    || (socialAccount !== null && (socialAccount.length < 2 || socialAccount.length > 100))) return null;
   return {
     event_slug: eventSlug, name, phone, email, domicile, institution, reason, notes, consent: true,
     selection_answer: selectionAnswer, commitment, portfolio_url: portfolioUrl,
+    age, referral_source: referralSource, social_account: socialAccount,
   };
 };
 
@@ -155,6 +168,7 @@ const parseMultipart = async (request: Request, contentType: string) => {
   }
   fields.consent = fields.consent === "true";
   if (fields.commitment !== undefined) fields.commitment = fields.commitment === "true";
+  if (fields.age !== undefined) fields.age = fields.age === "" ? null : Number(fields.age);
   return { fields, proof: files.instagram_proof ?? null, cv: files.cv ?? null, tooLarge: false as const };
 };
 
@@ -343,6 +357,25 @@ Deno.serve(async (request) => {
     if (rpcResponse.ok && result) {
       const registration = result.registration as { registration_code?: string; registration_status?: string } | undefined;
       const code = registration?.registration_code;
+      // Profile fields sit outside the create_registration RPC (its signature stays unchanged).
+      // A failed write is logged but never undoes the registration.
+      const profile = Object.fromEntries(Object.entries({
+        age: input.age, referral_source: input.referral_source, social_account: input.social_account,
+      }).filter(([, value]) => value !== null));
+      if (code && Object.keys(profile).length) {
+        const profileResponse = await fetch(
+          `${supabaseUrl}/rest/v1/registrations?registration_code=eq.${encodeURIComponent(code)}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json", "apikey": serviceRoleKey,
+              "Authorization": `Bearer ${serviceRoleKey}`, "Prefer": "return=minimal",
+            },
+            body: JSON.stringify(profile),
+          },
+        ).catch(() => null);
+        if (!profileResponse?.ok) console.error("Registration profile update failed", { status: profileResponse?.status });
+      }
       if (code && registration?.registration_status === "confirmed") await inBackground(sendConfirmationEmail(supabaseUrl, serviceRoleKey, { code }));
       if (code && registration?.registration_status === "applied") await inBackground(sendAppliedEmail(supabaseUrl, serviceRoleKey, code));
       return jsonResponse(201, result);

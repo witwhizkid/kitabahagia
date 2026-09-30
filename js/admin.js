@@ -100,6 +100,16 @@
     refunded: "Dikembalikan",
   };
 
+  const referralSourceLabels = {
+    instagram: "Instagram",
+    tiktok: "TikTok",
+    whatsapp: "Grup/pesan WhatsApp",
+    teman: "Teman atau keluarga",
+    kampus: "Kampus, sekolah, atau komunitas",
+    website: "Website Kita Bahagia",
+    lainnya: "Lainnya",
+  };
+
   const adminRoleLabels = {
     admin: "Admin",
     super_admin: "Super Admin",
@@ -783,6 +793,9 @@
     appendApplicantField("WhatsApp", applicant.phone);
     appendApplicantField("Domisili", applicant.domicile);
     appendApplicantField("Instansi", applicant.institution);
+    appendApplicantField("Usia", applicant.age);
+    appendApplicantField("Instagram/TikTok", applicant.social_account);
+    appendApplicantField("Tahu dari", referralSourceLabels[applicant.referral_source] || applicant.referral_source);
     appendApplicantField("Definisi bahagia", applicant.reason, { wide: true });
     if (applicant.notes) appendApplicantField("Catatan tambahan", applicant.notes, { wide: true });
     appendApplicantField("Terdaftar", formatDateTime(applicant.created_at));
@@ -923,10 +936,11 @@
 
   const csvCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
   const exportRegistrationsCsv = () => {
-    const columns = ["Kode", "Nama", "Email", "WhatsApp", "Domisili", "Instansi", "Definisi bahagia", "Jawaban seleksi", "Link portofolio", "Status", "Hadir", "Terdaftar"];
+    const columns = ["Kode", "Nama", "Email", "WhatsApp", "Domisili", "Instansi", "Usia", "Instagram/TikTok", "Tahu dari", "Definisi bahagia", "Jawaban seleksi", "Link portofolio", "Status", "Hadir", "Terdaftar"];
     const rows = registrations.map((applicant) => [
       applicant.registration_code, applicant.name, applicant.email, applicant.phone, applicant.domicile,
-      applicant.institution, applicant.reason, applicant.selection_answer, applicant.portfolio_url,
+      applicant.institution, applicant.age, applicant.social_account,
+      referralSourceLabels[applicant.referral_source] || applicant.referral_source, applicant.reason, applicant.selection_answer, applicant.portfolio_url,
       selectionEnabled() && applicant.registration_status === "confirmed"
         ? "Diterima" : registrationStatusLabels[applicant.registration_status] || applicant.registration_status,
       applicant.attended_at && applicant.registration_status === "confirmed" ? "Ya" : "",

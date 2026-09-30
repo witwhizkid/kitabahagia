@@ -2442,6 +2442,9 @@ if (registrationForm) {
       email: String(formData.get('email') || '').trim().toLowerCase(),
       domicile: String(formData.get('domicile') || '').trim(),
       institution: String(formData.get('institution') || '').trim(),
+      age: Number.parseInt(String(formData.get('age') || ''), 10) || null,
+      referral_source: String(formData.get('referral_source') || '') || null,
+      social_account: String(formData.get('social_account') || '').trim() || null,
       reason: String(formData.get('alasan') || formData.get('bahagia') || '').trim(),
       notes: String(formData.get('catatan') || '').trim() || null,
       consent: formData.get('consent') !== null
@@ -2857,6 +2860,9 @@ if (registrationForm) {
     setDataText('[data-review-email]', String(formData.get('email') || '').trim(), registrationReview);
     setDataText('[data-review-domicile]', String(formData.get('domicile') || '').trim(), registrationReview);
     setDataText('[data-review-institution]', String(formData.get('institution') || '').trim(), registrationReview);
+    setDataText('[data-review-age]', String(formData.get('age') || '').trim(), registrationReview);
+    setDataText('[data-review-social]', String(formData.get('social_account') || '').trim(), registrationReview);
+    setDataText('[data-review-referral]', document.getElementById('referralSource')?.selectedOptions[0]?.textContent || '', registrationReview);
     setDataText('[data-review-happiness]', String(formData.get('bahagia') || '').trim(), registrationReview);
     const selectionReview = registrationReview?.querySelector('[data-review-selection]');
     if (selectionReview) {
@@ -2900,7 +2906,7 @@ if (registrationForm) {
   const telephoneInput = document.getElementById('telepon');
   // Optional "ingat data saya": prefills the next registration on this device only; never sent to the server.
   const profileStorageKey = 'kb_volunteer_profile';
-  const profileFields = ['nama', 'telepon', 'email', 'domicile', 'institution'];
+  const profileFields = ['nama', 'telepon', 'email', 'domicile', 'institution', 'age', 'socialAccount'];
   const rememberProfileInput = document.getElementById('rememberProfile');
   try {
     const saved = JSON.parse(localStorage.getItem(profileStorageKey) || 'null');

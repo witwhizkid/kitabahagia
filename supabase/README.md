@@ -537,3 +537,17 @@ gpg --decrypt kb-db-YYYYMMDD.dump.gpg > kb.dump
 pg_restore --list kb.dump
 pg_restore --no-owner --no-privileges --data-only --table=<table> -d "<target-db-url>" kb.dump
 ```
+
+## Registration profile fields
+
+Migration `20261014010000_registration_profile_fields.sql` adds `registrations.age`
+(10–100), `referral_source` (`instagram`, `tiktok`, `whatsapp`, `teman`, `kampus`,
+`website`, `lainnya`) and `social_account` (2–100 chars). The public form requires all
+three. `create-registration` validates them and writes them with a PATCH right after the
+`create_registration` RPC succeeds (the RPC signature is unchanged); a failed PATCH is
+logged and never undoes the registration. The server accepts requests without them so a
+page cached before the change still works. `admin-registrations` returns them for the
+Detail panel and CSV export.
+
+Deploy order: run the migration **before** deploying `admin-registrations`, which selects
+the new columns.
