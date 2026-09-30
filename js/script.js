@@ -857,13 +857,42 @@ if (homeMotion) {
     });
   }, { threshold: 0.25 });
   // Jejak's title is left whole: it settles from a large size on scroll instead (style.css).
-  document.querySelectorAll('.home-page main > section:not(.hero-campaign, .impact-editorial) h2').forEach((heading) => {
+  document.querySelectorAll('.home-page main > section:not(.hero-campaign, .impact-editorial, .home-about-teaser) h2').forEach((heading) => {
     if (heading.getBoundingClientRect().top < window.innerHeight) return;
     heading.setAttribute('aria-label', heading.textContent.replace(/\s+/g, ' ').trim());
     splitWords(heading, { index: 0 });
     heading.classList.add('split-heading');
     inView.observe(heading);
   });
+  // The manifesto lights up word by word as it crosses the screen, so it is read, not skimmed.
+  const manifesto = document.querySelector('.home-about-teaser h2');
+  if (manifesto) {
+    manifesto.setAttribute('aria-label', manifesto.textContent.replace(/\s+/g, ' ').trim());
+    splitWords(manifesto, { index: 0 });
+    manifesto.classList.add('ink-heading');
+    const words = [...manifesto.querySelectorAll('.split-word')];
+    let lit = -1;
+    let queued = false;
+    const paint = () => {
+      queued = false;
+      const box = manifesto.getBoundingClientRect();
+      const start = window.innerHeight * .85;
+      const end = window.innerHeight * .4;
+      const progress = Math.min(Math.max((start - box.top) / (start - end + box.height), 0), 1);
+      const count = Math.round(progress * words.length);
+      if (count === lit) return;
+      words.forEach((word, index) => word.classList.toggle('is-lit', index < count));
+      lit = count;
+    };
+    window.addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(paint); } }, { passive: true });
+    paint();
+  }
+  // Footer reveal: the page lifts like a sheet off a footer parked underneath. Only when the footer
+  // fits the screen (a taller one would pin its bottom first), so phones keep the normal footer.
+  const footer = document.querySelector('.home-page .site-footer');
+  const fitFooter = () => document.documentElement.classList.toggle('footer-reveal', !!footer && footer.offsetHeight < window.innerHeight - 40);
+  fitFooter();
+  window.addEventListener('resize', fitFooter, { passive: true });
   document.querySelectorAll('.home-program-section .program-grid, .home-page .kisah-section-heading, .home-upcoming-list')
     .forEach((rule) => { rule.classList.add('draw-rule'); inView.observe(rule); });
   document.querySelectorAll('.home-page main .btn').forEach((button) => {

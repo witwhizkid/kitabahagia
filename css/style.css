@@ -7355,6 +7355,11 @@ h3 {
 .home-motion .split-word { display: inline-block; clip-path: inset(-.35em -.25em -.22em -.25em); }
 .home-motion .split-word > span { display: inline-block; transform: translateY(135%); transition: transform .9s cubic-bezier(.16, 1, .3, 1); transition-delay: calc(min(var(--word, 0), 12) * 55ms); }
 .home-motion .split-heading.is-in .split-word > span { transform: none; }
+.home-motion .ink-heading .split-word > span { transform: none; opacity: .16; transition: opacity .35s var(--ease); }
+.home-motion .ink-heading .split-word.is-lit > span { opacity: 1; }
+/* Footer reveal (Beranda): main is a sheet with rounded bottom corners over a sticky footer. */
+html.home-motion.footer-reveal .home-page main { position: relative; z-index: 1; overflow: clip; background: var(--cream); border-radius: 0 0 28px 28px; box-shadow: 0 30px 60px rgba(33, 12, 16, .3); }
+html.home-motion.footer-reveal .home-page .site-footer { position: sticky; bottom: 0; z-index: 0; }
 .home-motion .draw-rule { border-top-color: transparent; background: linear-gradient(var(--line), var(--line)) 0 0 / 0 1px no-repeat; transition: background-size 1.1s cubic-bezier(.65, 0, .35, 1); }
 .home-motion .home-upcoming-list.draw-rule { background-image: linear-gradient(var(--ink), var(--ink)); background-size: 0 2px; }
 .home-motion .draw-rule.is-in { background-size: 100% 1px; }
@@ -7571,6 +7576,9 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
     translate: none;
   }
 }
+
+/* Beranda footer wordmark: the brand name set edge to edge as the last thing on the page. */
+.footer-wordmark { margin: 0; padding: 8px clamp(18px, 4vw, 48px) .1em; overflow: hidden; color: var(--cream); font-family: "Instrument Sans", "DM Sans", sans-serif; font-size: 15.2vw; font-weight: 700; line-height: 1; letter-spacing: -.055em; text-align: center; white-space: nowrap; opacity: .92; }
 
 /* Transactional radius exception: welcoming registration flow, isolated from editorial cards. */
 .registration-page .registration-summary-sticky { border-radius: 26px; }
