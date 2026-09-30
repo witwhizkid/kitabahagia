@@ -466,8 +466,7 @@ sebelum kegiatan Oktober; migrasi `20261013010000`, `events.documentation_url` +
 "siapa saja yang punya link: Pelihat", isinya sudah dikurasi). Form Kegiatan dapat bagian
 "Dokumentasi": link folder Drive + maks. **5 foto pilihan** (dikompres di browser seperti
 foto Kisah; tidak mengambil gambar langsung dari Drive). Tampil publik (siapa saja, bukan
-hanya peserta) di halaman kegiatan yang sudah selesai (`pendaftaran?event=`): slide foto (HP 3:2 `cover`;
-≥641px tinggi `min(520px, 64vh)` + `contain`, foto utuh dan muat satu layar) +
+hanya peserta) di halaman kegiatan yang sudah selesai (`pendaftaran?event=`): slide foto +
 "Lihat semua foto di Drive ↗"; Kisah dengan "Kegiatan terkait" menampilkan galeri yang
 sama otomatis (satu sumber data). Link Drive ikut di email sertifikat. Tanpa foto/link =
 bagian disembunyikan. Foto anak: pilih yang aman/berizin (aturan tim dokum, bukan sistem).

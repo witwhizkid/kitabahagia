@@ -4712,12 +4712,6 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .event-gallery { margin-top: 36px; }
   .event-gallery-drive { width: 100%; justify-content: center; }
 }
-/* Desktop/tablet: the 3:2 crop was taller than the screen and cut portrait photos. Each slide now
-   fits the viewport height and shows the whole photo on the sand background. */
-@media (min-width: 641px) {
-  .event-gallery-slide { height: min(520px, 64vh); }
-  .event-gallery-slide img { height: 100%; aspect-ratio: auto; object-fit: contain; }
-}
 .story-detail-more { margin-top: 88px; }
 .story-detail-more .kisah-archive-grid { margin-top: 28px; }
 /* Wide screens: photo stays in view on the left while the text scrolls on the right (Kinfolk-like). */
