@@ -165,6 +165,8 @@ Lainnya:
   hanya `hover:hover`); header HP/tablet (≤1023px) sembunyi saat scroll ke bawah (`.is-tucked`), muncul lagi
   saat scroll ke atas. Sengaja **tidak** diambil: WebGL/three.js (berat, PageSpeed), smooth-scroll, durasi
   1,5–2,4 s. Tinggi judul sama persis dengan versi tanpa animasi (dicek).
+  Blok CSS "Stage 8" (Codex, Okt 2026: sticky bab Program, Tentang dua kolom, arsip Kisah, bingkai foto
+  Tentang/Kisah) **tidak boleh** mematikan motion Beranda ini (pernah terjadi, sudah dikembalikan).
 - Transisi antarhalaman (Okt 2026, ala tirai dashdigital.studio): klik link internal → JS (`js/script.js`,
   `.page-curtain`) langsung menaikkan panel maroon dari bawah (.56s) sambil logo KB putih
   (`assets/logo/logo-kita-bahagia-white.webp`) muncul pelan, lalu pindah halaman; loading terjadi di balik logo

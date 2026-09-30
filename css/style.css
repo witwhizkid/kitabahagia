@@ -7410,6 +7410,8 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
 
 /* Hero → Jejak (after studio-onto.com): as Jejak slides over the receding hero, its title arrives
    oversized and shrinks into place while the rest of the block rises in after it. */
+/* Beranda keeps its own Dash/ONTO motion above (hero recede, Jejak settle, photo drift);
+   this stage only adds frame reveals to Tentang and Kisah. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .home-page .impact-editorial-copy h2 { transform-origin: 0 0; animation: jejak-title-settle linear both; animation-timeline: view(); animation-range: cover 0% cover 45%; }
@@ -7430,48 +7432,9 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
   transition-duration: 260ms;
 }
 
-/* Replace the earlier showcase-like Beranda motion with three quiet moments: Programs, one
-   documentary frame, and the closing release. The existing Program observer only swaps photos. */
-@supports (animation-timeline: scroll()) {
-  .home-page .hero-campaign { animation: none; }
-
-  .home-page .hero-campaign-copy,
-  .home-page .hero-campaign-dots { animation: none; }
-
-  .home-page .hero-next { animation: hero-next-in .6s .4s var(--ease) both; }
-}
-
+/* Beranda keeps its own Dash/ONTO scroll motion above; this stage only frames Tentang and Kisah. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .home-page .impact-editorial-copy h2,
-    .home-page .impact-editorial-copy > :is(.impact-editorial-kicker, p),
-    .home-page .impact-editorial-stat,
-    .home-page .impact-editorial-image { animation: none; }
-
-    .home-page :is(.impact-editorial-image, .kisah-preview .kisah-entry-featured .kisah-image-link) img {
-      scale: 1;
-      animation: none;
-    }
-
-    .home-page .home-about-teaser .editorial-photo {
-      animation: editorial-frame-open 260ms var(--ease) both;
-      animation-timeline: view();
-      animation-range: entry 15% entry 55%;
-    }
-
-    .home-page .home-about-teaser .editorial-photo img {
-      scale: 1.015;
-      animation: editorial-photo-settle 260ms var(--ease) both;
-      animation-timeline: view();
-      animation-range: entry 15% entry 55%;
-    }
-
-    .home-page .home-closing-section .home-closing {
-      animation: editorial-close-in 240ms var(--ease) both;
-      animation-timeline: view();
-      animation-range: entry 10% entry 45%;
-    }
-
     .about-page .about-story-documentary {
       animation: editorial-frame-open 260ms var(--ease) both;
       animation-timeline: view();
@@ -7489,15 +7452,6 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
 @keyframes editorial-frame-open {
   from { clip-path: inset(0 4% 0 4%); opacity: .88; }
   to { clip-path: inset(0); opacity: 1; }
-}
-
-@keyframes editorial-photo-settle {
-  to { scale: 1; }
-}
-
-@keyframes editorial-close-in {
-  from { opacity: .88; translate: 0 8px; }
-  to { opacity: 1; translate: 0 0; }
 }
 
 @media (min-width: 1024px) {
@@ -7563,9 +7517,6 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
     opacity: 1;
   }
 
-  .home-page .home-about-teaser .editorial-photo,
-  .home-page .home-about-teaser .editorial-photo img,
-  .home-page .home-closing-section .home-closing,
   .about-page .about-story-documentary,
   .kisah-page .kisah-latest-story > .kisah-image-link {
     animation: none;
