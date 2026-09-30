@@ -7367,23 +7367,21 @@ h3 {
   .home-motion .site-header.is-tucked { transform: translateY(-100%); }
 }
 
-/* Scroll depth on Beranda (Oct 2026, after studio-onto.com): as the page scrolls, the hero recedes
-   (sinks slower than the scroll, shrinks into a rounded frame) while Jejak slides up over it, its
-   copy fades first, and a few photos drift inside their frames. CSS scroll-driven animations only;
-   browsers without them (Firefox, older Safari) keep the static page. Individual translate/scale
-   properties leave the existing hover zooms (transform) untouched. */
-@supports (animation-timeline: scroll()) {
+/* Scroll depth on Beranda (Oct 2026, after studio-onto.com). Hero → Jejak: js/script.js eases
+   --hero-depth (0 → 1 over the first screen) toward the scroll position, so the hero sinks at 30%
+   of the scroll speed and its copy fades while Jejak slides over it as a rounded sheet; nothing
+   scales, so it stays smooth on weak phones. A few photos drift inside their frames (CSS
+   scroll-driven, where supported). Individual translate/scale leave hover zooms untouched. */
+html.home-motion .home-page .hero-campaign { translate: 0 calc(var(--hero-depth, 0) * 30vh); }
+html.home-motion .home-page :is(.hero-campaign-copy, .hero-campaign-dots, .hero-next) { opacity: calc(1 - var(--hero-depth, 0) * 2.2); translate: 0 calc(var(--hero-depth, 0) * -60px); }
+html.home-motion .home-page .hero-next { animation-fill-mode: backwards; }
+html.home-motion .home-page .impact-editorial { position: relative; z-index: 1; border-radius: 28px 28px 0 0; box-shadow: 0 -24px 60px rgba(33, 12, 16, .28); }
+@media (max-width: 767px) { html.home-motion .home-page .impact-editorial { border-radius: 20px 20px 0 0; } }
+@supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .home-page .hero-campaign { transform-origin: 50% 0; animation: hero-recede linear both; animation-timeline: scroll(root); animation-range: 0 100vh; }
-    .home-page .impact-editorial { position: relative; z-index: 1; }
-    .home-page .hero-campaign-copy,
-    .home-page .hero-campaign-dots { animation: hero-copy-out linear both; animation-timeline: scroll(root); animation-range: 0 45vh; }
-    .home-page .hero-next { animation: hero-next-in .6s .4s var(--ease) both, hero-copy-out linear both; animation-timeline: auto, scroll(root); animation-range: normal, 0 45vh; }
     .home-page :is(.impact-editorial-image, .home-about-teaser .editorial-photo, .kisah-preview .kisah-entry-featured .kisah-image-link) img { scale: 1.12; animation: photo-drift linear both; animation-timeline: view(); animation-range: cover; }
   }
 }
-@keyframes hero-recede { to { translate: 0 22vh; scale: .92; border-radius: 28px; } }
-@keyframes hero-copy-out { to { opacity: 0; translate: 0 -48px; } }
 @keyframes photo-drift { from { translate: 0 -5%; } to { translate: 0 5%; } }
 
 /* Beranda loader (Oct 2026, after studio-onto.com). js/loader-gate.js adds html.loader-on only when

@@ -187,12 +187,12 @@ Lainnya:
   melayang di baris bawah hero (absolute, jadi tidak menggeser judul): desktop kanan bawah, ≤1023px kiri
   bawah (titik slider di kanan). Tanpa kegiatan/gagal fetch = tersembunyi. Layar loading/intro sengaja
   tidak dibuat (pengunjung HP dari IG/WA, PageSpeed).
-- Kedalaman scroll Beranda (Okt 2026, ref. studio-onto.com): CSS scroll-driven animation (`animation-timeline`,
-  dalam `@supports` + tanpa reduced motion). Hero (`.hero-campaign`) selama 100vh pertama turun 22vh lebih lambat
-  dari scroll, mengecil ke .92 dan membulat 28px; `.impact-editorial` (z-index 1) meluncur menutupinya. Copy hero,
-  titik slider, dan strip "Berikutnya" memudar + naik 48px dalam 45vh pertama. Foto Jejak, foto Tentang, dan foto
-  kisah utama bergeser ±5% di bingkainya (`scale` 1.12, `translate`; properti terpisah supaya zoom hover
-  `transform` tetap jalan). Firefox/Safari lama: diam. Lenis/smooth scroll sengaja tidak dipakai.
+- Kedalaman scroll Beranda (Okt 2026, ref. studio-onto.com; dirombak karena terasa kaku): JS (`js/script.js`,
+  blok home-motion) mengisi `--hero-depth` 0→1 selama 100vh pertama dengan *lerp* (.14 per frame) supaya
+  loncatan roda mouse meluncur halus tanpa membajak scroll (Lenis sengaja tidak dipakai). Hero turun 30vh
+  lebih lambat, copy/titik/strip memudar + naik 60px; `.impact-editorial` = lembaran krem (z-index 1, sudut
+  atas 28px / HP 20px, bayangan) yang naik menutupi hero. Tidak ada yang di-`scale` (ringan di HP lemah).
+  Foto Jejak, Tentang, kisah utama tetap bergeser ±5% (CSS scroll-driven, `scale` 1.12; Firefox/Safari lama diam).
 - Loader Beranda (Okt 2026, ref. studio-onto.com, disetujui dengan syarat): `js/loader-gate.js` (render-blocking
   di `<head>` index.html, sengaja) menambah `html.loader-on` hanya kalau Beranda halaman pertama kunjungan
   (`sessionStorage kb_visit`, diisi `script.js` di setiap halaman) dan motion diizinkan. `.kb-loader`: panel maroon,

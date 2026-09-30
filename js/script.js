@@ -887,6 +887,23 @@ if (homeMotion) {
     else if (y < lastY - 4 || y <= 160) header?.classList.remove('is-tucked');
     lastY = y;
   }, { passive: true });
+  // Hero → Jejak: the hero sinks slower than the page while Jejak slides over it like a sheet. The
+  // progress eases toward the scroll position, so wheel notches glide instead of stepping.
+  const hero = document.querySelector('.home-page .hero-campaign');
+  if (hero) {
+    const goal = () => Math.min(Math.max(window.scrollY / window.innerHeight, 0), 1);
+    let depth = goal();
+    let frame = 0;
+    const step = () => {
+      const target = goal();
+      depth += (target - depth) * .14;
+      if (Math.abs(target - depth) < .0005) depth = target;
+      hero.style.setProperty('--hero-depth', depth.toFixed(4));
+      frame = depth === target ? 0 : requestAnimationFrame(step);
+    };
+    window.addEventListener('scroll', () => { if (!frame) frame = requestAnimationFrame(step); }, { passive: true });
+    step();
+  }
 }
 
 // Any page seen in this visit means Beranda's loader (js/loader-gate.js) is skipped from now on.
