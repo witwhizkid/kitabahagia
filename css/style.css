@@ -7433,10 +7433,12 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
 /* Replace the earlier showcase-like Beranda motion with three quiet moments: Programs, one
    documentary frame, and the closing release. The existing Program observer only swaps photos. */
 @supports (animation-timeline: scroll()) {
-  .home-page .hero-campaign,
+  .home-page .hero-campaign { animation: none; }
+
   .home-page .hero-campaign-copy,
-  .home-page .hero-campaign-dots,
-  .home-page .hero-next { animation-timeline: auto; }
+  .home-page .hero-campaign-dots { animation: none; }
+
+  .home-page .hero-next { animation: hero-next-in .6s .4s var(--ease) both; }
 }
 
 @supports (animation-timeline: view()) {
