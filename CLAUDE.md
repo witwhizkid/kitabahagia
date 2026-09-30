@@ -185,6 +185,8 @@ Lainnya:
   versi lama (tim Desain tidak mau kotak maroon di tab). `favicon-192.png` = logo maroon transparan
   dengan padding 12% supaya tidak terpotong lingkaran di hasil Google (dulu mepet tepi).
   `apple-touch-icon.png` tetap logo putih di kotak maroon (ikon layar HP butuh latar penuh).
+  Link favicon memakai `?v=2`; kalau file favicon diganti lagi, naikkan angkanya (Chrome menyimpan
+  favicon di cache terpisah yang tidak ikut Ctrl+Shift+R).
 - SEO beranda: JSON-LD `WebSite` + `NGO` (nama, logo 320, email, `sameAs` IG/TikTok/LinkedIn) di
   `<head>` `index.html` + `og:site_name`. JSON-LD bukan skrip yang dijalankan, jadi aman dari CSP
   (dicek: tanpa "Refused"). Search Console sudah terverifikasi (domain), sitemap sudah dikirim.
