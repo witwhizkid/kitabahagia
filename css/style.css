@@ -7367,6 +7367,25 @@ h3 {
   .home-motion .site-header.is-tucked { transform: translateY(-100%); }
 }
 
+/* Scroll depth on Beranda (Oct 2026, after studio-onto.com): as the page scrolls, the hero recedes
+   (sinks slower than the scroll, shrinks into a rounded frame) while Jejak slides up over it, its
+   copy fades first, and a few photos drift inside their frames. CSS scroll-driven animations only;
+   browsers without them (Firefox, older Safari) keep the static page. Individual translate/scale
+   properties leave the existing hover zooms (transform) untouched. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .home-page .hero-campaign { transform-origin: 50% 0; animation: hero-recede linear both; animation-timeline: scroll(root); animation-range: 0 100vh; }
+    .home-page .impact-editorial { position: relative; z-index: 1; }
+    .home-page .hero-campaign-copy,
+    .home-page .hero-campaign-dots { animation: hero-copy-out linear both; animation-timeline: scroll(root); animation-range: 0 45vh; }
+    .home-page .hero-next { animation: hero-next-in .6s .4s var(--ease) both, hero-copy-out linear both; animation-timeline: auto, scroll(root); animation-range: normal, 0 45vh; }
+    .home-page :is(.impact-editorial-image, .home-about-teaser .editorial-photo, .kisah-preview .kisah-entry-featured .kisah-image-link) img { scale: 1.12; animation: photo-drift linear both; animation-timeline: view(); animation-range: cover; }
+  }
+}
+@keyframes hero-recede { to { translate: 0 22vh; scale: .92; border-radius: 28px; } }
+@keyframes hero-copy-out { to { opacity: 0; translate: 0 -48px; } }
+@keyframes photo-drift { from { translate: 0 -5%; } to { translate: 0 5%; } }
+
 /* Transactional radius exception: welcoming registration flow, isolated from editorial cards. */
 .registration-page .registration-summary-sticky { border-radius: 26px; }
 

@@ -183,6 +183,12 @@ Lainnya:
   melayang di baris bawah hero (absolute, jadi tidak menggeser judul): desktop kanan bawah, ≤1023px kiri
   bawah (titik slider di kanan). Tanpa kegiatan/gagal fetch = tersembunyi. Layar loading/intro sengaja
   tidak dibuat (pengunjung HP dari IG/WA, PageSpeed).
+- Kedalaman scroll Beranda (Okt 2026, ref. studio-onto.com): CSS scroll-driven animation (`animation-timeline`,
+  dalam `@supports` + tanpa reduced motion). Hero (`.hero-campaign`) selama 100vh pertama turun 22vh lebih lambat
+  dari scroll, mengecil ke .92 dan membulat 28px; `.impact-editorial` (z-index 1) meluncur menutupinya. Copy hero,
+  titik slider, dan strip "Berikutnya" memudar + naik 48px dalam 45vh pertama. Foto Jejak, foto Tentang, dan foto
+  kisah utama bergeser ±5% di bingkainya (`scale` 1.12, `translate`; properti terpisah supaya zoom hover
+  `transform` tetap jalan). Firefox/Safari lama: diam. Lenis/smooth scroll sengaja tidak dipakai.
 - Hero beranda: foto slide aktif zoom pelan 1.08→1 (7 s) dan judul muncul dengan
   wipe atas→bawah (`hero-title-in`); HP/tablet hanya teks slide pertama. Mati saat
   reduced motion.
