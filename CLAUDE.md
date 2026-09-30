@@ -152,6 +152,10 @@ Lainnya:
   (masyarakat_reguler / adventure_unique / impactful_action, diisi di form Kegiatan) dan
   `stories.event_id` (Kegiatan terkait di form Kisah, `on delete set null`). Data lama
   tidak diisi otomatis; halaman publik belum memakainya.
+- Navigasi publik di HP tetap hamburger (keputusan user Okt 2026): tab bar bawah ala admin ditolak
+  (7 menu, makan layar, numpuk dengan bar Safari). Tombol "Jadwal" krem di header juga ditolak (terlalu
+  ramai). Cadangan kalau uji coba tim menunjukkan orang susah menemukan Jadwal: ikon kalender di
+  sebelah hamburger, atau kotak "Lihat jadwal kegiatan" di dalam menu.
 - Transisi antarhalaman: `@view-transition` fade .3s (mati saat reduced motion).
   Angka Jejak beranda 2×2 di semua lebar dan menghitung naik sekali saat terlihat
   (tahun tidak); label pakai `.impact-editorial-stat > span` supaya span di dalam
