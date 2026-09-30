@@ -4663,7 +4663,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .kisah-archive-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; padding-top: 26px; border-top: 1px solid var(--line); }
 .kisah-archive-heading h2 { margin: 0; font-size: 21px; font-weight: 600; }
 .kisah-archive-heading > span { color: var(--muted); font-size: 13px; }
-.kisah-archive-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 48px 28px; }
+.kisah-archive-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 48px 28px; margin-top: 28px; }
 .kisah-archive-grid.has-two-stories { grid-template-columns: repeat(2,minmax(0,1fr)); }
 .kisah-archive-grid.has-one-story { grid-template-columns: minmax(0,1fr); max-width: 980px; }
 .kisah-archive-grid.has-one-story .kisah-entry { display: grid; grid-template-columns: minmax(280px,1.1fr) minmax(0,.9fr); column-gap: 36px; align-items: start; }
@@ -4713,7 +4713,6 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .event-gallery-drive { width: 100%; justify-content: center; }
 }
 .story-detail-more { margin-top: 88px; }
-.story-detail-more .kisah-archive-grid { margin-top: 28px; }
 /* Wide screens: photo stays in view on the left while the text scrolls on the right (Kinfolk-like). */
 @media (min-width: 900px) {
   .story-detail-layout.has-cover { display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1fr); gap: 64px; align-items: start; margin-top: 52px; }
