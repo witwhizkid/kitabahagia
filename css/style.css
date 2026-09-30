@@ -7413,8 +7413,8 @@ html.loader-skip .kb-loader { animation: loader-open .4s cubic-bezier(.65, 0, .3
 /* Portal: after the mark is drawn it becomes a window. The panel is masked by the logo shape
    (exclude), the hole grows past the screen and the hero photo shows through it. */
 @supports (mask-composite: exclude) {
-  html.loader-portal .kb-loader { mask: url("../assets/logo/loader-mask.webp") center / 0 0 no-repeat, linear-gradient(#000 0 0); mask-composite: exclude; animation: loader-portal .75s .02s cubic-bezier(.7, 0, .84, 0) forwards; }
-  html.loader-portal:not(.loader-skip) .kb-loader-mark { animation: loader-mark-hide 0s .02s forwards; }
+  html.loader-portal .kb-loader { mask: url("../assets/logo/loader-mask.webp") center / 0 0 no-repeat, linear-gradient(#000 0 0); mask-composite: exclude; animation: loader-portal .75s .88s cubic-bezier(.7, 0, .84, 0) forwards; }
+  html.loader-portal:not(.loader-skip) .kb-loader-mark { animation: loader-mark-hide 0s .88s forwards; }
   html.loader-portal.loader-skip .kb-loader { animation: loader-open .4s cubic-bezier(.65, 0, .35, 1) forwards; }
 }
 @keyframes loader-portal {
@@ -7425,7 +7425,7 @@ html.loader-skip .kb-loader { animation: loader-open .4s cubic-bezier(.65, 0, .3
 @keyframes loader-mark-hide { to { opacity: 0; } }
 html.loader-landing:not(.loader-skip) .kb-loader { animation: loader-fade .55s .25s ease forwards; }
 html.loader-landing:not(.loader-skip) .kb-loader-mark { animation: loader-land .6s cubic-bezier(.65, 0, .35, 1) forwards; }
-html.loader-land .home-page .hero-slide:first-child .hero-pill { animation-delay: 1.3s; } /* set at 0.86s; delay still counts from page load */
+html.loader-land .home-page .hero-slide:first-child .hero-pill { animation-delay: 1.3s; }
 @keyframes loader-fade { to { opacity: 0; visibility: hidden; } }
 @keyframes loader-land { 80% { opacity: 1; } to { transform: translate(var(--land-x), var(--land-y)) scale(var(--land-s)); opacity: 0; } }
 @media (min-width: 900px) { @keyframes loader-portal { 0% { mask-size: 128px auto, auto; } 75% { opacity: 1; } 100% { mask-size: 5200px auto, auto; opacity: 0; visibility: hidden; } } }
