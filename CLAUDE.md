@@ -65,7 +65,8 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
   baris), ikon lokasi/tanggal, harga + sisa slot, dan teks ajakan "Daftar →" / "Lihat detail →" di
   kanan bawah (tanda bisa diklik di HP). Seluruh kartu bisa diklik (stretched link di judul); ditekan
   mengecil .98; hover desktop naik 4px + border maroon + panah bergeser (mati saat reduced motion). Desktop/tablet
-  3 kolom; HP: beranda kartu geser, Jadwal kartu mendatar (poster 118px di kiri). Hover hanya di
+  3 kolom; HP: beranda kartu geser, Jadwal kartu mendatar (poster 118px di kiri, setinggi kartu,
+  `cover` dari atas supaya tidak ada ruang kosong di bawah foto; poster 4:5 terpotong sisi kiri-kanan). Hover hanya di
   `@media (hover:hover)`.
 - Badge poster (`eventPhotoBadge`): label gelap "Kuota penuh" / "Ditutup" / "Selesai"; poster
   hitam-putih **hanya** untuk kuota penuh (keputusan user Okt 2026: kegiatan selesai/ditutup tetap berwarna); buka dan tutup ≤7 hari = label maroon "N hari lagi"/"Besok"/
