@@ -856,7 +856,8 @@ if (homeMotion) {
       inView.unobserve(entry.target);
     });
   }, { threshold: 0.25 });
-  document.querySelectorAll('.home-page main > section:not(.hero-campaign) h2').forEach((heading) => {
+  // Jejak's title is left whole: it settles from a large size on scroll instead (style.css).
+  document.querySelectorAll('.home-page main > section:not(.hero-campaign, .impact-editorial) h2').forEach((heading) => {
     if (heading.getBoundingClientRect().top < window.innerHeight) return;
     heading.setAttribute('aria-label', heading.textContent.replace(/\s+/g, ' ').trim());
     splitWords(heading, { index: 0 });
@@ -887,6 +888,9 @@ if (homeMotion) {
     lastY = y;
   }, { passive: true });
 }
+
+// Any page seen in this visit means Beranda's loader (js/loader-gate.js) is skipped from now on.
+try { sessionStorage.setItem('kb_visit', '1'); } catch { /* storage blocked: the gate treats that as seen */ }
 
 // Page curtain (after dashdigital.studio): on an internal link click a maroon panel rises at once and
 // the KB logo fades in, then the browser navigates behind it. The cross-document view transition in
