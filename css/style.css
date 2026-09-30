@@ -6556,7 +6556,9 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   /* Schedule on phones: compact horizontal cards (poster left, details right). */
   .schedule-grid.event-card-grid { grid-template-columns:1fr; gap:14px; padding-top:20px; }
   .event-card-grid .event-card { flex-direction:row; }
-  .event-card-grid .event-card-photo { flex:0 0 118px; align-self:flex-start; }
+  /* Photo fills the card height (no empty strip under it); cropped from the top so poster headlines stay. */
+  .event-card-grid .event-card-photo { flex:0 0 118px; align-self:stretch; aspect-ratio:auto; min-height:148px; }
+  .event-card-grid .event-card-photo img { object-fit:cover; object-position:center top; }
   .event-card-grid .event-card-body { padding:12px 14px 14px; }
   .event-card-grid .event-card .event-title { margin:6px 0 10px; font-size:17px; line-height:1.25; }
   .event-card-grid .event-card-meta { gap:6px; font-size:13px; }
