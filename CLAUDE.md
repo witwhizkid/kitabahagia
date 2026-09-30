@@ -165,7 +165,10 @@ Lainnya:
   hanya `hover:hover`); header HP/tablet (≤1023px) sembunyi saat scroll ke bawah (`.is-tucked`), muncul lagi
   saat scroll ke atas. Sengaja **tidak** diambil: WebGL/three.js (berat, PageSpeed), smooth-scroll, durasi
   1,5–2,4 s. Tinggi judul sama persis dengan versi tanpa animasi (dicek).
-- Transisi antarhalaman: `@view-transition` fade .3s (mati saat reduced motion).
+- Transisi antarhalaman (Okt 2026, ala tirai dashdigital.studio): `@view-transition` lintas halaman, halaman
+  lama terangkat 6% + meredup di atas latar maroon (`::view-transition`), halaman baru menyapu naik dari
+  bawah (clip-path, .75s); header tetap diam (`view-transition-name: site-header`). Chrome/Edge/Safari 18.2+;
+  Firefox pindah biasa. Mati saat reduced motion.
   Angka Jejak beranda 2×2 di semua lebar dan menghitung naik sekali saat terlihat
   (tahun tidak); label pakai `.impact-editorial-stat > span` supaya span di dalam
   angka tidak ikut mengecil.

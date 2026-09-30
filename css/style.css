@@ -224,9 +224,17 @@
 }
 
 /* Soft cross-fade between pages of this site; browsers without support just navigate normally. */
+/* Page-to-page "curtain" (Oct 2026, after dashdigital.studio): the old page lifts and dims over a
+   maroon backdrop, the new page wipes up from the bottom; the header stays put. Browsers without
+   cross-document view transitions (Firefox) just navigate. */
 @view-transition { navigation: auto; }
-::view-transition-old(root),
-::view-transition-new(root) { animation-duration: .3s; }
+.site-header { view-transition-name: site-header; }
+::view-transition { background: var(--maroon); }
+::view-transition-old(root) { animation: kb-page-out .55s cubic-bezier(.65, 0, .35, 1) both; }
+::view-transition-new(root) { animation: kb-page-in .75s .12s cubic-bezier(.24, .36, 0, 1) both; }
+::view-transition-group(site-header) { animation-duration: .3s; }
+@keyframes kb-page-out { to { transform: translateY(-6%); opacity: .35; } }
+@keyframes kb-page-in { from { transform: translateY(8%); clip-path: inset(100% 0 0 0); } to { transform: none; clip-path: inset(0); } }
 
 @media (prefers-reduced-motion: reduce) {
   @view-transition { navigation: none; }
