@@ -4566,7 +4566,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .kisah-section-heading p { max-width: 51ch; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.7; }
 .kisah-section-heading > a { flex-shrink: 0; }
 .kisah-grid { display: grid; gap: 36px 28px; }
-.kisah-preview-grid { grid-template-columns: minmax(0,1.45fr) minmax(280px,.75fr); gap: 52px; align-items: start; }
+.kisah-preview-grid { grid-template-columns: minmax(0,1.45fr) minmax(280px,.75fr); gap: 52px; align-items: start; margin-top: 40px; }
 .kisah-secondary-list { display: grid; gap: 34px; }
 .kisah-entry-featured .kisah-image-link > img { aspect-ratio: 3 / 2; }
 .kisah-entry-secondary { display: grid; grid-template-columns: minmax(120px,.8fr) minmax(0,1.2fr); column-gap: 20px; align-items: start; padding-top: 24px; border-top: 1px solid var(--line); }
@@ -7300,12 +7300,12 @@ h3 {
 .home-page .hero-campaign-copy .hero-pill {
   display: inline-block;
   margin-left: -.02em;
-  padding: 0 .2em .08em .14em;
+  padding: .32em .2em .1em .14em;
   border-radius: .18em;
   background: linear-gradient(var(--maroon), var(--maroon)) left / 100% 100% no-repeat;
   color: var(--cream);
   font-size: 1.06em;
-  line-height: .95;
+  line-height: .5;
   letter-spacing: -.02em;
 }
 .home-page .hero-slide.active .hero-pill { animation: hero-pill-fill .8s .75s cubic-bezier(.65, 0, .35, 1) both; }
@@ -7346,8 +7346,9 @@ h3 {
 
 /* Homepage motion (Oct 2026, after dashdigital.studio). Classes come from JS, only on Beranda and
    never with reduced motion, so without JS every title, rule and button looks as before. */
-.home-motion .split-word { display: inline-block; overflow: hidden; vertical-align: bottom; padding: 0 .06em .14em 0; margin: 0 -.06em -.14em 0; }
-.home-motion .split-word > span { display: inline-block; transform: translateY(105%); transition: transform .9s cubic-bezier(.16, 1, .3, 1); transition-delay: calc(min(var(--word, 0), 12) * 55ms); }
+/* clip-path, not overflow:hidden: an overflow box aligns by its bottom edge, which lifted serif (Newsreader) words off the baseline. */
+.home-motion .split-word { display: inline-block; clip-path: inset(-.35em -.25em -.22em -.25em); }
+.home-motion .split-word > span { display: inline-block; transform: translateY(135%); transition: transform .9s cubic-bezier(.16, 1, .3, 1); transition-delay: calc(min(var(--word, 0), 12) * 55ms); }
 .home-motion .split-heading.is-in .split-word > span { transform: none; }
 .home-motion .draw-rule { border-top-color: transparent; background: linear-gradient(var(--line), var(--line)) 0 0 / 0 1px no-repeat; transition: background-size 1.1s cubic-bezier(.65, 0, .35, 1); }
 .home-motion .home-upcoming-list.draw-rule { background-image: linear-gradient(var(--ink), var(--ink)); background-size: 0 2px; }
