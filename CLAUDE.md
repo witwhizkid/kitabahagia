@@ -176,6 +176,9 @@ Lainnya:
   ibadah; CARTO butuh API key); "Lihat di peta" tetap ke Google Maps.
 - Logo header/footer semua halaman = `assets/logo/logo-kita-bahagia-320.webp` (13 KB); PNG
   2160px asli hanya untuk canvas (kalender, sertifikat). Foto Program beranda `loading="lazy"`.
+- Favicon (Okt 2026): pictorial KB di kotak maroon (#7B0A02), titik kuning + badan putih, padding 20%,
+  supaya tidak terpotong lingkaran di hasil Google (dulu logo transparan mepet tepi). File di
+  `assets/logo/` (ico 16/32/48, png 32/48/192, apple-touch 180); dibuat dari `0. Pictorial/1.png`.
 - Foto disajikan sebagai WebP yang sudah diperkecil; berkas mentah yang tidak
   dirujuk halaman publik tidak disimpan di `img/`.
 - Upload foto di admin dikompres di browser sebelum dikirim (`compressImage`
