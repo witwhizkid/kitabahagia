@@ -341,7 +341,10 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   `registrations.attended_at/attendance_marked_by`, RPC `mark_attendance`. Panel
   Detail pendaftar juga punya tombol "Tandai hadir"/"Batal hadir" (satu orang,
   aturan sama; nonaktif sebelum hari kegiatan). Detail:
-  "Attendance" di `supabase/README.md`.
+  "Attendance" di `supabase/README.md`. Okt 2026: status ketiga **Tidak hadir** (`absent_at`,
+  RPC `set_attendance` present/absent/clear): command bar "Tandai hadir · Tidak hadir · Kosongkan
+  tanda", ringkasan Hadir · Tidak hadir · Belum ditandai, CSV Ya/Tidak, pengingat Beranda sampai
+  semua terkonfirmasi ditandai. Sertifikat tetap hanya yang Hadir.
 - Tahap 2 **dibangun (Sep 2026)**: admin → tab **Sertifikat** = daftar tanda
   tangan (tabel `certificate_signers`, bucket privat `certificate-signatures`,
   Edge Function `admin-certificates`). Foto tanda tangan/stempel diubah jadi PNG

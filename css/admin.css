@@ -327,6 +327,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
 .registration-list .status-token.is-negative::before { background: #a33a3a; }
 .attendance-token { color: #294f32; font-size: .78rem; font-weight: 700; }
 .attendance-token::before { content: "✓ "; }
+.attendance-token.is-absent { color: var(--muted); }
+.attendance-token.is-absent::before { content: "✕ "; }
 .registration-payment.is-positive { color: #3f6b48; }
 .registration-payment.is-negative { color: #8c3030; }
 .applicant-dialog { position: fixed; inset: 0 0 0 auto; width: min(680px, 100%); max-width: 100%; height: 100dvh; max-height: 100dvh; margin: 0; padding: 0; border: 0; color: var(--ink); background: transparent; overflow: visible; }
@@ -725,7 +727,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
   }
   .toolbar-search { flex-basis: 100%; }
   .toolbar-select { flex: 1 1 calc(50% - 4px); }
-  .registrant-total { margin-left: 0; }
+  .registrant-total { margin-left: 0; white-space: normal; }
   .toolbar-export { margin-left: auto; }
   /* Phone: stacked compact rows (name + status, event, meta + Detail); no column header. */
   .registration-head { display: flex; padding: 6px 0; border-top: 0; }

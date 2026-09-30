@@ -269,6 +269,25 @@ the CSV has a "Hadir" column. **Deploy order:** migration first, then
 `supabase/rollback/20261006010000_registration_attendance.down.sql` (this
 deletes the attendance marks).
 
+"Tidak hadir" (migration `20261015010000_registration_absence.sql`) makes it
+three states: `registrations.absent_at` (never set together with
+`attended_at`, check constraint) and `set_attendance(codes[], state, actor)`
+with state `present` | `absent` | `clear`, same rules as above;
+`mark_attendance` stays as a wrapper (true = present, false = clear).
+`admin-registrations` returns `absent_at` and now accepts
+`POST { registration_codes, attendance: "present" | "absent" | "clear" }`
+(the old `attended` body is rejected); the response adds `absent`. Admin: the
+command bar has "Tandai hadir" / "Tidak hadir" / "Kosongkan tanda", rows show
+"✕ Tidak hadir", the summary counts Hadir · Tidak hadir · Belum ditandai, the
+Detail panel has both buttons (clicking the current state clears it), the CSV
+"Hadir" column says Ya / Tidak, and the Beranda reminder stays until every
+confirmed registrant is marked. Certificates still use `attended_at` only.
+**Deploy order:** migration, then `admin-registrations`, then the site (between
+the last two, the old admin page cannot save attendance). Rollback: previous
+`admin-registrations`, then
+`supabase/rollback/20261015010000_registration_absence.down.sql` (deletes the
+"Tidak hadir" marks, restores the two-state `mark_attendance`).
+
 ## Certificate signers ("Sertifikat" → daftar tanda tangan)
 
 Migration `20261007010000_certificate_signers.sql` adds

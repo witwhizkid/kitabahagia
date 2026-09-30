@@ -44,6 +44,7 @@ const registrationProjection = [
   "portfolio_url",
   "selection_decided_at",
   "attended_at",
+  "absent_at",
   "registration_status",
   "payment_status",
   "payment_deadline",
@@ -66,6 +67,7 @@ const attendanceErrors: Record<string, [number, string]> = {
   EVENT_NOT_STARTED: [409, "Kehadiran baru bisa ditandai mulai hari kegiatan."],
   INVALID_REQUEST: [400, "Pilih pendaftar dari satu kegiatan saja."],
 };
+const attendanceStates = new Set(["present", "absent", "clear"]);
 const paymentStatuses = new Set(["not_required", "unpaid", "pending", "paid", "failed", "expired", "refunded"]);
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -160,18 +162,18 @@ Deno.serve(async (request) => {
   });
 
   // POST: accept / waitlist / reject / reset applicants of one selection event, or
-  // mark / unmark attendance ({ attended: true | false }) for registrants of one event.
+  // set attendance ({ attendance: "present" | "absent" | "clear" }) for registrants of one event.
   if (request.method === "POST") {
     const body = await request.json().catch(() => null) as Record<string, unknown> | null;
     const codes = body?.registration_codes;
     const validCodes = Array.isArray(codes) && codes.length >= 1 && codes.length <= 500
       && codes.every((code) => typeof code === "string" && registrationCodePattern.test(code));
-    if (body && typeof body === "object" && !Array.isArray(body) && "attended" in body) {
-      if (Object.keys(body).some((key) => !["registration_codes", "attended"].includes(key))
-        || !validCodes || typeof body.attended !== "boolean") {
+    if (body && typeof body === "object" && !Array.isArray(body) && "attendance" in body) {
+      if (Object.keys(body).some((key) => !["registration_codes", "attendance"].includes(key))
+        || !validCodes || typeof body.attendance !== "string" || !attendanceStates.has(body.attendance)) {
         return fail(400, "INVALID_REQUEST", "Data kehadiran tidak valid.");
       }
-      const response = await rpc("mark_attendance", { p_registration_codes: codes, p_attended: body.attended, p_actor: adminId });
+      const response = await rpc("set_attendance", { p_registration_codes: codes, p_state: body.attendance, p_actor: adminId });
       const result = await response.json().catch(() => null) as Record<string, unknown> | null;
       if (response.ok && result) return json(200, { registrations: [], total: 0, attendance: result });
       const code = typeof result?.message === "string" ? result.message : "";

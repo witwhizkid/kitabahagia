@@ -302,11 +302,13 @@
     });
   };
 
-  const attendanceRequest = (registration_codes, attended) => authorizedRequest(adminRegistrationsUrl, {
+  // attendance: "present" | "absent" | "clear" (back to not marked).
+  const attendanceRequest = (registration_codes, attendance) => authorizedRequest(adminRegistrationsUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ registration_codes, attended }),
+    body: JSON.stringify({ registration_codes, attendance }),
   });
+  const attendanceState = (registration) => registration.attended_at ? "present" : registration.absent_at ? "absent" : "";
 
   const adminUsersRequest = (method = "GET", body) => authorizedRequest(adminUsersUrl, {
     method,
@@ -540,7 +542,8 @@
           <div class="registration-state">
             <span class="status-token ${statusTone(registrationStatus)}">${escapeHtml(selectionStatus)}</span>
             ${showPayment ? `<span class="registration-sub registration-payment ${statusTone(paymentStatus)}">${escapeHtml(paymentStatusLabels[paymentStatus] || paymentStatus)}</span>` : ""}
-            ${registration.attended_at && registrationStatus === "confirmed" ? '<span class="attendance-token">Hadir</span>' : ""}
+            ${registrationStatus !== "confirmed" ? "" : registration.attended_at ? '<span class="attendance-token">Hadir</span>'
+              : registration.absent_at ? '<span class="attendance-token is-absent">Tidak hadir</span>' : ""}
             ${isSelectionEvent ? `<span class="applicant-history">${historyCount ? `Pernah ikut ${historyCount}×` : "Peserta baru"}</span>` : ""}
           </div>
           <div class="registration-date">
@@ -554,12 +557,14 @@
     renderSelectionTools();
     const confirmedRows = registrations.filter((item) => item.registration_status === "confirmed" && !item.payment_expired);
     const attendedRows = confirmedRows.filter((item) => item.attended_at).length;
+    const absentRows = confirmedRows.filter((item) => item.absent_at).length;
+    const unmarkedRows = confirmedRows.length - attendedRows - absentRows;
     const attendanceSummary = $("#attendance-summary");
     attendanceSummary.hidden = !isBulk;
     // Counted from the rows shown, so say so when a search or status filter narrows them.
     const narrowed = ["#registration-search", "#registration-status-filter", "#payment-status-filter"]
       .some((selector) => $(selector).value.trim() !== "");
-    attendanceSummary.textContent = ` · Hadir ${attendedRows} dari ${confirmedRows.length} terkonfirmasi${narrowed ? " (sesuai filter)" : ""}`;
+    attendanceSummary.textContent = ` · Hadir ${attendedRows} · Tidak hadir ${absentRows}${unmarkedRows ? ` · Belum ditandai ${unmarkedRows}` : ""} dari ${confirmedRows.length} terkonfirmasi${narrowed ? " (sesuai filter)" : ""}`;
     document.querySelectorAll("[data-selection-bulk]").forEach((button) => { button.hidden = !isSelectionEvent; });
     const selectAll = $("#selection-select-all");
     selectAll.checked = false;
@@ -809,7 +814,8 @@
       appendApplicantField("Batas pembayaran", formatDateTime(applicant.payment_deadline));
     }
     if (status === "confirmed") {
-      appendApplicantField("Kehadiran", applicant.attended_at ? `Hadir · ditandai ${formatDateTime(applicant.attended_at)}` : "Belum ditandai hadir");
+      appendApplicantField("Kehadiran", applicant.attended_at ? `Hadir · ditandai ${formatDateTime(applicant.attended_at)}`
+        : applicant.absent_at ? `Tidak hadir · ditandai ${formatDateTime(applicant.absent_at)}` : "Belum ditandai");
     }
     const outcomes = isSelectionEvent && ["confirmed", "waitlisted", "rejected"].includes(status);
     applicantDialog.querySelector(".applicant-selection-actions").hidden = !isSelectionEvent;
@@ -817,14 +823,20 @@
     const waButton = applicantDialog.querySelector("[data-applicant-whatsapp]");
     waButton.hidden = !outcomes;
     // Same rules as the bulk "Tandai hadir": confirmed registrants, from the event day (WIB).
-    const attendanceButton = applicantDialog.querySelector("[data-applicant-attendance]");
+    // Clicking the button of the current state clears it (back to not marked).
     const canMark = status === "confirmed";
     const eventStarted = Boolean(event.event_date) && event.event_date <= todayInJakarta();
-    attendanceButton.hidden = !canMark;
-    attendanceButton.textContent = applicant.attended_at ? "Batal hadir" : "Tandai hadir";
-    attendanceButton.className = `button ${applicant.attended_at ? "button-secondary" : "button-primary"}`;
-    attendanceButton.disabled = !eventStarted;
-    attendanceButton.title = eventStarted ? "" : "Kehadiran baru bisa ditandai mulai hari kegiatan.";
+    const currentAttendance = attendanceState(applicant);
+    applicantDialog.querySelectorAll("[data-applicant-attendance]").forEach((attendanceButton) => {
+      const state = attendanceButton.dataset.applicantAttendance;
+      const active = currentAttendance === state;
+      attendanceButton.hidden = !canMark;
+      attendanceButton.textContent = state === "present"
+        ? (active ? "Batal hadir" : "Tandai hadir") : (active ? "Batal tidak hadir" : "Tidak hadir");
+      attendanceButton.className = `button ${state === "present" && !currentAttendance ? "button-primary" : "button-secondary"}`;
+      attendanceButton.disabled = !eventStarted;
+      attendanceButton.title = eventStarted ? "" : "Kehadiran baru bisa ditandai mulai hari kegiatan.";
+    });
     applicantDialog.querySelector(".applicant-dialog-footer").hidden = !outcomes && !canMark;
     applicantDialog.querySelector('[data-applicant-nav="previous"]').disabled = applicantDialogIndex <= 0;
     applicantDialog.querySelector('[data-applicant-nav="next"]').disabled = applicantDialogIndex >= registrations.length - 1;
@@ -904,19 +916,25 @@
     }
   };
 
-  const markAttendance = async (codes, attended) => {
+  const attendanceCopy = {
+    present: { pending: "Menandai hadir…", done: "ditandai hadir", same: "sudah hadir" },
+    absent: { pending: "Menandai tidak hadir…", done: "ditandai tidak hadir", same: "sudah tidak hadir" },
+    clear: { pending: "Mengosongkan tanda kehadiran…", done: "dikosongkan tanda kehadirannya", same: "belum ditandai" },
+  };
+  const markAttendance = async (codes, state) => {
     const feedback = $("#registrations-feedback");
     if (!codes.length) return setFeedback(feedback, "Pilih setidaknya satu pendaftar.", "error");
-    setFeedback(feedback, attended ? "Menandai hadir…" : "Membatalkan tanda hadir…");
+    const copy = attendanceCopy[state];
+    setFeedback(feedback, copy.pending);
     selectionDecisionPending = true;
     syncSelectionDecisionControls();
     try {
-      const { attendance = {} } = await attendanceRequest(codes, attended);
+      const { attendance = {} } = await attendanceRequest(codes, state);
       const changed = Number(attendance.changed) || 0;
       const skipped = Number(attendance.skipped) || 0;
       const unchanged = Number(attendance.unchanged) || 0;
-      const parts = [`${changed} pendaftar ${attended ? "ditandai hadir" : "dibatalkan tanda hadirnya"}`];
-      if (unchanged) parts.push(`${unchanged} sudah ${attended ? "hadir" : "tidak bertanda hadir"} sebelumnya`);
+      const parts = [`${changed} pendaftar ${copy.done}`];
+      if (unchanged) parts.push(`${unchanged} ${copy.same} sebelumnya`);
       if (skipped) parts.push(`${skipped} dilewati karena belum terkonfirmasi`);
       $("#selection-select-all").checked = false;
       try {
@@ -943,7 +961,7 @@
       referralSourceLabels[applicant.referral_source] || applicant.referral_source, applicant.reason, applicant.selection_answer, applicant.portfolio_url,
       selectionEnabled() && applicant.registration_status === "confirmed"
         ? "Diterima" : registrationStatusLabels[applicant.registration_status] || applicant.registration_status,
-      applicant.attended_at && applicant.registration_status === "confirmed" ? "Ya" : "",
+      applicant.registration_status !== "confirmed" ? "" : applicant.attended_at ? "Ya" : applicant.absent_at ? "Tidak" : "",
       formatDateTime(applicant.created_at),
     ]);
     const csv = `\uFEFF${[columns, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n")}`;
@@ -1015,30 +1033,32 @@
   }));
   document.querySelectorAll("[data-attendance-bulk]").forEach((button) => button.addEventListener("click", () => {
     const codes = [...registrationsList.querySelectorAll("[data-applicant-select]:checked")].map((checkbox) => checkbox.value);
-    void markAttendance(codes, button.dataset.attendanceBulk === "true");
+    void markAttendance(codes, button.dataset.attendanceBulk);
   }));
   $("#registrations-export").addEventListener("click", exportRegistrationsCsv);
   applicantDialog.querySelector(".applicant-dialog-close").addEventListener("click", () => applicantDialog.close());
   applicantDialog.addEventListener("click", (event) => { if (event.target === applicantDialog) applicantDialog.close(); });
-  applicantDialog.querySelector("[data-applicant-attendance]").addEventListener("click", async (event) => {
+  applicantDialog.querySelectorAll("[data-applicant-attendance]").forEach((button) => button.addEventListener("click", async () => {
     const applicant = currentDialogApplicant();
     if (!applicant) return;
-    const button = event.currentTarget;
     const code = applicant.registration_code;
-    const attended = !applicant.attended_at;
+    const state = attendanceState(applicant) === button.dataset.applicantAttendance ? "clear" : button.dataset.applicantAttendance;
     const feedback = $("#applicant-dialog-feedback");
-    button.disabled = true;
-    setFeedback(feedback, attended ? "Menandai hadir…" : "Membatalkan tanda hadir…");
+    const buttons = applicantDialog.querySelectorAll("[data-applicant-attendance]");
+    buttons.forEach((item) => { item.disabled = true; });
+    setFeedback(feedback, attendanceCopy[state].pending);
     try {
-      await attendanceRequest([code], attended);
+      await attendanceRequest([code], state);
     } catch (error) {
-      button.disabled = false;
+      buttons.forEach((item) => { item.disabled = false; });
       setFeedback(feedback, error.message, "error");
       return;
     }
     // Show the result right away; the list refresh below brings the server's timestamp.
-    applicant.attended_at = attended ? new Date().toISOString() : null;
-    const done = attended ? "Ditandai hadir." : "Tanda hadir dibatalkan.";
+    const now = new Date().toISOString();
+    applicant.attended_at = state === "present" ? now : null;
+    applicant.absent_at = state === "absent" ? now : null;
+    const done = { present: "Ditandai hadir.", absent: "Ditandai tidak hadir.", clear: "Tanda kehadiran dikosongkan." }[state];
     if (applicantDialog.open && currentDialogApplicant()?.registration_code === code) renderApplicantDialog();
     setFeedback(feedback, done, "success");
     try {
@@ -1050,7 +1070,7 @@
       showApplicant(code);
       setFeedback($("#applicant-dialog-feedback"), done, "success");
     }
-  });
+  }));
   applicantDialog.querySelectorAll("[data-applicant-nav]").forEach((button) => button.addEventListener("click", () => moveApplicant(button.dataset.applicantNav === "previous" ? -1 : 1)));
   applicantDialog.querySelectorAll("[data-applicant-decision]").forEach((button) => button.addEventListener("click", () => {
     const applicant = currentDialogApplicant();
@@ -1759,8 +1779,8 @@
     if (daysFromToday(event.event_date) > 0 || sinceEnd > 30) return null;
     return { lifecycle: sinceEnd > 0 ? "history" : "active", certificates: sinceEnd >= CERTIFICATE_AFTER_DAYS };
   };
-  // Per-event checks so these tasks disappear once the work is done: nobody marked
-  // present yet (with confirmed registrants), or present volunteers without a certificate.
+  // Per-event checks so these tasks disappear once the work is done: confirmed
+  // registrants not marked present/absent yet, or present volunteers without a certificate.
   const loadHomeChecks = async () => {
     if (home.checksAt && Date.now() - home.checksAt < adminCacheTtl) return;
     const checks = new Map();
@@ -1768,16 +1788,17 @@
       const span = homeWindow(event);
       if (!span) return;
       try {
-        // Attendance first: until someone is marked present there is nothing to certify.
         const data = await registrationRequest({ event: event.slug, lifecycle: span.lifecycle, registration_status: "confirmed" });
         const rows = Array.isArray(data.registrations) ? data.registrations : [];
-        if (rows.length && !rows.some((row) => row.attended_at)) {
-          checks.set(event.slug, { kind: "attendance", lifecycle: span.lifecycle, count: rows.length });
-        } else if (span.certificates && rows.length) {
+        const check = {};
+        const unmarked = rows.filter((row) => !attendanceState(row)).length;
+        if (unmarked) check.attendance = { lifecycle: span.lifecycle, count: unmarked };
+        if (span.certificates && rows.some((row) => row.attended_at)) {
           const issue = await authorizedRequest(issueUrl({ event: event.slug }));
           const pending = (issue.recipients || []).filter((recipient) => !recipient.certificate?.issued_at).length;
-          if (pending) checks.set(event.slug, { kind: "certificate", count: pending });
+          if (pending) check.certificate = { count: pending };
         }
+        if (check.attendance || check.certificate) checks.set(event.slug, check);
       } catch {
         // A failed check only hides that one reminder.
       }
@@ -1793,11 +1814,11 @@
       const title = `<strong>${escapeHtml(event.title)}</strong>`;
       const untilStart = daysFromToday(event.event_date);
       const check = home.checks.get(event.slug);
-      if (check?.kind === "attendance") {
-        tasks.push({ tone: "attendance", text: `Tandai hadir ${check.count} relawan ${title}`, go: "registrations", event: event.slug, lifecycle: check.lifecycle });
+      if (check?.attendance) {
+        tasks.push({ tone: "attendance", text: `Tandai kehadiran ${check.attendance.count} relawan ${title}`, go: "registrations", event: event.slug, lifecycle: check.attendance.lifecycle });
       }
-      if (check?.kind === "certificate") {
-        tasks.push({ tone: "certificate", text: `${check.count} sertifikat ${title} belum diterbitkan`, go: "certificates", event: event.slug });
+      if (check?.certificate) {
+        tasks.push({ tone: "certificate", text: `${check.certificate.count} sertifikat ${title} belum diterbitkan`, go: "certificates", event: event.slug });
       }
       if (untilStart < 0) return;
       if (!event.is_public) tasks.push({ tone: "draft", text: `${title} belum tampil di website`, go: "edit", event: event.slug });
