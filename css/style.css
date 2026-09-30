@@ -7446,7 +7446,6 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
     .home-page .impact-editorial-copy h2 { transform-origin: 0 0; animation: jejak-title-settle linear both; animation-timeline: view(); animation-range: cover 0% cover 45%; }
     .home-page .impact-editorial-copy > :is(.impact-editorial-kicker, p),
     .home-page .impact-editorial-stat,
-    .home-page .impact-editorial-image { animation: jejak-rise linear both; animation-timeline: view(); animation-range: entry 30% cover 40%; }
   }
 }
 @keyframes jejak-title-settle { from { scale: 2; } }
@@ -7578,6 +7577,12 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
     translate: none;
   }
 }
+
+/* Block reveal (Oct 2026, after Eleos): the two key Beranda photos (Jejak, featured story) open in a 5×4 staircase of blocks from the top left, once, when they come into view. A
+   9-frame mask sprite stepped along; it replaces their plain fade, it is not added to other photos. */
+html.home-motion .block-reveal { mask: url("../img/block-mask.png") 0 0 / 900% 100% no-repeat; }
+html.home-motion .block-reveal.is-in { animation: block-reveal .72s steps(9, jump-none) forwards; }
+@keyframes block-reveal { to { mask-position: 100% 0; } }
 
 /* Transactional radius exception: welcoming registration flow, isolated from editorial cards. */
 .registration-page .registration-summary-sticky { border-radius: 26px; }

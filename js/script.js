@@ -893,6 +893,16 @@ if (homeMotion) {
   const fitFooter = () => document.documentElement.classList.toggle('footer-reveal', !!footer && footer.offsetHeight < window.innerHeight - 40);
   fitFooter();
   window.addEventListener('resize', fitFooter, { passive: true });
+  // Block reveal on the two key photos; the featured story arrives later from js/stories.js.
+  const blockReveal = (scope) => scope.querySelectorAll('.impact-editorial-image, .kisah-preview .kisah-entry-featured .kisah-image-link')
+    .forEach((photo) => {
+      if (photo.classList.contains('block-reveal')) return;
+      photo.classList.add('block-reveal');
+      inView.observe(photo);
+    });
+  blockReveal(document);
+  const storyPreview = document.querySelector('.home-page .kisah-preview');
+  if (storyPreview) new MutationObserver(() => blockReveal(storyPreview)).observe(storyPreview, { childList: true, subtree: true });
   document.querySelectorAll('.home-program-section .program-grid, .home-page .kisah-section-heading, .home-upcoming-list')
     .forEach((rule) => { rule.classList.add('draw-rule'); inView.observe(rule); });
   document.querySelectorAll('.home-page main .btn').forEach((button) => {

@@ -204,6 +204,10 @@ Lainnya:
   menyala kata demi kata sesuai scroll (JS, opacity .16→1); footer Beranda terbuka di bawah `main` yang jadi
   lembaran bersudut bawah 28px (`html.footer-reveal`, footer `sticky; bottom:0`) hanya kalau tinggi footer muat
   di layar (HP: footer biasa). Wordmark "Kita Bahagia" raksasa di footer sudah dicoba dan ditolak user (jelek).
+- Block reveal (Okt 2026, ref. Eleos, dicoba atas permintaan user): foto Jejak + foto kisah utama Beranda terbuka
+  berundak 5×4 kotak dari kiri atas, sekali saat terlihat (`.block-reveal.is-in`, sprite mask `img/block-mask.png`
+  9 frame, `steps`, .72s; foto kisah dipasang lewat MutationObserver karena dirender `stories.js`). Menggantikan
+  "naik" foto Jejak, tidak ditambahkan ke foto lain. Pendapat awal Claude: kurang "jurnal lapangan"; tunggu review user.
 - Hero → Jejak (ref. ONTO): judul Jejak tidak dipecah per kata; masuk dengan `scale` 2 (HP 1.6) lalu mengecil ke
   ukuran asli (view timeline, `cover 0%–45%`); kicker, paragraf, tiap angka, dan foto Jejak naik + muncul menyusul.
 - Hero beranda: foto slide aktif zoom pelan 1.08→1 (7 s) dan judul muncul dengan
