@@ -156,6 +156,15 @@ Lainnya:
   (7 menu, makan layar, numpuk dengan bar Safari). Tombol "Jadwal" krem di header juga ditolak (terlalu
   ramai). Cadangan kalau uji coba tim menunjukkan orang susah menemukan Jadwal: ikon kalender di
   sebelah hamburger, atau kotak "Lihat jadwal kegiatan" di dalam menu.
+- Motion Beranda ala dashdigital.studio (Okt 2026, keputusan user, **Beranda dulu**; lebarkan ke halaman
+  lain hanya kalau user setuju): JS menambah `html.home-motion` (hanya `.home-page`, bukan saat reduced
+  motion). Judul `h2` di bawah layar pertama dipecah per kata (`.split-word`, `aria-hidden`; h2 dapat
+  `aria-label` teks aslinya) lalu naik dari tirai .9s expo-out, jeda 55 ms per kata (maks. 12);
+  garis atas `.program-grid` Program, `.kisah-section-heading`, `.home-upcoming-list` tergambar kiri→kanan
+  (border jadi transparan, garis = background); `.btn` di `main` label berguling saat hover (`.btn-roll`,
+  hanya `hover:hover`); header HP/tablet (≤1023px) sembunyi saat scroll ke bawah (`.is-tucked`), muncul lagi
+  saat scroll ke atas. Sengaja **tidak** diambil: WebGL/three.js (berat, PageSpeed), smooth-scroll, durasi
+  1,5–2,4 s. Tinggi judul sama persis dengan versi tanpa animasi (dicek).
 - Transisi antarhalaman: `@view-transition` fade .3s (mati saat reduced motion).
   Angka Jejak beranda 2×2 di semua lebar dan menghitung naik sekali saat terlihat
   (tahun tidak); label pakai `.impact-editorial-stat > span` supaya span di dalam

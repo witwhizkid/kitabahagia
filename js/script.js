@@ -802,6 +802,73 @@ if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'Int
     item.classList.add('reveal');
   });
 }
+// Homepage motion inspired by dashdigital.studio: section titles rise word by word from behind a
+// mask, heading rules draw left to right, buttons roll their label on hover, and the header slides
+// away while scrolling down on phones/tablets. Beranda only, never with reduced motion. Titles
+// already on screen at load stay static (no layout shift for the first paint).
+const homeMotion = document.body.classList.contains('home-page')
+  && window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window;
+if (homeMotion) {
+  document.documentElement.classList.add('home-motion');
+  const splitWords = (node, counter) => {
+    [...node.childNodes].forEach((child) => {
+      if (child.nodeType === Node.ELEMENT_NODE) { splitWords(child, counter); return; }
+      if (child.nodeType !== Node.TEXT_NODE || !child.textContent.trim()) return;
+      const fragment = document.createDocumentFragment();
+      child.textContent.split(/(\s+)/).forEach((part) => {
+        if (!part) return;
+        if (/^\s+$/.test(part)) { fragment.append(document.createTextNode(' ')); return; }
+        const outer = document.createElement('span');
+        const inner = document.createElement('span');
+        outer.className = 'split-word';
+        outer.setAttribute('aria-hidden', 'true');
+        inner.style.setProperty('--word', String(counter.index++));
+        inner.textContent = part;
+        outer.append(inner);
+        fragment.append(outer);
+      });
+      child.replaceWith(fragment);
+    });
+  };
+  const inView = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-in');
+      inView.unobserve(entry.target);
+    });
+  }, { threshold: 0.25 });
+  document.querySelectorAll('.home-page main > section:not(.hero-campaign) h2').forEach((heading) => {
+    if (heading.getBoundingClientRect().top < window.innerHeight) return;
+    heading.setAttribute('aria-label', heading.textContent.replace(/\s+/g, ' ').trim());
+    splitWords(heading, { index: 0 });
+    heading.classList.add('split-heading');
+    inView.observe(heading);
+  });
+  document.querySelectorAll('.home-program-section .program-grid, .home-page .kisah-section-heading, .home-upcoming-list')
+    .forEach((rule) => { rule.classList.add('draw-rule'); inView.observe(rule); });
+  document.querySelectorAll('.home-page main .btn').forEach((button) => {
+    const label = button.textContent.replace(/\s+/g, ' ').trim();
+    if (!label || button.children.length) return;
+    const roll = document.createElement('span');
+    const text = document.createElement('span');
+    roll.className = 'btn-roll';
+    roll.dataset.label = label;
+    text.textContent = label;
+    roll.append(text);
+    button.replaceChildren(roll);
+  });
+  const header = document.querySelector('.home-page .site-header');
+  const compactHeader = window.matchMedia('(max-width: 1023px)');
+  let lastY = window.scrollY;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    const hide = compactHeader.matches && y > lastY + 4 && y > 160 && !document.body.classList.contains('mobile-menu-open');
+    if (hide) header?.classList.add('is-tucked');
+    else if (y < lastY - 4 || y <= 160) header?.classList.remove('is-tucked');
+    lastY = y;
+  }, { passive: true });
+}
+
 const revealItems = document.querySelectorAll('.reveal');
 if ('IntersectionObserver' in window) {
   const observer = new IntersectionObserver(entries => {
