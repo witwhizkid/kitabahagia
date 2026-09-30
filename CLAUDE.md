@@ -60,8 +60,11 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
   lewat, bukan draf/batal). Kolom cari, tab kategori, pengelompokan per bulan, dan fitur lebar
   "Segera berakhir" dihapus (dulu semua kegiatan muncul dua kali). Hidupkan lagi hanya kalau kegiatan
   sudah belasan per bulan (ada di riwayat git).
-- Kartu: poster 4:5 (`object-fit: contain`, latar `--sand`), kategori, judul (maks. 3–4 baris), ikon
-  lokasi/tanggal, harga + sisa slot; seluruh kartu bisa diklik (stretched link di judul). Desktop/tablet
+- Kartu: poster 4:5 utuh (`contain`); gambar yang bukan 4:5 (foto landscape) otomatis `cover`
+  (`fitEventPhoto`, kelas `.is-cover`) supaya tidak ada pita kosong. Isi: kategori, judul (maks. 3–4
+  baris), ikon lokasi/tanggal, harga + sisa slot, dan teks ajakan "Daftar →" / "Lihat detail →" di
+  kanan bawah (tanda bisa diklik di HP). Seluruh kartu bisa diklik (stretched link di judul); ditekan
+  mengecil .98; hover desktop naik 4px + border maroon + panah bergeser (mati saat reduced motion). Desktop/tablet
   3 kolom; HP: beranda kartu geser, Jadwal kartu mendatar (poster 118px di kiri). Hover hanya di
   `@media (hover:hover)`.
 - Badge poster (`eventPhotoBadge`): kuota penuh / ditutup / selesai = poster hitam-putih + label gelap

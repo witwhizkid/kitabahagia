@@ -265,6 +265,17 @@ const eventPhoto = (event, className) => {
 };
 const eventIsPast = (event) => eventRegistrationAvailability(event).reason === 'past';
 
+// Posters are 4:5 and shown whole; photos of any other shape fill the frame instead of leaving a blank band.
+const fitEventPhoto = (img) => {
+  if (!img.naturalWidth) return;
+  const ratio = img.naturalWidth / img.naturalHeight;
+  img.closest('.event-card-photo')?.classList.toggle('is-cover', Math.abs(ratio - 0.8) > 0.06);
+};
+document.addEventListener('load', (event) => {
+  if (event.target instanceof HTMLImageElement && event.target.closest('.event-card-photo')) fitEventPhoto(event.target);
+}, true);
+const fitEventPhotos = (container) => container.querySelectorAll('.event-card-photo img').forEach((img) => { if (img.complete) fitEventPhoto(img); });
+
 // Poster card (homepage "Kegiatan Terdekat" and the schedule grid) with title, place, date and price; the whole card links.
 const eventCardIcon = {
   place: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
@@ -279,7 +290,7 @@ const eventCardMarkup = (event, attributes = '') => `<article class="event-card$
       <li>${eventCardIcon.place}<span>${escapeHTML(event.location)}</span></li>
       <li>${eventCardIcon.date}<span>${escapeHTML(event.date)}</span></li>
     </ul>
-    <div class="event-card-foot"><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}</div>
+    <div class="event-card-foot"><div><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}</div><span class="event-card-cta" aria-hidden="true">${eventRegistrationAvailability(event).available ? 'Daftar' : 'Lihat detail'} <span>&rarr;</span></span></div>
   </div>
 </article>`;
 
@@ -350,6 +361,7 @@ const renderHomepageEvents = async () => {
   }
 
   list.innerHTML = events.map(eventCardMarkup).join('');
+  fitEventPhotos(list);
   list.hidden = false;
   list.removeAttribute('aria-busy');
   empty.hidden = true;
@@ -436,6 +448,7 @@ const renderScheduleEvents = async () => {
   // with two tabs (Mendatang / Sudah selesai); poster badges carry "N hari lagi" and "Kuota penuh".
   grid.innerHTML = [...scheduleEvents, ...pastEvents]
     .map((event) => eventCardMarkup(event, eventIsPast(event) ? ' data-past' : '')).join('');
+  fitEventPhotos(grid);
   grid.removeAttribute('aria-busy');
   count?.classList.remove('visually-hidden');
   if (empty && scheduleEmptyDefaultMarkup !== undefined) empty.innerHTML = scheduleEmptyDefaultMarkup;
