@@ -165,11 +165,14 @@ Lainnya:
   hanya `hover:hover`); header HP/tablet (≤1023px) sembunyi saat scroll ke bawah (`.is-tucked`), muncul lagi
   saat scroll ke atas. Sengaja **tidak** diambil: WebGL/three.js (berat, PageSpeed), smooth-scroll, durasi
   1,5–2,4 s. Tinggi judul sama persis dengan versi tanpa animasi (dicek).
-- Transisi antarhalaman (Okt 2026, ala tirai dashdigital.studio, dilambatkan atas permintaan user):
-  `@view-transition` lintas halaman. Panel maroon + logo KB putih (`assets/logo/logo-kita-bahagia-white.webp`,
-  latar `::view-transition`) naik menutup halaman lama (.6s), logo terlihat sebentar, lalu terbuka ke atas
-  memperlihatkan halaman baru (mulai .85s, .8s; total ±1,65s). Header ikut tertutup (seperti Dash).
-  Chrome/Edge/Safari 18.2+; Firefox pindah biasa. Mati saat reduced motion.
+- Transisi antarhalaman (Okt 2026, ala tirai dashdigital.studio): klik link internal → JS (`js/script.js`,
+  `.page-curtain`) langsung menaikkan panel maroon dari bawah (.56s) sambil logo KB putih
+  (`assets/logo/logo-kita-bahagia-white.webp`) muncul pelan, lalu pindah halaman; loading terjadi di balik logo
+  (dulu terasa "freeze" karena view transition baru mulai setelah halaman baru siap). `@view-transition`
+  menahan bingkai tertutup itu (`old(root)` tanpa animasi) lalu halaman baru terbuka dari bawah (.85s).
+  Dilewati untuk Ctrl/Cmd-klik, `target`, unduhan, link luar, dan link `#` di halaman yang sama; `pageshow`
+  menurunkan tirai saat kembali (Back). Hanya di browser dengan transisi lintas halaman (`onpagereveal`:
+  Chrome/Edge/Safari 18.2+); lainnya pindah biasa. Mati saat reduced motion. Admin tidak memakainya.
   Angka Jejak beranda 2×2 di semua lebar dan menghitung naik sekali saat terlihat
   (tahun tidak); label pakai `.impact-editorial-stat > span` supaya span di dalam
   angka tidak ikut mengecil.

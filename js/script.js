@@ -869,6 +869,36 @@ if (homeMotion) {
   }, { passive: true });
 }
 
+// Page curtain (after dashdigital.studio): on an internal link click a maroon panel rises at once and
+// the KB logo fades in, then the browser navigates behind it. The cross-document view transition in
+// style.css keeps that covered frame and opens the new page upward from the bottom, so the wait for
+// the next page happens behind the logo instead of as a frozen screen. Only where cross-document view
+// transitions exist (elsewhere links behave normally) and never with reduced motion.
+if ('onpagereveal' in window && window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+  const curtain = document.createElement('div');
+  curtain.className = 'page-curtain';
+  curtain.setAttribute('aria-hidden', 'true');
+  const curtainLogo = document.createElement('img');
+  curtainLogo.src = '/assets/logo/logo-kita-bahagia-white.webp';
+  curtainLogo.alt = '';
+  curtain.append(curtainLogo);
+  document.body.append(curtain);
+  const CURTAIN_MS = 560;
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest?.('a[href]');
+    if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if ((link.target && link.target !== '_self') || link.hasAttribute('download')) return;
+    const url = new URL(link.href, location.href);
+    if (url.origin !== location.origin || !/^https?:$/.test(url.protocol)) return;
+    if (url.pathname === location.pathname && url.search === location.search) return;
+    event.preventDefault();
+    curtain.classList.add('is-covering');
+    setTimeout(() => { location.href = url.href; }, CURTAIN_MS);
+  });
+  // Back/forward restores this page from the cache with the curtain still up.
+  window.addEventListener('pageshow', () => curtain.classList.remove('is-covering'));
+}
+
 const revealItems = document.querySelectorAll('.reveal');
 if ('IntersectionObserver' in window) {
   const observer = new IntersectionObserver(entries => {
