@@ -179,6 +179,9 @@ Lainnya:
 - Favicon (Okt 2026): pictorial KB putih di kotak maroon (#7B0A02, opsi A pilihan user), padding 20%,
   supaya tidak terpotong lingkaran di hasil Google (dulu logo transparan mepet tepi). File di
   `assets/logo/` (ico 16/32/48, png 32/48/192, apple-touch 180); dibuat dari `0. Pictorial/2.png` (putih).
+- SEO beranda: JSON-LD `WebSite` + `NGO` (nama, logo 320, email, `sameAs` IG/TikTok/LinkedIn) di
+  `<head>` `index.html` + `og:site_name`. JSON-LD bukan skrip yang dijalankan, jadi aman dari CSP
+  (dicek: tanpa "Refused"). Search Console sudah terverifikasi (domain), sitemap sudah dikirim.
 - Foto disajikan sebagai WebP yang sudah diperkecil; berkas mentah yang tidak
   dirujuk halaman publik tidak disimpan di `img/`.
 - Upload foto di admin dikompres di browser sebelum dikirim (`compressImage`
