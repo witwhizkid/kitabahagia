@@ -7577,9 +7577,6 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
   }
 }
 
-/* Beranda footer wordmark: the brand name set edge to edge as the last thing on the page. */
-.footer-wordmark { margin: 0; padding: 8px clamp(18px, 4vw, 48px) .1em; overflow: hidden; color: var(--cream); font-family: "Instrument Sans", "DM Sans", sans-serif; font-size: 15.2vw; font-weight: 700; line-height: 1; letter-spacing: -.055em; text-align: center; white-space: nowrap; opacity: .92; }
-
 /* Transactional radius exception: welcoming registration flow, isolated from editorial cards. */
 .registration-page .registration-summary-sticky { border-radius: 26px; }
 
