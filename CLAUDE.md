@@ -165,10 +165,11 @@ Lainnya:
   hanya `hover:hover`); header HP/tablet (≤1023px) sembunyi saat scroll ke bawah (`.is-tucked`), muncul lagi
   saat scroll ke atas. Sengaja **tidak** diambil: WebGL/three.js (berat, PageSpeed), smooth-scroll, durasi
   1,5–2,4 s. Tinggi judul sama persis dengan versi tanpa animasi (dicek).
-- Transisi antarhalaman (Okt 2026, ala tirai dashdigital.studio): `@view-transition` lintas halaman, halaman
-  lama terangkat 6% + meredup di atas latar maroon (`::view-transition`), halaman baru menyapu naik dari
-  bawah (clip-path, .75s); header tetap diam (`view-transition-name: site-header`). Chrome/Edge/Safari 18.2+;
-  Firefox pindah biasa. Mati saat reduced motion.
+- Transisi antarhalaman (Okt 2026, ala tirai dashdigital.studio, dilambatkan atas permintaan user):
+  `@view-transition` lintas halaman. Panel maroon + logo KB putih (`assets/logo/logo-kita-bahagia-white.webp`,
+  latar `::view-transition`) naik menutup halaman lama (.6s), logo terlihat sebentar, lalu terbuka ke atas
+  memperlihatkan halaman baru (mulai .85s, .8s; total ±1,65s). Header ikut tertutup (seperti Dash).
+  Chrome/Edge/Safari 18.2+; Firefox pindah biasa. Mati saat reduced motion.
   Angka Jejak beranda 2×2 di semua lebar dan menghitung naik sekali saat terlihat
   (tahun tidak); label pakai `.impact-editorial-stat > span` supaya span di dalam
   angka tidak ikut mengecil.
