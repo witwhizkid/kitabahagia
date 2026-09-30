@@ -101,6 +101,10 @@ Halaman pendaftaran (`pendaftaran.html`):
   kalender": link Google Calendar + file .ics (pengingat H-1) dari `selectedEvent`
   (`renderCalendar` di `renderOnboarding`). Cek status belum punya karena
   `payment-status` tidak mengirim tanggal kegiatan.
+- Layar sukses (gratis terkonfirmasi, seleksi "applied", bayar lunas) menampilkan "Email konfirmasi
+  sudah dikirim ke <email yang diketik>. … Cek folder Promosi atau Spam." (`renderEmailNote`,
+  `[data-email-note]`; masukan tim Okt 2026, sekalian membuat salah ketik email ketahuan). Cadangan /
+  tidak lolos tidak mendapat email, jadi catatannya disembunyikan.
 - Form peserta (Okt 2026, permintaan owner) juga wajib: Usia (10–100), Akun Instagram/TikTok,
   dan "Dari mana kamu tahu kegiatan ini?" (pilihan: Instagram, TikTok, Informasi teman; database
   masih menerima kunci lama lain). Dropdown pakai gaya KB (`enhanceFormSelect` di `js/script.js`,
@@ -177,9 +181,10 @@ Lainnya:
   ibadah; CARTO butuh API key); "Lihat di peta" tetap ke Google Maps.
 - Logo header/footer semua halaman = `assets/logo/logo-kita-bahagia-320.webp` (13 KB); PNG
   2160px asli hanya untuk canvas (kalender, sertifikat). Foto Program beranda `loading="lazy"`.
-- Favicon (Okt 2026): pictorial KB putih di kotak maroon (#7B0A02, opsi A pilihan user), padding 20%,
-  supaya tidak terpotong lingkaran di hasil Google (dulu logo transparan mepet tepi). File di
-  `assets/logo/` (ico 16/32/48, png 32/48/192, apple-touch 180); dibuat dari `0. Pictorial/2.png` (putih).
+- Favicon (Okt 2026): ikon tab (`favicon.ico` 16/32/48, `favicon-32/48.png`) = logo maroon transparan
+  versi lama (tim Desain tidak mau kotak maroon di tab). `favicon-192.png` = logo maroon transparan
+  dengan padding 12% supaya tidak terpotong lingkaran di hasil Google (dulu mepet tepi).
+  `apple-touch-icon.png` tetap logo putih di kotak maroon (ikon layar HP butuh latar penuh).
 - SEO beranda: JSON-LD `WebSite` + `NGO` (nama, logo 320, email, `sameAs` IG/TikTok/LinkedIn) di
   `<head>` `index.html` + `og:site_name`. JSON-LD bukan skrip yang dijalankan, jadi aman dari CSP
   (dicek: tanpa "Refused"). Search Console sudah terverifikasi (domain), sitemap sudah dikirim.

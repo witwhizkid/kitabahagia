@@ -2725,7 +2725,9 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .payment-details { padding-left:32px; border-left:1px solid var(--line); }
 .payment-details h3 { margin:0 0 24px; font-size:22px; }
 .payment-details dl, .registration-confirmation dl { margin:0; }
-.registration-status-link { margin:18px 0 0; }
+.registration-status-link, .registration-email-note { margin:18px 0 0; }
+.registration-email-note { color:var(--muted); font-size:15px; line-height:1.6; }
+.registration-email-note strong { color:var(--ink); overflow-wrap:anywhere; }
 .payment-details dl > div, .registration-confirmation dl > div { padding:16px 0; border-bottom:1px solid var(--line); }
 .payment-details dt, .registration-confirmation dt { font-size:12px; color:var(--muted); }
 .payment-details dd, .registration-confirmation dd { margin:6px 0 0; overflow-wrap:anywhere; font-weight:600; }
@@ -6807,6 +6809,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .schedule-page .event-row { grid-template-columns: 92px 132px minmax(0, 1fr) 180px; gap: 24px; }
 .schedule-page .event-row-side { align-self: stretch; align-content: center; }
 .schedule-page .final-cta { align-items: center; }
+.schedule-page .final-cta-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 
 /* Kisah — image-led lead story and a scalable, non-uniform archive rhythm. */
 .kisah-page .kisah-intro { padding-block: 80px 64px; }
