@@ -185,7 +185,7 @@ Lainnya:
   "Berikutnya · <kegiatan> · <tgl> · <lokasi>[ · tutup N hari lagi] →" (`[data-hero-next]`, `renderHeroNext`,
   data dari fetch Kegiatan Terdekat; kegiatan pertama yang masih dibuka, kalau tidak ada yang pertama)
   melayang di baris bawah hero (absolute, jadi tidak menggeser judul): desktop kanan bawah, ≤1023px kiri
-  bawah (titik slider di kanan). Tanpa kegiatan/gagal fetch = tersembunyi. Layar loading/intro sengaja
+  bawah (titik slider di kanan; HP ≤767px: titik disembunyikan selama strip tampil, strip selebar baris). Tanpa kegiatan/gagal fetch = tersembunyi. Layar loading/intro sengaja
   tidak dibuat (pengunjung HP dari IG/WA, PageSpeed).
 - Kedalaman scroll Beranda (Okt 2026, ref. studio-onto.com; dirombak karena terasa kaku): JS (`js/script.js`,
   blok home-motion) mengisi `--hero-depth` 0→1 selama 100vh pertama dengan *lerp* (.14 per frame) supaya

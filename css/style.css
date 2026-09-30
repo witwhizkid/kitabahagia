@@ -7334,10 +7334,15 @@ h3 {
 @media (hover: hover) { .home-page .hero-next:hover .hero-next-arrow { transform: translateX(4px); } }
 .home-page .hero-next:focus-visible { outline: 3px solid rgba(247, 223, 229, .95); outline-offset: 4px; }
 @keyframes hero-next-in { from { opacity: 0; transform: translateY(6px); } }
-/* Phones and tablets keep the slider dots at the bottom right, so the strip takes the left side. */
+/* Tablets keep the slider dots at the bottom right, so the strip takes the left side. Phones hide the
+   dots while the strip shows (the slider autoplays), giving the strip the full row. */
 @media (max-width: 1023px) {
   .home-page .hero-next { right: 124px; left: clamp(18px, 5vw, 48px); bottom: 10px; max-width: 560px; gap: 8px; padding-top: 7px; font-size: 12.5px; }
   .home-page .hero-next-label { font-size: 10px; }
+}
+@media (max-width: 767px) {
+  .home-page .hero-next { right: 18px; left: 18px; bottom: 14px; max-width: none; gap: 10px; }
+  .home-page .hero-next:not([hidden]) ~ .hero-campaign-dots { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .home-page .hero-slide.active .hero-pill,
