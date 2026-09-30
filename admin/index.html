@@ -392,8 +392,9 @@
             <button class="button button-secondary" type="button" data-selection-bulk="accepted">Terima</button>
             <button class="button button-secondary" type="button" data-selection-bulk="waitlisted">Cadangan</button>
             <button class="button button-secondary" type="button" data-selection-bulk="rejected">Tolak</button>
-            <button class="button button-secondary" type="button" data-attendance-bulk="true">Tandai hadir</button>
-            <button class="button button-secondary" type="button" data-attendance-bulk="false">Batal hadir</button>
+            <button class="button button-secondary" type="button" data-attendance-bulk="present">Tandai hadir</button>
+            <button class="button button-secondary" type="button" data-attendance-bulk="absent">Tidak hadir</button>
+            <button class="button button-secondary" type="button" data-attendance-bulk="clear" title="Kembalikan ke belum ditandai">Kosongkan tanda</button>
             <button id="selection-clear" class="text-button" type="button">Batal pilih</button>
           </div>
           <div id="registrations-head" class="registration-head" hidden>
@@ -433,7 +434,8 @@
             <div id="applicant-dialog-content" class="applicant-dialog-content"></div>
             <p id="applicant-dialog-feedback" class="feedback" role="status" aria-live="polite"></p>
             <footer class="applicant-dialog-footer">
-              <button class="button button-secondary" type="button" data-applicant-attendance hidden>Tandai hadir</button>
+              <button class="button button-secondary" type="button" data-applicant-attendance="present" hidden>Tandai hadir</button>
+              <button class="button button-secondary" type="button" data-applicant-attendance="absent" hidden>Tidak hadir</button>
               <button class="button button-secondary" type="button" data-applicant-whatsapp hidden>Kirim WhatsApp hasil</button>
             </footer>
           </div>
