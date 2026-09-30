@@ -2169,7 +2169,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 }
 
 .about-value-sequence .value-card p {
-  max-width: 250px;
+  max-width: 36ch;
   font-size: 14px;
   line-height: 1.65;
 }
@@ -7454,6 +7454,37 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
   to { clip-path: inset(0); opacity: 1; }
 }
 
+@media (min-width: 768px) {
+  /* Each value is one index row: number · title · line, all on one baseline and one left edge. */
+  .about-page .about-value-sequence {
+    grid-template-columns: 1fr;
+  }
+
+  .about-page .about-value-sequence .value-card,
+  .about-page .about-value-sequence .value-card:first-child,
+  .about-page .about-value-sequence .value-card:last-child {
+    display: grid;
+    grid-template-columns: 44px minmax(0, .8fr) minmax(0, 1.2fr);
+    column-gap: clamp(20px, 3vw, 40px);
+    align-items: baseline;
+    padding: 36px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .about-page .about-value-sequence .value-card:last-child { border-bottom: 0; }
+
+  .about-page .about-value-sequence .value-card h3 {
+    margin: 0;
+    font-size: clamp(26px, 2.4vw, 32px);
+    letter-spacing: -.02em;
+  }
+
+  .about-page .about-value-sequence .value-card p {
+    max-width: 40ch;
+    font-size: 15px;
+  }
+}
+
 @media (min-width: 1024px) {
   /* Every family gets the same sticky treatment and releases at its own section boundary. */
   .program-page .program-family-heading {
@@ -7478,16 +7509,8 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
     text-align: left;
   }
 
-  .about-page .about-value-sequence {
-    grid-template-columns: 1fr;
-    margin-top: 0;
-  }
-
-  .about-page .about-value-sequence .value-card {
-    min-height: 220px;
-    padding-block: 32px 40px;
-    border-top: 1px solid var(--line);
-  }
+  .about-page .about-value-sequence { margin-top: 0; border-top: 0; }
+  .about-page .about-value-sequence .value-card:first-child { padding-top: 4px; }
 
   /* The archive label behaves like an index tab, while the stories remain fast to scan. */
   .kisah-page .kisah-archive-heading {
