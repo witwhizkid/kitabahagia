@@ -7422,6 +7422,158 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
 @keyframes jejak-rise { from { opacity: 0; translate: 0 48px; } }
 @media (max-width: 767px) { @keyframes jejak-title-settle { from { scale: 1.6; } } }
 
+/* Stage 8: native-scroll editorial choreography.
+   Direction: ENERGY 1 / RHYTHM 2 / MOTION 1. Sticky elements act as chapter markers;
+   restrained frame reveals give documentary photography a pause without changing its crop. */
+.reveal {
+  transform: translateY(8px);
+  transition-duration: 260ms;
+}
+
+/* Replace the earlier showcase-like Beranda motion with three quiet moments: Programs, one
+   documentary frame, and the closing release. The existing Program observer only swaps photos. */
+@supports (animation-timeline: scroll()) {
+  .home-page .hero-campaign,
+  .home-page .hero-campaign-copy,
+  .home-page .hero-campaign-dots,
+  .home-page .hero-next { animation-timeline: auto; }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .home-page .impact-editorial-copy h2,
+    .home-page .impact-editorial-copy > :is(.impact-editorial-kicker, p),
+    .home-page .impact-editorial-stat,
+    .home-page .impact-editorial-image { animation: none; }
+
+    .home-page :is(.impact-editorial-image, .kisah-preview .kisah-entry-featured .kisah-image-link) img {
+      scale: 1;
+      animation: none;
+    }
+
+    .home-page .home-about-teaser .editorial-photo {
+      animation: editorial-frame-open 260ms var(--ease) both;
+      animation-timeline: view();
+      animation-range: entry 15% entry 55%;
+    }
+
+    .home-page .home-about-teaser .editorial-photo img {
+      scale: 1.015;
+      animation: editorial-photo-settle 260ms var(--ease) both;
+      animation-timeline: view();
+      animation-range: entry 15% entry 55%;
+    }
+
+    .home-page .home-closing-section .home-closing {
+      animation: editorial-close-in 240ms var(--ease) both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 45%;
+    }
+
+    .about-page .about-story-documentary {
+      animation: editorial-frame-open 260ms var(--ease) both;
+      animation-timeline: view();
+      animation-range: entry 15% entry 55%;
+    }
+
+    .kisah-page .kisah-latest-story > .kisah-image-link {
+      animation: editorial-frame-open 260ms var(--ease) both;
+      animation-timeline: view();
+      animation-range: entry 15% entry 55%;
+    }
+  }
+}
+
+@keyframes editorial-frame-open {
+  from { clip-path: inset(0 4% 0 4%); opacity: .88; }
+  to { clip-path: inset(0); opacity: 1; }
+}
+
+@keyframes editorial-photo-settle {
+  to { scale: 1; }
+}
+
+@keyframes editorial-close-in {
+  from { opacity: .88; translate: 0 8px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@media (min-width: 1024px) {
+  /* Every family gets the same sticky treatment and releases at its own section boundary. */
+  .program-page .program-family-heading {
+    position: sticky;
+    top: calc(var(--site-header-height) + 20px);
+    z-index: 3;
+    padding-block: 12px 18px;
+    background: rgba(251, 248, 244, .96);
+  }
+
+  /* Tentang becomes a reflective two-column reading sequence; the heading is the sole marker. */
+  .about-page .about-values-section > .container {
+    display: grid;
+    grid-template-columns: minmax(240px, .75fr) minmax(0, 1.25fr);
+    gap: clamp(56px, 8vw, 112px);
+    align-items: start;
+  }
+
+  .about-page .about-values-section .center-heading {
+    position: sticky;
+    top: calc(var(--site-header-height) + 28px);
+    text-align: left;
+  }
+
+  .about-page .about-value-sequence {
+    grid-template-columns: 1fr;
+    margin-top: 0;
+  }
+
+  .about-page .about-value-sequence .value-card {
+    min-height: 220px;
+    padding-block: 32px 40px;
+    border-top: 1px solid var(--line);
+  }
+
+  /* The archive label behaves like an index tab, while the stories remain fast to scan. */
+  .kisah-page .kisah-archive-heading {
+    position: sticky;
+    top: var(--site-header-height);
+    z-index: 3;
+    padding-bottom: 16px;
+    background: var(--cream);
+  }
+}
+
+@media (min-width: 901px) {
+  .home-program-section .program-stage img {
+    transform: scale(1.015);
+    transition: clip-path 280ms var(--ease), transform 280ms var(--ease);
+  }
+}
+
+@media (max-width: 1023px) {
+  .program-page .program-family-heading,
+  .about-page .about-values-section .center-heading,
+  .kisah-page .kisah-archive-heading { position: static; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.home-page, .about-page, .program-page, .kisah-page) .reveal {
+    opacity: 1;
+  }
+
+  .home-page .home-about-teaser .editorial-photo,
+  .home-page .home-about-teaser .editorial-photo img,
+  .home-page .home-closing-section .home-closing,
+  .about-page .about-story-documentary,
+  .kisah-page .kisah-latest-story > .kisah-image-link {
+    animation: none;
+    clip-path: none;
+    opacity: 1;
+    scale: 1;
+    translate: none;
+  }
+}
+
 /* Transactional radius exception: welcoming registration flow, isolated from editorial cards. */
 .registration-page .registration-summary-sticky { border-radius: 26px; }
 

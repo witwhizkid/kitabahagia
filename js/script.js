@@ -821,51 +821,12 @@ if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'Int
     item.classList.add('reveal');
   });
 }
-// Homepage motion inspired by dashdigital.studio: section titles rise word by word from behind a
-// mask, heading rules draw left to right, buttons roll their label on hover, and the header slides
-// away while scrolling down on phones/tablets. Beranda only, never with reduced motion. Titles
-// already on screen at load stay static (no layout shift for the first paint).
+// Homepage button labels keep a small hover response. Scroll choreography lives in CSS so native
+// scrolling stays untouched and no continuous scroll listener is needed.
 const homeMotion = document.body.classList.contains('home-page')
-  && window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window;
+  && window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
 if (homeMotion) {
   document.documentElement.classList.add('home-motion');
-  const splitWords = (node, counter) => {
-    [...node.childNodes].forEach((child) => {
-      if (child.nodeType === Node.ELEMENT_NODE) { splitWords(child, counter); return; }
-      if (child.nodeType !== Node.TEXT_NODE || !child.textContent.trim()) return;
-      const fragment = document.createDocumentFragment();
-      child.textContent.split(/(\s+)/).forEach((part) => {
-        if (!part) return;
-        if (/^\s+$/.test(part)) { fragment.append(document.createTextNode(' ')); return; }
-        const outer = document.createElement('span');
-        const inner = document.createElement('span');
-        outer.className = 'split-word';
-        outer.setAttribute('aria-hidden', 'true');
-        inner.style.setProperty('--word', String(counter.index++));
-        inner.textContent = part;
-        outer.append(inner);
-        fragment.append(outer);
-      });
-      child.replaceWith(fragment);
-    });
-  };
-  const inView = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      entry.target.classList.add('is-in');
-      inView.unobserve(entry.target);
-    });
-  }, { threshold: 0.25 });
-  // Jejak's title is left whole: it settles from a large size on scroll instead (style.css).
-  document.querySelectorAll('.home-page main > section:not(.hero-campaign, .impact-editorial) h2').forEach((heading) => {
-    if (heading.getBoundingClientRect().top < window.innerHeight) return;
-    heading.setAttribute('aria-label', heading.textContent.replace(/\s+/g, ' ').trim());
-    splitWords(heading, { index: 0 });
-    heading.classList.add('split-heading');
-    inView.observe(heading);
-  });
-  document.querySelectorAll('.home-program-section .program-grid, .home-page .kisah-section-heading, .home-upcoming-list')
-    .forEach((rule) => { rule.classList.add('draw-rule'); inView.observe(rule); });
   document.querySelectorAll('.home-page main .btn').forEach((button) => {
     const label = button.textContent.replace(/\s+/g, ' ').trim();
     if (!label || button.children.length) return;
@@ -877,16 +838,6 @@ if (homeMotion) {
     roll.append(text);
     button.replaceChildren(roll);
   });
-  const header = document.querySelector('.home-page .site-header');
-  const compactHeader = window.matchMedia('(max-width: 1023px)');
-  let lastY = window.scrollY;
-  window.addEventListener('scroll', () => {
-    const y = window.scrollY;
-    const hide = compactHeader.matches && y > lastY + 4 && y > 160 && !document.body.classList.contains('mobile-menu-open');
-    if (hide) header?.classList.add('is-tucked');
-    else if (y < lastY - 4 || y <= 160) header?.classList.remove('is-tucked');
-    lastY = y;
-  }, { passive: true });
 }
 
 // Any page seen in this visit means Beranda's loader (js/loader-gate.js) is skipped from now on.
