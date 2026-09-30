@@ -173,7 +173,7 @@ Lainnya:
   (dulu terasa "freeze" karena view transition baru mulai setelah halaman baru siap). `@view-transition`
   menahan bingkai tertutup itu (`old(root)` tanpa animasi) lalu halaman baru terbuka dari bawah (.85s).
   Dilewati untuk Ctrl/Cmd-klik, `target`, unduhan, link luar, dan link `#` di halaman yang sama; `pageshow`
-  menurunkan tirai saat kembali (Back). Hanya di browser dengan transisi lintas halaman (`onpagereveal`:
+  menurunkan tirai saat kembali (Back). Tirai diam = `visibility: hidden` (dulu pinggirnya nongol merah di bawah layar HP lambat saat bar alamat Chrome menghilang). Hanya di browser dengan transisi lintas halaman (`onpagereveal`:
   Chrome/Edge/Safari 18.2+); lainnya pindah biasa. Mati saat reduced motion. Admin tidak memakainya.
   Angka Jejak beranda 2×2 di semua lebar dan menghitung naik sekali saat terlihat
   (tahun tidak); label pakai `.impact-editorial-stat > span` supaya span di dalam

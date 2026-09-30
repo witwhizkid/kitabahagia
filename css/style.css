@@ -232,9 +232,9 @@
 ::view-transition-old(root) { animation: none; }
 ::view-transition-new(root) { animation: kb-curtain-open .85s cubic-bezier(.24, .36, 0, 1) both; }
 @keyframes kb-curtain-open { from { clip-path: inset(100% 0 0 0); transform: translateY(8%); } to { clip-path: inset(0); transform: none; } }
-.page-curtain { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: var(--maroon); transform: translateY(100%); pointer-events: none; transition: transform .56s cubic-bezier(.65, 0, .35, 1); }
+.page-curtain { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: var(--maroon); transform: translateY(100%); visibility: hidden; pointer-events: none; transition: transform .56s cubic-bezier(.65, 0, .35, 1), visibility 0s .56s; }
 .page-curtain img { width: 128px; height: auto; opacity: 0; transform: translateY(14px); transition: opacity .5s .18s ease, transform .6s .18s cubic-bezier(.24, .36, 0, 1); }
-.page-curtain.is-covering { transform: none; pointer-events: auto; }
+.page-curtain.is-covering { transform: none; visibility: visible; pointer-events: auto; transition-delay: 0s; }
 .page-curtain.is-covering img { opacity: 1; transform: none; }
 @media (min-width: 900px) { .page-curtain img { width: 160px; } }
 
