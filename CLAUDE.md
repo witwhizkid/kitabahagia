@@ -67,8 +67,8 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
   mengecil .98; hover desktop naik 4px + border maroon + panah bergeser (mati saat reduced motion). Desktop/tablet
   3 kolom; HP: beranda kartu geser, Jadwal kartu mendatar (poster 118px di kiri). Hover hanya di
   `@media (hover:hover)`.
-- Badge poster (`eventPhotoBadge`): kuota penuh / ditutup / selesai = poster hitam-putih + label gelap
-  ("Kuota penuh", "Ditutup", "Selesai"); buka dan tutup ≤7 hari = label maroon "N hari lagi"/"Besok"/
+- Badge poster (`eventPhotoBadge`): label gelap "Kuota penuh" / "Ditutup" / "Selesai"; poster
+  hitam-putih **hanya** untuk kuota penuh (keputusan user Okt 2026: kegiatan selesai/ditutup tetap berwarna); buka dan tutup ≤7 hari = label maroon "N hari lagi"/"Besok"/
   "Hari ini". Kegiatan ditutup/selesai tidak menampilkan sisa slot.
 - Status default "Pendaftaran dibuka" tidak ditampilkan.
 
