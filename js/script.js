@@ -303,6 +303,24 @@ const eventCardSkeleton = (className = 'schedule-card') => `<article class="${cl
   </div>
 </article>`;
 
+// Hero "Berikutnya" strip: the next event that still takes registrations (else the next one),
+// floated on the hero's bottom row so filling it in never shifts the title.
+const renderHeroNext = (events) => {
+  const link = document.querySelector('[data-hero-next]');
+  const text = link?.querySelector('[data-hero-next-text]');
+  if (!link || !text) return;
+  const next = events.find((event) => eventRegistrationAvailability(event).available) || events[0];
+  if (!next) return;
+  const days = eventRegistrationAvailability(next).available ? eventDaysLeft(next) : null;
+  const parts = [next.name, eventShortDateFormatter.format(new Date(next.start))];
+  if (next.location && next.location !== 'Lokasi menyusul') parts.push(next.location);
+  if (days !== null && days >= 0 && days <= 7) parts.push(`tutup ${eventDaysLeftLabel(days).toLowerCase()}`);
+  text.textContent = parts.join(' · ');
+  link.href = eventHref(next);
+  link.setAttribute('aria-label', `Kegiatan berikutnya: ${parts.join(', ')}`);
+  link.hidden = false;
+};
+
 let homepageEventsLoading = false;
 let scheduleEventsLoading = false;
 const scheduleEmptyDefaultMarkup = document.getElementById('scheduleEmpty')?.innerHTML;
@@ -360,6 +378,7 @@ const renderHomepageEvents = async () => {
     return;
   }
 
+  renderHeroNext(events);
   list.innerHTML = events.map(eventCardMarkup).join('');
   fitEventPhotos(list);
   list.hidden = false;

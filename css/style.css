@@ -7294,6 +7294,56 @@ h3 {
   .kisah-page .kisah-image-link > img { transform: none; transition: none; }
 }
 
+/* Hero accent and "Berikutnya" strip (Oct 2026, after Rebelliously Optimistic and 1000 Whales on
+   Awwwards). "Makna" sits in a maroon pill that fills from the left; the strip floats on the hero's
+   bottom row (opposite the slider dots), so filling it in from public-events never moves the title. */
+.home-page .hero-campaign-copy .hero-pill {
+  display: inline-block;
+  margin-left: -.02em;
+  padding: 0 .2em .08em .14em;
+  border-radius: .18em;
+  background: linear-gradient(var(--maroon), var(--maroon)) left / 100% 100% no-repeat;
+  color: var(--cream);
+  font-size: 1.06em;
+  line-height: .95;
+  letter-spacing: -.02em;
+}
+.home-page .hero-slide.active .hero-pill { animation: hero-pill-fill .8s .75s cubic-bezier(.65, 0, .35, 1) both; }
+@keyframes hero-pill-fill { from { background-size: 0 100%; } }
+.home-page .hero-next {
+  position: absolute;
+  z-index: 4;
+  right: max(var(--container-gutter, 20px), calc((100vw - var(--container-max, 1160px)) / 2));
+  bottom: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  max-width: min(600px, 52vw);
+  padding-top: 9px;
+  border-top: 1px solid rgba(255, 248, 239, .35);
+  color: var(--cream);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  text-shadow: 0 1px 12px rgba(25, 5, 9, .35);
+  animation: hero-next-in .6s .4s var(--ease) both;
+}
+.home-page .hero-next-label { flex: none; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; opacity: .72; }
+.home-page .hero-next-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-page .hero-next-arrow { flex: none; transition: transform .3s var(--ease); }
+@media (hover: hover) { .home-page .hero-next:hover .hero-next-arrow { transform: translateX(4px); } }
+.home-page .hero-next:focus-visible { outline: 3px solid rgba(247, 223, 229, .95); outline-offset: 4px; }
+@keyframes hero-next-in { from { opacity: 0; transform: translateY(6px); } }
+/* Phones and tablets keep the slider dots at the bottom right, so the strip takes the left side. */
+@media (max-width: 1023px) {
+  .home-page .hero-next { right: 124px; left: clamp(18px, 5vw, 48px); bottom: 10px; max-width: 560px; gap: 8px; padding-top: 7px; font-size: 12.5px; }
+  .home-page .hero-next-label { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-page .hero-slide.active .hero-pill,
+  .home-page .hero-next { animation: none; }
+}
+
 /* Homepage motion (Oct 2026, after dashdigital.studio). Classes come from JS, only on Beranda and
    never with reduced motion, so without JS every title, rule and button looks as before. */
 .home-motion .split-word { display: inline-block; overflow: hidden; vertical-align: bottom; padding: 0 .06em .14em 0; margin: 0 -.06em -.14em 0; }

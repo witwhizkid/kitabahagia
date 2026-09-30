@@ -176,6 +176,13 @@ Lainnya:
   Angka Jejak beranda 2×2 di semua lebar dan menghitung naik sekali saat terlihat
   (tahun tidak); label pakai `.impact-editorial-stat > span` supaya span di dalam
   angka tidak ikut mengecil.
+- Hero beranda (Okt 2026, referensi Awwwards: Rebelliously Optimistic + 1000 Whales): kata "Makna" di judul
+  = pil maroon, Newsreader italic krem (`.hero-pill`), terisi dari kiri .8s setelah judul muncul. Strip
+  "Berikutnya · <kegiatan> · <tgl> · <lokasi>[ · tutup N hari lagi] →" (`[data-hero-next]`, `renderHeroNext`,
+  data dari fetch Kegiatan Terdekat; kegiatan pertama yang masih dibuka, kalau tidak ada yang pertama)
+  melayang di baris bawah hero (absolute, jadi tidak menggeser judul): desktop kanan bawah, ≤1023px kiri
+  bawah (titik slider di kanan). Tanpa kegiatan/gagal fetch = tersembunyi. Layar loading/intro sengaja
+  tidak dibuat (pengunjung HP dari IG/WA, PageSpeed).
 - Hero beranda: foto slide aktif zoom pelan 1.08→1 (7 s) dan judul muncul dengan
   wipe atas→bawah (`hero-title-in`); HP/tablet hanya teks slide pertama. Mati saat
   reduced motion.
