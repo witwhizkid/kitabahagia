@@ -223,17 +223,20 @@
   .home-page .hero-slide.active img { animation: hero-photo-settle 7s cubic-bezier(.2,.6,.2,1) both; }
 }
 
-/* Page-to-page "curtain" (Oct 2026, after dashdigital.studio): a maroon panel with the white KB
-   logo rises over the old page, holds a beat, then opens upward onto the new page. CSS-only view
-   transition, so navigation itself is not delayed; browsers without cross-document view
-   transitions (Firefox) just navigate. */
+/* Page-to-page curtain (Oct 2026, after dashdigital.studio). On an internal link click JS raises
+   .page-curtain (maroon, KB logo fading in) right away, then navigates. The cross-document view
+   transition holds that covered frame and opens the new page upward from the bottom. Without the
+   JS curtain (back button, typed URL) the new page simply wipes up over the old one. */
 @view-transition { navigation: auto; }
-::view-transition { background: var(--maroon) url("../assets/logo/logo-kita-bahagia-white.webp") center / 128px auto no-repeat; }
-::view-transition-old(root) { animation: kb-curtain-cover .6s cubic-bezier(.65, 0, .35, 1) both; }
-::view-transition-new(root) { animation: kb-curtain-open .8s .85s cubic-bezier(.24, .36, 0, 1) both; }
-@keyframes kb-curtain-cover { to { clip-path: inset(0 0 100% 0); transform: translateY(-4%); } }
-@keyframes kb-curtain-open { from { clip-path: inset(100% 0 0 0); transform: translateY(6%); } to { clip-path: inset(0); transform: none; } }
-@media (min-width: 900px) { ::view-transition { background-size: 160px auto; } }
+::view-transition { background: var(--maroon); }
+::view-transition-old(root) { animation: none; }
+::view-transition-new(root) { animation: kb-curtain-open .85s cubic-bezier(.24, .36, 0, 1) both; }
+@keyframes kb-curtain-open { from { clip-path: inset(100% 0 0 0); transform: translateY(8%); } to { clip-path: inset(0); transform: none; } }
+.page-curtain { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: var(--maroon); transform: translateY(100%); pointer-events: none; transition: transform .56s cubic-bezier(.65, 0, .35, 1); }
+.page-curtain img { width: 128px; height: auto; opacity: 0; transform: translateY(14px); transition: opacity .5s .18s ease, transform .6s .18s cubic-bezier(.24, .36, 0, 1); }
+.page-curtain.is-covering { transform: none; pointer-events: auto; }
+.page-curtain.is-covering img { opacity: 1; transform: none; }
+@media (min-width: 900px) { .page-curtain img { width: 160px; } }
 
 @media (prefers-reduced-motion: reduce) {
   @view-transition { navigation: none; }
