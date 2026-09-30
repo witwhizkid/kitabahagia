@@ -1663,9 +1663,23 @@ if (registrationForm) {
     };
   };
 
+  // Confirmed and "applied" registrations get an email; show where it went so a typo is noticed.
+  const renderEmailNote = (container, data) => {
+    const note = container?.querySelector('[data-email-note]');
+    if (!note) return;
+    note.hidden = !['confirmed', 'applied'].includes(data?.registration_status);
+    if (note.hidden) return;
+    const email = registrationForm ? String(new FormData(registrationForm).get('email') || '').trim() : '';
+    const address = document.createElement('strong');
+    address.textContent = email;
+    note.replaceChildren(...(email ? ['Email konfirmasi sudah dikirim ke ', address, '.'] : ['Email konfirmasi sudah dikirim ke email yang kamu daftarkan.']),
+      ' Belum masuk dalam beberapa menit? Cek folder Promosi atau Spam.');
+  };
+
   const showConfirmedRegistration = (data) => {
     stopPaymentMonitoring();
     renderPaymentState('paid', data);
+    renderEmailNote(document.getElementById('paymentStage'), { registration_status: 'confirmed', ...data });
     renderOnboarding(document.querySelector('#paymentStage [data-registration-onboarding]'), data);
     markTerminalRecoveryForRefresh(data);
     document.getElementById('paymentStage')?.focus();
@@ -1689,6 +1703,7 @@ if (registrationForm) {
     resultStage.querySelector('#freeConfirmationHeading').textContent = outcome.heading;
     resultStage.querySelector('[data-confirmation-copy]').textContent = outcome.copy;
     fillConfirmationEventCard(resultStage.querySelector('[data-confirmation-event]'), data.event_title);
+    renderEmailNote(resultStage, data);
     const instagramCta = resultStage.querySelector('[data-registration-instagram-cta]');
     if (instagramCta) instagramCta.hidden = isSelectionEvent();
     const onboarding = resultStage.querySelector('[data-registration-onboarding]');

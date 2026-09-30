@@ -101,6 +101,10 @@ Halaman pendaftaran (`pendaftaran.html`):
   kalender": link Google Calendar + file .ics (pengingat H-1) dari `selectedEvent`
   (`renderCalendar` di `renderOnboarding`). Cek status belum punya karena
   `payment-status` tidak mengirim tanggal kegiatan.
+- Layar sukses (gratis terkonfirmasi, seleksi "applied", bayar lunas) menampilkan "Email konfirmasi
+  sudah dikirim ke <email yang diketik>. … Cek folder Promosi atau Spam." (`renderEmailNote`,
+  `[data-email-note]`; masukan tim Okt 2026, sekalian membuat salah ketik email ketahuan). Cadangan /
+  tidak lolos tidak mendapat email, jadi catatannya disembunyikan.
 - Form peserta (Okt 2026, permintaan owner) juga wajib: Usia (10–100), Akun Instagram/TikTok,
   dan "Dari mana kamu tahu kegiatan ini?" (pilihan: Instagram, TikTok, Informasi teman; database
   masih menerima kunci lama lain). Dropdown pakai gaya KB (`enhanceFormSelect` di `js/script.js`,
