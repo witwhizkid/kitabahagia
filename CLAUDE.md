@@ -370,9 +370,10 @@ Lainnya:
 Hosting & pembayaran (keputusan user, Sep 2026):
 - Domain **kitabahagia.id** (dibeli di Jagoan Hosting, Sep 2026), tanpa www
   (www dialihkan ke apex lewat Redirect Rule Cloudflare). Hosting pindah ke
-  **Cloudflare Pages** (Vercel Hobby tidak boleh komersial); Vercel tetap hidup
-  sebagai cadangan sampai domain stabil, lalu `vercel.json`, `middleware.js`,
-  `.vercelignore` bisa dihapus. File Pages: build `bash scripts/build-pages.sh`
+  **Cloudflare Pages** (Vercel Hobby tidak boleh komersial); Vercel (Okt 2026) tidak lagi
+  menyajikan situs: `vercel.json` mengalihkan semua path (+ query) secara permanen ke `kitabahagia.id`
+  supaya link lama tetap jalan; 1–2 bulan kemudian project Vercel, `vercel.json`, `middleware.js` dihapus
+  (`.vercelignore` dipakai `build-pages.sh`, ganti nama dulu, jangan dibuang). File Pages: build `bash scripts/build-pages.sh`
   → `dist/` (menyalin semua kecuali isi `.vercelignore`, dotfile, file Vercel;
   jadi `_headers`/`_routes.json` jangan dimasukkan ke `.vercelignore`),
   `_headers` (header + CSP, samakan dengan `vercel.json` selama dua-duanya ada),
