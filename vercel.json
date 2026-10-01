@@ -2,6 +2,17 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
     {
+      "source": "/",
+      "missing": [
+        {
+          "type": "host",
+          "value": "kitabahagia.id"
+        }
+      ],
+      "destination": "https://kitabahagia.id/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "missing": [
         {
