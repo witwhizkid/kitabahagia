@@ -382,7 +382,8 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   `/pendaftaran(.html)` supaya kuota Functions tidak habis). Pages mengalihkan
   `x.html` → `/x`, jadi canonical/og:url/sitemap memakai URL tanpa `.html`;
   link di dalam situs tetap `.html` (tetap jalan lewat redirect). Supabase Auth:
-  Site URL + Redirect URLs `https://kitabahagia.id/admin/`.
+  Site URL + Redirect URLs `https://kitabahagia.id/admin/`. Link undangan/kirim ulang akses admin memakai secret
+  Edge Function `ADMIN_SITE_ORIGIN` (`admin-users`), harus `https://kitabahagia.id` (dulu masih vercel.app, Okt 2026).
 - Email (Sep 2026, semua lewat dashboard, tanpa kode): Supabase Auth mengirim via
   SMTP **Brevo** dengan pengirim `Kita Bahagia <noreply@kitabahagia.id>`; domain
   terautentikasi di Brevo (DKIM `brevo1/2._domainkey`, DMARC `p=none`). Email
