@@ -178,7 +178,7 @@ const renderEventGallery = (container, { title, documentationUrl, photos }) => {
   }
   const altOf = (photo, index) => photo.alt || `Foto kegiatan ${index + 1}`;
   container.innerHTML = `
-    <div class="event-gallery-head"><p class="event-gallery-kicker">Dokumentasi</p><h2>Momen dari ${escapeHTML(title)}</h2></div>
+    <div class="event-gallery-head"><h2>Momen dari ${escapeHTML(title)}</h2></div>
     ${slides.length ? `<div class="event-gallery-track${slides.length === 1 ? ' is-single' : ''}" tabindex="0" aria-label="Foto kegiatan, geser atau pakai panah untuk melihat">${slides.map((photo, index) => `
       <figure class="event-gallery-slide"><button type="button" class="event-gallery-frame" data-gallery-open="${index}" aria-label="Perbesar: ${escapeHTML(altOf(photo, index))}"><img src="${escapeHTML(photo.url)}" alt="${escapeHTML(altOf(photo, index))}" loading="lazy" decoding="async"></button>${photo.alt ? `<figcaption>${escapeHTML(photo.alt)}</figcaption>` : ''}</figure>`).join('')}
     </div>
@@ -952,16 +952,16 @@ if (homeMotion) {
   const fitFooter = () => document.documentElement.classList.toggle('footer-reveal', !!footer && footer.offsetHeight < window.innerHeight - 40);
   fitFooter();
   window.addEventListener('resize', fitFooter, { passive: true });
-  // Block reveal on the two key photos; the featured story arrives later from js/stories.js.
-  const blockReveal = (scope) => scope.querySelectorAll('.impact-editorial-image, .kisah-preview .kisah-entry-featured .kisah-image-link')
+  // Journal prints settle into place once seen; the featured story arrives later from js/stories.js.
+  const journalPrint = (scope) => scope.querySelectorAll('.impact-editorial-image, .kisah-preview .kisah-entry-featured .kisah-image-link')
     .forEach((photo) => {
-      if (photo.classList.contains('block-reveal')) return;
-      photo.classList.add('block-reveal');
+      if (photo.classList.contains('journal-print')) return;
+      photo.classList.add('journal-print');
       inView.observe(photo);
     });
-  blockReveal(document);
+  journalPrint(document);
   const storyPreview = document.querySelector('.home-page .kisah-preview');
-  if (storyPreview) new MutationObserver(() => blockReveal(storyPreview)).observe(storyPreview, { childList: true, subtree: true });
+  if (storyPreview) new MutationObserver(() => journalPrint(storyPreview)).observe(storyPreview, { childList: true, subtree: true });
   document.querySelectorAll('.home-program-section .program-grid, .home-page .kisah-section-heading, .home-upcoming-list')
     .forEach((rule) => { rule.classList.add('draw-rule'); inView.observe(rule); });
   document.querySelectorAll('.home-page main .btn').forEach((button) => {

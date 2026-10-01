@@ -7568,11 +7568,12 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
   }
 }
 
-/* Block reveal (Oct 2026, after Eleos): the two key Beranda photos (Jejak, featured story) open in a 5×4 staircase of blocks from the top left, once, when they come into view. A
-   9-frame mask sprite stepped along; it replaces their plain fade, it is not added to other photos. */
-html.home-motion .block-reveal { mask: url("../img/block-mask.png") 0 0 / 900% 100% no-repeat; }
-html.home-motion .block-reveal.is-in { animation: block-reveal .72s steps(9, jump-none) forwards; }
-@keyframes block-reveal { to { mask-position: 100% 0; } }
+/* Journal print (Oct 2026, replaces the Eleos block reveal): the two key Beranda photos (Jejak,
+   featured story) sit like prints pasted into the field journal: cream border (box-shadow spread, so
+   the crop and its hover zoom stay untouched), a slight tilt, and once in view they settle gently. */
+.home-page :is(.impact-editorial-image, .kisah-preview .kisah-entry-featured .kisah-image-link) { box-shadow: 0 0 0 10px #fffdf8, 0 22px 44px rgba(60, 20, 25, .16); rotate: -1deg; }
+html.home-motion .journal-print { opacity: 0; translate: 0 18px; rotate: -2.6deg; transition: opacity .9s var(--ease), translate .9s var(--ease), rotate 1.1s var(--ease); }
+html.home-motion .journal-print.is-in { opacity: 1; translate: 0 0; rotate: -1deg; }
 
 /* Stabilo (Oct 2026): a hand-drawn maroon marker behind one key word per page, instead of a serif
    italic accent everywhere. Uneven radius and a slight tilt keep it from looking like a CSS box. */
