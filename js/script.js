@@ -178,7 +178,7 @@ const renderEventGallery = (container, { title, documentationUrl, photos }) => {
   }
   const altOf = (photo, index) => photo.alt || `Foto kegiatan ${index + 1}`;
   container.innerHTML = `
-    <div class="event-gallery-head"><p class="event-gallery-kicker">Dokumentasi</p><h2>Momen dari <em>${escapeHTML(title)}</em></h2></div>
+    <div class="event-gallery-head"><p class="event-gallery-kicker">Dokumentasi</p><h2>Momen dari ${escapeHTML(title)}</h2></div>
     ${slides.length ? `<div class="event-gallery-track${slides.length === 1 ? ' is-single' : ''}" tabindex="0" aria-label="Foto kegiatan, geser atau pakai panah untuk melihat">${slides.map((photo, index) => `
       <figure class="event-gallery-slide"><button type="button" class="event-gallery-frame" data-gallery-open="${index}" aria-label="Perbesar: ${escapeHTML(altOf(photo, index))}"><img src="${escapeHTML(photo.url)}" alt="${escapeHTML(altOf(photo, index))}" loading="lazy" decoding="async"></button>${photo.alt ? `<figcaption>${escapeHTML(photo.alt)}</figcaption>` : ''}</figure>`).join('')}
     </div>
@@ -867,6 +867,18 @@ if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'Int
     if (item.hidden || item.classList.contains('sr-only') || top === 0 || top < window.innerHeight) return;
     item.classList.add('reveal');
   });
+}
+// Marker strokes (.stabilo) sweep in once when their heading is on screen. Without JS or with
+// reduced motion they are simply drawn.
+const stabiloMarks = document.querySelectorAll('.stabilo');
+if (stabiloMarks.length && window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window) {
+  document.documentElement.classList.add('stabilo-motion');
+  const stabiloObserver = new IntersectionObserver((entries) => entries.forEach((entry) => {
+    if (!entry.isIntersecting) return;
+    entry.target.classList.add('is-in');
+    stabiloObserver.unobserve(entry.target);
+  }), { threshold: 1 });
+  stabiloMarks.forEach((mark) => stabiloObserver.observe(mark));
 }
 // Homepage motion inspired by dashdigital.studio: section titles rise word by word from behind a
 // mask, heading rules draw left to right, buttons roll their label on hover, and the header slides

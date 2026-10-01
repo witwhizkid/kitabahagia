@@ -220,6 +220,10 @@ Lainnya:
   layar; foto per kartu disembunyikan. HP/tablet tetap baris biasa + tirai saat
   kartu muncul. Sticky butuh `overflow-x: clip` (bukan `hidden`) di
   `html.home-document`/`.home-page`.
+- Aksen judul (Okt 2026, keputusan user, anti-generik): Newsreader italic **hanya** di 3 judul Beranda (hero
+  "Makna", manifesto, "Mulai dari satu kegiatan."); **stabilo** maroon (`.stabilo`, goresan tergambar sekali saat
+  terlihat, `html.stabilo-motion`) hanya di Tentang "kebaikan", Relawan "hadir", Program "Ikut.". Judul lain polos.
+  Maks. satu aksen per halaman; jangan tambah `<em>` di judul baru.
 - Kesan premium (hasil design-dna): kata aksen `h1 em, h2 em` = Newsreader italic
   maroon (dimuat di semua halaman ber-Google Fonts; `em` netral pakai
   `font-family: inherit`); `text-wrap: balance` di heading, `pretty` di paragraf;
