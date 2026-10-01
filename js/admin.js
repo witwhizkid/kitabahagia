@@ -1705,7 +1705,8 @@
     return true;
   };
   window.addEventListener("beforeunload", (event) => {
-    if ([...dirtyForms].some((form) => !form.closest("[hidden]"))) event.preventDefault();
+    // Issuing certificates paces its emails, so closing the tab mid-run would leave some unsent.
+    if ([...dirtyForms].some((form) => !form.closest("[hidden]")) || issuance.running) event.preventDefault();
   });
 
   // Beranda: what needs attention today, computed from events + active registrations.
@@ -3496,7 +3497,7 @@
   };
 
   // Resolves to { email } once the PDF is stored; an email problem never undoes the issue.
-  const issueCertificate = async (event, baseSpec, recipient, sendEmail) => {
+  const issueCertificate = async (event, baseSpec, recipient, sendEmail, beforeEmail) => {
     const name = recipientName(recipient).trim().replace(/\s+/g, " ");
     const slug = event.slug;
     const { certificate: issued } = await issueJson({ event: slug, action: "issue" },
@@ -3508,6 +3509,7 @@
       method: "POST", headers: { "Content-Type": "application/pdf" }, body: pdf,
     });
     if (!sendEmail) return { email: null };
+    await beforeEmail?.();
     try {
       const { email } = await issueJson({ event: slug, action: "email" }, { code: issued.verification_code });
       return { email };
@@ -3532,10 +3534,23 @@
     try {
       setFeedback(feedback, "Menyiapkan tanda tangan dan pengaturan…");
       const baseSpec = await issueSnapshot(event);
+      // Emails in a batch leave at least EMAIL_GAP_MS apart, so a new sending domain does not look
+      // like a burst to Brevo/Gmail (12 at once sat in "Sent" without delivery, Oct 2026).
+      const EMAIL_GAP_MS = 8000;
+      let lastEmailAt = 0;
       for (const [index, recipient] of recipients.entries()) {
-        setFeedback(feedback, `Menerbitkan ${index + 1}/${recipients.length}: ${recipientName(recipient)}…`);
+        const label = `${index + 1}/${recipients.length}: ${recipientName(recipient)}`;
+        setFeedback(feedback, `Menerbitkan ${label}…`);
+        const pace = async () => {
+          const wait = lastEmailAt + EMAIL_GAP_MS - Date.now();
+          if (wait > 0) {
+            setFeedback(feedback, `Menerbitkan ${label} · email dikirim berjeda, jangan tutup halaman ini…`);
+            await new Promise((resolve) => setTimeout(resolve, wait));
+          }
+          lastEmailAt = Date.now();
+        };
         try {
-          const { email } = await issueCertificate(event, baseSpec, recipient, issuance.data?.email_ready);
+          const { email } = await issueCertificate(event, baseSpec, recipient, issuance.data?.email_ready, pace);
           done += 1;
           if (email && !email.sent) emailProblems += 1;
         } catch (error) {

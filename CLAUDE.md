@@ -438,7 +438,7 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   (`KBCertificate.toPdf`, JPEG dalam PDF A4), email lewat Brevo API
   (`BREVO_API_KEY`; pengirim `CERTIFICATE_EMAIL_FROM`, disarankan `halo@`;
   gaya kartu playful dengan tombol, dipilih user setelah dicoba versi polos;
-  subjek "<nama depan>, sertifikat relawanmu udah jadi!"), per orang ada Lihat · Terbitkan ulang (kode/link tetap) ·
+  subjek "<nama depan>, sertifikat relawanmu udah jadi!"), email dalam satu kali terbit dikirim berjeda min. 8 detik (`EMAIL_GAP_MS` di `runIssue`; 12 email sekaligus pernah nyangkut di status "Sent" Brevo, Okt 2026), per orang ada Lihat · Terbitkan ulang (kode/link tetap) ·
   Kirim ulang email · WA. Halaman publik `sertifikat.html?k=` (noindex) +
   function `public-certificate`. Belum: link sertifikat di Cek status,
   pengumuman grup WA (manual), font Garet. Detail: "Issuing certificates" di
