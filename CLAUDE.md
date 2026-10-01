@@ -145,9 +145,10 @@ Lainnya:
   `sr-only`/tersembunyi). Zoom foto kisah/kegiatan pelan (1.2s/.9s) hanya di
   `@media (hover:hover)` untuk kisah (halaman Kisah/Program kini zoom tipis 1.012,
   220 ms dari blok yang sama).
-- Halaman Program dikelompokkan jadi 3 bab bernomor (`.program-family`: 01 Masyarakat
-  Reguler, 02 Adventure & Unique, 03 Impactful Action); angka Jejak beranda diberi
-  nomor kecil 01–04 (Codex, Sep 2026).
+- Halaman Program dikelompokkan jadi 3 bab (`.program-family`: Masyarakat Reguler, Adventure & Unique,
+  Impactful Action). Label nomor hiasan 01/02/03 **dihapus** (Okt 2026, keputusan user: kesan template/AI):
+  bab Program, alur program (jadi panah →), Program + testimoni Beranda, angka Jejak, Nilai Kami Tentang.
+  Nomor hanya dipakai untuk urutan sungguhan (langkah Relawan/Kolaborasi, panduan bayar). Jangan tambah lagi.
 - "Living Archive" (Codex, Sep 2026, migrasi `20261012010000`): `events.program_key`
   (masyarakat_reguler / adventure_unique / impactful_action, diisi di form Kegiatan) dan
   `stories.event_id` (Kegiatan terkait di form Kisah, `on delete set null`). Data lama
