@@ -27,9 +27,15 @@
       root.classList.add('loader-landing');
     }, 860);
   }
+  // Skipping only makes sense before the finale starts (0.86s). Later, a first touch to scroll would
+  // restart the panel animation and play the loader a second time.
   const skip = () => root.classList.add('loader-skip');
   window.addEventListener('pointerdown', skip, { once: true });
   window.addEventListener('keydown', skip, { once: true });
+  setTimeout(() => {
+    window.removeEventListener('pointerdown', skip);
+    window.removeEventListener('keydown', skip);
+  }, 850);
   // After the loader and the delayed hero entrance are over, drop the class so later slide changes run on time.
   setTimeout(() => root.classList.remove('loader-on', 'loader-skip', 'loader-portal', 'loader-land', 'loader-landing'), 3200);
 })();
