@@ -4708,33 +4708,36 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .event-gallery { display: grid; gap: 16px; max-width: 760px; margin: 48px 0 0; }
 .event-gallery-kicker { margin: 0 0 6px; color: var(--maroon); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .event-gallery-head h2 { margin: 0; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; }
-/* Film strip: dark base, sprocket holes top and bottom, KB edge print; frames off the gate are
-   negatives (inverted + warm mask) and develop when centred. */
-.event-gallery-track { --film: #1c1513; position: relative; display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 26px 8% 34px; border-radius: var(--radius-photo); background: radial-gradient(circle at 50% 50%, var(--cream) 0 3px, transparent 3.5px) 0 7px / 18px 12px repeat-x, radial-gradient(circle at 50% 50%, var(--cream) 0 3px, transparent 3.5px) 0 calc(100% - 7px) / 18px 12px repeat-x, var(--film); scrollbar-width: none; }
-.event-gallery-track.is-single { padding-inline: 26px; }
+/* Jurnal tempel: each photo is a print taped into the field journal (maroon paper tape), set a
+   little askew on the page grain; the print in the middle straightens and lifts, the others rest
+   slightly faded. Captions read like handwritten notes (Newsreader italic). */
+.event-gallery-track { position: relative; display: flex; gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 30px 8% 40px; scrollbar-width: none; }
+.event-gallery-track.is-single { padding-inline: 4px; }
 .event-gallery-track.is-single .event-gallery-slide { flex-basis: 100%; }
 .event-gallery-track::-webkit-scrollbar { display: none; }
-.event-gallery-track:focus-visible { outline: 3px solid var(--maroon); outline-offset: 3px; }
-.event-gallery-slide { position: relative; flex: 0 0 84%; margin: 0; scroll-snap-align: center; }
-.event-gallery-slide::after { content: "KITA BAHAGIA \25B8"; position: absolute; bottom: -15px; left: 4px; color: #d9822b; font: 700 8px/1 "DM Sans", sans-serif; letter-spacing: .24em; opacity: .75; pointer-events: none; }
+.event-gallery-track:focus-visible { outline: 3px solid var(--maroon); outline-offset: -3px; }
+.event-gallery-slide { position: relative; flex: 0 0 84%; margin: 0; padding: 10px 10px 14px; scroll-snap-align: center; background: #fffdf8; box-shadow: 0 10px 24px rgba(60, 20, 25, .1), 0 1px 2px rgba(60, 20, 25, .12); rotate: -1.6deg; transition: rotate .6s var(--ease), translate .6s var(--ease), box-shadow .6s var(--ease); }
+.event-gallery-slide:nth-child(2n) { rotate: 1.2deg; }
+.event-gallery-slide:nth-child(3n) { rotate: -.8deg; }
+.event-gallery-slide::before { content: ""; position: absolute; z-index: 1; top: -10px; left: 50%; width: 68px; height: 20px; background: rgba(122, 31, 43, .62); translate: -50% 0; rotate: -4deg; pointer-events: none; }
+.event-gallery-slide:nth-child(2n)::before { left: auto; right: -14px; translate: none; rotate: 38deg; }
+.event-gallery-slide.is-developed,
+.event-gallery-track.is-single .event-gallery-slide { rotate: 0deg; translate: 0 -6px; box-shadow: 0 22px 40px rgba(60, 20, 25, .16), 0 2px 4px rgba(60, 20, 25, .12); }
 .event-gallery-frame { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
-.event-gallery-slide img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 2px; filter: invert(1) sepia(.75) saturate(1.6) hue-rotate(-12deg) brightness(.92); transition: filter .7s ease; }
+.event-gallery-slide img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; opacity: .72; filter: saturate(.8); transition: opacity .6s var(--ease), filter .6s var(--ease); }
 .event-gallery-slide.is-developed img,
-.event-gallery-track.is-single img { filter: none; }
-.event-gallery-slide figcaption { position: absolute; inset: auto 0 0; padding: 28px 16px 12px; color: #fff; font-size: 14px; background: linear-gradient(transparent, rgba(0, 0, 0, .6)); border-radius: 0 0 2px 2px; opacity: 0; transition: opacity .4s ease; pointer-events: none; }
-.event-gallery-slide.is-developed figcaption,
-.event-gallery-track.is-single figcaption { opacity: 1; }
-.event-gallery-lightbox { max-width: min(1100px, 94vw); max-height: 92vh; padding: 0; border: 0; border-radius: var(--radius-photo); background: var(--film, #1c1513); overflow: visible; }
-.event-gallery-lightbox::backdrop { background: rgba(20, 12, 12, .86); }
-.event-gallery-lightbox img { display: block; max-width: min(1100px, 94vw); max-height: 92vh; object-fit: contain; }
-.event-gallery-close { position: absolute; top: -14px; right: -14px; width: 40px; height: 40px; color: var(--maroon); background: var(--cream); border: 0; border-radius: 50%; font-size: 24px; line-height: 1; cursor: pointer; }
-@media (prefers-reduced-motion: reduce) { .event-gallery-slide img { filter: none; transition: none; } .event-gallery-slide figcaption { opacity: 1; transition: none; } }
+.event-gallery-track.is-single img { opacity: 1; filter: none; }
+.event-gallery-slide figcaption { padding-top: 10px; color: var(--ink); font: italic 400 16px/1.35 "Newsreader", Georgia, serif; }
+.event-gallery-lightbox { max-width: min(1100px, 94vw); max-height: 92vh; padding: 12px; border: 0; background: #fffdf8; overflow: visible; }
+.event-gallery-lightbox::backdrop { background: rgba(40, 18, 20, .78); }
+.event-gallery-lightbox img { display: block; max-width: calc(min(1100px, 94vw) - 24px); max-height: calc(92vh - 24px); object-fit: contain; }
+.event-gallery-close { position: absolute; top: -14px; right: -14px; width: 40px; height: 40px; color: var(--cream); background: var(--maroon); border: 0; border-radius: 50%; font-size: 24px; line-height: 1; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .event-gallery-slide, .event-gallery-slide img { transition: none; } }
 .event-gallery-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
 .event-gallery-nav { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
 .event-gallery-nav button { width: 42px; height: 42px; color: var(--maroon); background: var(--white); border: 1px solid var(--line); border-radius: 50%; font-size: 18px; cursor: pointer; }
 .event-gallery-nav button:hover { border-color: var(--maroon); }
 .registration-page .event-gallery { margin: 32px auto 0; }
-.registration-page .event-gallery-track { border-radius: 22px; }
 @media (min-width: 768px) { .event-gallery-track:not(.is-single) { padding-inline: 15%; } .event-gallery-track:not(.is-single) .event-gallery-slide { flex-basis: 70%; } }
 @media (max-width: 640px) {
   .event-gallery { margin-top: 36px; }

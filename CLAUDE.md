@@ -548,7 +548,7 @@ sebelum kegiatan Oktober; migrasi `20261013010000`, `events.documentation_url` +
 foto Kisah; tidak mengambil gambar langsung dari Drive). Tampil publik (siapa saja, bukan
 hanya peserta) di halaman kegiatan yang sudah selesai (`pendaftaran?event=`): slide foto +
 "Lihat semua foto di Drive ↗"; Kisah dengan "Kegiatan terkait" menampilkan galeri yang
-sama otomatis (satu sumber data). Tampil sebagai **pita film 35mm** (Okt 2026, ide dari 21st.dev "Filmstrip Gallery", ditulis ulang vanilla): latar gelap + lubang sproket (gradien CSS) + cetakan tepi "KITA BAHAGIA ▸"; frame di luar tengah = negatif (filter invert+sepia), frame tengah "tercuci" jadi foto (.7s); tap frame tengah = `<dialog>` perbesar, frame lain = digeser ke tengah; panah keyboard; reduced motion = semua berwarna. Link Drive ikut di email sertifikat. Tanpa foto/link =
+sama otomatis (satu sumber data). Tampil sebagai **jurnal tempel** (Okt 2026; versi pita film + negatif ditolak user: kaku, dan wajah anak dibalik warnanya seram): cetakan foto berbingkai krem, selotip kertas maroon, miring ±1,6°; foto tengah (`.is-developed`) lurus + terangkat, lainnya agak pudar; keterangan Newsreader miring; tap foto tengah = `<dialog>` perbesar, foto lain = digeser ke tengah; panah keyboard. Link Drive ikut di email sertifikat. Tanpa foto/link =
 bagian disembunyikan. Foto anak: pilih yang aman/berizin (aturan tim dokum, bukan sistem).
 
 Dashboard dampak publik (setelah ± 6 laporan bulanan konsisten): angka total

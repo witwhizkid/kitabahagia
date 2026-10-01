@@ -160,9 +160,9 @@ const normalizeRegistrationEvent = (event) => {
 };
 
 // Documentation gallery (finished event page + related Kisah): up to 5 photos and the Drive folder.
-// Documentation photos as a 35mm film strip (Oct 2026, after 21st.dev "Filmstrip Gallery"):
-// frames off-centre show as orange negatives and "develop" into the photo when centred; a tap
-// opens the frame in a native <dialog>. Reduced motion shows every frame developed.
+// Documentation photos as prints taped into a field journal (Oct 2026; scroll mechanics after
+// 21st.dev "Filmstrip Gallery"): the centred print straightens and lifts (.is-developed), a tap
+// on it opens a native <dialog>, a tap on another print rolls that one to the centre.
 const renderEventGallery = (container, { title, documentationUrl, photos }) => {
   const slides = (Array.isArray(photos) ? photos : [])
     .filter((photo) => typeof photo?.url === 'string' && photo.url.startsWith('https://')).slice(0, 5);
