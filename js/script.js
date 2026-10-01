@@ -160,6 +160,9 @@ const normalizeRegistrationEvent = (event) => {
 };
 
 // Documentation gallery (finished event page + related Kisah): up to 5 photos and the Drive folder.
+// Documentation photos as a 35mm film strip (Oct 2026, after 21st.dev "Filmstrip Gallery"):
+// frames off-centre show as orange negatives and "develop" into the photo when centred; a tap
+// opens the frame in a native <dialog>. Reduced motion shows every frame developed.
 const renderEventGallery = (container, { title, documentationUrl, photos }) => {
   const slides = (Array.isArray(photos) ? photos : [])
     .filter((photo) => typeof photo?.url === 'string' && photo.url.startsWith('https://')).slice(0, 5);
@@ -173,27 +176,71 @@ const renderEventGallery = (container, { title, documentationUrl, photos }) => {
     container.replaceChildren();
     return;
   }
+  const altOf = (photo, index) => photo.alt || `Foto kegiatan ${index + 1}`;
   container.innerHTML = `
     <div class="event-gallery-head"><p class="event-gallery-kicker">Dokumentasi</p><h2>Momen dari <em>${escapeHTML(title)}</em></h2></div>
-    ${slides.length ? `<div class="event-gallery-track" tabindex="0" aria-label="Foto kegiatan, geser untuk melihat">${slides.map((photo, index) => `
-      <figure class="event-gallery-slide"><img src="${escapeHTML(photo.url)}" alt="${escapeHTML(photo.alt || `Foto kegiatan ${index + 1}`)}" loading="lazy" decoding="async">${photo.alt ? `<figcaption>${escapeHTML(photo.alt)}</figcaption>` : ''}</figure>`).join('')}
-    </div>` : ''}
+    ${slides.length ? `<div class="event-gallery-track${slides.length === 1 ? ' is-single' : ''}" tabindex="0" aria-label="Foto kegiatan, geser atau pakai panah untuk melihat">${slides.map((photo, index) => `
+      <figure class="event-gallery-slide"><button type="button" class="event-gallery-frame" data-gallery-open="${index}" aria-label="Perbesar: ${escapeHTML(altOf(photo, index))}"><img src="${escapeHTML(photo.url)}" alt="${escapeHTML(altOf(photo, index))}" loading="lazy" decoding="async"></button>${photo.alt ? `<figcaption>${escapeHTML(photo.alt)}</figcaption>` : ''}</figure>`).join('')}
+    </div>
+    <dialog class="event-gallery-lightbox" aria-label="Foto kegiatan"><img alt=""><button type="button" class="event-gallery-close" data-gallery-close aria-label="Tutup">&times;</button></dialog>` : ''}
     <div class="event-gallery-foot">
       ${slides.length > 1 ? `<div class="event-gallery-nav"><button type="button" data-gallery-step="-1" aria-label="Foto sebelumnya">&larr;</button><span data-gallery-count>1 / ${slides.length}</span><button type="button" data-gallery-step="1" aria-label="Foto berikutnya">&rarr;</button></div>` : ''}
       ${drive ? `<a class="btn btn-secondary event-gallery-drive" href="${escapeHTML(drive)}" target="_blank" rel="noopener noreferrer">Lihat semua foto di Drive <span aria-hidden="true">&nearr;</span></a>` : ''}
     </div>`;
   const track = container.querySelector('.event-gallery-track');
   if (!track) return;
+  const frames = [...track.querySelectorAll('.event-gallery-slide')];
   const count = container.querySelector('[data-gallery-count]');
-  const current = () => Math.round(track.scrollLeft / Math.max(track.clientWidth, 1));
+  const instant = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let active = -1;
+  const develop = () => {
+    const middle = track.scrollLeft + track.clientWidth / 2;
+    let nearest = 0;
+    frames.forEach((frame, index) => {
+      const distance = Math.abs(frame.offsetLeft + frame.offsetWidth / 2 - middle);
+      const best = Math.abs(frames[nearest].offsetLeft + frames[nearest].offsetWidth / 2 - middle);
+      if (distance < best) nearest = index;
+    });
+    if (nearest === active) return;
+    active = nearest;
+    frames.forEach((frame, index) => frame.classList.toggle('is-developed', index === nearest));
+    if (count) count.textContent = `${nearest + 1} / ${frames.length}`;
+  };
+  const goTo = (index) => {
+    const frame = frames[Math.min(frames.length - 1, Math.max(0, index))];
+    track.scrollTo({ left: frame.offsetLeft - (track.clientWidth - frame.offsetWidth) / 2, behavior: instant() ? 'auto' : 'smooth' });
+  };
+  let queued = false;
   track.addEventListener('scroll', () => {
-    if (count) count.textContent = `${current() + 1} / ${slides.length}`;
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; develop(); });
   }, { passive: true });
+  window.addEventListener('resize', develop, { passive: true });
+  develop();
+  track.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    goTo(active + (event.key === 'ArrowRight' ? 1 : -1));
+  });
   container.querySelectorAll('[data-gallery-step]').forEach((button) => button.addEventListener('click', () => {
-    const next = Math.min(slides.length - 1, Math.max(0, current() + Number(button.dataset.galleryStep)));
-    const instant = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    track.scrollTo({ left: next * track.clientWidth, behavior: instant ? 'auto' : 'smooth' });
+    goTo(active + Number(button.dataset.galleryStep));
   }));
+  const lightbox = container.querySelector('.event-gallery-lightbox');
+  const lightboxImage = lightbox.querySelector('img');
+  track.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-gallery-open]');
+    if (!button) return;
+    const index = Number(button.dataset.galleryOpen);
+    // An off-centre frame first rolls into the gate; the centred one opens.
+    if (index !== active) { goTo(index); return; }
+    lightboxImage.src = slides[index].url;
+    lightboxImage.alt = altOf(slides[index], index);
+    lightbox.showModal();
+  });
+  lightbox.addEventListener('click', (event) => {
+    if (event.target === lightbox || event.target.closest('[data-gallery-close]')) lightbox.close();
+  });
 };
 
 const eventRegistrationAvailability = (event) => {
