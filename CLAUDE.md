@@ -377,6 +377,12 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   → `dist/` (menyalin semua kecuali isi `.vercelignore`, dotfile, file Vercel;
   jadi `_headers`/`_routes.json` jangan dimasukkan ke `.vercelignore`),
   `_headers` (header + CSP, samakan dengan `vercel.json` selama dua-duanya ada),
+  build juga memecah CSS per halaman (`scripts/split-css.mjs`, Okt 2026, PageSpeed): tiap HTML dapat
+  `css/style.<kelas-halaman>.css` = `style.css` tanpa aturan yang mustahil cocok (butuh kelas `*-page`/
+  `home-document` yang tidak ada di halaman itu, atau kelas yang tidak muncul di HTML/JS publik mana pun;
+  awalan dinamis `x-${...}` dianggap ada). Urutan aturan tidak berubah; dicek: computed style semua elemen
+  identik di 16 halaman × 390/820/1366. Tetap edit **`css/style.css`** saja. Kelas yang dibuat JS dari
+  data tanpa awalan literal harus tetap tertulis utuh di JS supaya tidak terbuang. 302 KB → 135–190 KB.
   build juga menempelkan `?v=<commit>` ke link JS/CSS lokal di semua HTML
   (Cloudflare membuat browser menyimpan JS/CSS 4 jam; tanpa ini HTML baru bisa
   memakai `admin.js` lama setelah deploy), `functions/_middleware.js` (preview bot, dibatasi `_routes.json` ke

@@ -11,6 +11,9 @@ tar -cf - \
   --exclude=./vercel.json --exclude=./middleware.js \
   --exclude-from=.vercelignore \
   . | tar -xf - -C dist
+# Each page gets style.css minus rules that can never match it (scripts/split-css.mjs); without
+# Node the pages simply keep the full style.css.
+if command -v node >/dev/null 2>&1; then node scripts/split-css.mjs dist; else echo "node missing: full style.css kept"; fi
 # Cloudflare lets browsers keep JS/CSS for hours while HTML is always fresh, so a deploy
 # could pair new HTML with old admin.js. Stamp local JS/CSS links with the commit so every
 # deploy loads matching files.
