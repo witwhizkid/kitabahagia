@@ -260,6 +260,12 @@ Lainnya:
   di HP dan memanjangkan Beranda). Jangan tambahkan lagi.
   Catatan: aturan `.btn` ketiga (sekitar baris 6150) sempat masih `--radius-lg` 6px, jadi "semua tombol pil" baru
   benar-benar berlaku Okt 2026 ini.
+- Paket ref. Okt 2026 #2: (1) "Bagikan ke Story" di kartu "Ajak teman ikut" layar sukses: gambar 1080×1920 digambar
+  di canvas (`makeStoryImage`: latar maroon gelap, kartu merah bata "Aku ikut <kegiatan>", tgl · lokasi, "Yuk, ikut juga!
+  kitabahagia.id/link"; tanpa poster karena gambar lintas-origin mengotori canvas), HP = share sheet native
+  (`navigator.share` files), lainnya unduh PNG; (2) menu aktif desktop (≥1024px) = pil krem teks maroon (masukan tim),
+  HP tetap daftar hamburger; (3) 404 ramah: "Waduh, nyasar." + cetakan foto + kegiatan terdekat (`renderLinkEvents`,
+  href absolut `/pendaftaran.html…`); (4) footer HP (≤640px): peta disembunyikan, tinggal link "Lihat di peta", jarak dirapatkan.
 - Ref. "dekat dengan rakyat" (Okt 2026): (1) kartu kegiatan menulis "N orang udah daftar · …" kalau ≥5 (kapasitas − sisa,
   `registeredCount`; Seleksi tanpa angka); (2) layar sukses pendaftaran: konfeti kertas warna KB sekali (`celebrate` di
   `renderOnboarding`, ±2 s, mati saat reduced motion) + "Ajak teman ikut" jadi kartu merah muda dengan dua tombol pil;

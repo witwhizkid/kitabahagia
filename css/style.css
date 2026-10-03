@@ -65,8 +65,7 @@
     filter: brightness(0) invert(1);
   }
   .home-page .site-header.is-scrolled .nav { text-shadow: none; }
-  .home-page .site-header .nav a:hover,
-  .home-page .site-header .nav a.active { color: var(--cream) !important; }
+  .home-page .site-header .nav a:not(.active):hover { color: var(--cream) !important; }
   .home-page .site-header .nav a::after,
   .home-page .site-header .nav a.active::after,
   .home-page .site-header .nav a.active:hover::after {
@@ -1666,6 +1665,13 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .nav a.active:hover::after {
   transform: scaleX(1) !important;
   background: rgba(255,255,255,0.95) !important;
+}
+@media (min-width: 1024px) {
+  /* Active page = a cream pill, like an app tab (team feedback Oct 2026: clearer than an underline). */
+  .nav a.active,
+  .nav a.active:hover { padding: 8px 16px; margin-block: -8px; border-radius: 999px; background: var(--cream); color: var(--maroon) !important; }
+  .nav a.active::after,
+  .nav a.active:hover::after { display: none; }
 }
 .text-block { max-width:800px; }
 .text-block p { color:var(--muted); font-size:16px; }
@@ -4671,23 +4677,25 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 }
 
 @media (max-width: 640px) {
-  .site-footer .footer-main { gap: 30px; padding: 46px 0 38px; }
-  .site-footer .footer-brand-logo { height: 58px; }
+  .site-footer .footer-main { gap: 26px; padding: 40px 0 30px; }
+  .site-footer .footer-brand-logo { height: 52px; }
   .site-footer .footer-social { gap: 4px; margin-top: 22px; }
   .site-footer .footer-groups {
     grid-template-columns: repeat(2,minmax(0,1fr));
-    gap: 36px 32px;
+    gap: 26px 32px;
   }
   .site-footer .footer-location-col { grid-column: 1 / -1; }
-  .site-footer .footer-col h3 { margin-bottom: 16px; }
-  .site-footer .footer-location-col h3 { margin-bottom: 26px; }
+  .site-footer .footer-col h3 { margin-bottom: 10px; }
+  .site-footer .footer-location-col h3 { margin-bottom: 8px; }
   .site-footer .footer-nav { gap: 4px; }
   .site-footer .footer-nav a {
     display: inline-flex;
     align-items: center;
     min-height: 40px;
   }
-  .site-footer .footer-map-preview { max-width: none; height: 180px; }
+  /* Phones: the static map makes the footer tall; the "Lihat di peta" link stays. */
+  .site-footer .footer-map-preview { display: none; }
+  .site-footer .footer-map-preview + .footer-map-link { margin-top: 0; }
   .site-footer .footer-map-link { min-height: 40px; }
   .site-footer .footer-bottom { padding: 20px 0 24px; }
   .site-footer .footer-copy-wrap {
@@ -6983,6 +6991,20 @@ html.stabilo-motion .stabilo:not(.is-in)::before { clip-path: inset(0 100% 0 0);
 
 @media (prefers-reduced-motion: reduce) {
   .registration-page .registration-review-actions .btn { transition: none; }
+}
+
+/* 404 (Oct 2026, after Gojek/Duolingo): friendly copy, a journal print and the next events (renderLinkEvents). */
+.not-found-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 64px; align-items: center; }
+.not-found-copy h1 { margin: 12px 0 14px; font-size: clamp(44px, 5vw, 72px); }
+.not-found-copy > p { max-width: 46ch; margin: 0 0 26px; color: var(--muted); font-size: 17px; }
+.not-found-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; }
+.not-found-events { max-width: 520px; margin-top: 36px; }
+.link-events.not-found-events h2 { color: var(--maroon); }
+.not-found-print { margin: 0; overflow: hidden; aspect-ratio: 4 / 3; }
+.not-found-print img { width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 900px) {
+  .not-found-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .not-found-print { order: -1; max-width: 420px; }
 }
 
 /* /link: Instagram/TikTok bio page (Oct 2026). Dark maroon like the Beranda programs, big KB-coloured pills. */

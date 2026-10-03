@@ -535,7 +535,8 @@ const renderScheduleEvents = async () => {
 void renderHomepageEvents();
 void renderScheduleEvents();
 
-// /link (Instagram/TikTok bio page): up to three upcoming events as big tappable rows.
+// /link (Instagram/TikTok bio page) and the 404 page: up to three upcoming events as big tappable rows.
+// Root-relative hrefs, because 404 can be served at any depth.
 const renderLinkEvents = async () => {
   const list = document.querySelector('[data-link-events]');
   if (!list) return;
@@ -546,7 +547,7 @@ const renderLinkEvents = async () => {
       .sort((a, b) => new Date(a.start) - new Date(b.start))
       .slice(0, 3);
     if (!events.length) return;
-    list.innerHTML = events.map((event) => `<a class="link-event" href="${eventHref(event)}"><strong>${escapeHTML(event.name)}</strong><span>${escapeHTML(eventShortDateFormatter.format(new Date(event.start)))} · ${escapeHTML(event.location)}</span></a>`).join('');
+    list.innerHTML = events.map((event) => `<a class="link-event" href="/${eventHref(event)}"><strong>${escapeHTML(event.name)}</strong><span>${escapeHTML(eventShortDateFormatter.format(new Date(event.start)))} · ${escapeHTML(event.location)}</span></a>`).join('');
     list.closest('[data-link-events-wrap]').hidden = false;
   } catch (error) {
     console.error('Kegiatan untuk halaman link gagal dimuat', error);
@@ -1859,6 +1860,94 @@ if (registrationForm) {
     block.querySelector('[data-calendar-ics]').onclick = () => downloadCalendarFile(item);
   };
 
+  // "Bagikan ke Story" (after Spotify Wrapped): a 1080×1920 KB-coloured image drawn in the browser
+  // (logo + event; no poster, a cross-origin image would taint the canvas). Phones get the native share
+  // sheet (Instagram is in it); elsewhere it downloads.
+  const wrapCanvasText = (context, text, maxWidth) => {
+    const lines = [];
+    let line = '';
+    String(text).split(/\s+/).forEach((word) => {
+      const next = line ? `${line} ${word}` : word;
+      if (context.measureText(next).width > maxWidth && line) { lines.push(line); line = word; } else line = next;
+    });
+    if (line) lines.push(line);
+    return lines;
+  };
+  const makeStoryImage = async (event) => {
+    await Promise.all(['700 96px "Instrument Sans"', '500 40px "DM Sans"'].map((font) => document.fonts?.load(font).catch(() => null)));
+    const logo = new Image();
+    logo.src = 'assets/logo/logo-kita-bahagia-white.webp';
+    await logo.decode().catch(() => null);
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1920;
+    const context = canvas.getContext('2d');
+    context.fillStyle = '#2a0e13';
+    context.fillRect(0, 0, 1080, 1920);
+    const dots = ['#c23a3f', '#efb635', '#f6e6d6', '#f2b8c0'];
+    for (let i = 0; i < 26; i += 1) {
+      context.fillStyle = dots[i % dots.length];
+      context.globalAlpha = .5;
+      context.beginPath();
+      context.arc(Math.random() * 1080, Math.random() * 1920, 6 + Math.random() * 10, 0, Math.PI * 2);
+      context.fill();
+    }
+    context.globalAlpha = 1;
+    if (logo.complete && logo.naturalWidth) context.drawImage(logo, 96, 130, 170, 170);
+    context.save();
+    context.translate(540, 980);
+    context.rotate(-.035);
+    context.fillStyle = '#c23a3f';
+    context.beginPath();
+    context.roundRect(-450, -400, 900, 800, 64);
+    context.fill();
+    context.fillStyle = '#ffe6e1';
+    context.font = '500 44px "DM Sans", sans-serif';
+    context.fillText('Aku ikut', -380, -290);
+    context.fillStyle = '#ffffff';
+    context.font = '700 96px "Instrument Sans", "DM Sans", sans-serif';
+    const title = wrapCanvasText(context, event.name, 760).slice(0, 3);
+    title.forEach((line, i) => context.fillText(line, -380, -170 + i * 104));
+    context.font = '500 40px "DM Sans", sans-serif';
+    context.fillStyle = '#ffe6e1';
+    const meta = wrapCanvasText(context, `${eventShortDateFormatter.format(new Date(event.start))} · ${event.location}`, 760).slice(0, 2);
+    meta.forEach((line, i) => context.fillText(line, -380, -170 + title.length * 104 + 40 + i * 52));
+    context.restore();
+    context.fillStyle = '#efb635';
+    context.font = '700 64px "Instrument Sans", "DM Sans", sans-serif';
+    context.fillText('Yuk, ikut juga!', 96, 1560);
+    context.fillStyle = '#f6e6d6';
+    context.font = '500 44px "DM Sans", sans-serif';
+    context.fillText('kitabahagia.id/link', 96, 1640);
+    return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  };
+  const shareStory = async (button) => {
+    if (!selectedEvent) return;
+    button.disabled = true;
+    try {
+      const blob = await makeStoryImage(selectedEvent);
+      if (!blob) throw new Error('canvas');
+      const file = new File([blob], `kita-bahagia-${selectedEvent.slug}.png`, { type: 'image/png' });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] }).catch(() => null);
+      } else {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = file.name;
+        document.body.append(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+    } catch {
+      button.textContent = 'Gagal membuat gambar';
+      setTimeout(() => { button.textContent = 'Bagikan ke Story'; }, 2000);
+    } finally {
+      button.disabled = false;
+    }
+  };
+
   // "Ajak teman ikut" on the success screens: someone who just registered is the best person to invite friends.
   const renderShare = (container) => {
     const row = container.querySelector('[data-event-share]');
@@ -1867,6 +1956,8 @@ if (registrationForm) {
     if (!selectedEvent) return;
     const shareUrl = `${window.location.origin}/pendaftaran.html?event=${encodeURIComponent(selectedEvent.slug)}`;
     row.querySelector('[data-event-share-whatsapp]').href = `https://wa.me/?text=${encodeURIComponent(`Aku sudah daftar ${selectedEvent.name} di Kita Bahagia, ikut yuk: ${shareUrl}`)}`;
+    const storyButton = row.querySelector('[data-event-share-story]');
+    if (storyButton) storyButton.onclick = () => shareStory(storyButton);
     const copyButton = row.querySelector('[data-event-share-copy]');
     copyButton.onclick = async () => {
       try {
