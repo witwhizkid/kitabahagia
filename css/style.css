@@ -843,6 +843,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   position: relative;
 }
 .home-page .impact-editorial + .home-upcoming-section,
+.home-page .home-upcoming-section + .home-howto,
 .home-page .home-about-teaser + .kisah-preview,
 .home-page .kisah-preview + .testimonial-section,
 .home-page .testimonial-section + .home-closing-section {
@@ -854,6 +855,33 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 }
 .home-page .impact-editorial-image {
   border-radius: var(--radius-photo);
+}
+
+/* Beranda "Daftar cuma 2 menit" (Oct 2026, after bank Jago's phone section): real phone screenshots of the
+   flow in a phone frame. Desktop: the frame sticks while the three steps scroll past and swaps screens
+   (js/script.js, data-howto). Phones: compact steps, screens rotate every ~3s (not with reduced motion). */
+.home-howto { background: var(--cream); }
+.howto-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 72px; align-items: start; }
+.howto-copy h2 { margin: 0 0 14px; font-size: clamp(36px, 4vw, 56px); }
+.howto-copy > p { max-width: 40ch; margin: 0 0 20px; color: var(--muted); font-size: 17px; }
+.howto-steps { margin: 0 0 28px; padding: 0; list-style: none; }
+.howto-steps li { display: grid; grid-template-columns: 40px minmax(0, 1fr); align-content: start; column-gap: 14px; min-height: 42vh; padding: 26px 0; border-top: 1px solid var(--line); opacity: .38; transition: opacity .3s var(--ease); }
+.howto-steps li:last-child { min-height: 0; }
+.howto-steps li.is-on { opacity: 1; }
+.howto-steps em { grid-row: 1 / span 2; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--maroon); color: var(--white); font: 700 16px/1 "Instrument Sans", "DM Sans", sans-serif; font-style: normal; }
+.howto-steps strong { font: 700 clamp(22px, 2.2vw, 30px)/1.15 "Instrument Sans", "DM Sans", sans-serif; letter-spacing: -.02em; }
+.howto-steps span { max-width: 38ch; margin-top: 8px; color: var(--muted); font-size: 16px; line-height: 1.6; }
+.howto-phone { position: sticky; top: calc(var(--site-header-height) + 32px); justify-self: center; width: 300px; aspect-ratio: 9 / 19.5; padding: 10px; border-radius: 46px; background: var(--ink); box-shadow: 0 30px 60px rgba(60, 20, 25, .25); }
+.howto-screen { position: relative; height: 100%; overflow: hidden; border-radius: 36px; background: var(--white); }
+.howto-screen img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; opacity: 0; transition: opacity .45s var(--ease); }
+.howto-screen img.is-on { opacity: 1; }
+@media (max-width: 900px) {
+  .howto-grid { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .howto-phone { position: relative; top: auto; width: 230px; }
+  .howto-steps li { min-height: 0; padding: 18px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .howto-steps li, .howto-screen img { transition: none; }
 }
 
 /* Beranda programs (Oct 2026, after gojek.io): big swipeable cards on a dark maroon stage. JS marks the
@@ -5458,7 +5486,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .registration-share { display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px; margin:22px 0 0; padding:18px 20px; border-radius:22px; background:#fbe4e1; color:#53141d; font-size:15px; font-weight:700; }
 .registration-page .registration-share[hidden] { display:none; }
 .registration-page .registration-share a, .registration-page .registration-share button { display:inline-flex; align-items:center; min-height:44px; padding:0 18px; border:0; border-radius:999px; background:var(--white); color:var(--maroon); font:inherit; font-size:14px; text-decoration:none; cursor:pointer; }
-.registration-page .registration-share a { margin-left:auto; background:var(--maroon); color:var(--white); }
+.registration-page .registration-share a { background:var(--maroon); color:var(--white); }
 /* Success confetti (after Duolingo): KB-coloured paper bits fall once, ~1.8s, never with reduced motion. */
 .kb-confetti { position:fixed; inset:0; z-index:90; overflow:hidden; pointer-events:none; }
 .kb-confetti i { position:absolute; top:-24px; left:var(--x); width:10px; height:16px; border-radius:3px; background:#c23a3f; animation:kb-confetti-fall var(--d) cubic-bezier(.25,.6,.4,1) var(--delay) forwards; }
@@ -6126,7 +6154,7 @@ h3 {
 .btn {
   min-height: 48px;
   padding-inline: 20px;
-  border-radius: var(--radius-lg);
+  border-radius: 999px;
   box-shadow: none;
 }
 
@@ -6470,16 +6498,20 @@ html.home-motion.footer-reveal .home-page .site-footer { position: sticky; botto
   .home-motion .site-header.is-tucked { transform: translateY(-100%); }
 }
 
-/* Scroll depth on Beranda (Oct 2026, after studio-onto.com). Hero → Jejak: js/script.js eases
-   --hero-depth (0 → 1 over the first screen) toward the scroll position, so the hero sinks at 30%
-   of the scroll speed and its copy fades while Jejak slides over it as a rounded sheet; nothing
-   scales, so it stays smooth on weak phones. A few photos drift inside their frames (CSS
-   scroll-driven, where supported). Individual translate/scale leave hover zooms untouched. */
-/* On phones the compositor can scroll a frame ahead of the JS shift; the dark shadow above the hero
-   backs any momentary gap so it never flashes white. */
-html.home-motion .home-page .hero-campaign { translate: 0 var(--hero-shift, 0px); box-shadow: 0 -40vh 0 0 #1f1012; }
-html.home-motion .home-page :is(.hero-campaign-copy, .hero-campaign-dots, .hero-next) { opacity: calc(1 - var(--hero-depth, 0) * 2.2); translate: 0 calc(var(--hero-depth, 0) * -60px); }
-html.home-motion .home-page .hero-next { animation-fill-mode: backwards; }
+/* Scroll depth on Beranda (Oct 2026, after studio-onto.com; moved from a JS lerp to CSS scroll-driven
+   animations after bank Jago felt smoother): over the first screen the hero sinks at 30% of the scroll
+   speed and its copy fades while Jejak slides over it as a rounded sheet. The browser runs it off the
+   main thread; without scroll timelines (Firefox, old Safari) the sheet simply scrolls over a still hero.
+   hero-copy-out comes first in .hero-next's list so its entrance (listed last) wins while it plays. */
+html.home-motion .home-page .hero-campaign { box-shadow: 0 -40vh 0 0 #1f1012; }
+@supports (animation-timeline: scroll()) {
+  html.home-motion .home-page .hero-campaign { animation: hero-sink linear both; animation-timeline: scroll(root); animation-range: 0 100vh; }
+  html.home-motion .home-page :is(.hero-campaign-copy, .hero-campaign-dots) { animation: hero-copy-out linear both; animation-timeline: scroll(root); animation-range: 0 46vh; }
+  html.home-motion .home-page .hero-next { animation: hero-copy-out linear both, hero-next-in .6s .4s var(--ease) backwards; animation-timeline: scroll(root), auto; animation-range: 0 46vh, normal; }
+  html.loader-on .home-page .hero-next { animation-delay: 0s, 1.55s; }
+}
+@keyframes hero-sink { to { translate: 0 30vh; } }
+@keyframes hero-copy-out { to { opacity: 0; translate: 0 -60px; } }
 html.home-motion .home-page .impact-editorial { position: relative; z-index: 1; border-radius: 28px 28px 0 0; box-shadow: 0 -24px 60px rgba(33, 12, 16, .28); }
 @media (max-width: 767px) { html.home-motion .home-page .impact-editorial { border-radius: 20px 20px 0 0; } }
 @supports (animation-timeline: view()) {
@@ -6528,7 +6560,6 @@ html.loader-on .home-page .hero-slide:first-child .hero-campaign-copy :is(h1, h2
 html.loader-on .home-page .hero-slide:first-child .hero-campaign-copy p,
 html.loader-on .home-page .hero-slide:first-child .hero-campaign-actions { animation-delay: 1.6s; }
 html.loader-on .home-page .hero-slide:first-child .hero-pill { animation-delay: 1.9s; }
-html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
 
 /* Hero → Jejak (after studio-onto.com): as Jejak slides over the receding hero, its title arrives
    oversized and shrinks into place while the rest of the block rises in after it. */

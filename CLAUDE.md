@@ -212,10 +212,10 @@ Lainnya:
   melayang di baris bawah hero (absolute, jadi tidak menggeser judul): desktop kanan bawah, ≤1023px kiri
   bawah (titik slider di kanan; HP ≤767px: titik disembunyikan selama strip tampil, strip selebar baris). Tanpa kegiatan/gagal fetch = tersembunyi. Layar loading/intro sengaja
   tidak dibuat (pengunjung HP dari IG/WA, PageSpeed).
-- Kedalaman scroll Beranda (Okt 2026, ref. studio-onto.com; dirombak karena terasa kaku): JS (`js/script.js`,
-  blok home-motion) mengisi `--hero-depth` 0→1 selama 100vh pertama dengan *lerp* (.14 per frame) supaya
-  loncatan roda mouse meluncur halus tanpa membajak scroll (Lenis sengaja tidak dipakai). Hero turun 30vh
-  lebih lambat, copy/titik/strip memudar + naik 60px; `.impact-editorial` = lembaran krem (z-index 1, sudut
+- Kedalaman scroll Beranda (Okt 2026, ref. studio-onto.com; mesin diganti ke CSS scroll-driven setelah web bank Jago
+  terasa lebih mulus): `animation-timeline: scroll(root)` di 100vh pertama, tanpa JS (lerp lama dihapus). Hero turun 30vh
+  lebih lambat, copy/titik/strip memudar + naik 60px (di 46vh pertama; `.hero-next` = dua animasi, fade dulu lalu
+  entrance supaya entrance tetap menang); browser tanpa scroll timeline: hero diam, lembaran tetap naik; `.impact-editorial` = lembaran krem (z-index 1, sudut
   atas 28px / HP 20px, bayangan) yang naik menutupi hero. Tidak ada yang di-`scale` (ringan di HP lemah).
   Foto Jejak, Tentang, kisah utama tetap bergeser ±5% (CSS scroll-driven, `scale` 1.12; Firefox/Safari lama diam).
 - Loader Beranda (Okt 2026, ref. studio-onto.com, disetujui dengan syarat): `js/loader-gate.js` (render-blocking
@@ -256,6 +256,12 @@ Lainnya:
   pengumuman sr-only) tetap; `updateTestimonials` menambah `data-stack` (0 depan, 1–2 mengintip) dan `.is-thrown`
   (kartu terakhir dilempar ke kiri). Warna kartu bergilir: merah bata, emas, maroon gelap, kertas, merah muda.
   Kartu selain depan `pointer-events: none` (kartu terlempar sempat menutupi panah). CSS testimoni lama dihapus.
+- "Daftar cuma 2 menit" di Beranda (Okt 2026, ref. bank Jago): setelah Kegiatan Terdekat; 3 langkah bernomor (urutan
+  sungguhan) + bingkai HP berisi screenshot asli `img/daftar-langkah-1..3.webp` (dibuat dari Playwright, data tiruan
+  "Nadia Putri"; buat ulang kalau tampilan pendaftaran berubah). Desktop: HP menempel, layar ganti sesuai langkah
+  yang lewat tengah layar; ≤900px: langkah ringkas, layar berganti sendiri tiap 3 s (tidak saat reduced motion).
+  Catatan: aturan `.btn` ketiga (sekitar baris 6150) sempat masih `--radius-lg` 6px, jadi "semua tombol pil" baru
+  benar-benar berlaku Okt 2026 ini.
 - Ref. "dekat dengan rakyat" (Okt 2026): (1) kartu kegiatan menulis "N orang udah daftar · …" kalau ≥5 (kapasitas − sisa,
   `registeredCount`; Seleksi tanpa angka); (2) layar sukses pendaftaran: konfeti kertas warna KB sekali (`celebrate` di
   `renderOnboarding`, ±2 s, mati saat reduced motion) + "Ajak teman ikut" jadi kartu merah muda dengan dua tombol pil;

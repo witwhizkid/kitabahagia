@@ -1020,25 +1020,6 @@ if (homeMotion) {
     else if (y < lastY - 4 || y <= 160) header?.classList.remove('is-tucked');
     lastY = y;
   }, { passive: true });
-  // Hero → Jejak: the hero sinks slower than the page while Jejak slides over it like a sheet. The
-  // progress eases toward the scroll position, so wheel notches glide instead of stepping.
-  const hero = document.querySelector('.home-page .hero-campaign');
-  if (hero) {
-    const goal = () => Math.min(Math.max(window.scrollY / window.innerHeight, 0), 1);
-    let depth = goal();
-    let frame = 0;
-    const step = () => {
-      const target = goal();
-      depth += (target - depth) * .14;
-      if (Math.abs(target - depth) < .0005) depth = target;
-      hero.style.setProperty('--hero-depth', depth.toFixed(4));
-      // Never sink further than the page has scrolled, or a gap opens above the hero on the way back up.
-      hero.style.setProperty('--hero-shift', `${Math.min(depth * window.innerHeight * .3, window.scrollY).toFixed(1)}px`);
-      frame = depth === target ? 0 : requestAnimationFrame(step);
-    };
-    window.addEventListener('scroll', () => { if (!frame) frame = requestAnimationFrame(step); }, { passive: true });
-    step();
-  }
 }
 
 // Any page seen in this visit means Beranda's loader (js/loader-gate.js) is skipped from now on.
@@ -1119,6 +1100,32 @@ if (impactCounters.length && 'IntersectionObserver' in window
     counter.stat.replaceChildren(label, counter.shown);
     countObserver.observe(counter.stat);
   });
+}
+
+// Beranda "Daftar cuma 2 menit": the phone shows the step being read (desktop, by scroll) or cycles the
+// three screens on its own (phones, where the steps are short), never with reduced motion.
+const howto = document.querySelector('[data-howto]');
+if (howto) {
+  const steps = [...howto.querySelectorAll('[data-howto-step]')];
+  const screens = [...howto.querySelectorAll('.howto-screen img')];
+  const wide = window.matchMedia('(min-width: 901px)');
+  let current = 0;
+  const show = (index) => {
+    current = index;
+    steps.forEach((step, i) => step.classList.toggle('is-on', i === index));
+    screens.forEach((screen, i) => screen.classList.toggle('is-on', i === index));
+  };
+  show(0);
+  if ('IntersectionObserver' in window) {
+    const stepObserver = new IntersectionObserver((entries) => {
+      entries.forEach(({ isIntersecting, target }) => { if (isIntersecting && wide.matches) show(steps.indexOf(target)); });
+    }, { rootMargin: '-45% 0px -45% 0px' });
+    steps.forEach((step) => stepObserver.observe(step));
+  }
+  setInterval(() => {
+    if (wide.matches || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    show((current + 1) % steps.length);
+  }, 3000);
 }
 
 // Beranda programs (after gojek.io): one big card per program, swiped sideways. The card nearest the
