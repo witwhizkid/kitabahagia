@@ -110,6 +110,10 @@ Halaman pendaftaran (`pendaftaran.html`):
   pengumuman; gratis biasa = langsung aman. Copy `expired` (QRIS kedaluwarsa, slot
   masih ditahan sampai deadline, buat QRIS baru), `failed`, gagal cek status, dan
   `SERVER_ERROR` menjelaskan data tetap tersimpan dan tidak perlu daftar/bayar ulang.
+- Urutan layar sukses gratis (`#freeRegistrationConfirmation`, Okt 2026, masukan user: tombol grup terlalu ke bawah) diatur
+  lewat CSS `order` (markup/JS tetap): judul → "Tempatmu sudah dikonfirmasi" → kartu kegiatan → kartu putih "Langkah
+  berikutnya" (tombol Grup WhatsApp selebar kartu, kalender pil kecil, ajak teman) → kode pendaftaran → catatan email →
+  link Instagram. Baris "Kegiatan" disembunyikan kalau kartu kegiatan tampil (dobel). Link grup juga ada di email konfirmasi.
 - Layar sukses (gratis terkonfirmasi / bayar lunas / diterima) punya "Simpan ke
   kalender": link Google Calendar + file .ics (pengingat H-1) dari `selectedEvent`
   (`renderCalendar` di `renderOnboarding`). Cek status belum punya karena

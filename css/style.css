@@ -2354,12 +2354,15 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-payment-window { margin:14px 0 0; color:var(--muted); font-size:13px; line-height:1.55; }
 .registration-payment-window[hidden], .registration-resume[hidden] { display:none; }
 .registration-resume { margin-top:12px; }
-.registration-onboarding { margin-top:28px; padding-top:24px; border-top:1px solid var(--line); }
+.registration-onboarding { margin:0 0 8px; padding:22px; border:1px solid var(--line); border-radius:24px; background:var(--white); }
 .registration-onboarding h3 { margin:0 0 8px; font-size:20px; }
 .registration-onboarding p { max-width:48ch; margin:0 0 18px; color:var(--muted); font-size:14px; line-height:1.65; }
 .registration-onboarding .btn { display:inline-flex; align-items:center; gap:8px; min-height:48px; }
-.calendar-actions { margin-top:22px; }
-.calendar-actions p { margin-bottom:12px; }
+.registration-onboarding [data-whatsapp-group] { justify-content:center; width:100%; min-height:56px; font-size:16px; }
+.registration-onboarding [data-whatsapp-group][hidden] { display:none; }
+.calendar-actions { margin-top:18px; }
+.calendar-actions p { margin-bottom:10px; font-size:13px; }
+.calendar-actions .btn { min-height:40px; padding-inline:16px; font-size:13px; }
 .calendar-buttons { display:flex; flex-wrap:wrap; gap:10px; }
 .payment-details { padding-left:32px; border-left:1px solid var(--line); }
 .payment-details h3 { margin:0 0 24px; font-size:22px; }
@@ -2432,7 +2435,19 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-page .payment-stage.payment_failed .payment-intro,
 .registration-page .payment-stage.payment_deadline_passed .payment-intro { display:block; margin:0; text-align:center; }
 .registration-page .payment-back-link:focus-visible { outline-color:var(--white); }
-.registration-confirmation { margin-top:48px; padding:32px 0; border-top:1px solid var(--line); max-width:680px; }
+.registration-confirmation { display:flex; flex-direction:column; margin-top:48px; padding:32px 0; border-top:1px solid var(--line); max-width:680px; }
+.registration-confirmation[hidden] { display:none; }
+/* Success screen order (Oct 2026): what to do next comes right after the event; reference info and the
+   Instagram link follow. CSS order only, so the markup and JS hooks stay the same. */
+.registration-confirmation > [data-confirmation-copy] { order:1; margin:-6px 0 18px; }
+.registration-confirmation > .registration-confirmation-event { order:2; }
+.registration-confirmation > .registration-onboarding { order:3; }
+.registration-confirmation > dl { order:4; }
+.registration-confirmation > .registration-email-note { order:5; }
+.registration-confirmation > .registration-status-link { order:6; }
+.registration-confirmation > [data-registration-instagram-cta] { order:7; align-self:flex-start; margin-top:18px; }
+/* The event card already names the event, so the "Kegiatan" row would repeat it. */
+.registration-confirmation-event:not([hidden]) ~ dl > div:nth-child(2) { display:none; }
 .registration-confirmation-event { display:flex; align-items:center; gap:16px; margin:0 0 20px; padding:14px; border-radius:var(--radius-md); background:var(--maroon-soft); }
 .registration-confirmation-event img { flex:none; width:64px; aspect-ratio:4 / 5; border-radius:8px; background:var(--cream); object-fit:contain; }
 .registration-confirmation-event p { margin:0; line-height:1.5; }
