@@ -256,10 +256,8 @@ Lainnya:
   pengumuman sr-only) tetap; `updateTestimonials` menambah `data-stack` (0 depan, 1–2 mengintip) dan `.is-thrown`
   (kartu terakhir dilempar ke kiri). Warna kartu bergilir: merah bata, emas, maroon gelap, kertas, merah muda.
   Kartu selain depan `pointer-events: none` (kartu terlempar sempat menutupi panah). CSS testimoni lama dihapus.
-- "Daftar cuma 2 menit" di Beranda (Okt 2026, ref. bank Jago): setelah Kegiatan Terdekat; 3 langkah bernomor (urutan
-  sungguhan) + bingkai HP berisi screenshot asli `img/daftar-langkah-1..3.webp` (dibuat dari Playwright, data tiruan
-  "Nadia Putri"; buat ulang kalau tampilan pendaftaran berubah). Desktop: HP menempel, layar ganti sesuai langkah
-  yang lewat tengah layar; ≤900px: langkah ringkas, layar berganti sendiri tiap 3 s (tidak saat reduced motion).
+- "Daftar cuma 2 menit" (bingkai HP + 3 langkah, ref. bank Jago) **dicoba lalu dihapus** (Okt 2026, user: tidak efektif
+  di HP dan memanjangkan Beranda). Jangan tambahkan lagi.
   Catatan: aturan `.btn` ketiga (sekitar baris 6150) sempat masih `--radius-lg` 6px, jadi "semua tombol pil" baru
   benar-benar berlaku Okt 2026 ini.
 - Ref. "dekat dengan rakyat" (Okt 2026): (1) kartu kegiatan menulis "N orang udah daftar · …" kalau ≥5 (kapasitas − sisa,

@@ -1102,32 +1102,6 @@ if (impactCounters.length && 'IntersectionObserver' in window
   });
 }
 
-// Beranda "Daftar cuma 2 menit": the phone shows the step being read (desktop, by scroll) or cycles the
-// three screens on its own (phones, where the steps are short), never with reduced motion.
-const howto = document.querySelector('[data-howto]');
-if (howto) {
-  const steps = [...howto.querySelectorAll('[data-howto-step]')];
-  const screens = [...howto.querySelectorAll('.howto-screen img')];
-  const wide = window.matchMedia('(min-width: 901px)');
-  let current = 0;
-  const show = (index) => {
-    current = index;
-    steps.forEach((step, i) => step.classList.toggle('is-on', i === index));
-    screens.forEach((screen, i) => screen.classList.toggle('is-on', i === index));
-  };
-  show(0);
-  if ('IntersectionObserver' in window) {
-    const stepObserver = new IntersectionObserver((entries) => {
-      entries.forEach(({ isIntersecting, target }) => { if (isIntersecting && wide.matches) show(steps.indexOf(target)); });
-    }, { rootMargin: '-45% 0px -45% 0px' });
-    steps.forEach((step) => stepObserver.observe(step));
-  }
-  setInterval(() => {
-    if (wide.matches || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    show((current + 1) % steps.length);
-  }, 3000);
-}
-
 // Beranda programs (after gojek.io): one big card per program, swiped sideways. The card nearest the
 // middle is "on": it is not dimmed and its word in the headline lights up in the card's colour.
 const programCarousel = document.querySelector('[data-program-carousel]');
