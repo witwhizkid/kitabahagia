@@ -237,6 +237,14 @@
 ::view-transition-old(root) { animation: none; }
 ::view-transition-new(root) { animation: kb-curtain-open .85s cubic-bezier(.24, .36, 0, 1) both; }
 @keyframes kb-curtain-open { from { clip-path: inset(100% 0 0 0); transform: translateY(8%); } to { clip-path: inset(0); transform: none; } }
+/* Event card → registration (Oct 2026, app-like): no curtain; the clicked poster flies into the summary
+   thumbnail (view-transition-name set by JS on both pages only for that card) while the pages cross-fade. */
+html:active-view-transition-type(poster)::view-transition { background: var(--cream); }
+html:active-view-transition-type(poster)::view-transition-old(root) { animation: kb-page-fade-out .3s ease both; }
+html:active-view-transition-type(poster)::view-transition-new(root) { animation: kb-page-fade-in .45s .1s ease both; }
+::view-transition-group(event-poster) { z-index: 2; animation-duration: .62s; animation-timing-function: cubic-bezier(.2, .75, .2, 1); }
+@keyframes kb-page-fade-out { to { opacity: 0; } }
+@keyframes kb-page-fade-in { from { opacity: 0; } }
 .page-curtain { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: var(--maroon); transform: translateY(100%); visibility: hidden; pointer-events: none; transition: transform .56s cubic-bezier(.65, 0, .35, 1), visibility 0s .56s; }
 .page-curtain img { width: 128px; height: auto; opacity: 0; transform: translateY(14px); transition: opacity .5s .18s ease, transform .6s .18s cubic-bezier(.24, .36, 0, 1); }
 .page-curtain.is-covering { transform: none; visibility: visible; pointer-events: auto; transition-delay: 0s; }
@@ -854,6 +862,19 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .home-page .impact-editorial-image {
   border-radius: var(--radius-photo);
 }
+
+/* Marquee (Oct 2026, Awwwards stage 2): one slow band of KB phrases opening the dark programs section.
+   Two identical halves slide by -50% so the loop is seamless; still under reduced motion. */
+.kb-marquee { margin: -24px 0 56px; overflow: hidden; border-block: 1px solid rgba(255, 248, 239, .14); }
+.kb-marquee-track { display: flex; width: max-content; animation: kb-marquee 38s linear infinite; }
+.kb-marquee-track > div { display: flex; flex: none; align-items: center; }
+.kb-marquee span { padding: 18px 28px; color: #f6e6d6; font: 600 clamp(22px, 2.4vw, 34px)/1 "Instrument Sans", "DM Sans", sans-serif; letter-spacing: -.02em; white-space: nowrap; }
+.kb-marquee i { flex: none; width: 12px; height: 12px; border-radius: 50%; background: #efb635; }
+.kb-marquee i:nth-of-type(2n) { background: #ff8f86; }
+@media (hover: hover) { .kb-marquee:hover .kb-marquee-track { animation-play-state: paused; } }
+@keyframes kb-marquee { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .kb-marquee-track { animation: none; } }
+@media (max-width: 767px) { .kb-marquee { margin: -8px 0 36px; } .kb-marquee span { padding: 14px 20px; } }
 
 /* Beranda programs (Oct 2026, after gojek.io): big swipeable cards on a dark maroon stage. JS marks the
    centred card .is-on and lights its word in the headline; without JS every card stays bright. */
@@ -7037,3 +7058,18 @@ html.stabilo-motion .stabilo:not(.is-in)::before { clip-path: inset(0 100% 0 0);
 @media (prefers-reduced-motion: reduce) {
   .link-item, .link-event { transition: none; }
 }
+
+/* Kartu Relawan on sertifikat.html (Oct 2026): a member card that tilts in 3D with the pointer or the
+   phone (--rx/--ry from JS) and catches a moving shine (--mx/--my); still under reduced motion. */
+.volunteer-card-section { margin-top: 48px; padding-top: 36px; border-top: 1px solid var(--line); }
+.volunteer-card-section[hidden] { display: none; }
+.volunteer-card-section h2 { margin: 0 0 6px; font-size: clamp(26px, 3vw, 34px); }
+.volunteer-card-section > p { margin: 0 0 26px; color: var(--muted); }
+.volunteer-card { position: relative; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; max-width: 460px; aspect-ratio: 1.586; margin-bottom: 26px; padding: 28px 30px; overflow: hidden; border-radius: 26px; background: linear-gradient(135deg, #53141d 0%, #c23a3f 60%, #efb635 100%); color: var(--white); box-shadow: 0 24px 50px rgba(60, 20, 25, .3); transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .25s ease-out; }
+.volunteer-card-shine { position: absolute; inset: 0; background: radial-gradient(circle at var(--mx, 30%) var(--my, 20%), rgba(255, 255, 255, .45), transparent 45%), linear-gradient(115deg, transparent 30%, rgba(255, 240, 199, .25) 45%, rgba(242, 184, 192, .25) 55%, transparent 70%); mix-blend-mode: overlay; pointer-events: none; }
+.volunteer-card-logo { position: absolute; top: 24px; left: 28px; width: 54px; height: 54px; object-fit: contain; }
+.volunteer-card-label { color: #ffe6e1; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.volunteer-card strong { font: 700 clamp(24px, 4vw, 34px)/1.1 "Instrument Sans", "DM Sans", sans-serif; letter-spacing: -.02em; }
+.volunteer-card-event { color: #ffe6e1; font-size: 14px; }
+.volunteer-card-since { margin-top: 6px; color: #2a0e13; font-size: 13px; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .volunteer-card { transform: none; transition: none; } }

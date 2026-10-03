@@ -260,6 +260,15 @@ Lainnya:
   di HP dan memanjangkan Beranda). Jangan tambahkan lagi.
   Catatan: aturan `.btn` ketiga (sekitar baris 6150) sempat masih `--radius-lg` 6px, jadi "semua tombol pil" baru
   benar-benar berlaku Okt 2026 ini.
+- Paket ref. Okt 2026 #3 ("geleng-geleng"): (1) **poster terbang**: klik kartu kegiatan melewati tirai; JS memberi poster
+  kartu `view-transition-name: event-poster` + simpan `sessionStorage kb_poster` {slug, src}, `js/poster-handoff.js`
+  (di `<head>` pendaftaran.html, sebelum render pertama) menaruh poster itu di thumbnail ringkasan dengan nama yang sama,
+  tipe transisi `poster` = halaman cross-fade + latar krem (CSS `:active-view-transition-type(poster)`); Chrome/Edge/
+  Safari 18.2+, lainnya pindah biasa. (2) **Kartu Relawan** di sertifikat.html (setelah data sah): kartu gradien maroon→
+  merah bata→emas, miring 3D + kilau ikut kursor/kemiringan HP (Android; iOS butuh izin, dilewati), "Bagikan kartu" =
+  PNG 1600×1010 lewat `shareImageFile` (helper bersama dengan Story). (3) **Marquee** pita frasa KB di atas Program
+  Beranda (38 s, berhenti saat hover/reduced motion). Foto ikut kursor + galeri geser mendatar (tahap 2 Awwwards)
+  sengaja tidak dibuat: daftar Kisah sudah berfoto dan carousel mendatar sudah ada di Program/testimoni/dokumentasi.
 - Paket ref. Okt 2026 #2: (1) "Bagikan ke Story" di kartu "Ajak teman ikut" layar sukses: gambar 1080×1920 digambar
   di canvas (`makeStoryImage`: latar maroon gelap, kartu merah bata "Aku ikut <kegiatan>", tgl · lokasi, "Yuk, ikut juga!
   kitabahagia.id/link"; tanpa poster karena gambar lintas-origin mengotori canvas), HP = share sheet native

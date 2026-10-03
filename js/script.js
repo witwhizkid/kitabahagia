@@ -27,6 +27,36 @@ const formatEventPrice = (price) => price === 0 ? 'Gratis' : new Intl.NumberForm
   style: 'currency', currency: 'IDR', maximumFractionDigits: 0
 }).format(price);
 
+// Share an image the visitor made (Story, volunteer card): the native share sheet on phones (Instagram
+// is in it), a PNG download elsewhere.
+const shareImageFile = async (blob, filename) => {
+  const file = new File([blob], filename, { type: 'image/png' });
+  if (navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ files: [file] }).catch(() => null);
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+// Breaks text into lines that fit maxWidth on a canvas.
+const wrapCanvasText = (context, text, maxWidth) => {
+  const lines = [];
+  let line = '';
+  String(text).split(/\s+/).forEach((word) => {
+    const next = line ? `${line} ${word}` : word;
+    if (context.measureText(next).width > maxWidth && line) { lines.push(line); line = word; } else line = next;
+  });
+  if (line) lines.push(line);
+  return lines;
+};
+const canvasToPng = (canvas) => new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('canvas'))), 'image/png'));
+
 const fetchPublicEvents = async ({ slug = null, limit = null, past = false } = {}) => {
   const url = new URL(`${SUPABASE_FUNCTIONS_BASE_URL}/public-events`);
   if (PUBLIC_EVENTS_CONFIG.demo) url.searchParams.set('demo', 'true');
@@ -1041,6 +1071,7 @@ if ('onpagereveal' in window && window.matchMedia('(prefers-reduced-motion: no-p
   curtain.append(curtainLogo);
   document.body.append(curtain);
   const CURTAIN_MS = 560;
+  let flyingPoster = null;
   document.addEventListener('click', (event) => {
     const link = event.target.closest?.('a[href]');
     if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -1048,12 +1079,30 @@ if ('onpagereveal' in window && window.matchMedia('(prefers-reduced-motion: no-p
     const url = new URL(link.href, location.href);
     if (url.origin !== location.origin || !/^https?:$/.test(url.protocol)) return;
     if (url.pathname === location.pathname && url.search === location.search) return;
+    // Event cards skip the curtain: their poster flies into the registration page instead
+    // (js/poster-handoff.js picks it up there).
+    const poster = link.closest('.event-card')?.querySelector('.event-card-photo img');
+    if (poster?.complete && poster.naturalWidth && url.searchParams.get('event')) {
+      try {
+        sessionStorage.setItem('kb_poster', JSON.stringify({ slug: url.searchParams.get('event'), src: poster.currentSrc || poster.src }));
+      } catch {
+        return;
+      }
+      poster.style.viewTransitionName = 'event-poster';
+      flyingPoster = poster;
+      window.addEventListener('pageswap', (swap) => swap.viewTransition?.types?.add('poster'), { once: true });
+      return;
+    }
     event.preventDefault();
     curtain.classList.add('is-covering');
     setTimeout(() => { location.href = url.href; }, CURTAIN_MS);
   });
-  // Back/forward restores this page from the cache with the curtain still up.
-  window.addEventListener('pageshow', () => curtain.classList.remove('is-covering'));
+  // Back/forward restores this page from the cache with the curtain still up (or a poster still named).
+  window.addEventListener('pageshow', () => {
+    curtain.classList.remove('is-covering');
+    if (flyingPoster) flyingPoster.style.viewTransitionName = '';
+    flyingPoster = null;
+  });
 }
 
 const revealItems = document.querySelectorAll('.reveal');
@@ -1863,16 +1912,6 @@ if (registrationForm) {
   // "Bagikan ke Story" (after Spotify Wrapped): a 1080×1920 KB-coloured image drawn in the browser
   // (logo + event; no poster, a cross-origin image would taint the canvas). Phones get the native share
   // sheet (Instagram is in it); elsewhere it downloads.
-  const wrapCanvasText = (context, text, maxWidth) => {
-    const lines = [];
-    let line = '';
-    String(text).split(/\s+/).forEach((word) => {
-      const next = line ? `${line} ${word}` : word;
-      if (context.measureText(next).width > maxWidth && line) { lines.push(line); line = word; } else line = next;
-    });
-    if (line) lines.push(line);
-    return lines;
-  };
   const makeStoryImage = async (event) => {
     await Promise.all(['700 96px "Instrument Sans"', '500 40px "DM Sans"'].map((font) => document.fonts?.load(font).catch(() => null)));
     const logo = new Image();
@@ -1919,27 +1958,13 @@ if (registrationForm) {
     context.fillStyle = '#f6e6d6';
     context.font = '500 44px "DM Sans", sans-serif';
     context.fillText('kitabahagia.id/link', 96, 1640);
-    return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    return canvasToPng(canvas);
   };
   const shareStory = async (button) => {
     if (!selectedEvent) return;
     button.disabled = true;
     try {
-      const blob = await makeStoryImage(selectedEvent);
-      if (!blob) throw new Error('canvas');
-      const file = new File([blob], `kita-bahagia-${selectedEvent.slug}.png`, { type: 'image/png' });
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] }).catch(() => null);
-      } else {
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = file.name;
-        document.body.append(anchor);
-        anchor.click();
-        anchor.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }
+      await shareImageFile(await makeStoryImage(selectedEvent), `kita-bahagia-${selectedEvent.slug}.png`);
     } catch {
       button.textContent = 'Gagal membuat gambar';
       setTimeout(() => { button.textContent = 'Bagikan ke Story'; }, 2000);
@@ -3621,6 +3646,80 @@ if (certificateCheck) {
     message.textContent = '';
     message.hidden = true;
     result.hidden = false;
+    renderVolunteerCard(certificate);
+  };
+  // Kartu Relawan (Oct 2026): a shiny member card that tilts with the pointer (or the phone, where the
+  // browser allows it without a permission prompt) and can be shared/downloaded as a PNG.
+  const sinceFormatter = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
+  const renderVolunteerCard = (certificate) => {
+    const section = document.querySelector('[data-volunteer-card-section]');
+    const card = section?.querySelector('[data-volunteer-card]');
+    if (!card) return;
+    const since = `Relawan sejak ${sinceFormatter.format(new Date(`${certificate.event_date}T12:00:00+07:00`))}`;
+    card.querySelector('[data-card-name]').textContent = certificate.recipient_name;
+    card.querySelector('[data-card-event]').textContent = certificate.event_title;
+    card.querySelector('[data-card-since]').textContent = since;
+    section.hidden = false;
+    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+      const tilt = (x, y) => {
+        card.style.setProperty('--ry', `${(x - .5) * 18}deg`);
+        card.style.setProperty('--rx', `${(.5 - y) * 14}deg`);
+        card.style.setProperty('--mx', `${x * 100}%`);
+        card.style.setProperty('--my', `${y * 100}%`);
+      };
+      card.addEventListener('pointermove', (event) => {
+        const box = card.getBoundingClientRect();
+        tilt((event.clientX - box.left) / box.width, (event.clientY - box.top) / box.height);
+      });
+      card.addEventListener('pointerleave', () => tilt(.5, .5));
+      if ('DeviceOrientationEvent' in window && typeof DeviceOrientationEvent.requestPermission !== 'function') {
+        window.addEventListener('deviceorientation', ({ beta, gamma }) => {
+          if (beta === null || gamma === null) return;
+          tilt(Math.min(Math.max((gamma + 30) / 60, 0), 1), Math.min(Math.max((beta - 20) / 60, 0), 1));
+        });
+      }
+    }
+    section.querySelector('[data-card-share]').onclick = async (event) => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      try {
+        await document.fonts?.load('700 92px "Instrument Sans"').catch(() => null);
+        const logo = new Image();
+        logo.src = 'assets/logo/logo-kita-bahagia-white.webp';
+        await logo.decode().catch(() => null);
+        const canvas = document.createElement('canvas');
+        canvas.width = 1600;
+        canvas.height = 1010;
+        const context = canvas.getContext('2d');
+        const gradient = context.createLinearGradient(0, 0, 1600, 1010);
+        gradient.addColorStop(0, '#53141d');
+        gradient.addColorStop(.6, '#c23a3f');
+        gradient.addColorStop(1, '#efb635');
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.roundRect(0, 0, 1600, 1010, 72);
+        context.fill();
+        if (logo.complete && logo.naturalWidth) context.drawImage(logo, 110, 100, 170, 170);
+        context.fillStyle = '#ffe6e1';
+        context.font = '600 40px "DM Sans", sans-serif';
+        context.fillText('KARTU RELAWAN · KITA BAHAGIA', 110, 380);
+        context.fillStyle = '#ffffff';
+        context.font = '700 92px "Instrument Sans", "DM Sans", sans-serif';
+        wrapCanvasText(context, certificate.recipient_name, 1380).slice(0, 2).forEach((line, i) => context.fillText(line, 110, 500 + i * 100));
+        context.font = '500 44px "DM Sans", sans-serif';
+        context.fillStyle = '#ffe6e1';
+        wrapCanvasText(context, certificate.event_title, 1380).slice(0, 2).forEach((line, i) => context.fillText(line, 110, 760 + i * 56));
+        context.fillStyle = '#2a0e13';
+        context.font = '700 40px "DM Sans", sans-serif';
+        context.fillText(since, 110, 920);
+        await shareImageFile(await canvasToPng(canvas), 'kartu-relawan-kita-bahagia.png');
+      } catch {
+        button.textContent = 'Gagal membuat gambar';
+        setTimeout(() => { button.textContent = 'Bagikan kartu'; }, 2000);
+      } finally {
+        button.disabled = false;
+      }
+    };
   };
   const notFound = 'Sertifikat tidak ditemukan. Pastikan link atau QR-nya utuh. Kalau yakin sertifikatmu asli, hubungi Kita Bahagia lewat halaman Kontak.';
   const failed = 'Sertifikat belum dapat diperiksa. Periksa koneksi lalu muat ulang halaman ini.';
