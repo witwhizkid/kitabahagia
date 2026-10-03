@@ -235,8 +235,13 @@
 @view-transition { navigation: auto; }
 ::view-transition { background: var(--maroon); }
 ::view-transition-old(root) { animation: none; }
-::view-transition-new(root) { animation: kb-curtain-open .85s cubic-bezier(.24, .36, 0, 1) both; }
-@keyframes kb-curtain-open { from { clip-path: inset(100% 0 0 0); transform: translateY(8%); } to { clip-path: inset(0); transform: none; } }
+::view-transition-new(root) { animation: none; }
+/* Arriving side: js/curtain-gate.js puts html.curtain-in on the new page before its first paint (same
+   maroon + logo as .page-curtain, so the swap is invisible) and .curtain-open once the DOM is ready. */
+html.curtain-in::after { content: ""; position: fixed; inset: 0; z-index: 1002; background: var(--maroon) url("/assets/logo/logo-kita-bahagia-white.webp") center / 128px auto no-repeat; pointer-events: none; }
+html.curtain-open::after { animation: kb-curtain-lift .7s cubic-bezier(.65, 0, .35, 1) forwards; }
+@keyframes kb-curtain-lift { to { transform: translateY(-100%); } }
+@media (min-width: 900px) { html.curtain-in::after { background-size: 160px auto; } }
 /* Event card → registration (Oct 2026, app-like): no curtain; the clicked poster flies into the summary
    thumbnail (view-transition-name set by JS on both pages only for that card) while the pages cross-fade. */
 html:active-view-transition-type(poster)::view-transition { background: var(--cream); }

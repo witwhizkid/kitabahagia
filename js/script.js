@@ -1094,6 +1094,8 @@ if ('onpagereveal' in window && window.matchMedia('(prefers-reduced-motion: no-p
       return;
     }
     event.preventDefault();
+    // The next page starts under the same curtain and lifts it itself (js/curtain-gate.js).
+    try { sessionStorage.setItem('kb_curtain', '1'); } catch { /* no storage: the next page just appears */ }
     curtain.classList.add('is-covering');
     setTimeout(() => { location.href = url.href; }, CURTAIN_MS);
   });

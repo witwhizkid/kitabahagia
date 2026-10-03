@@ -200,7 +200,7 @@ Lainnya:
   (dulu terasa "freeze" karena view transition baru mulai setelah halaman baru siap). `@view-transition`
   menahan bingkai tertutup itu (`old(root)` tanpa animasi) lalu halaman baru terbuka dari bawah (.85s).
   Dilewati untuk Ctrl/Cmd-klik, `target`, unduhan, link luar, dan link `#` di halaman yang sama; `pageshow`
-  menurunkan tirai saat kembali (Back). Tirai diam = `visibility: hidden` (dulu pinggirnya nongol merah di bawah layar HP lambat saat bar alamat Chrome menghilang). Hanya di browser dengan transisi lintas halaman (`onpagereveal`:
+  menurunkan tirai saat kembali (Back). Okt 2026: sisi halaman baru tidak lagi bergantung pada view transition (Chrome kadang melewatinya atau memotongnya saat halaman lambat, mis. Jadwal → tirai "kadang muncul kadang tidak"): klik menyimpan `sessionStorage kb_curtain`, `js/curtain-gate.js` (render-blocking di `<head>` semua halaman publik) memasang `html.curtain-in` (panel maroon + logo lewat `html::after`) sebelum render pertama lalu `.curtain-open` mengangkatnya .7s setelah DOM siap (cadangan 1,8 s); `::view-transition-new(root)` tanpa animasi. Tirai diam = `visibility: hidden` (dulu pinggirnya nongol merah di bawah layar HP lambat saat bar alamat Chrome menghilang). Hanya di browser dengan transisi lintas halaman (`onpagereveal`:
   Chrome/Edge/Safari 18.2+); lainnya pindah biasa. Mati saat reduced motion. Admin tidak memakainya.
   Angka Jejak beranda 2×2 di semua lebar dan menghitung naik sekali saat terlihat
   (tahun tidak); label pakai `.impact-editorial-stat > span` supaya span di dalam
