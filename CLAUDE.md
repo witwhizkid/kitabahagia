@@ -154,6 +154,15 @@ Lainnya:
   Impactful Action). Label nomor hiasan 01/02/03 **dihapus** (Okt 2026, keputusan user: kesan template/AI):
   bab Program, alur program (jadi panah →), Program + testimoni Beranda, angka Jejak, Nilai Kami Tentang.
   Nomor hanya dipakai untuk urutan sungguhan (langkah Relawan/Kolaborasi, panduan bayar). Jangan tambah lagi.
+  Kartu Program (Okt 2026, audit UI): per bab grid kartu putih (foto 3:2 di atas, tag, judul, deskripsi, meta),
+  alur kegiatan dilipat di `<details class="program-flow-details">` "Lihat alur kegiatan"; bab dengan satu
+  program = kartu lebar (foto kiri) di ≥961px; HP = satu baris kartu geser per bab (84%), supaya halaman tidak
+  memanjang.
+- Pembuka halaman satu pola (Okt 2026, audit UI): breadcrumb → teks kiri (judul + kalimat [+ catatan]) dan
+  **foto cetakan jurnal** kanan (`.hero-print`: bingkai krem, miring -1°, masuk pelan sekali saat dimuat) di
+  Program, Tentang (foto strip penuh di atas dihapus), Kolaborasi, Relawan, Kisah; kolom 1.1fr/.9fr, ≤960px
+  bertumpuk. Judul pembuka bersama `clamp(44px, 4.6vw, 64px)` supaya tidak pecah 5 baris. Jadwal sengaja tanpa
+  foto (isinya poster kegiatan), Kontak/FAQ/halaman legal juga tetap teks.
 - "Living Archive" (Codex, Sep 2026, migrasi `20261012010000`): `events.program_key`
   (masyarakat_reguler / adventure_unique / impactful_action, diisi di form Kegiatan) dan
   `stories.event_id` (Kegiatan terkait di form Kisah, `on delete set null`). Data lama
