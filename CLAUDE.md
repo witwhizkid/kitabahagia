@@ -128,6 +128,12 @@ Halaman pendaftaran (`pendaftaran.html`):
   meniru `enhanceSelect` admin; select asli tersembunyi tetap sumber nilai + validasi). Tampil di
   Konfirmasi, admin Detail + CSV, dan Privasi.
   Detail: "Registration profile fields" di `supabase/README.md`.
+- Paket form Okt 2026: data "Ingat data saya" **tidak lagi diisi diam-diam**; muncul kartu "Daftar sebagai <nama>?" ([data-profile-
+  prompt]) dengan "Pakai data ini" / "Bukan saya" (hapus simpanan). Error nomor WA ramah + contoh 081234567890 dan kolom
+  bergoyang (`.is-shaking`; aturan validasi tidak berubah). Tombol Konfirmasi: spinner (`.is-loading`) lalu hijau ✓ (`.is-done`).
+  Tutup ≤24 jam lagi: badge poster + status ringkasan jadi "Tutup dalam HH:MM:SS" (`data-countdown`, satu timer global).
+  Daftar sukses disimpan di `localStorage kb_my_registration`; Beranda + Jadwal menampilkan "Kamu terdaftar di <kegiatan> · <hari>
+  · Cek status →" sampai hari kegiatan lewat (`renderMyRegistration`, tidak dikirim ke server).
 - Centang "Ingat data saya" (tanpa `name`, tidak ikut terkirim) menyimpan nama,
   WA, email, domisili, instansi, usia, akun sosmed di `localStorage` `kb_volunteer_profile` saat
   submit valid dan mengisi otomatis pendaftaran berikutnya; tidak dicentang =

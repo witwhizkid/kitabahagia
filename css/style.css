@@ -7048,6 +7048,29 @@ html.stabilo-motion .stabilo:not(.is-in)::before { clip-path: inset(0 100% 0 0);
   .not-found-print { order: -1; max-width: 420px; }
 }
 
+/* Form helpers (Oct 2026): remembered-profile prompt, phone shake, lively confirm button, my-registration
+   reminder on Beranda/Jadwal, and the ticking deadline label in the registration summary. */
+.profile-prompt { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 16px; margin:0 0 22px; padding:16px 18px; border-radius:20px; background:#fbe4e1; color:#53141d; }
+.profile-prompt[hidden] { display:none; }
+.profile-prompt p { margin:0; font-size:15px; }
+.profile-prompt > div { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; }
+.profile-prompt .btn { min-height:42px; padding-inline:18px; font-size:14px; }
+.profile-forget { padding:10px 4px; border:0; background:none; color:#53141d; font:inherit; font-size:14px; font-weight:700; text-decoration:underline; text-underline-offset:4px; cursor:pointer; }
+.is-shaking { animation:kb-shake .4s cubic-bezier(.36, .07, .19, .97); }
+@keyframes kb-shake { 20%, 60% { transform:translateX(-6px); } 40%, 80% { transform:translateX(6px); } }
+#confirmRegistrationButton.is-loading::before { content:""; width:16px; height:16px; margin-right:10px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:kb-spin .7s linear infinite; }
+#confirmRegistrationButton.is-done { background:#2e7d4f; border-color:#2e7d4f; color:var(--white); }
+#confirmRegistrationButton.is-done::before { content:"\2713"; margin-right:8px; font-weight:800; }
+@keyframes kb-spin { to { transform:rotate(360deg); } }
+.my-registration { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; margin:0 0 18px; padding:14px 18px; border-radius:18px; background:#fbe4e1; color:#53141d; font-size:15px; font-weight:700; }
+.my-registration[hidden] { display:none; }
+.my-registration a { color:var(--maroon); text-decoration:underline; text-underline-offset:4px; }
+.registration-page .registration-summary-topline > span.is-countdown { background:var(--white); color:var(--maroon); font-variant-numeric:tabular-nums; }
+.event-photo-badge[data-countdown] { font-variant-numeric:tabular-nums; }
+@media (prefers-reduced-motion: reduce) {
+  .is-shaking, #confirmRegistrationButton.is-loading::before { animation:none; }
+}
+
 /* /link: Instagram/TikTok bio page (Oct 2026). Dark maroon like the Beranda programs, big KB-coloured pills. */
 .link-page { min-height: 100svh; background: #2a0e13; color: var(--white); }
 .link-shell { display: flex; flex-direction: column; align-items: center; width: min(520px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 40px; text-align: center; }

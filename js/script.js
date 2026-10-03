@@ -308,6 +308,24 @@ const eventDaysLeft = (event) => {
   return Number.isNaN(deadline.getTime()) ? null : jakartaDayNumber(deadline) - jakartaDayNumber(new Date());
 };
 const eventDaysLeftLabel = (days) => days <= 0 ? 'Hari ini' : days === 1 ? 'Besok' : `${days} hari lagi`;
+// Under 24 hours to the deadline the label becomes a ticking "Tutup dalam 05:42:10" (after Tokopedia):
+// the element carries data-countdown and one shared timer refreshes every such label on the page.
+const COUNTDOWN_WINDOW_MS = 24 * 3600e3;
+const eventCountdownDeadline = (event) => {
+  const deadline = new Date(event.registrationDeadline || '');
+  const left = deadline.getTime() - Date.now();
+  return left > 0 && left <= COUNTDOWN_WINDOW_MS ? deadline : null;
+};
+const countdownText = (deadline) => {
+  const left = Math.max(0, Math.floor((deadline.getTime() - Date.now()) / 1000));
+  const pad = (value) => String(value).padStart(2, '0');
+  return `Tutup dalam ${pad(Math.floor(left / 3600))}:${pad(Math.floor(left / 60) % 60)}:${pad(left % 60)}`;
+};
+setInterval(() => {
+  document.querySelectorAll('[data-countdown]').forEach((element) => {
+    element.textContent = countdownText(new Date(element.dataset.countdown));
+  });
+}, 1000);
 // Few seats left is the "siapa cepat" signal, so it gets the accent.
 const eventOpensFormatter = new Intl.DateTimeFormat('id-ID', {
   day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
@@ -335,6 +353,8 @@ const eventPhotoBadge = (event) => {
   const { available, reason } = eventRegistrationAvailability(event);
   const closedLabels = { past: 'Selesai', full: 'Kuota penuh', closed: 'Ditutup', applicants_full: 'Ditutup' };
   if (closedLabels[reason]) return { closed: true, grayscale: reason === 'full', label: closedLabels[reason] };
+  const soon = available ? eventCountdownDeadline(event) : null;
+  if (soon) return { closed: false, label: countdownText(soon), countdown: soon.toISOString() };
   const days = eventDaysLeft(event);
   if (available && days !== null && days >= 0 && days <= 7) return { closed: false, label: eventDaysLeftLabel(days) };
   return null;
@@ -343,7 +363,7 @@ const eventPhoto = (event, className) => {
   const badge = eventPhotoBadge(event);
   return `<figure class="${className}${event.image ? '' : ' is-empty'}${badge?.grayscale ? ' is-closed' : ''}">${event.image
     ? `<img src="${escapeHTML(event.image)}" alt="${escapeHTML(event.imageAlt)}" loading="lazy" decoding="async">` : ''}${badge
-    ? `<span class="event-photo-badge${badge.closed ? ' is-closed' : ''}">${escapeHTML(badge.label)}</span>` : ''}</figure>`;
+    ? `<span class="event-photo-badge${badge.closed ? ' is-closed' : ''}"${badge.countdown ? ` data-countdown="${badge.countdown}"` : ''}>${escapeHTML(badge.label)}</span>` : ''}</figure>`;
 };
 const eventIsPast = (event) => eventRegistrationAvailability(event).reason === 'past';
 
@@ -564,6 +584,22 @@ const renderScheduleEvents = async () => {
 
 void renderHomepageEvents();
 void renderScheduleEvents();
+
+// "Kamu terdaftar di …" (after cinema tickets): the last registration made on this device, shown above
+// the event lists until the event day has passed. Nothing leaves the device.
+const renderMyRegistration = () => {
+  const slot = document.querySelector('[data-my-registration]');
+  if (!slot) return;
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('kb_my_registration') || 'null'); } catch { return; }
+  const start = new Date(saved?.start || '');
+  if (!saved?.name || Number.isNaN(start.getTime()) || jakartaDayNumber(start) < jakartaDayNumber(new Date())) return;
+  const when = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' }).format(start);
+  slot.querySelector('[data-my-registration-text]').textContent = `${saved.applied ? 'Kamu ikut seleksi' : 'Kamu terdaftar di'} ${saved.name} · ${when}`;
+  slot.querySelector('a').href = `cek-status.html?kode=${encodeURIComponent(saved.code || '')}`;
+  slot.hidden = false;
+};
+renderMyRegistration();
 
 // /link (Instagram/TikTok bio page) and the 404 page: up to three upcoming events as big tappable rows.
 // Root-relative hrefs, because 404 can be served at any depth.
@@ -2616,6 +2652,14 @@ if (registrationForm) {
     setText('eventStatus', statusReason === 'past' || statusText === selectedEvent.capacity
       ? statusText
       : `${statusText} · ${selectedEvent.capacity}`);
+    // registrationAvailable is set further down; the reason from the availability check is already known here.
+    const closingSoon = !statusReason || statusReason === 'open' ? eventCountdownDeadline(selectedEvent) : null;
+    const statusElement = document.getElementById('eventStatus');
+    if (statusElement && closingSoon) {
+      statusElement.dataset.countdown = closingSoon.toISOString();
+      statusElement.textContent = countdownText(closingSoon);
+      statusElement.classList.add('is-countdown');
+    }
 
     const eventImageWrap = document.getElementById('eventImageWrap');
     const eventImage = document.getElementById('eventImage');
@@ -3427,14 +3471,33 @@ if (registrationForm) {
   const profileStorageKey = 'kb_volunteer_profile';
   const profileFields = ['nama', 'telepon', 'email', 'domicile', 'institution', 'age', 'socialAccount'];
   const rememberProfileInput = document.getElementById('rememberProfile');
+  // A saved profile is offered, not filled in silently (after Gojek/Shopee): "Daftar sebagai Nadia?".
+  // That avoids registering someone else when a phone is borrowed.
   try {
     const saved = JSON.parse(localStorage.getItem(profileStorageKey) || 'null');
-    if (saved && typeof saved === 'object') {
-      profileFields.forEach((id) => {
-        const input = document.getElementById(id);
-        if (input && !input.value && typeof saved[id] === 'string') input.value = saved[id];
+    const savedName = typeof saved?.nama === 'string' ? saved.nama.trim() : '';
+    const prompt = document.querySelector('[data-profile-prompt]');
+    if (savedName && prompt) {
+      prompt.querySelector('[data-profile-name]').textContent = savedName;
+      prompt.hidden = false;
+      prompt.querySelector('[data-profile-use]').addEventListener('click', () => {
+        profileFields.forEach((id) => {
+          const input = document.getElementById(id);
+          if (input && typeof saved[id] === 'string') {
+            input.value = saved[id];
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        });
+        if (rememberProfileInput) rememberProfileInput.checked = true;
+        prompt.hidden = true;
+        document.getElementById('nama')?.focus();
       });
-      if (rememberProfileInput) rememberProfileInput.checked = true;
+      prompt.querySelector('[data-profile-forget]').addEventListener('click', () => {
+        try { localStorage.removeItem(profileStorageKey); } catch { /* nothing to forget */ }
+        if (rememberProfileInput) rememberProfileInput.checked = false;
+        prompt.hidden = true;
+        document.getElementById('nama')?.focus();
+      });
     }
   } catch {
     // Storage can be unavailable (private mode); the form still works without it.
@@ -3456,10 +3519,10 @@ if (registrationForm) {
 
   const getPhoneError = (rawValue) => {
     const raw = String(rawValue || '').trim();
-    if (!raw) return 'Nomor WhatsApp wajib diisi.';
-    if (!/^\+?[0-9\s().-]+$/.test(raw)) return 'Format nomor WhatsApp tidak valid.';
+    if (!raw) return 'Nomor WhatsApp wajib diisi, contoh 081234567890.';
+    if (!/^\+?[0-9\s().-]+$/.test(raw)) return 'Nomor WhatsApp cuma boleh angka. Coba format 08xx atau +62xx, contoh 081234567890.';
     const normalized = raw.replace(/[\s().-]/g, '');
-    if (!/^\+?\d{8,20}$/.test(normalized)) return 'Nomor WhatsApp harus 8-20 digit angka.';
+    if (!/^\+?\d{8,20}$/.test(normalized)) return 'Nomornya kependekan atau kepanjangan (8–20 angka). Contoh: 081234567890.';
     return '';
   };
 
@@ -3474,6 +3537,12 @@ if (registrationForm) {
     if (!telephoneInput) return true;
     const message = getPhoneError(telephoneInput.value);
     setPhoneError(message);
+    if (message) {
+      // A short shake points at the field (after Duolingo); CSS skips it with reduced motion.
+      telephoneInput.classList.remove('is-shaking');
+      void telephoneInput.offsetWidth;
+      telephoneInput.classList.add('is-shaking');
+    }
     if (message && focus) telephoneInput.focus();
     return !message;
   };
@@ -3538,6 +3607,7 @@ if (registrationForm) {
     confirmRegistrationButton.disabled = true;
     editRegistrationButton.disabled = true;
     confirmRegistrationButton.textContent = 'Memproses...';
+    confirmRegistrationButton.classList.add('is-loading');
     showRegistrationMessage('Mengirim data pendaftaran...', 'pending');
     const isPaidEvent = selectedEvent.price > 0;
     if (isPaidEvent) showPaymentLoadingState();
@@ -3571,6 +3641,13 @@ if (registrationForm) {
       }
       registrationCompleted = true;
       confirmRegistrationButton.textContent = 'Pendaftaran tercatat';
+      confirmRegistrationButton.classList.replace('is-loading', 'is-done');
+      // 6. Remember this registration on the device so Beranda/Jadwal can remind "Kamu terdaftar di …".
+      try {
+        localStorage.setItem('kb_my_registration', JSON.stringify({
+          slug: selectedEvent.slug, name: title, start: selectedEvent.start, code, applied: isApplied
+        }));
+      } catch { /* the reminder is a convenience only */ }
       const resultStage = isFreeConfirmed || isApplied ? document.getElementById('freeRegistrationConfirmation') : null;
       if (resultStage && isApplied) {
         showFreeRegistrationConfirmation({ ...registration, event_title: title });
@@ -3606,6 +3683,7 @@ if (registrationForm) {
     } finally {
       isSubmitting = false;
       registrationForm.removeAttribute('aria-busy');
+      confirmRegistrationButton.classList.remove('is-loading');
       if (!registrationCompleted) {
         confirmRegistrationButton.disabled = false;
         editRegistrationButton.disabled = false;

@@ -148,6 +148,10 @@
                 <form data-registration-form novalidate>
                   <input id="kegiatan" name="kegiatan" type="hidden" value="">
                   <input id="eventSlug" name="event_slug" type="hidden" value="">
+                  <div class="profile-prompt" data-profile-prompt hidden>
+                    <p>Daftar sebagai <strong data-profile-name></strong>?</p>
+                    <div><button class="btn btn-primary" type="button" data-profile-use>Pakai data ini</button><button class="profile-forget" type="button" data-profile-forget>Bukan saya</button></div>
+                  </div>
                   <div class="form-grid">
                     <div class="field"><label for="nama">Nama lengkap *</label><input id="nama" name="nama" type="text" autocomplete="name" placeholder="Masukkan nama lengkap" required></div>
                     <div class="field"><label for="telepon">Nomor WhatsApp *</label><input id="telepon" name="telepon" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" required aria-describedby="teleponError"><span id="teleponError" class="field-error" role="alert" hidden></span></div>
