@@ -775,11 +775,18 @@ if (testimonialSlides.length && testimonialTrack) {
   const testimonialMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   const updateTestimonials = ({ announce = false } = {}) => {
+    const total = testimonialSlides.length;
     testimonialSlides.forEach((slide, index) => {
       const isActive = index === activeIndex;
+      const stack = (index - activeIndex + total) % total;
       slide.classList.toggle('active', isActive);
       slide.setAttribute('aria-hidden', String(!isActive));
+      // Card stack: 0 in front, 1–2 peek behind, the last one is the card just thrown off.
+      slide.dataset.stack = String(stack);
+      slide.classList.toggle('is-thrown', total > 3 && stack === total - 1);
     });
+    const count = document.querySelector('[data-testimonial-count]');
+    if (count) count.textContent = `${activeIndex + 1} / ${total}`;
 
     if (announce && testimonialStatus) {
       const activeSlide = testimonialSlides[activeIndex];

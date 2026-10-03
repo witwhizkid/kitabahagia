@@ -249,6 +249,11 @@ Lainnya:
   panah keyboard di track. Lebar pakai container query (`cqw`) supaya scrollbar Windows tidak menggeser tengah;
   kartu terakhir diberi `margin-right` (padding akhir flex scroll tidak ikut dihitung). ≤1023px: foto di atas, snap
   `start`, tanpa panah. CSS lama `.program-card`/`.program-grid`/`.program-stage` (±150 aturan) dihapus.
+- Testimoni Beranda (Okt 2026, ref. gojek.io "open source"): tumpukan kartu miring di latar krem; judul + kalimat
+  kecil + panah bulat + "n / 5" di kiri, kartu di kanan (HP bertumpuk). JS testimoni lama (autoplay 5 s, panah,
+  pengumuman sr-only) tetap; `updateTestimonials` menambah `data-stack` (0 depan, 1–2 mengintip) dan `.is-thrown`
+  (kartu terakhir dilempar ke kiri). Warna kartu bergilir: merah bata, emas, maroon gelap, kertas, merah muda.
+  Kartu selain depan `pointer-events: none` (kartu terlempar sempat menutupi panah). CSS testimoni lama dihapus.
 - Aksen judul (Okt 2026, keputusan user, anti-generik): Newsreader italic **hanya** di 3 judul Beranda (hero
   "Makna", manifesto, "Mulai dari satu kegiatan."); **stabilo** maroon (`.stabilo`, goresan tergambar sekali saat
   terlihat, `html.stabilo-motion`) hanya di Tentang "kebaikan", Relawan "hadir", Program "Ikut.". Judul lain polos.
