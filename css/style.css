@@ -7071,6 +7071,10 @@ html.stabilo-motion .stabilo:not(.is-in)::before { clip-path: inset(0 100% 0 0);
   .is-shaking, #confirmRegistrationButton.is-loading::before { animation:none; }
 }
 
+.footer-install { display:inline-flex; align-items:center; min-height:40px; margin-top:16px; padding:0 18px; border:1px solid rgba(255, 248, 239, .4); border-radius:999px; background:transparent; color:var(--cream); font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+.footer-install[hidden], .link-item[hidden] { display:none; }
+.link-list button.link-item { width:100%; border:0; cursor:pointer; }
+
 /* /link: Instagram/TikTok bio page (Oct 2026). Dark maroon like the Beranda programs, big KB-coloured pills. */
 .link-page { min-height: 100svh; background: #2a0e13; color: var(--white); }
 .link-shell { display: flex; flex-direction: column; align-items: center; width: min(520px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 40px; text-align: center; }

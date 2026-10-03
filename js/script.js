@@ -1089,6 +1089,27 @@ if (homeMotion) {
   }, { passive: true });
 }
 
+// "Pasang di HP" (Oct 2026, PWA): manifest.json makes the site installable; Chromium browsers fire
+// beforeinstallprompt, so the buttons only appear where installing actually works. iOS has no such
+// event (Safari: Share → Add to Home Screen), so nothing shows there.
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  installPrompt = event;
+  document.querySelectorAll('[data-install-app]').forEach((button) => { button.hidden = false; });
+});
+document.addEventListener('click', async (event) => {
+  const button = event.target.closest?.('[data-install-app]');
+  if (!button || !installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice.catch(() => null);
+  installPrompt = null;
+  document.querySelectorAll('[data-install-app]').forEach((item) => { item.hidden = true; });
+});
+window.addEventListener('appinstalled', () => {
+  document.querySelectorAll('[data-install-app]').forEach((item) => { item.hidden = true; });
+});
+
 // Any page seen in this visit means Beranda's loader (js/loader-gate.js) is skipped from now on.
 try { sessionStorage.setItem('kb_visit', '1'); } catch { /* storage blocked: the gate treats that as seen */ }
 

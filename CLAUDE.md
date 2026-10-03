@@ -316,11 +316,18 @@ Lainnya:
   `apple-touch-icon.png` tetap logo putih di kotak maroon (ikon layar HP butuh latar penuh).
   Link favicon memakai `?v=2`; kalau file favicon diganti lagi, naikkan angkanya (Chrome menyimpan
   favicon di cache terpisah yang tidak ikut Ctrl+Shift+R).
+- PWA (Okt 2026, ref. Gojek/Tokopedia web): `manifest.json` (standalone, maroon `#7a1f2b`, pintasan Jadwal + Cek status) + ikon
+  `assets/logo/app-icon-192/512.png` dan `app-icon-maskable-512.png` (logo putih `20.png` di atas maroon), `<link rel="manifest">`
+  + `theme-color` di semua halaman publik. Tanpa service worker (sengaja: tidak ada cache offline yang bisa menahan versi lama).
+  Tombol "Pasang Kita Bahagia di HP" (footer + halaman /link, `[data-install-app]`) hanya muncul saat `beforeinstallprompt`
+  (Chrome/Edge/Samsung Internet Android); iPhone tetap lewat Bagikan → Tambahkan ke Layar Utama.
 - SEO beranda: JSON-LD `WebSite` + `NGO` (nama, logo 320, email, `sameAs` IG/TikTok/LinkedIn) di
   `<head>` `index.html` + `og:site_name`. JSON-LD bukan skrip yang dijalankan, jadi aman dari CSP
   (dicek: tanpa "Refused"). Search Console sudah terverifikasi (domain), sitemap sudah dikirim.
 - Foto disajikan sebagai WebP yang sudah diperkecil; berkas mentah yang tidak
   dirujuk halaman publik tidak disimpan di `img/`.
+  **Jangan hapus `img/Baduy 1.webp`**: dipakai sebagai poster kegiatan di database (tidak terlihat dari grep HTML/JS;
+  sempat terhapus Okt 2026 lalu dikembalikan). Cek `.vercelignore` dan data event sebelum menghapus gambar apa pun.
 - Upload foto di admin dikompres di browser sebelum dikirim (`compressImage`
   di `js/admin.js`): kegiatan maks. 1200×1500, kisah maks. 1600×1600, WebP
   (JPEG di browser tanpa WebP). File sumber boleh sampai 25 MB.
