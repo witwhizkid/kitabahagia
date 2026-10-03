@@ -242,7 +242,8 @@ Lainnya:
 - Program Beranda (Okt 2026, ref. gojek.io, mockup disetujui; mengganti foto menempel + tirai `.program-stage`):
   section latar maroon gelap `#2a0e13`, judul "Mau mulai dari yang **dekat**, yang **seru**, atau yang **berdampak**?"
   (kata = Reguler/Unique/Gratis, menyala sesuai kartu yang di tengah), lalu carousel geser `[data-program-carousel]`:
-  satu kartu besar per program (sudut 56px, Reguler merah bata `#c23a3f`, Unique krem `#f6e6d6`, Gratis emas `#efb635`),
+  satu kartu besar per program (sudut 48px, tinggi ikut layar `clamp(380px, 100svh - 300px, 500px)` supaya judul satu baris +
+  kartu muat di laptop 1366×682 tanpa scroll; Reguler merah bata `#c23a3f`, Unique krem `#f6e6d6`, Gratis emas `#efb635`),
   isi nama + kalimat + daftar program huruf kecil tebal + tombol pil ke program.html + foto miring 1,5°. Kartu yang
   tidak di tengah redup (.55, scale .96) hanya setelah JS siap (`.is-ready`). Panah bulat (≥1024px), titik = tombol,
   panah keyboard di track. Lebar pakai container query (`cqw`) supaya scrollbar Windows tidak menggeser tengah;
