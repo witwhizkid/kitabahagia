@@ -183,7 +183,7 @@ Lainnya:
   lain hanya kalau user setuju): JS menambah `html.home-motion` (hanya `.home-page`, bukan saat reduced
   motion). Judul `h2` di bawah layar pertama dipecah per kata (`.split-word`, `aria-hidden`; h2 dapat
   `aria-label` teks aslinya) lalu naik dari tirai .9s expo-out, jeda 55 ms per kata (maks. 12);
-  garis atas `.program-grid` Program, `.kisah-section-heading`, `.home-upcoming-list` tergambar kiri→kanan
+  garis atas `.program-grid` Program dan `.kisah-section-heading` tergambar kiri→kanan
   (border jadi transparan, garis = background); `.btn` di `main` label berguling saat hover (`.btn-roll`,
   hanya `hover:hover`); header HP/tablet (≤1023px) sembunyi saat scroll ke bawah (`.is-tucked`), muncul lagi
   saat scroll ke atas. Sengaja **tidak** diambil: WebGL/three.js (berat, PageSpeed), smooth-scroll, durasi
