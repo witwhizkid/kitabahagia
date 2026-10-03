@@ -1759,39 +1759,16 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   letter-spacing: inherit;
 }
 
-.about-value-sequence {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  margin-top: 50px;
-  border-top: 1px solid var(--line);
-}
-
-.about-value-sequence .value-card {
-  padding: 24px 28px 0;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.about-value-sequence .value-card:first-child {
-  padding-left: 0;
-}
-
-.about-value-sequence .value-card:last-child {
-  padding-right: 0;
-}
-
-.about-value-sequence .value-card h3 {
-  font-size: 24px;
-  margin-top: 22px;
-}
-
-.about-value-sequence .value-card p {
-  max-width: 36ch;
-  font-size: 14px;
-  line-height: 1.65;
+/* Nilai Kami (Oct 2026, after gojek.io): one bold statement card per value, in KB colours. */
+.about-value-sequence.value-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; margin-top: 40px; }
+.about-value-sequence .value-card { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 28px; align-items: center; min-height: 200px; padding: 40px 48px; border: 0; border-radius: 40px; box-shadow: none; background: var(--value-bg); color: var(--value-fg); }
+.about-value-sequence .value-card:nth-child(1) { --value-bg: #c23a3f; --value-fg: var(--white); }
+.about-value-sequence .value-card:nth-child(2) { --value-bg: #f6e6d6; --value-fg: #53141d; }
+.about-value-sequence .value-card:nth-child(3) { --value-bg: #efb635; --value-fg: var(--ink); }
+.about-value-sequence .value-card h3 { margin: 0; color: inherit; font-size: clamp(36px, 4vw, 56px); letter-spacing: -.04em; }
+.about-value-sequence .value-card p { max-width: 32ch; margin: 0; color: inherit; opacity: .9; font-size: clamp(17px, 1.5vw, 21px); line-height: 1.5; }
+@media (max-width: 767px) {
+  .about-value-sequence .value-card { grid-template-columns: minmax(0, 1fr); gap: 10px; min-height: 0; padding: 28px 26px; border-radius: 28px; }
 }
 
 .about-closing-section {
@@ -3114,25 +3091,13 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
     aspect-ratio: auto;
   }
 
-  .about-value-sequence {
-    display: block;
-    margin-top: 34px;
-  }
+  
 
-  .about-value-sequence .value-card,
-  .about-value-sequence .value-card:first-child,
-  .about-value-sequence .value-card:last-child {
-    padding: 20px 0;
-    border-bottom: 1px solid var(--line);
-  }
+  
 
-  .about-value-sequence .value-card:last-child {
-    border-bottom: 0;
-  }
+  
 
-  .about-value-sequence .value-card h3 {
-    margin-top: 14px;
-  }
+  
 
   .about-closing-section {
     padding: 30px 0 34px;
@@ -5809,8 +5774,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .about-page .about-story-section .text-block p + p { margin-top: 24px; }
 
 .about-page .about-values-section { padding-block: 104px 112px; }
-.about-page .about-value-sequence { margin-top: 64px; }
-.about-page .about-value-sequence .value-card { padding-top: 32px; }
+
 .about-page .about-closing-section { padding-block: 56px 64px; }
 .about-page .about-closing { padding-block: 32px; }
 
@@ -6069,7 +6033,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .about-page .about-story-section .story-grid { gap: 40px; }
   .about-page .about-story-section .story-image { min-height: 0; aspect-ratio: 4 / 3; }
   .about-page .about-values-section { padding-block: 72px 80px; }
-  .about-page .about-value-sequence { margin-top: 40px; }
+  
   .about-page .about-closing-section { padding-block: 40px 48px; }
 
   .program-page > .section.section-soft { padding-block: 48px 72px; }
@@ -6602,37 +6566,6 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
   to { clip-path: inset(0); opacity: 1; }
 }
 
-@media (min-width: 768px) {
-  /* Each value is one index row: title · line, all on one baseline and one left edge. */
-  .about-page .about-value-sequence {
-    grid-template-columns: 1fr;
-  }
-
-  .about-page .about-value-sequence .value-card,
-  .about-page .about-value-sequence .value-card:first-child,
-  .about-page .about-value-sequence .value-card:last-child {
-    display: grid;
-    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
-    column-gap: clamp(20px, 3vw, 40px);
-    align-items: baseline;
-    padding: 36px 0;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .about-page .about-value-sequence .value-card:last-child { border-bottom: 0; }
-
-  .about-page .about-value-sequence .value-card h3 {
-    margin: 0;
-    font-size: clamp(26px, 2.4vw, 32px);
-    letter-spacing: -.02em;
-  }
-
-  .about-page .about-value-sequence .value-card p {
-    max-width: 40ch;
-    font-size: 15px;
-  }
-}
-
 @media (min-width: 1024px) {
   /* Every family gets the same sticky treatment and releases at its own section boundary. */
   /* Tentang becomes a reflective two-column reading sequence; the heading is the sole marker. */
@@ -6649,8 +6582,8 @@ html.loader-on .home-page .hero-next { animation-delay: 1.55s, 0s; }
     text-align: left;
   }
 
-  .about-page .about-value-sequence { margin-top: 0; border-top: 0; }
-  .about-page .about-value-sequence .value-card:first-child { padding-top: 4px; }
+  
+  
 
   /* The archive label behaves like an index tab, while the stories remain fast to scan. */
   .kisah-page .kisah-archive-heading {

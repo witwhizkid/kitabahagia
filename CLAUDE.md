@@ -190,8 +190,10 @@ Lainnya:
   1,5–2,4 s. Tinggi judul sama persis dengan versi tanpa animasi (dicek).
   Blok CSS "Stage 8" (Codex, Okt 2026: sticky bab Program, Tentang dua kolom, arsip Kisah, bingkai foto
   Tentang/Kisah) **tidak boleh** mematikan motion Beranda ini (pernah terjadi, sudah dikembalikan).
-  Nilai Kami di Tentang (≥768px) = baris indeks satu garis kiri: nomor · judul · kalimat (grid, satu
-  baseline); ≥1024px judul bagian menempel di kiri. HP tetap bertumpuk.
+  Nilai Kami di Tentang (Okt 2026, ref. gojek.io) = tiga kartu pernyataan berwarna bertumpuk (Rumah merah bata,
+  Tumbuh krem, Bermakna emas; sudut 40px, kata besar kiri + kalimat kanan; HP bertumpuk dalam kartu);
+  ≥1024px judul bagian tetap menempel di kiri. Selector `.about-value-sequence.value-grid` supaya menang dari
+  grid 3 kolom `.value-grid` lama.
 - Transisi antarhalaman (Okt 2026, ala tirai dashdigital.studio): klik link internal → JS (`js/script.js`,
   `.page-curtain`) langsung menaikkan panel maroon dari bawah (.56s) sambil logo KB putih
   (`assets/logo/logo-kita-bahagia-white.webp`) muncul pelan, lalu pindah halaman; loading terjadi di balik logo
