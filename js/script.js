@@ -55,6 +55,24 @@ const wrapCanvasText = (context, text, maxWidth) => {
   if (line) lines.push(line);
   return lines;
 };
+// Draws an image at a given width keeping its own proportions (the KB logo is wide, not square).
+const drawImageAtWidth = (context, image, x, y, width) => {
+  if (!image?.naturalWidth) return 0;
+  const height = width * image.naturalHeight / image.naturalWidth;
+  context.drawImage(image, x, y, width, height);
+  return height;
+};
+// Loads a remote image for canvas use. Storage serves CORS headers, so the canvas stays exportable; any
+// failure (or a slow network) resolves to null and the caller draws without it.
+const loadCanvasImage = (src, timeout = 5000) => new Promise((resolve) => {
+  if (!src) { resolve(null); return; }
+  const image = new Image();
+  image.crossOrigin = 'anonymous';
+  const timer = setTimeout(() => resolve(null), timeout);
+  image.onload = () => { clearTimeout(timer); resolve(image); };
+  image.onerror = () => { clearTimeout(timer); resolve(null); };
+  image.src = src;
+});
 const canvasToPng = (canvas) => new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('canvas'))), 'image/png'));
 
 const fetchPublicEvents = async ({ slug = null, limit = null, past = false } = {}) => {
@@ -1973,9 +1991,10 @@ if (registrationForm) {
   // sheet (Instagram is in it); elsewhere it downloads.
   const makeStoryImage = async (event) => {
     await Promise.all(['700 96px "Instrument Sans"', '500 40px "DM Sans"'].map((font) => document.fonts?.load(font).catch(() => null)));
-    const logo = new Image();
-    logo.src = 'assets/logo/logo-kita-bahagia-white.webp';
-    await logo.decode().catch(() => null);
+    const [logo, poster] = await Promise.all([
+      loadCanvasImage('assets/logo/logo-kita-bahagia-white.webp'),
+      loadCanvasImage(event.image)
+    ]);
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
     canvas.height = 1920;
@@ -1991,25 +2010,52 @@ if (registrationForm) {
       context.fill();
     }
     context.globalAlpha = 1;
-    if (logo.complete && logo.naturalWidth) context.drawImage(logo, 96, 130, 170, 170);
+    drawImageAtWidth(context, logo, 96, 110, 230);
+    // Measure the text first so the card is as tall as its content (+ the poster when it loaded).
+    context.font = '700 96px "Instrument Sans", "DM Sans", sans-serif';
+    const title = wrapCanvasText(context, event.name, 760).slice(0, 3);
+    context.font = '500 40px "DM Sans", sans-serif';
+    const meta = wrapCanvasText(context, `${eventShortDateFormatter.format(new Date(event.start))} · ${event.location}`, 760).slice(0, 2);
+    const textHeight = 100 + title.length * 104 + 30 + meta.length * 52;
+    // A portrait poster may use up to 640px of height inside the card; a landscape photo takes what it needs.
+    const posterScale = poster ? Math.min(780 / poster.naturalWidth, 640 / poster.naturalHeight) : 0;
+    const posterHeight = poster ? poster.naturalHeight * posterScale : 0;
+    const cardHeight = poster ? textHeight + posterHeight + 150 : textHeight + 90;
+    const cardTop = Math.max(400, 940 - cardHeight / 2);
     context.save();
-    context.translate(540, 980);
+    context.translate(540, cardTop + cardHeight / 2);
     context.rotate(-.035);
+    const top = -cardHeight / 2;
     context.fillStyle = '#c23a3f';
     context.beginPath();
-    context.roundRect(-450, -400, 900, 800, 64);
+    context.roundRect(-450, top, 900, cardHeight, 64);
     context.fill();
     context.fillStyle = '#ffe6e1';
     context.font = '500 44px "DM Sans", sans-serif';
-    context.fillText('Aku ikut', -380, -290);
+    context.fillText('Aku ikut', -380, top + 100);
     context.fillStyle = '#ffffff';
     context.font = '700 96px "Instrument Sans", "DM Sans", sans-serif';
-    const title = wrapCanvasText(context, event.name, 760).slice(0, 3);
-    title.forEach((line, i) => context.fillText(line, -380, -170 + i * 104));
+    title.forEach((line, i) => context.fillText(line, -380, top + 200 + i * 104));
     context.font = '500 40px "DM Sans", sans-serif';
     context.fillStyle = '#ffe6e1';
-    const meta = wrapCanvasText(context, `${eventShortDateFormatter.format(new Date(event.start))} · ${event.location}`, 760).slice(0, 2);
-    meta.forEach((line, i) => context.fillText(line, -380, -170 + title.length * 104 + 40 + i * 52));
+    meta.forEach((line, i) => context.fillText(line, -380, top + 200 + title.length * 104 + 10 + i * 52));
+    if (poster) {
+      // The poster sits whole (contain) on a lighter panel inside the card, like a print on a page.
+      const boxTop = top + textHeight + 70;
+      const boxHeight = posterHeight + 40;
+      context.fillStyle = 'rgba(255, 255, 255, .14)';
+      context.beginPath();
+      context.roundRect(-410, boxTop, 820, boxHeight, 40);
+      context.fill();
+      const width = poster.naturalWidth * posterScale;
+      const height = posterHeight;
+      context.save();
+      context.beginPath();
+      context.roundRect(-width / 2, boxTop + (boxHeight - height) / 2, width, height, 24);
+      context.clip();
+      context.drawImage(poster, -width / 2, boxTop + (boxHeight - height) / 2, width, height);
+      context.restore();
+    }
     context.restore();
     context.fillStyle = '#efb635';
     context.font = '700 64px "Instrument Sans", "DM Sans", sans-serif';
@@ -3785,9 +3831,7 @@ if (certificateCheck) {
       button.disabled = true;
       try {
         await document.fonts?.load('700 92px "Instrument Sans"').catch(() => null);
-        const logo = new Image();
-        logo.src = 'assets/logo/logo-kita-bahagia-white.webp';
-        await logo.decode().catch(() => null);
+        const logo = await loadCanvasImage('assets/logo/logo-kita-bahagia-white.webp');
         const canvas = document.createElement('canvas');
         canvas.width = 1600;
         canvas.height = 1010;
@@ -3800,7 +3844,7 @@ if (certificateCheck) {
         context.beginPath();
         context.roundRect(0, 0, 1600, 1010, 72);
         context.fill();
-        if (logo.complete && logo.naturalWidth) context.drawImage(logo, 110, 100, 170, 170);
+        drawImageAtWidth(context, logo, 110, 100, 220);
         context.fillStyle = '#ffe6e1';
         context.font = '600 40px "DM Sans", sans-serif';
         context.fillText('KARTU RELAWAN · KITA BAHAGIA', 110, 380);
