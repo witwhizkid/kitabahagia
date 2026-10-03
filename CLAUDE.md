@@ -256,6 +256,11 @@ Lainnya:
   pengumuman sr-only) tetap; `updateTestimonials` menambah `data-stack` (0 depan, 1–2 mengintip) dan `.is-thrown`
   (kartu terakhir dilempar ke kiri). Warna kartu bergilir: merah bata, emas, maroon gelap, kertas, merah muda.
   Kartu selain depan `pointer-events: none` (kartu terlempar sempat menutupi panah). CSS testimoni lama dihapus.
+- Ref. "dekat dengan rakyat" (Okt 2026): (1) kartu kegiatan menulis "N orang udah daftar · …" kalau ≥5 (kapasitas − sisa,
+  `registeredCount`; Seleksi tanpa angka); (2) layar sukses pendaftaran: konfeti kertas warna KB sekali (`celebrate` di
+  `renderOnboarding`, ±2 s, mati saat reduced motion) + "Ajak teman ikut" jadi kartu merah muda dengan dua tombol pil;
+  (3) `link.html` = halaman link bio IG/TikTok (`kitabahagia.id/link`, tanpa header): logo, kegiatan terdekat
+  (`renderLinkEvents`, maks. 3, tersembunyi kalau kosong/gagal), tombol pil warna KB ke Jadwal/Relawan/Kisah/Kolaborasi/WA.
 - Aksen judul (Okt 2026, keputusan user, anti-generik): Newsreader italic **hanya** di 3 judul Beranda (hero
   "Makna", manifesto, "Mulai dari satu kegiatan."); **stabilo** maroon (`.stabilo`, goresan tergambar sekali saat
   terlihat, `html.stabilo-motion`) hanya di Tentang "kebaikan", Relawan "hadir", Program "Ikut.". Judul lain polos.

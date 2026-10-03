@@ -126,6 +126,8 @@ const normalizeScheduleEvent = (event) => {
     statusKey,
     capacity,
     remainingCapacity: event.remaining_capacity ?? null,
+    // Seats taken (incl. ones held for payment); selection events send no numbers.
+    registeredCount: Number.isInteger(event.capacity) && Number.isInteger(remainingCapacity) ? event.capacity - remainingCapacity : null,
     price: Number(event.price) || 0,
     image: event.image_url || '',
     imageAlt: event.image_alt || `Dokumentasi ${event.title}`,
@@ -290,10 +292,12 @@ const eventSlotNote = (event) => {
   if (['closed', 'past'].includes(availability.reason)) return '';
   const remaining = event.remainingCapacity;
   if (event.statusKey === 'full' || remaining === 0) return '<span class="event-slot is-full">Kuota penuh</span>';
+  // Social proof (after Kitabisa), only once it is not embarrassing: 5 or more people.
+  const joined = event.registeredCount >= 5 ? `${event.registeredCount} orang udah daftar · ` : '';
   if (Number.isInteger(remaining) && remaining <= 5 && eventRegistrationAvailability(event).available) {
-    return `<span class="event-slot is-low">Tinggal ${remaining} slot</span>`;
+    return `<span class="event-slot is-low">${joined}Tinggal ${remaining} slot</span>`;
   }
-  return `<span class="event-slot">${escapeHTML(event.capacity)}</span>`;
+  return `<span class="event-slot">${escapeHTML(joined + event.capacity)}</span>`;
 };
 // Poster badge: unavailable events get a dark state label and only full ones turn grayscale
 // (finished events keep their colours); open ones closing within a week get "3 hari lagi".
@@ -530,6 +534,25 @@ const renderScheduleEvents = async () => {
 
 void renderHomepageEvents();
 void renderScheduleEvents();
+
+// /link (Instagram/TikTok bio page): up to three upcoming events as big tappable rows.
+const renderLinkEvents = async () => {
+  const list = document.querySelector('[data-link-events]');
+  if (!list) return;
+  try {
+    const events = (await fetchPublicEvents({ limit: 3 }))
+      .map(normalizeScheduleEvent)
+      .filter((event) => event && !eventIsPast(event))
+      .sort((a, b) => new Date(a.start) - new Date(b.start))
+      .slice(0, 3);
+    if (!events.length) return;
+    list.innerHTML = events.map((event) => `<a class="link-event" href="${eventHref(event)}"><strong>${escapeHTML(event.name)}</strong><span>${escapeHTML(eventShortDateFormatter.format(new Date(event.start)))} · ${escapeHTML(event.location)}</span></a>`).join('');
+    list.closest('[data-link-events-wrap]').hidden = false;
+  } catch (error) {
+    console.error('Kegiatan untuk halaman link gagal dimuat', error);
+  }
+};
+void renderLinkEvents();
 
 const REGISTRATION_CONFIG = Object.freeze({
   registrationEndpoint: `${SUPABASE_FUNCTIONS_BASE_URL}/create-registration`,
@@ -1875,8 +1898,30 @@ if (registrationForm) {
     };
   };
 
+  // Success confetti: once per page, only on a real success screen, never with reduced motion.
+  let celebrated = false;
+  const celebrate = () => {
+    if (celebrated || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    celebrated = true;
+    const layer = document.createElement('div');
+    layer.className = 'kb-confetti';
+    layer.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 36; i += 1) {
+      const bit = document.createElement('i');
+      bit.style.setProperty('--x', `${Math.random() * 100}%`);
+      bit.style.setProperty('--d', `${1.3 + Math.random() * .8}s`);
+      bit.style.setProperty('--delay', `${Math.random() * .35}s`);
+      bit.style.setProperty('--drift', `${(Math.random() - .5) * 160}px`);
+      bit.style.setProperty('--spin', `${(Math.random() - .5) * 900}deg`);
+      layer.append(bit);
+    }
+    document.body.append(layer);
+    setTimeout(() => layer.remove(), 2600);
+  };
+
   const renderOnboarding = (container, data) => {
     if (!container) return;
+    celebrate();
     const copy = container.querySelector('[data-onboarding-copy]');
     const link = container.querySelector('[data-whatsapp-group]');
     const groupUrl = safeWhatsAppGroupUrl(data?.whatsapp_group_url);

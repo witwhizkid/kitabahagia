@@ -5454,9 +5454,18 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .event-map { margin-top:16px; overflow:hidden; border-radius:var(--radius-md); background:var(--sand); aspect-ratio:16 / 9; }
 .event-map iframe { display:block; width:100%; height:100%; border:0; }
 .event-map-open { display:inline-flex; align-items:center; gap:6px; min-height:44px; margin-top:6px; color:var(--maroon); font-size:14px; font-weight:600; text-decoration:underline; text-underline-offset:4px; }
-.registration-page .registration-share { display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; margin:22px 0 0; color:var(--muted); font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+/* Invite friends: the happiest moment of the flow, so it gets a warm card with two pill buttons. */
+.registration-page .registration-share { display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px; margin:22px 0 0; padding:18px 20px; border-radius:22px; background:#fbe4e1; color:#53141d; font-size:15px; font-weight:700; }
 .registration-page .registration-share[hidden] { display:none; }
-.registration-page .registration-share a, .registration-page .registration-share button { padding:10px 0; margin-block:-10px; border:0; background:none; color:var(--maroon); font:inherit; letter-spacing:inherit; text-transform:inherit; text-decoration:underline; text-underline-offset:4px; cursor:pointer; }
+.registration-page .registration-share a, .registration-page .registration-share button { display:inline-flex; align-items:center; min-height:44px; padding:0 18px; border:0; border-radius:999px; background:var(--white); color:var(--maroon); font:inherit; font-size:14px; text-decoration:none; cursor:pointer; }
+.registration-page .registration-share a { margin-left:auto; background:var(--maroon); color:var(--white); }
+/* Success confetti (after Duolingo): KB-coloured paper bits fall once, ~1.8s, never with reduced motion. */
+.kb-confetti { position:fixed; inset:0; z-index:90; overflow:hidden; pointer-events:none; }
+.kb-confetti i { position:absolute; top:-24px; left:var(--x); width:10px; height:16px; border-radius:3px; background:#c23a3f; animation:kb-confetti-fall var(--d) cubic-bezier(.25,.6,.4,1) var(--delay) forwards; }
+.kb-confetti i:nth-child(4n+2) { background:#efb635; }
+.kb-confetti i:nth-child(4n+3) { background:#f6e6d6; }
+.kb-confetti i:nth-child(4n+4) { width:12px; height:12px; border-radius:50%; background:#7a1f2b; }
+@keyframes kb-confetti-fall { to { transform:translate(var(--drift), 110vh) rotate(var(--spin)); } }
 .registration-page .registration-event-disclosure { border-bottom:0; }
 .registration-page .registration-event-disclosure > summary { display:inline-flex; align-items:center; min-height:40px; padding:8px 16px; border-radius:999px; background:var(--maroon-soft); }
 .registration-page .registration-event-disclosure[open] .registration-event-content { margin-top:12px; padding:20px 22px; border-radius:var(--radius-lg); background:var(--cream); }
@@ -6971,4 +6980,35 @@ html.stabilo-motion .stabilo:not(.is-in)::before { clip-path: inset(0 100% 0 0);
 
 @media (prefers-reduced-motion: reduce) {
   .registration-page .registration-review-actions .btn { transition: none; }
+}
+
+/* /link: Instagram/TikTok bio page (Oct 2026). Dark maroon like the Beranda programs, big KB-coloured pills. */
+.link-page { min-height: 100svh; background: #2a0e13; color: var(--white); }
+.link-shell { display: flex; flex-direction: column; align-items: center; width: min(520px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 40px; text-align: center; }
+.link-brand img { width: 88px; height: 88px; object-fit: contain; }
+.link-shell h1 { margin: 14px 0 4px; color: var(--white); font-size: 30px; letter-spacing: -.03em; }
+.link-tagline { margin: 0 0 28px; color: #f2dfe2; font-size: 15px; }
+.link-events { width: 100%; margin-bottom: 22px; text-align: left; }
+.link-events[hidden] { display: none; }
+.link-events h2 { margin: 0 0 10px; color: #ff8f86; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.link-event-list { display: grid; gap: 10px; }
+.link-event { display: grid; gap: 4px; padding: 16px 20px; border-radius: 22px; background: #c23a3f; color: var(--white); text-decoration: none; transition: transform .18s var(--ease); }
+.link-event strong { font: 700 18px/1.25 "Instrument Sans", "DM Sans", sans-serif; letter-spacing: -.02em; }
+.link-event span { opacity: .85; font-size: 14px; }
+.link-list { display: grid; gap: 12px; width: 100%; }
+.link-item { display: flex; align-items: center; justify-content: space-between; min-height: 60px; padding: 0 24px; border-radius: 999px; font: 700 16px/1.2 "Instrument Sans", "DM Sans", sans-serif; text-decoration: none; transition: transform .18s var(--ease); }
+.link-item.is-red { background: #c23a3f; color: var(--white); }
+.link-item.is-gold { background: #efb635; color: var(--ink); }
+.link-item.is-cream { background: #f6e6d6; color: #53141d; }
+.link-item.is-white { background: var(--white); color: #53141d; }
+.link-item:active, .link-event:active { transform: scale(.98); }
+.link-item:focus-visible, .link-event:focus-visible, .link-social a:focus-visible, .link-home:focus-visible { outline: 3px solid var(--white); outline-offset: 3px; }
+@media (hover: hover) {
+  .link-item:hover, .link-event:hover { transform: translateY(-2px); }
+}
+.link-social { display: flex; gap: 20px; margin: 28px 0 0; }
+.link-social a { padding: 10px 0; color: #f2dfe2; font-size: 14px; font-weight: 700; }
+.link-home { margin-top: 18px; color: rgba(255, 255, 255, .55); font-size: 13px; }
+@media (prefers-reduced-motion: reduce) {
+  .link-item, .link-event { transition: none; }
 }
