@@ -68,6 +68,11 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
   3 kolom; HP: beranda kartu geser, Jadwal kartu mendatar (poster 118px di kiri, setinggi kartu,
   `cover` dari atas supaya tidak ada ruang kosong di bawah foto; poster 4:5 terpotong sisi kiri-kanan). Hover hanya di
   `@media (hover:hover)`.
+- Kegiatan sedikit (Okt 2026, audit UI): kalau yang tampil 1–2 kegiatan, grid dapat `.is-few` (+ `.is-one`) dari JS
+  (`renderHomepageEvents`, `applyFilters` Jadwal) → ≥768px kartu mendatar besar (poster 40% kiri, `cover` dari atas):
+  tablet satu kolom maks. 640px, ≥1100px dua kolom (satu kartu maks. 760px). HP tidak berubah.
+- Urutan Beranda: hero → Jejak → **Kegiatan Terdekat** → Program → Tentang → Kisah (Okt 2026, dulu Terdekat setelah
+  Program). Judul bab Program tidak lagi sticky berlatar krem (kotak sisa Stage 8 dihapus).
 - Badge poster (`eventPhotoBadge`): label gelap "Kuota penuh" / "Ditutup" / "Selesai"; poster
   hitam-putih **hanya** untuk kuota penuh (keputusan user Okt 2026: kegiatan selesai/ditutup tetap berwarna); buka dan tutup ≤7 hari = label maroon "N hari lagi"/"Besok"/
   "Hari ini". Kegiatan ditutup/selesai tidak menampilkan sisa slot.

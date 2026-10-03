@@ -427,6 +427,8 @@ const renderHomepageEvents = async () => {
 
   renderHeroNext(events);
   list.innerHTML = events.map(eventCardMarkup).join('');
+  list.classList.toggle('is-few', events.length <= 2);
+  list.classList.toggle('is-one', events.length === 1);
   fitEventPhotos(list);
   list.hidden = false;
   list.removeAttribute('aria-busy');
@@ -1139,6 +1141,9 @@ function initializeScheduleFilters() {
       if (match) visible += 1;
     });
     if (scheduleCount) scheduleCount.textContent = `Menampilkan ${visible} kegiatan`;
+    const grid = document.getElementById('scheduleGrid');
+    grid?.classList.toggle('is-few', visible > 0 && visible <= 2);
+    grid?.classList.toggle('is-one', visible === 1);
     scheduleEmpty?.classList.toggle('hidden', visible !== 0);
   };
 
