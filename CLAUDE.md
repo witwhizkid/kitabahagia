@@ -72,7 +72,7 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
   (`--radius-round`), latar putih, foto masuk 8px dengan sudut 18px (`--radius-round-photo`); kategori = pil berwarna
   sesuai Program Family kegiatan (`events.program_key` → kelas `family-reguler/adventure/impact` di
   `eventCardMarkup`; kosong = pil maroon muda), dikirim `public-events`. Palet sekunder dari ornamen sertifikat:
-  Reguler maroon `#8a150e`/`#fbe4e1`, Adventure hijau `#1d5236`/`#dcefe3`, Impactful emas `#8f5d00`/`#fff0c7`
+  Reguler maroon `#8a150e`/`#fbe4e1`, Unique krem (teks maroon gelap `#53141d`/`#f6e6d6`; dulu hijau, ditolak user: KB tidak punya hijau), Gratis emas `#8f5d00`/`#fff0c7`
   (token `--fam-*`). Kartu Program berlatar warna bab (sudut 28px, foto inset 20px, label pil, judul + titik warna
   bab). Semua `.btn` pil. Foto non-cetakan (Program/Kisah Beranda, arsip Kisah, foto pembuka) 18px; **cetakan
   jurnal Beranda tetap bersudut 2px** (kesan foto cetak). Garis tebal di atas daftar Kegiatan Terdekat dihapus.
@@ -158,8 +158,8 @@ Lainnya:
   `sr-only`/tersembunyi). Zoom foto kisah/kegiatan pelan (1.2s/.9s) hanya di
   `@media (hover:hover)` untuk kisah (halaman Kisah/Program kini zoom tipis 1.012,
   220 ms dari blok yang sama).
-- Halaman Program dikelompokkan jadi 3 bab (`.program-family`: Masyarakat Reguler, Adventure & Unique,
-  Impactful Action). Label nomor hiasan 01/02/03 **dihapus** (Okt 2026, keputusan user: kesan template/AI):
+- Halaman Program dikelompokkan jadi 3 bab (`.program-family`): **Program Reguler, Program Unique, Program Gratis**
+  (nama disamakan dengan Beranda + admin, Okt 2026; kunci database tetap). Label nomor hiasan 01/02/03 **dihapus** (Okt 2026, keputusan user: kesan template/AI):
   bab Program, alur program (jadi panah →), Program + testimoni Beranda, angka Jejak, Nilai Kami Tentang.
   Nomor hanya dipakai untuk urutan sungguhan (langkah Relawan/Kolaborasi, panduan bayar). Jangan tambah lagi.
   Kartu Program (Okt 2026, audit UI): per bab grid kartu putih (foto 3:2 di atas, tag, judul, deskripsi, meta),
@@ -183,7 +183,7 @@ Lainnya:
   lain hanya kalau user setuju): JS menambah `html.home-motion` (hanya `.home-page`, bukan saat reduced
   motion). Judul `h2` di bawah layar pertama dipecah per kata (`.split-word`, `aria-hidden`; h2 dapat
   `aria-label` teks aslinya) lalu naik dari tirai .9s expo-out, jeda 55 ms per kata (maks. 12);
-  garis atas `.program-grid` Program dan `.kisah-section-heading` tergambar kiri→kanan
+  garis atas `.kisah-section-heading` tergambar kiri→kanan
   (border jadi transparan, garis = background); `.btn` di `main` label berguling saat hover (`.btn-roll`,
   hanya `hover:hover`); header HP/tablet (≤1023px) sembunyi saat scroll ke bawah (`.is-tucked`), muncul lagi
   saat scroll ke atas. Sengaja **tidak** diambil: WebGL/three.js (berat, PageSpeed), smooth-scroll, durasi
@@ -239,12 +239,15 @@ Lainnya:
 - Hero beranda: foto slide aktif zoom pelan 1.08→1 (7 s) dan judul muncul dengan
   wipe atas→bawah (`hero-title-in`); HP/tablet hanya teks slide pertama. Mati saat
   reduced motion.
-- Program beranda desktop (≥901px): JS menambah `.program-stage` (salinan foto
-  kartu, aria-hidden, ditaruh di akhir grid supaya `:nth-child` kartu tetap) yang
-  menempel di kiri dan berganti dengan efek tirai saat teks program lewat tengah
-  layar; foto per kartu disembunyikan. HP/tablet tetap baris biasa + tirai saat
-  kartu muncul. Sticky butuh `overflow-x: clip` (bukan `hidden`) di
-  `html.home-document`/`.home-page`.
+- Program Beranda (Okt 2026, ref. gojek.io, mockup disetujui; mengganti foto menempel + tirai `.program-stage`):
+  section latar maroon gelap `#2a0e13`, judul "Mau mulai dari yang **dekat**, yang **seru**, atau yang **berdampak**?"
+  (kata = Reguler/Unique/Gratis, menyala sesuai kartu yang di tengah), lalu carousel geser `[data-program-carousel]`:
+  satu kartu besar per program (sudut 56px, Reguler merah bata `#c23a3f`, Unique krem `#f6e6d6`, Gratis emas `#efb635`),
+  isi nama + kalimat + daftar program huruf kecil tebal + tombol pil ke program.html + foto miring 1,5°. Kartu yang
+  tidak di tengah redup (.55, scale .96) hanya setelah JS siap (`.is-ready`). Panah bulat (≥1024px), titik = tombol,
+  panah keyboard di track. Lebar pakai container query (`cqw`) supaya scrollbar Windows tidak menggeser tengah;
+  kartu terakhir diberi `margin-right` (padding akhir flex scroll tidak ikut dihitung). ≤1023px: foto di atas, snap
+  `start`, tanpa panah. CSS lama `.program-card`/`.program-grid`/`.program-stage` (±150 aturan) dihapus.
 - Aksen judul (Okt 2026, keputusan user, anti-generik): Newsreader italic **hanya** di 3 judul Beranda (hero
   "Makna", manifesto, "Mulai dari satu kegiatan."); **stabilo** maroon (`.stabilo`, goresan tergambar sekali saat
   terlihat, `html.stabilo-motion`) hanya di Tentang "kebaikan", Relawan "hadir", Program "Ikut.". Judul lain polos.
@@ -374,7 +377,7 @@ Lainnya:
   Semua `<select>` admin (selain yang jadi pil) memakai dropdown KB `enhanceSelect`: select
   asli disembunyikan tapi tetap sumber data (nilai, event `change`, `.value` dari kode tetap
   jalan; select yang dibuat belakangan ikut otomatis). Label Program Family di admin:
-  Program Reguler / Program Unique / Impactful Action (kunci database tetap).
+  Program Reguler / Program Unique / Program Gratis (kunci database tetap).
 - Admin di HP (≤768px): tab bar bawah dengan ikon (disembunyikan saat form
   kegiatan/kisah terbuka), logo di header, judul + tombol Tambah satu baris,
   kartu kegiatan ringkas tanpa label. Tablet (769–900px) tetap tab atas. Form

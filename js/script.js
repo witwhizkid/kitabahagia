@@ -967,7 +967,7 @@ if (homeMotion) {
   journalPrint(document);
   const storyPreview = document.querySelector('.home-page .kisah-preview');
   if (storyPreview) new MutationObserver(() => journalPrint(storyPreview)).observe(storyPreview, { childList: true, subtree: true });
-  document.querySelectorAll('.home-program-section .program-grid, .home-page .kisah-section-heading')
+  document.querySelectorAll('.home-page .kisah-section-heading')
     .forEach((rule) => { rule.classList.add('draw-rule'); inView.observe(rule); });
   document.querySelectorAll('.home-page main .btn').forEach((button) => {
     const label = button.textContent.replace(/\s+/g, ' ').trim();
@@ -1091,41 +1091,59 @@ if (impactCounters.length && 'IntersectionObserver' in window
   });
 }
 
-// Homepage programs on desktop: one sticky photo that curtains to the program whose text is passing
-// the middle of the screen. The stage copies the cards' own images (same files, already loading);
-// CSS only uses it from 901px, so phones keep the alternating rows.
-const programGrid = document.querySelector('.home-program-section .program-grid');
-const programCards = programGrid ? [...programGrid.querySelectorAll(':scope > .program-card')] : [];
-const programPhotos = programCards.map((card) => card.querySelector('.program-image img'));
-if (programCards.length && programPhotos.every(Boolean) && 'IntersectionObserver' in window) {
-  const stage = document.createElement('div');
-  stage.className = 'program-stage';
-  stage.setAttribute('aria-hidden', 'true');
-  const stagePhotos = programPhotos.map((photo) => {
-    const copy = photo.cloneNode();
-    copy.alt = '';
-    copy.removeAttribute('fetchpriority');
-    return copy;
-  });
-  stage.append(...stagePhotos);
-  stage.style.gridRow = `1 / span ${programCards.length}`;
-  programGrid.append(stage); // last, so the cards keep their :nth-child styles
-  programGrid.classList.add('has-stage');
-  let activeProgram = -1;
-  const showProgram = (index) => {
-    if (index === activeProgram || index < 0) return;
-    stagePhotos.forEach((photo) => photo.classList.remove('is-prev'));
-    stagePhotos[activeProgram]?.classList.replace('is-active', 'is-prev');
-    stagePhotos[index].classList.add('is-active');
-    activeProgram = index;
+// Beranda programs (after gojek.io): one big card per program, swiped sideways. The card nearest the
+// middle is "on": it is not dimmed and its word in the headline lights up in the card's colour.
+const programCarousel = document.querySelector('[data-program-carousel]');
+if (programCarousel) {
+  const track = programCarousel.querySelector('.program-track');
+  const slides = [...track.children];
+  const words = [...document.querySelectorAll('.program-lead-word')];
+  const dots = [...programCarousel.querySelectorAll('.program-dots button')];
+  const prev = programCarousel.querySelector('[data-program-prev]');
+  const next = programCarousel.querySelector('[data-program-next]');
+  let active = -1;
+  const setActive = (index) => {
+    if (index === active) return;
+    active = index;
+    slides.forEach((slide, i) => slide.classList.toggle('is-on', i === index));
+    words.forEach((word, i) => word.classList.toggle('is-on', i === index));
+    dots.forEach((dot, i) => dot.setAttribute('aria-current', String(i === index)));
+    prev.disabled = index === 0;
+    next.disabled = index === slides.length - 1;
   };
-  showProgram(0);
-  const programObserver = new IntersectionObserver((entries) => {
-    entries.forEach(({ isIntersecting, target }) => {
-      if (isIntersecting) showProgram(programCards.indexOf(target));
+  const nearest = () => {
+    const middle = track.scrollLeft + track.clientWidth / 2;
+    let best = 0;
+    slides.forEach((slide, i) => {
+      const distance = Math.abs(slide.offsetLeft + slide.offsetWidth / 2 - middle);
+      if (distance < Math.abs(slides[best].offsetLeft + slides[best].offsetWidth / 2 - middle)) best = i;
     });
-  }, { rootMargin: '-45% 0px -45% 0px' });
-  programCards.forEach((card) => programObserver.observe(card));
+    return best;
+  };
+  const goTo = (index) => {
+    const slide = slides[Math.max(0, Math.min(slides.length - 1, index))];
+    const centred = getComputedStyle(slide).scrollSnapAlign.includes('center');
+    const left = centred
+      ? slide.offsetLeft - (track.clientWidth - slide.offsetWidth) / 2
+      : slide.offsetLeft - (parseFloat(getComputedStyle(track).scrollPaddingLeft) || 0);
+    const instant = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    track.scrollTo({ left, behavior: instant ? 'auto' : 'smooth' });
+  };
+  let frame = 0;
+  track.addEventListener('scroll', () => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => setActive(nearest()));
+  }, { passive: true });
+  track.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    goTo(active + (event.key === 'ArrowRight' ? 1 : -1));
+  });
+  prev.addEventListener('click', () => goTo(active - 1));
+  next.addEventListener('click', () => goTo(active + 1));
+  dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)));
+  setActive(0);
+  programCarousel.classList.add('is-ready');
 }
 
 function initializeScheduleFilters() {
