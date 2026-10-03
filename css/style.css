@@ -4471,8 +4471,8 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .testimonial-slide-inner::before { content: "\201C"; display: block; height: 40px; font: 700 96px/1 "Instrument Sans", "DM Sans", sans-serif; opacity: .35; }
 .testimonial-slide blockquote { margin: 0; color: inherit; font: 600 clamp(20px, 1.9vw, 26px)/1.35 "Instrument Sans", "DM Sans", sans-serif; letter-spacing: -.02em; }
 .testimonial-slide .person { padding-top: 18px; border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent); font-size: 14px; }
-.testimonial-slide .person strong { margin-right: 8px; }
-.testimonial-slide .person span { opacity: .75; }
+.testimonial-slide .person strong { margin-right: 8px; color: inherit; }
+.testimonial-slide .person span { color: inherit; opacity: .9; }
 .testimonial-slide:nth-child(5n + 1) { --card-bg: #c23a3f; --card-fg: var(--white); }
 .testimonial-slide:nth-child(5n + 2) { --card-bg: #efb635; --card-fg: var(--ink); }
 .testimonial-slide:nth-child(5n + 3) { --card-bg: #53141d; --card-fg: var(--white); }
