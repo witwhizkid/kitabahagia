@@ -68,6 +68,14 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
   3 kolom; HP: beranda kartu geser, Jadwal kartu mendatar (poster 118px di kiri, setinggi kartu,
   `cover` dari atas supaya tidak ada ruang kosong di bawah foto; poster 4:5 terpotong sisi kiri-kanan). Hover hanya di
   `@media (hover:hover)`.
+- Kartu membulat + palet KB (Okt 2026, ref. Gojek, mockup disetujui user): kartu kegiatan sudut 24px
+  (`--radius-round`), latar putih, foto masuk 8px dengan sudut 18px (`--radius-round-photo`); kategori = pil berwarna
+  sesuai Program Family kegiatan (`events.program_key` → kelas `family-reguler/adventure/impact` di
+  `eventCardMarkup`; kosong = pil maroon muda), dikirim `public-events`. Palet sekunder dari ornamen sertifikat:
+  Reguler maroon `#8a150e`/`#fbe4e1`, Adventure hijau `#1d5236`/`#dcefe3`, Impactful emas `#8f5d00`/`#fff0c7`
+  (token `--fam-*`). Kartu Program berlatar warna bab (sudut 28px, foto inset 20px, label pil, judul + titik warna
+  bab). Semua `.btn` pil. Foto non-cetakan (Program/Kisah Beranda, arsip Kisah, foto pembuka) 18px; **cetakan
+  jurnal Beranda tetap bersudut 2px** (kesan foto cetak). Garis tebal di atas daftar Kegiatan Terdekat dihapus.
 - Kegiatan sedikit (Okt 2026, audit UI): kalau yang tampil 1–2 kegiatan, grid dapat `.is-few` (+ `.is-one`) dari JS
   (`renderHomepageEvents`, `applyFilters` Jadwal) → ≥768px kartu mendatar besar (poster 40% kiri, `cover` dari atas):
   tablet satu kolom maks. 640px, ≥1100px dua kolom (satu kartu maks. 760px). HP tidak berubah.
@@ -139,7 +147,7 @@ Halaman detail Kisah (`kisah-detail.html`, `js/stories.js`), gaya editorial ala 
 Lainnya:
 - Sudut membulat di halaman pendaftaran/pembayaran (kartu 22–28px, tombol dan
   label pil) **disengaja** biar playful; jangan disamakan ke 6–8px halaman lain
-  (sudah dicoba, user: terlalu kaku). Label kapital kecil (`.eyebrow`) di beranda maksimal 2
+  (sudah dicoba, user: terlalu kaku). Okt 2026: kartu publik ikut membulat (lihat "Kartu membulat + palet KB"). Label kapital kecil (`.eyebrow`) di beranda maksimal 2
   (Jejak + Agenda berikutnya). Jangan pakai `font-style: italic` pada
   Instrument Sans/DM Sans: versi italic tidak dimuat, jadi browser memiringkan palsu.
 - Gerak halus ala Aesop: `.reveal` (fade + naik 16px, .8s; di Beranda/Tentang/Program/

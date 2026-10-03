@@ -28,6 +28,7 @@ type EventRow = {
   benefits: string[];
   category: string | null;
   category_key: string | null;
+  program_key: string | null;
   event_date: string;
   start_time: string | null;
   timezone: string;
@@ -66,6 +67,7 @@ const eventProjection = [
   "benefits",
   "category",
   "category_key",
+  "program_key",
   "event_date",
   "start_time",
   "timezone",
@@ -250,6 +252,7 @@ Deno.serve(async (request) => {
         benefits: event.benefits,
         category: event.category,
         category_key: event.category_key,
+        program_key: event.program_key ?? null,
         start_at: startAt,
         end_at: event.end_at ? new Date(event.end_at).toISOString() : null,
         location: event.location,

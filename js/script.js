@@ -115,6 +115,7 @@ const normalizeScheduleEvent = (event) => {
     description: event.description || '',
     category: event.category || 'Tanpa kategori',
     categoryKey: event.category_key || 'uncategorized',
+    programKey: event.program_key || '',
     start: event.start_at,
     end: event.end_at,
     date: formatEventDateRange(start, end),
@@ -328,7 +329,9 @@ const eventCardIcon = {
   place: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
   date: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
 };
-const eventCardMarkup = (event, attributes = '') => `<article class="event-card${eventIsPast(event) ? ' is-past' : ''}"${attributes}>
+// Category pill colour follows the event's program family (same colours as the Program chapters).
+const eventFamilyClasses = { masyarakat_reguler: ' family-reguler', adventure_unique: ' family-adventure', impactful_action: ' family-impact' };
+const eventCardMarkup = (event, attributes = '') => `<article class="event-card${eventFamilyClasses[event.programKey] || ''}${eventIsPast(event) ? ' is-past' : ''}"${attributes}>
   ${eventPhoto(event, 'event-card-photo')}
   <div class="event-card-body">
     <p class="event-kicker">${escapeHTML(event.category)}</p>
@@ -964,7 +967,7 @@ if (homeMotion) {
   journalPrint(document);
   const storyPreview = document.querySelector('.home-page .kisah-preview');
   if (storyPreview) new MutationObserver(() => journalPrint(storyPreview)).observe(storyPreview, { childList: true, subtree: true });
-  document.querySelectorAll('.home-program-section .program-grid, .home-page .kisah-section-heading, .home-upcoming-list')
+  document.querySelectorAll('.home-program-section .program-grid, .home-page .kisah-section-heading')
     .forEach((rule) => { rule.classList.add('draw-rule'); inView.observe(rule); });
   document.querySelectorAll('.home-page main .btn').forEach((button) => {
     const label = button.textContent.replace(/\s+/g, ' ').trim();
