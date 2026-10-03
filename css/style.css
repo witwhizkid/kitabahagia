@@ -4325,7 +4325,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .home-closing-compact .eyebrow { grid-column: 1; margin-bottom: 12px; }
 .home-closing-compact h2 { grid-column: 1; font-size: clamp(28px,3vw,40px); }
 .home-closing-compact .join-copy p { grid-column: 1; max-width: 52ch; margin: 14px 0 0; }
-.home-closing-compact .join-actions { grid-column: 2; grid-row: 1 / 4; align-items: flex-start; flex-direction: column; gap: 10px; }
+.home-closing-compact .join-actions { grid-column: 2; grid-row: 1 / 4; align-items: center; flex-direction: column; gap: 10px; }
 /* Scoped nav layout includes Kisah without changing unrelated pages. */
 .home-page .nav, .about-page .nav, .kisah-page .nav { gap: clamp(14px,1.8vw,25px); }
 .home-page .nav a, .about-page .nav a, .kisah-page .nav a { white-space: nowrap; }
