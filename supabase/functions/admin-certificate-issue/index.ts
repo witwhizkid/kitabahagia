@@ -41,6 +41,11 @@ const registrationCodePattern = /^[A-Za-z0-9-]{4,60}$/;
 const codeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
+const toBase64 = (bytes: Uint8Array) => {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+};
 const serviceHeaders = (key: string, extra: Record<string, string> = {}) => ({
   apikey: key,
   Authorization: `Bearer ${key}`,
@@ -316,6 +321,15 @@ Deno.serve(async (request) => {
   }
   const name = String(certificate.recipient_name);
   const link = linkFor(emailCode);
+  // Attach the stored PDF so volunteers get the file without opening the site.
+  // If the download fails, the email still goes out with the link only.
+  const pdf = await fetch(`${supabaseUrl}/storage/v1/object/${BUCKET}/${certificate.pdf_path}`, {
+    headers: serviceHeaders(serviceKey, { Accept: "application/pdf" }),
+  }).then(async (response) => response.ok ? new Uint8Array(await response.arrayBuffer()) : null).catch(() => null);
+  const attachment = pdf && pdf.byteLength <= MAX_PDF_BYTES ? [{
+    name: `Sertifikat Kita Bahagia - ${name.replace(/[^\p{L}\p{N} .'-]/gu, "").replace(/\s+/g, " ").trim() || "Relawan"}.pdf`,
+    content: toBase64(pdf),
+  }] : null;
   const dateText = formatDate(event.event_date);
   const firstWord = name.trim().split(/\s+/)[0] || name;
   const greetingName = firstWord === firstWord.toUpperCase() || firstWord === firstWord.toLowerCase()
@@ -336,9 +350,9 @@ Deno.serve(async (request) => {
 <p style="margin:0 0 8px;font-size:12px;font-weight:bold;letter-spacing:.12em;text-transform:uppercase;color:#780c06">Kita Bahagia</p>
 <h1 style="margin:0 0 18px;font-size:26px;line-height:1.25">${photos ? "Sertifikat &amp; foto kegiatanmu udah siap!" : "Sertifikatmu udah jadi!"}&nbsp;🎉</h1>
 <p style="margin:0 0 14px;font-size:15px;line-height:1.6">Halo ${escapeHtml(greetingName)}!</p>
-<p style="margin:0 0 18px;font-size:15px;line-height:1.6">Makasih banyak udah hadir dan ikut nyebar bahagia di <strong>${escapeHtml(event.title)}</strong> (${dateText}). Ini sertifikat relawanmu, bisa dilihat dan diunduh lewat tombol di bawah${photos ? ", plus foto-foto kegiatan buat kenang-kenangan" : ""}.</p>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.6">Makasih banyak udah hadir dan ikut nyebar bahagia di <strong>${escapeHtml(event.title)}</strong> (${dateText}). ${attachment ? "Sertifikat relawanmu kami lampirkan di email ini (PDF), jadi bisa langsung diunduh. Versi online-nya juga ada di tombol di bawah" : "Ini sertifikat relawanmu, bisa dilihat dan diunduh lewat tombol di bawah"}${photos ? ", plus foto-foto kegiatan buat kenang-kenangan" : ""}.</p>
 <p style="margin:0 0 22px;padding:12px 16px;border-radius:12px;background:#fdf5e1;font-size:14px;line-height:1.5">Atas nama<br><strong style="font-size:16px;color:#780c06">${escapeHtml(name)}</strong></p>
-<p style="margin:0 0 24px"><a href="${link}" style="display:inline-block;padding:14px 24px;border-radius:999px;background:#780c06;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px">Lihat &amp; unduh sertifikat &rarr;</a></p>
+<p style="margin:0 0 24px"><a href="${link}" style="display:inline-block;padding:14px 24px;border-radius:999px;background:#780c06;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px">${attachment ? "Lihat sertifikat online" : "Lihat &amp; unduh sertifikat"} &rarr;</a></p>
 <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#6b6164">Link ini khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.</p>
 <p style="margin:0 0 22px;font-size:13px;line-height:1.6;color:#6b6164;word-break:break-all">${link}</p>
 ${photosBlock}
@@ -355,7 +369,8 @@ ${photosBlock}
       to: [{ email, name }],
       subject: photos ? `${greetingName}, sertifikat & foto kegiatanmu udah jadi!` : `${greetingName}, sertifikat relawanmu udah jadi!`,
       htmlContent: html,
-      textContent: `Halo ${greetingName}!\n\nMakasih banyak udah hadir dan ikut nyebar bahagia di ${event.title} (${dateText}). Sertifikat relawanmu atas nama ${name} bisa dilihat dan diunduh di:\n${link}\n\nLink ini khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.\n\n${photos ? `Foto-foto kegiatannya juga udah ada, bebas diunduh buat kenang-kenangan (kalau diposting, tag @kitabahagiaa_ ya):\n${photos}\n\n` : ""}Sampai ketemu di kegiatan berikutnya!\nTim Kita Bahagia`,
+      ...(attachment ? { attachment } : {}),
+      textContent: `Halo ${greetingName}!\n\nMakasih banyak udah hadir dan ikut nyebar bahagia di ${event.title} (${dateText}). Sertifikat relawanmu atas nama ${name} ${attachment ? "terlampir di email ini (PDF). Versi online-nya" : "bisa dilihat dan diunduh"} di:\n${link}\n\nLink ini khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.\n\n${photos ? `Foto-foto kegiatannya juga udah ada, bebas diunduh buat kenang-kenangan (kalau diposting, tag @kitabahagiaa_ ya):\n${photos}\n\n` : ""}Sampai ketemu di kegiatan berikutnya!\nTim Kita Bahagia`,
     }),
   }).catch(() => null);
   if (!send?.ok) {
