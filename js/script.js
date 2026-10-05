@@ -1107,6 +1107,48 @@ if (homeMotion) {
   }, { passive: true });
 }
 
+// Tab bar (Oct 2026, mobile ≤960px, where the menu is a hamburger): Beranda · Jadwal · Program · Kisah stay one
+// tap away; the hamburger keeps the rest plus Cek status, Relawan and FAQ. Not on the registration flow or /link.
+// It hides while scrolling down, while typing, and while the menu is open.
+if (document.querySelector('.site-header') && !document.body.matches('.registration-page, .link-page')) {
+  const icons = {
+    home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    program: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+    book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/>',
+  };
+  const page = window.location.pathname.replace(/^\/+|\.html$|\/+$/g, '') || 'index';
+  const tabs = [
+    ['Beranda', '/', 'home', ['index']],
+    ['Jadwal', '/jadwal.html', 'calendar', ['jadwal']],
+    ['Program', '/program.html', 'program', ['program']],
+    ['Kisah', '/kisah.html', 'book', ['kisah', 'kisah-detail']],
+  ];
+  const bar = document.createElement('nav');
+  bar.className = 'tab-bar';
+  bar.setAttribute('aria-label', 'Navigasi cepat');
+  bar.innerHTML = tabs.map(([label, href, icon, pages]) => `<a href="${href}"${pages.includes(page) ? ' aria-current="page"' : ''}>`
+    + `<span class="tab-bar-icon"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[icon]}</svg></span>${label}</a>`).join('');
+  document.body.append(bar);
+  document.body.classList.add('has-tab-bar');
+  const nav = document.querySelector('.site-header .nav');
+  if (nav) {
+    const extra = (label, href) => Object.assign(document.createElement('a'), { className: 'nav-extra', href, textContent: label });
+    nav.prepend(extra('Cek status pendaftaran', '/cek-status.html'));
+    nav.append(extra('Relawan', '/relawan.html'), extra('FAQ', '/faq.html'));
+  }
+  let lastTabY = window.scrollY;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    if (y > lastTabY + 4 && y > 120) bar.classList.add('is-tucked');
+    else if (y < lastTabY - 4 || y <= 120) bar.classList.remove('is-tucked');
+    lastTabY = y;
+  }, { passive: true });
+  const typing = () => document.body.classList.toggle('is-typing', Boolean(document.activeElement?.matches('input, textarea, select')));
+  document.addEventListener('focusin', typing);
+  document.addEventListener('focusout', () => setTimeout(typing, 0));
+}
+
 // "Pasang di HP" (Oct 2026, PWA): manifest.json makes the site installable; Chromium browsers fire
 // beforeinstallprompt, so the buttons only appear where installing actually works. iOS has no such
 // event (Safari: Share → Add to Home Screen), so nothing shows there.

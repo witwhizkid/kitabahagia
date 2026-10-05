@@ -482,6 +482,21 @@ button { font: inherit; }
 }
 .menu-toggle { display: none; border: 0; background: transparent; width: 42px; height: 42px; padding: 9px; }
 .menu-toggle span { display: block; height: 2px; margin: 5px 0; background: var(--white); border-radius: 99px; }
+/* Tab bar (Oct 2026): mobile only (≤960px, same as the hamburger); built by js/script.js. */
+.tab-bar { display: none; }
+@media (min-width: 961px) { .site-header .nav-extra { display: none; } }
+@media (max-width: 960px) {
+  .tab-bar { position: fixed; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 50; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; height: 64px; padding: 0 6px; border-radius: 24px; background: rgba(251, 246, 239, .97); box-shadow: 0 10px 30px rgba(42, 14, 19, .2), 0 0 0 1px rgba(42, 14, 19, .07); transition: transform .3s var(--ease), opacity .3s var(--ease); }
+  .tab-bar a { display: flex; flex-direction: column; align-items: center; gap: 3px; color: #8a6f72; font-size: 11px; font-weight: 600; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+  .tab-bar-icon { display: flex; padding: 5px 16px; border-radius: 999px; transition: background-color .2s ease; }
+  .tab-bar svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tab-bar a[aria-current="page"] { color: var(--maroon); font-weight: 700; }
+  .tab-bar a[aria-current="page"] .tab-bar-icon { background: var(--maroon); color: var(--white); }
+  .tab-bar.is-tucked, .is-typing .tab-bar, .mobile-menu-open .tab-bar { opacity: 0; transform: translateY(calc(100% + 24px)); pointer-events: none; }
+  .has-tab-bar .site-footer::after { content: ""; display: block; height: calc(88px + env(safe-area-inset-bottom)); }
+  .has-tab-bar .site-header .nav > a:is([href$="index.html"], [href$="jadwal.html"], [href$="program.html"], [href$="kisah.html"]) { display: none; }
+}
+@media (max-width: 960px) and (prefers-reduced-motion: reduce) { .tab-bar { transition: none; } }
 
 .hero {
   padding: 88px 0 64px;
