@@ -3795,18 +3795,171 @@ if (certificateCheck) {
     result.hidden = false;
     renderVolunteerCard(certificate);
   };
-  // Kartu Relawan (Oct 2026): a shiny member card that tilts with the pointer (or the phone, where the
-  // browser allows it without a permission prompt) and can be shared/downloaded as a PNG.
+  // Kartu Relawan (Oct 2026): the story image itself, shown as a shiny card that tilts with the pointer (or the
+  // phone, where the browser allows it without a permission prompt) and shared/downloaded as a PNG.
   const sinceFormatter = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
+  // Story-sized (1080×1920) volunteer card, drawn once into the page's canvas: the preview people see is the
+  // exact image they share.
+  const drawVolunteerStory = async (canvas, certificate) => {
+    await Promise.all([
+      document.fonts?.load('700 108px "Instrument Sans"'),
+      document.fonts?.load('italic 54px "Newsreader"'),
+      document.fonts?.load('500 30px "DM Sans"'),
+    ].map((task) => task?.catch(() => null)));
+    const [logo, photo] = await Promise.all([
+      loadCanvasImage('assets/logo/logo-kita-bahagia-white.webp'),
+      loadCanvasImage(certificate.event_photo),
+    ]);
+    // Cream ID card on a gold strap over the dark KB backdrop: event photo, name with the
+    // "relawan Kita Bahagia" pill, a ticket stub, and the link to join.
+    canvas.width = 1080;
+    canvas.height = 1920;
+    const context = canvas.getContext('2d');
+    const W = 860, X = 110, Y = 170, PAD = 56, INNER = W - PAD * 2;
+    // Long names shrink first, then wrap to two lines at 84px or smaller.
+    let size = 108, lines;
+    for (;;) {
+      context.font = `700 ${size}px "Instrument Sans", "DM Sans", sans-serif`;
+      lines = wrapCanvasText(context, certificate.recipient_name, INNER);
+      if (lines.length === 1 || (lines.length === 2 && size <= 84) || size <= 60) break;
+      size -= 6;
+    }
+    lines = lines.slice(0, 2);
+    const lineHeight = size + 6;
+    const nameY = Y + 1010;
+    const pillY = nameY + (lines.length - 1) * lineHeight + 34;
+    const perfY = pillY + 76 + 54;
+    const H = perfY - Y + 270;
+    context.fillStyle = '#2a0e13';
+    context.fillRect(0, 0, 1080, 1920);
+    [[80, 880, 500, 'rgba(194, 58, 63, .5)'], [1040, 1440, 400, 'rgba(239, 182, 53, .3)']].forEach(([cx, cy, r, color]) => {
+      const glow = context.createRadialGradient(cx, cy, 0, cx, cy, r);
+      glow.addColorStop(0, color);
+      glow.addColorStop(1, 'rgba(42, 14, 19, 0)');
+      context.fillStyle = glow;
+      context.fillRect(0, 0, 1080, 1920);
+    });
+    const pill = (text, x, y, font, fill, color, padX, height) => {
+      context.font = font;
+      const width = context.measureText(text).width + padX * 2;
+      context.fillStyle = fill;
+      context.beginPath();
+      context.roundRect(x, y, width, height, height / 2);
+      context.fill();
+      context.fillStyle = color;
+      context.textBaseline = 'middle';
+      context.fillText(text, x + padX, y + height / 2 + 2);
+      context.textBaseline = 'alphabetic';
+      return width;
+    };
+    context.save();
+    context.translate(540, Y + H / 2);
+    context.rotate(1.5 * Math.PI / 180);
+    context.translate(-540, -(Y + H / 2));
+    context.fillStyle = '#efb635';
+    context.beginPath();
+    context.roundRect(495, -60, 90, 260, 12);
+    context.fill();
+    context.shadowColor = 'rgba(0, 0, 0, .55)';
+    context.shadowBlur = 100;
+    context.shadowOffsetY = 50;
+    context.fillStyle = '#f6ecdf';
+    context.beginPath();
+    context.roundRect(X, Y, W, H, 48);
+    context.fill();
+    context.shadowColor = 'transparent';
+    context.fillStyle = '#2a0e13';
+    context.beginPath();
+    context.roundRect(480, Y + 34, 120, 26, 13);
+    context.fill();
+    // The white logo tinted maroon for the cream card.
+    if (logo) {
+      const mark = document.createElement('canvas');
+      mark.width = logo.naturalWidth;
+      mark.height = logo.naturalHeight;
+      const markContext = mark.getContext('2d');
+      markContext.drawImage(logo, 0, 0);
+      markContext.globalCompositeOperation = 'source-in';
+      markContext.fillStyle = '#8a150e';
+      markContext.fillRect(0, 0, mark.width, mark.height);
+      context.drawImage(mark, X + PAD, Y + 90, 84 * mark.width / mark.height, 84);
+    }
+    context.font = '600 26px "DM Sans", sans-serif';
+    const tagText = 'KARTU RELAWAN';
+    const tagWidth = context.measureText(tagText).width + 44;
+    context.strokeStyle = 'rgba(138, 21, 14, .35)';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.roundRect(X + W - PAD - tagWidth, Y + 106, tagWidth, 52, 26);
+    context.stroke();
+    context.fillStyle = '#8a150e';
+    context.fillText(tagText, X + W - PAD - tagWidth + 22, Y + 141);
+    const photoY = Y + 220, photoH = 620;
+    context.save();
+    context.beginPath();
+    context.roundRect(X + PAD, photoY, INNER, photoH, 30);
+    context.clip();
+    if (photo?.naturalWidth) {
+      const scale = Math.max(INNER / photo.naturalWidth, photoH / photo.naturalHeight);
+      const w = photo.naturalWidth * scale, h = photo.naturalHeight * scale;
+      context.drawImage(photo, X + PAD + (INNER - w) / 2, photoY + (photoH - h) / 2, w, h);
+    } else {
+      context.fillStyle = '#8a150e';
+      context.fillRect(X + PAD, photoY, INNER, photoH);
+      drawImageAtWidth(context, logo, X + PAD + INNER / 2 - 170, photoY + photoH / 2 - 88, 340);
+    }
+    context.restore();
+    context.font = '700 28px "DM Sans", sans-serif';
+    const fullBadge = `✓ Hadir · ${certificate.event_title}`;
+    pill(context.measureText(fullBadge).width < INNER - 100 ? fullBadge : '✓ Hadir', X + PAD + 22, photoY + photoH - 78,
+      '700 28px "DM Sans", sans-serif', '#8a150e', '#ffffff', 24, 56);
+    context.fillStyle = '#8a150e';
+    context.font = '600 30px "DM Sans", sans-serif';
+    context.fillText('KARTU INI MILIK', X + PAD, Y + 905);
+    context.font = `700 ${size}px "Instrument Sans", "DM Sans", sans-serif`;
+    context.fillStyle = '#2a0e13';
+    lines.forEach((line, i) => context.fillText(line, X + PAD, nameY + i * lineHeight));
+    pill('relawan Kita Bahagia', X + PAD, pillY,
+      'italic 54px "Newsreader", serif', '#c23a3f', '#fff3e6', 30, 76);
+    context.strokeStyle = 'rgba(42, 14, 19, .22)';
+    context.lineWidth = 6;
+    context.setLineDash([18, 14]);
+    context.beginPath();
+    context.moveTo(X, perfY);
+    context.lineTo(X + W, perfY);
+    context.stroke();
+    context.setLineDash([]);
+    context.fillStyle = '#2a0e13';
+    [X, X + W].forEach((cx) => { context.beginPath(); context.arc(cx, perfY, 33, 0, Math.PI * 2); context.fill(); });
+    const stub = (label, value, x, y, width) => {
+      context.fillStyle = '#8a150e';
+      context.font = '500 28px "DM Sans", sans-serif';
+      context.fillText(label, x, y);
+      context.fillStyle = '#2a0e13';
+      context.font = '700 36px "DM Sans", sans-serif';
+      const valueLines = wrapCanvasText(context, value, width - 30);
+      context.fillText(`${valueLines[0] || ''}${valueLines.length > 1 ? '…' : ''}`, x, y + 46);
+    };
+    stub(certificate.event_location ? 'Lokasi' : 'Kegiatan', certificate.event_location || certificate.event_title, X + PAD, perfY + 62, INNER);
+    stub('Tanggal', dateText(certificate), X + PAD, perfY + 170, INNER / 2 - 20);
+    stub('Relawan sejak', sinceFormatter.format(new Date(`${certificate.event_date}T12:00:00+07:00`)), X + PAD + INNER / 2, perfY + 170, INNER / 2);
+    context.restore();
+    context.fillStyle = '#ffe6e1';
+    context.font = '500 38px "DM Sans", sans-serif';
+    context.fillText('Yuk, ikut juga!', 110, 1812);
+    context.font = '700 38px "DM Sans", sans-serif';
+    const ctaWidth = context.measureText('kitabahagia.id/link').width + 64;
+    pill('kitabahagia.id/link', 970 - ctaWidth, 1772, '700 38px "DM Sans", sans-serif', '#efb635', '#2a0e13', 32, 76);
+  };
   const renderVolunteerCard = (certificate) => {
     const section = document.querySelector('[data-volunteer-card-section]');
     const card = section?.querySelector('[data-volunteer-card]');
     if (!card) return;
-    const since = `Relawan sejak ${sinceFormatter.format(new Date(`${certificate.event_date}T12:00:00+07:00`))}`;
-    card.querySelector('[data-card-name]').textContent = certificate.recipient_name;
-    card.querySelector('[data-card-event]').textContent = certificate.event_title;
-    card.querySelector('[data-card-since]').textContent = since;
+    const canvas = card.querySelector('[data-card-canvas]');
+    canvas.setAttribute('aria-label', `Kartu Relawan Kita Bahagia milik ${certificate.recipient_name}, ${certificate.event_title}`);
     section.hidden = false;
+    const ready = drawVolunteerStory(canvas, certificate);
+    ready.catch(() => {});
     if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
       const tilt = (x, y) => {
         card.style.setProperty('--ry', `${(x - .5) * 18}deg`);
@@ -3830,156 +3983,7 @@ if (certificateCheck) {
       const button = event.currentTarget;
       button.disabled = true;
       try {
-        await Promise.all([
-          document.fonts?.load('700 108px "Instrument Sans"'),
-          document.fonts?.load('italic 54px "Newsreader"'),
-          document.fonts?.load('500 30px "DM Sans"'),
-        ].map((task) => task?.catch(() => null)));
-        const [logo, photo] = await Promise.all([
-          loadCanvasImage('assets/logo/logo-kita-bahagia-white.webp'),
-          loadCanvasImage(certificate.event_photo),
-        ]);
-        // Story-sized (1080×1920) ID card on the dark KB backdrop: cream card on a gold strap, the event photo,
-        // the name with the "relawan Kita Bahagia" pill, a ticket stub, and the link to join.
-        const canvas = document.createElement('canvas');
-        canvas.width = 1080;
-        canvas.height = 1920;
-        const context = canvas.getContext('2d');
-        const W = 860, X = 110, Y = 170, PAD = 56, INNER = W - PAD * 2;
-        // Long names shrink first, then wrap to two lines at 84px or smaller.
-        let size = 108, lines;
-        for (;;) {
-          context.font = `700 ${size}px "Instrument Sans", "DM Sans", sans-serif`;
-          lines = wrapCanvasText(context, certificate.recipient_name, INNER);
-          if (lines.length === 1 || (lines.length === 2 && size <= 84) || size <= 60) break;
-          size -= 6;
-        }
-        lines = lines.slice(0, 2);
-        const lineHeight = size + 6;
-        const nameY = Y + 1010;
-        const pillY = nameY + (lines.length - 1) * lineHeight + 34;
-        const perfY = pillY + 76 + 54;
-        const H = perfY - Y + 270;
-        context.fillStyle = '#2a0e13';
-        context.fillRect(0, 0, 1080, 1920);
-        [[80, 880, 500, 'rgba(194, 58, 63, .5)'], [1040, 1440, 400, 'rgba(239, 182, 53, .3)']].forEach(([cx, cy, r, color]) => {
-          const glow = context.createRadialGradient(cx, cy, 0, cx, cy, r);
-          glow.addColorStop(0, color);
-          glow.addColorStop(1, 'rgba(42, 14, 19, 0)');
-          context.fillStyle = glow;
-          context.fillRect(0, 0, 1080, 1920);
-        });
-        const pill = (text, x, y, font, fill, color, padX, height) => {
-          context.font = font;
-          const width = context.measureText(text).width + padX * 2;
-          context.fillStyle = fill;
-          context.beginPath();
-          context.roundRect(x, y, width, height, height / 2);
-          context.fill();
-          context.fillStyle = color;
-          context.textBaseline = 'middle';
-          context.fillText(text, x + padX, y + height / 2 + 2);
-          context.textBaseline = 'alphabetic';
-          return width;
-        };
-        context.save();
-        context.translate(540, Y + H / 2);
-        context.rotate(1.5 * Math.PI / 180);
-        context.translate(-540, -(Y + H / 2));
-        context.fillStyle = '#efb635';
-        context.beginPath();
-        context.roundRect(495, -60, 90, 260, 12);
-        context.fill();
-        context.shadowColor = 'rgba(0, 0, 0, .55)';
-        context.shadowBlur = 100;
-        context.shadowOffsetY = 50;
-        context.fillStyle = '#f6ecdf';
-        context.beginPath();
-        context.roundRect(X, Y, W, H, 48);
-        context.fill();
-        context.shadowColor = 'transparent';
-        context.fillStyle = '#2a0e13';
-        context.beginPath();
-        context.roundRect(480, Y + 34, 120, 26, 13);
-        context.fill();
-        // The white logo tinted maroon for the cream card.
-        if (logo) {
-          const mark = document.createElement('canvas');
-          mark.width = logo.naturalWidth;
-          mark.height = logo.naturalHeight;
-          const markContext = mark.getContext('2d');
-          markContext.drawImage(logo, 0, 0);
-          markContext.globalCompositeOperation = 'source-in';
-          markContext.fillStyle = '#8a150e';
-          markContext.fillRect(0, 0, mark.width, mark.height);
-          context.drawImage(mark, X + PAD, Y + 90, 84 * mark.width / mark.height, 84);
-        }
-        context.font = '600 26px "DM Sans", sans-serif';
-        const tagText = 'KARTU RELAWAN';
-        const tagWidth = context.measureText(tagText).width + 44;
-        context.strokeStyle = 'rgba(138, 21, 14, .35)';
-        context.lineWidth = 2;
-        context.beginPath();
-        context.roundRect(X + W - PAD - tagWidth, Y + 106, tagWidth, 52, 26);
-        context.stroke();
-        context.fillStyle = '#8a150e';
-        context.fillText(tagText, X + W - PAD - tagWidth + 22, Y + 141);
-        const photoY = Y + 220, photoH = 620;
-        context.save();
-        context.beginPath();
-        context.roundRect(X + PAD, photoY, INNER, photoH, 30);
-        context.clip();
-        if (photo?.naturalWidth) {
-          const scale = Math.max(INNER / photo.naturalWidth, photoH / photo.naturalHeight);
-          const w = photo.naturalWidth * scale, h = photo.naturalHeight * scale;
-          context.drawImage(photo, X + PAD + (INNER - w) / 2, photoY + (photoH - h) / 2, w, h);
-        } else {
-          context.fillStyle = '#8a150e';
-          context.fillRect(X + PAD, photoY, INNER, photoH);
-          drawImageAtWidth(context, logo, X + PAD + INNER / 2 - 170, photoY + photoH / 2 - 88, 340);
-        }
-        context.restore();
-        context.font = '700 28px "DM Sans", sans-serif';
-        const fullBadge = `✓ Hadir · ${certificate.event_title}`;
-        pill(context.measureText(fullBadge).width < INNER - 100 ? fullBadge : '✓ Hadir', X + PAD + 22, photoY + photoH - 78,
-          '700 28px "DM Sans", sans-serif', '#8a150e', '#ffffff', 24, 56);
-        context.fillStyle = '#8a150e';
-        context.font = '600 30px "DM Sans", sans-serif';
-        context.fillText('KARTU INI MILIK', X + PAD, Y + 905);
-        context.font = `700 ${size}px "Instrument Sans", "DM Sans", sans-serif`;
-        context.fillStyle = '#2a0e13';
-        lines.forEach((line, i) => context.fillText(line, X + PAD, nameY + i * lineHeight));
-        pill('relawan Kita Bahagia', X + PAD, pillY,
-          'italic 54px "Newsreader", serif', '#c23a3f', '#fff3e6', 30, 76);
-        context.strokeStyle = 'rgba(42, 14, 19, .22)';
-        context.lineWidth = 6;
-        context.setLineDash([18, 14]);
-        context.beginPath();
-        context.moveTo(X, perfY);
-        context.lineTo(X + W, perfY);
-        context.stroke();
-        context.setLineDash([]);
-        context.fillStyle = '#2a0e13';
-        [X, X + W].forEach((cx) => { context.beginPath(); context.arc(cx, perfY, 33, 0, Math.PI * 2); context.fill(); });
-        const stub = (label, value, x, y, width) => {
-          context.fillStyle = '#8a150e';
-          context.font = '500 28px "DM Sans", sans-serif';
-          context.fillText(label, x, y);
-          context.fillStyle = '#2a0e13';
-          context.font = '700 36px "DM Sans", sans-serif';
-          const valueLines = wrapCanvasText(context, value, width - 30);
-          context.fillText(`${valueLines[0] || ''}${valueLines.length > 1 ? '…' : ''}`, x, y + 46);
-        };
-        stub(certificate.event_location ? 'Lokasi' : 'Kegiatan', certificate.event_location || certificate.event_title, X + PAD, perfY + 62, INNER);
-        stub('Tanggal', dateText(certificate), X + PAD, perfY + 170, INNER / 2 - 20);
-        stub('Relawan sejak', sinceFormatter.format(new Date(`${certificate.event_date}T12:00:00+07:00`)), X + PAD + INNER / 2, perfY + 170, INNER / 2);
-        context.restore();
-        context.fillStyle = '#ffe6e1';
-        context.font = '500 38px "DM Sans", sans-serif';
-        context.fillText('Yuk, ikut juga!', 110, 1812);
-        context.font = '700 38px "DM Sans", sans-serif';
-        const ctaWidth = context.measureText('kitabahagia.id/link').width + 64;
-        pill('kitabahagia.id/link', 970 - ctaWidth, 1772, '700 38px "DM Sans", sans-serif', '#efb635', '#2a0e13', 32, 76);
+        await ready;
         await shareImageFile(await canvasToPng(canvas), 'kartu-relawan-kita-bahagia.png');
       } catch {
         button.textContent = 'Gagal membuat gambar';

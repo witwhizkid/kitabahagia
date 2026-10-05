@@ -278,7 +278,8 @@ Lainnya:
   merah bata→emas, miring 3D + kilau ikut kursor/kemiringan HP (Android; iOS butuh izin, dilewati), "Bagikan kartu" =
   PNG story 1080×1920 lewat `shareImageFile` (Okt 2026, mockup D disetujui user: latar maroon gelap + cahaya merah/emas,
   ID card krem miring 1,5° bertali emas, foto kegiatan, "KARTU INI MILIK" + nama + pil Newsreader "relawan Kita Bahagia",
-  sobekan Lokasi/Tanggal/Relawan sejak, tombol emas kitabahagia.id/link; tinggi kartu ikut panjang nama). Foto + lokasi dari
+  sobekan Lokasi/Tanggal/Relawan sejak, tombol emas kitabahagia.id/link; tinggi kartu ikut panjang nama). Pratinjau di halaman = canvas gambar yang sama
+  (`drawVolunteerStory`, lebar maks. 320px, 9:16, efek miring + kilau tetap), jadi yang dilihat = yang dibagikan; kartu HTML lama dihapus. Foto + lokasi dari
   `public-certificate` (`event_photo` = foto dokumentasi pertama, kalau tidak ada poster; `event_location`). (3) **Marquee** pita frasa KB di atas Program
   Beranda (38 s, berhenti saat hover/reduced motion). Foto ikut kursor + galeri geser mendatar (tahap 2 Awwwards)
   sengaja tidak dibuat: daftar Kisah sudah berfoto dan carousel mendatar sudah ada di Program/testimoni/dokumentasi.
