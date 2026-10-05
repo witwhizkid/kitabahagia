@@ -505,7 +505,12 @@ HP grid 2×2, tombol "Lihat kegiatan terdekat →" + "Kegiatan gratis juga dapat
 Kegiatan Terdekat. Mockup B: latar maroon gelap, daftar 4 poin kiri + tumpukan benda (sertifikat, kartu, foto, chat WA)
 kanan; risiko dua bagian gelap di Beranda. Contoh sertifikat di versi publik **tanpa tanda tangan asli** (nama "Nama Kamu",
 tanda tangan diburamkan). Tanpa nomor 01–04 dan tanpa label kapital kecil (aturan yang sudah ada).
-Ide lain dari perbandingan (belum diminta): deret logo mitra di Beranda setelah ada kolaborasi resmi; laporan tahunan /
+Logo mitra (keputusan user Okt 2026, menunggu file logo dari owner): grid `.collaboration-partners` di kolaborasi.html
+(placeholder Mitra A/B/C, `hidden`) diisi dulu = versi lengkap (logo, nama, bentuk kerja sama) untuk calon mitra.
+Beranda baru dapat versi ringkas kalau sudah ≥4–5 logo: satu baris logo kecil satu warna + "Pernah berkolaborasi dengan"
++ link "Lihat semua →" ke Kolaborasi, tepat di bawah angka Jejak; tidak berjalan (sudah ada marquee). Syarat: izin
+tertulis tiap mitra (WA/email cukup), file SVG atau PNG transparan versi lengkap (bukan screenshot).
+Ide lain dari perbandingan (belum diminta): laporan tahunan /
 dashboard dampak; Kartu Relawan tahap 2 (jumlah kegiatan + jam, stempel per kegiatan, warna naik level 1/3/5+; butuh data
 lintas sertifikat per relawan, jaga privasi). Domain: jaga perpanjangan `kitabahagia.id` (domain lama Sabang Merauke
 diambil situs judi).
