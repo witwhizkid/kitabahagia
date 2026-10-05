@@ -95,14 +95,14 @@ back to the old QR-expiry countdown when `payment_deadline` is absent.
 Migration `20260925010000_event_seat_hold_rules.sql` builds on the payment deadline:
 
 - **Per-event window.** `events.payment_window_minutes` (default 15, allowed
-  10–1440) replaces the fixed 3 hours:
+  10–1440; 5–1440 since `20261016010000_payment_window_five_minutes.sql`) replaces the fixed 3 hours:
   `payment_deadline = least(now() + payment_window_minutes, registration_deadline)`.
-  Admins choose it in the event form ("Batas waktu bayar": 10/15/30 menit,
+  Admins choose it in the event form ("Batas waktu bayar": 5/10/15/30 menit,
   1/3/24 jam); `admin-events` validates the integer range. `public-events`
   returns it so the registration page can say how long a seat is held.
   Existing registrations keep their stored `payment_deadline`. The 5-minute
   `REGISTRATION_CLOSED` rule now only triggers when the event's own
-  registration deadline is less than 5 minutes away (the window is at least 10).
+  registration deadline is less than 5 minutes away (the window is at least 5).
 - **One active registration per person per event** (free events too).
   `create_registration` refuses `ALREADY_REGISTERED` (HTTP `409`) when the same
   event already has a registration with the same `lower(email)` **or** the same
