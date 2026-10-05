@@ -185,10 +185,16 @@ Lainnya:
   (masyarakat_reguler / adventure_unique / impactful_action, diisi di form Kegiatan) dan
   `stories.event_id` (Kegiatan terkait di form Kisah, `on delete set null`). Data lama
   tidak diisi otomatis; halaman publik belum memakainya.
-- Navigasi publik di HP tetap hamburger (keputusan user Okt 2026): tab bar bawah ala admin ditolak
-  (7 menu, makan layar, numpuk dengan bar Safari). Tombol "Jadwal" krem di header juga ditolak (terlalu
-  ramai). Cadangan kalau uji coba tim menunjukkan orang susah menemukan Jadwal: ikon kalender di
-  sebelah hamburger, atau kotak "Lihat jadwal kegiatan" di dalam menu.
+- Navigasi publik HP (≤960px, sama dengan breakpoint hamburger): **tab bar bawah + hamburger** (Okt 2026, keputusan user,
+  membalik penolakan sebelumnya karena 7 menu tidak muat; mockup disetujui). Tab bar `.tab-bar` dibuat JS (`js/script.js`)
+  di semua halaman ber-header kecuali `.registration-page` dan `.link-page`: Beranda · Jadwal · Program · Kisah (href absolut,
+  `aria-current` dari path; kisah-detail = Kisah), pil krem melayang (radius 24px, `env(safe-area-inset-bottom)`), tab aktif =
+  pil maroon + ikon putih. Sembunyi saat scroll ke bawah (`.is-tucked`, muncul lagi saat scroll ke atas / y ≤120), saat
+  mengetik (`body.is-typing`), dan saat menu terbuka. Hamburger di HP menyembunyikan 4 link itu dan mendapat `.nav-extra`
+  dari JS: "Cek status pendaftaran" (paling atas), Relawan, FAQ (disembunyikan ≥961px). Footer dapat ruang bawah lewat
+  `.has-tab-bar .site-footer::after`. Tab "Kegiatanku" sengaja **belum** dibuat (pre-launch, isinya akan kosong; pengingat
+  `renderMyRegistration` sudah menutup kebutuhan); buat bareng Kartu Relawan tahap 2. Belum dicek di iPhone asli (risiko
+  bertumpuk dengan bar Safari).
 - Motion Beranda ala dashdigital.studio (Okt 2026, keputusan user, **Beranda dulu**; lebarkan ke halaman
   lain hanya kalau user setuju): JS menambah `html.home-motion` (hanya `.home-page`, bukan saat reduced
   motion). Judul `h2` di bawah layar pertama dipecah per kata (`.split-word`, `aria-hidden`; h2 dapat
