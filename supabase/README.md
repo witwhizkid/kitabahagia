@@ -374,7 +374,8 @@ state, `opens_on` / `open` (H+3 after the event's last day, WIB; `ISSUE_AFTER_DA
 settings and `email_ready`; `POST ?event=&action=issue` creates the row (or
 re-issues with the same code and link: new name/number snapshot);
 `action=pdf&code=` stores the PDF (`%PDF-`, ≤4 MB, overwrites) and sets
-`issued_at`; `action=email` sends the link through the Brevo API
+`issued_at`; `action=email` sends the link through the Brevo API, with the stored PDF attached
+("Sertifikat Kita Bahagia - <nama>.pdf", base64; if the download fails the email goes out link-only)
 (`BREVO_API_KEY` secret, sender `CERTIFICATE_EMAIL_FROM` or
 `noreply@kitabahagia.id`, reply-to `halo@`) and records the result. The email is a
 card with a button (subject "<first name>, sertifikat relawanmu udah jadi!",
