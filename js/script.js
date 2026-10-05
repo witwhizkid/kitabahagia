@@ -1109,7 +1109,7 @@ if (homeMotion) {
 
 // Tab bar (Oct 2026, mobile ≤960px, where the menu is a hamburger): Beranda · Jadwal · Program · Kisah stay one
 // tap away; the hamburger keeps the rest plus Cek status, Relawan and FAQ. Not on the registration flow or /link.
-// It hides while scrolling down, while typing, and while the menu is open.
+// It stays visible while scrolling (user decision); it only hides while typing and while the menu is open.
 if (document.querySelector('.site-header') && !document.body.matches('.registration-page, .link-page')) {
   const icons = {
     home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
@@ -1137,13 +1137,6 @@ if (document.querySelector('.site-header') && !document.body.matches('.registrat
     nav.prepend(extra('Cek status pendaftaran', '/cek-status.html'));
     nav.append(extra('Relawan', '/relawan.html'), extra('FAQ', '/faq.html'));
   }
-  let lastTabY = window.scrollY;
-  window.addEventListener('scroll', () => {
-    const y = window.scrollY;
-    if (y > lastTabY + 4 && y > 120) bar.classList.add('is-tucked');
-    else if (y < lastTabY - 4 || y <= 120) bar.classList.remove('is-tucked');
-    lastTabY = y;
-  }, { passive: true });
   const typing = () => document.body.classList.toggle('is-typing', Boolean(document.activeElement?.matches('input, textarea, select')));
   document.addEventListener('focusin', typing);
   document.addEventListener('focusout', () => setTimeout(typing, 0));
