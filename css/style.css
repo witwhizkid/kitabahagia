@@ -492,7 +492,7 @@ button { font: inherit; }
   .tab-bar svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .tab-bar a[aria-current="page"] { color: var(--maroon); font-weight: 700; }
   .tab-bar a[aria-current="page"] .tab-bar-icon { background: var(--maroon); color: var(--white); }
-  .tab-bar.is-tucked, .is-typing .tab-bar, .mobile-menu-open .tab-bar { opacity: 0; transform: translateY(calc(100% + 24px)); pointer-events: none; }
+  .is-typing .tab-bar, .mobile-menu-open .tab-bar { opacity: 0; transform: translateY(calc(100% + 24px)); pointer-events: none; }
   .has-tab-bar .site-footer::after { content: ""; display: block; height: calc(88px + env(safe-area-inset-bottom)); }
   .has-tab-bar .site-header .nav > a:is([href$="index.html"], [href$="jadwal.html"], [href$="program.html"], [href$="kisah.html"]) { display: none; }
 }

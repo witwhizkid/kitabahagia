@@ -189,8 +189,9 @@ Lainnya:
   membalik penolakan sebelumnya karena 7 menu tidak muat; mockup disetujui). Tab bar `.tab-bar` dibuat JS (`js/script.js`)
   di semua halaman ber-header kecuali `.registration-page` dan `.link-page`: Beranda · Jadwal · Program · Kisah (href absolut,
   `aria-current` dari path; kisah-detail = Kisah), pil krem melayang (radius 24px, `env(safe-area-inset-bottom)`), tab aktif =
-  pil maroon + ikon putih. Sembunyi saat scroll ke bawah (`.is-tucked`, muncul lagi saat scroll ke atas / y ≤120), saat
-  mengetik (`body.is-typing`), dan saat menu terbuka. Hamburger di HP menyembunyikan 4 link itu dan mendapat `.nav-extra`
+  pil maroon + ikon putih. **Selalu terlihat saat scroll** (keputusan user, dulu sembunyi saat scroll ke bawah); hanya
+  sembunyi saat mengetik (`body.is-typing`) dan saat menu terbuka. Kalau tim tidak setuju: revert commit tab bar
+  (balik total) atau cabut tab tapi pertahankan `.nav-extra` Cek status/Relawan/FAQ di hamburger (jalan tengah). Hamburger di HP menyembunyikan 4 link itu dan mendapat `.nav-extra`
   dari JS: "Cek status pendaftaran" (paling atas), Relawan, FAQ (disembunyikan ≥961px). Footer dapat ruang bawah lewat
   `.has-tab-bar .site-footer::after`. Tab "Kegiatanku" sengaja **belum** dibuat (pre-launch, isinya akan kosong; pengingat
   `renderMyRegistration` sudah menutup kebutuhan); buat bareng Kartu Relawan tahap 2. Belum dicek di iPhone asli (risiko
