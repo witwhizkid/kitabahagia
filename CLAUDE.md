@@ -321,6 +321,9 @@ Lainnya:
   + `theme-color` di semua halaman publik. Tanpa service worker (sengaja: tidak ada cache offline yang bisa menahan versi lama).
   Tombol "Pasang Kita Bahagia di HP" (footer + halaman /link, `[data-install-app]`) hanya muncul saat `beforeinstallprompt`
   (Chrome/Edge/Samsung Internet Android); iPhone tetap lewat Bagikan → Tambahkan ke Layar Utama.
+  Admin punya aplikasi terpisah "KB Admin" (Okt 2026, permintaan user): `admin/manifest.json` (`id`/`scope`/`start_url`
+  `/admin/`, ikon sama) + `theme-color`/`apple-touch-icon` di `admin/index.html`; dipasang lewat menu browser (tanpa tombol).
+  iPhone: login ulang sekali di aplikasi terpasang (penyimpanan terpisah dari Safari).
 - SEO beranda: JSON-LD `WebSite` + `NGO` (nama, logo 320, email, `sameAs` IG/TikTok/LinkedIn) di
   `<head>` `index.html` + `og:site_name`. JSON-LD bukan skrip yang dijalankan, jadi aman dari CSP
   (dicek: tanpa "Refused"). Search Console sudah terverifikasi (domain), sitemap sudah dikirim.
