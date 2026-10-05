@@ -1114,7 +1114,7 @@ if (document.querySelector('.site-header') && !document.body.matches('.registrat
   const icons = {
     home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
     calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
-    program: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+    program: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
     book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/>',
   };
   const page = window.location.pathname.replace(/^\/+|\.html$|\/+$/g, '') || 'index';

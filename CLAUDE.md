@@ -188,7 +188,7 @@ Lainnya:
 - Navigasi publik HP (≤960px, sama dengan breakpoint hamburger): **tab bar bawah + hamburger** (Okt 2026, keputusan user,
   membalik penolakan sebelumnya karena 7 menu tidak muat; mockup disetujui). Tab bar `.tab-bar` dibuat JS (`js/script.js`)
   di semua halaman ber-header kecuali `.registration-page` dan `.link-page`: Beranda · Jadwal · Program · Kisah (href absolut,
-  `aria-current` dari path; kisah-detail = Kisah), pil krem melayang (radius 24px, `env(safe-area-inset-bottom)`), tab aktif =
+  `aria-current` dari path; kisah-detail = Kisah), ikon garis (rumah, kalender, kompas untuk Program, buku), pil krem melayang (radius 24px, `env(safe-area-inset-bottom)`), tab aktif =
   pil maroon + ikon putih. **Selalu terlihat saat scroll** (keputusan user, dulu sembunyi saat scroll ke bawah); hanya
   sembunyi saat mengetik (`body.is-typing`) dan saat menu terbuka. Kalau tim tidak setuju: revert commit tab bar
   (balik total) atau cabut tab tapi pertahankan `.nav-extra` Cek status/Relawan/FAQ di hamburger (jalan tengah). Hamburger di HP menyembunyikan 4 link itu dan mendapat `.nav-extra`
