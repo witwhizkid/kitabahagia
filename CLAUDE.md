@@ -496,6 +496,20 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   seat-hold, `payment-status` tetap.
 
 
+Beranda "Kenapa ikut KB?" (Okt 2026, **menunggu persetujuan owner**; user suka dua mockup, belum memilih):
+bagian "yang kamu bawa pulang" berisi 4 hal: Sertifikat ber-QR (email, bisa dicek keasliannya), Kartu Relawan (Story),
+Foto dokumentasi (dikurasi tim dokum), Teman baru (grup WA per kegiatan). Ide dari perbandingan situs komunitas lain
+(Gama Dharma punya daftar alasan ikut). Mockup A: latar krem, judul "Ikut sekali, yang kamu bawa pulang lebih dari
+sekadar cerita.", 4 kartu warna keluarga KB (merah bata/maroon gelap/krem/emas) masing-masing dengan contoh benda miring,
+HP grid 2×2, tombol "Lihat kegiatan terdekat →" + "Kegiatan gratis juga dapat semuanya."; saran: taruh tepat setelah
+Kegiatan Terdekat. Mockup B: latar maroon gelap, daftar 4 poin kiri + tumpukan benda (sertifikat, kartu, foto, chat WA)
+kanan; risiko dua bagian gelap di Beranda. Contoh sertifikat di versi publik **tanpa tanda tangan asli** (nama "Nama Kamu",
+tanda tangan diburamkan). Tanpa nomor 01–04 dan tanpa label kapital kecil (aturan yang sudah ada).
+Ide lain dari perbandingan (belum diminta): deret logo mitra di Beranda setelah ada kolaborasi resmi; laporan tahunan /
+dashboard dampak; Kartu Relawan tahap 2 (jumlah kegiatan + jam, stempel per kegiatan, warna naik level 1/3/5+; butuh data
+lintas sertifikat per relawan, jaga privasi). Domain: jaga perpanjangan `kitabahagia.id` (domain lama Sabang Merauke
+diambil situs judi).
+
 Web sengaja tidak ditambah fitur baru sampai pemicunya terjadi (roadmap:
 4 kegiatan/bulan, tim ± 70 orang; 24 perancang program = 6 tim × 4 orang,
 tim 1–3 dan 4–6 bergantian tiap bulan, + 1 kegiatan gratis akhir bulan).
