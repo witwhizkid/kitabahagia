@@ -141,11 +141,11 @@ begin
 
   -- 10b. Out-of-range window is rejected by the check constraint ----------------
   begin
-    update public.events set payment_window_minutes = 5 where id = v_paid;
+    update public.events set payment_window_minutes = 4 where id = v_paid;
     v_error := 'ok';
   exception when check_violation then v_error := 'check_violation';
   end;
-  insert into kb_seathold_test values ('10b', 'payment_window_minutes = 5 ditolak', 'check_violation', v_error, v_error = 'check_violation');
+  insert into kb_seathold_test values ('10b', 'payment_window_minutes = 4 ditolak', 'check_violation', v_error, v_error = 'check_violation');
 
   -- 10c. Full event + duplicate email: EVENT_FULL (capacity is checked first) ----
   perform public.create_registration('zz-seathold-test-full', 'Uji F', '081344445555', 'uji-f@example.com', 'uji', null, true);
@@ -166,9 +166,9 @@ $$;
 
 -- 11. Existing events received the default (read-only).
 insert into kb_seathold_test
-select '11', 'Semua kegiatan punya payment_window_minutes 10..1440', '0 di luar rentang', count(*)::text, count(*) = 0
+select '11', 'Semua kegiatan punya payment_window_minutes 5..1440', '0 di luar rentang', count(*)::text, count(*) = 0
   from public.events
- where payment_window_minutes is null or payment_window_minutes not between 10 and 1440;
+ where payment_window_minutes is null or payment_window_minutes not between 5 and 1440;
 
 -- 12. Lookup indexes exist and are not unique (read-only).
 insert into kb_seathold_test

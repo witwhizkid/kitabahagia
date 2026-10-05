@@ -120,8 +120,8 @@ const validatePayload = (input: unknown, creating: boolean) => {
           return { error: field === "price" ? "Harga tidak valid." : "Kapasitas harus bilangan bulat positif." } as const;
         } else data[field] = value;
       } else if (field === "payment_window_minutes") {
-        if (!Number.isInteger(value) || Number(value) < 10 || Number(value) > 1440) {
-          return { error: "Batas waktu bayar harus 10 sampai 1440 menit." } as const;
+        if (!Number.isInteger(value) || Number(value) < 5 || Number(value) > 1440) {
+          return { error: "Batas waktu bayar harus 5 sampai 1440 menit." } as const;
         }
         data[field] = value;
       } else if (field === "registration_mode") {

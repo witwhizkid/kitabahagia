@@ -345,7 +345,8 @@ Lainnya:
 - Midtrans sandbox/production dipilih lewat `MIDTRANS_ENV`; payload QRIS mentah
   disimpan dan QR digambar sendiri (`js/vendor/qrcode-generator.min.js`).
 - Jendela pembayaran/seat-hold diatur per kegiatan dari admin
-  (`payment_window_minutes`); lihat "Seat-hold rules" di `supabase/README.md`.
+  (`payment_window_minutes`, pilihan 5/10/15/30 menit, 1/3/24 jam; 5 menit ditambah Okt 2026 atas
+  permintaan owner, migrasi `20261016010000`); lihat "Seat-hold rules" di `supabase/README.md`.
   Copy menjelaskan slot ditahan sementara sampai deadline yang sama; countdown
   tetap memakai `payment_deadline` existing. Jangan hardcode durasi. CTA
   "Ikuti Kita Bahagia di Instagram" muncul setelah pendaftaran gratis biasa
