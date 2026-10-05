@@ -32,11 +32,11 @@ Deno.serve(async (request) => {
   const query = new URLSearchParams({
     verification_code: `eq.${code}`,
     issued_at: "not.is.null",
-    select: "recipient_name,certificate_number,event_title,event_date,event_end_at,issued_at,pdf_path",
+    select: "recipient_name,certificate_number,event_title,event_date,event_end_at,issued_at,pdf_path,event:events(location,image_url,documentation_photos)",
     limit: "1",
   });
   const response = await fetch(`${supabaseUrl}/rest/v1/certificates?${query}`, { headers });
-  const rows = await response.json().catch(() => null) as Array<Record<string, string | null>> | null;
+  const rows = await response.json().catch(() => null) as Array<Record<string, unknown>> | null;
   if (!response.ok || !Array.isArray(rows)) return json(500, { error: { code: "SERVER_ERROR", message: "Sertifikat belum dapat diperiksa." } });
   const row = rows[0];
   if (!row?.pdf_path) return notFound();
@@ -57,6 +57,13 @@ Deno.serve(async (request) => {
       pdfUrl = url.href;
     }
   }
-  const { pdf_path: _path, ...certificate } = row;
-  return json(200, { certificate: { ...certificate, role: "Relawan Tingkat Nasional", pdf_url: pdfUrl } });
+  // Location and one photo for the shareable volunteer card: the first documentation photo, else the poster.
+  const { pdf_path: _path, event, ...certificate } = row;
+  const details = (event && typeof event === "object" ? event : {}) as Record<string, unknown>;
+  const photos = Array.isArray(details.documentation_photos) ? details.documentation_photos as Array<{ url?: unknown }> : [];
+  const photo = [photos[0]?.url, details.image_url].find((value) => typeof value === "string" && value) ?? null;
+  return json(200, { certificate: {
+    ...certificate, role: "Relawan Tingkat Nasional", pdf_url: pdfUrl,
+    event_location: typeof details.location === "string" ? details.location : null, event_photo: photo,
+  } });
 });

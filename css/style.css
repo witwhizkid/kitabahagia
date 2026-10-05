@@ -7118,5 +7118,5 @@ html.stabilo-motion .stabilo:not(.is-in)::before { clip-path: inset(0 100% 0 0);
 .volunteer-card-label { color: #ffe6e1; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .volunteer-card strong { font: 700 clamp(24px, 4vw, 34px)/1.1 "Instrument Sans", "DM Sans", sans-serif; letter-spacing: -.02em; }
 .volunteer-card-event { color: #ffe6e1; font-size: 14px; }
-.volunteer-card-since { margin-top: 6px; color: #2a0e13; font-size: 13px; font-weight: 700; }
+.volunteer-card-since { margin-top: 6px; color: #fff3e6; font-size: 13px; font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .volunteer-card { transform: none; transition: none; } }

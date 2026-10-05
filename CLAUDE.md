@@ -276,7 +276,10 @@ Lainnya:
   tipe transisi `poster` = halaman cross-fade + latar krem (CSS `:active-view-transition-type(poster)`); Chrome/Edge/
   Safari 18.2+, lainnya pindah biasa. (2) **Kartu Relawan** di sertifikat.html (setelah data sah): kartu gradien maroon→
   merah bata→emas, miring 3D + kilau ikut kursor/kemiringan HP (Android; iOS butuh izin, dilewati), "Bagikan kartu" =
-  PNG 1600×1010 lewat `shareImageFile` (helper bersama dengan Story). (3) **Marquee** pita frasa KB di atas Program
+  PNG story 1080×1920 lewat `shareImageFile` (Okt 2026, mockup D disetujui user: latar maroon gelap + cahaya merah/emas,
+  ID card krem miring 1,5° bertali emas, foto kegiatan, "KARTU INI MILIK" + nama + pil Newsreader "relawan Kita Bahagia",
+  sobekan Lokasi/Tanggal/Relawan sejak, tombol emas kitabahagia.id/link; tinggi kartu ikut panjang nama). Foto + lokasi dari
+  `public-certificate` (`event_photo` = foto dokumentasi pertama, kalau tidak ada poster; `event_location`). (3) **Marquee** pita frasa KB di atas Program
   Beranda (38 s, berhenti saat hover/reduced motion). Foto ikut kursor + galeri geser mendatar (tahap 2 Awwwards)
   sengaja tidak dibuat: daftar Kisah sudah berfoto dan carousel mendatar sudah ada di Program/testimoni/dokumentasi.
 - Paket ref. Okt 2026 #2: (1) "Bagikan ke Story" di kartu "Ajak teman ikut" layar sukses: gambar 1080×1920 digambar
