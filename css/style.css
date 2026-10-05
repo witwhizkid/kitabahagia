@@ -4641,6 +4641,14 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   color: currentColor;
   font-size: 16px;
 }
+.site-footer .footer-address {
+  max-width: 310px;
+  margin: 0 0 14px;
+  padding: 0;
+  color: rgba(255,248,239,.78);
+  font-size: 14px;
+  line-height: 1.55;
+}
 .site-footer .footer-map-preview {
   position: relative;
   width: 100%;
