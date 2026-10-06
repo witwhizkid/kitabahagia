@@ -351,7 +351,12 @@ Lainnya:
   memakai crop potret `img/hero-*-mobile.webp` lewat `<picture>`. Slide 1
   memakai `hero-volunteer-*`; slide 2 memakai `hero-slide-2-*` dengan grade
   hangat; slide 3 memakai `hero-slide-3-*`. Foto slide 1 di-preload (`fetchpriority` high); foto slide 2–3 memakai
-  `data-src`/`data-srcset` dan baru dimuat JS setelah `load` (PageSpeed HP: LCP). Berkas sumber mentahnya tidak
+  `data-src`/`data-srcset` dan baru dimuat JS setelah `load` (PageSpeed HP: LCP). Okt 2026: crop HP punya versi
+  540/720/900w (`srcset` + `sizes="100vw"`, preload `imagesrcset`). Build menggabungkan `curtain-gate.js` + `loader-gate.js`
+  jadi `js/home-gate.js` khusus index.html (satu request render-blocking; sumber tetap terpisah).
+  Investigasi PageSpeed 96→74 (6 Okt 2026): Lighthouse lokal versi 1, 3, dan 6 Okt sama-sama 80 (tanpa animasi/loader pun 80),
+  jadi bukan regresi kode; penurunan live = variasi PSI (Lighthouse 13.5, TTFB/cache Cloudflare). LCP live = logo loader;
+  hambatan terbesar CSS Beranda ±169 KB render-blocking. Ukur ulang 3× dan ambil median sebelum menyimpulkan. Berkas sumber mentahnya tidak
   disimpan di folder aset publik.
 - Foto yang tampil dengan `object-fit: cover` di bingkai yang lebih "kotak"
   dari fotonya butuh file lebih lebar dari bingkainya: atur `sizes` ke lebar

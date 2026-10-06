@@ -14,6 +14,11 @@ tar -cf - \
 # Each page gets style.css minus rules that can never match it (scripts/split-css.mjs); without
 # Node the pages simply keep the full style.css.
 if command -v node >/dev/null 2>&1; then node scripts/split-css.mjs dist; else echo "node missing: full style.css kept"; fi
+# Beranda needs both render-blocking gates; serve them as one file so the first paint waits on
+# one request instead of two (PageSpeed, Oct 2026). Sources stay separate in js/.
+cat dist/js/curtain-gate.js dist/js/loader-gate.js > dist/js/home-gate.js
+sed -i -E 's#<script src="js/curtain-gate\.js"></script>#<script src="js/home-gate.js"></script>#; /<script src="js\/loader-gate\.js"><\/script>/d' dist/index.html
+grep -q 'js/home-gate.js' dist/index.html || { echo "home-gate swap failed"; exit 1; }
 # Cloudflare lets browsers keep JS/CSS for hours while HTML is always fresh, so a deploy
 # could pair new HTML with old admin.js. Stamp local JS/CSS links with the commit so every
 # deploy loads matching files.

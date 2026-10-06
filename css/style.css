@@ -915,10 +915,10 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .program-slide.family-adventure { background: #f6e6d6; color: #53141d; }
 .program-slide.family-impact { background: #efb635; color: var(--ink); }
 .program-slide h3 { margin: 0 0 8px; color: inherit; font-size: clamp(28px, 2.6vw, 38px); letter-spacing: -.03em; }
-.program-slide-copy > p { margin: 0 0 22px; opacity: .88; font-size: 15px; line-height: 1.6; }
+.program-slide-copy > p { margin: 0 0 22px; opacity: .95; font-size: 15px; line-height: 1.6; }
 .program-slide-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; margin: 0 0 24px; padding: 0; list-style: none; }
 .program-slide-list strong { display: block; font: 700 21px/1.1 "Instrument Sans", "DM Sans", sans-serif; letter-spacing: -.03em; }
-.program-slide-list span { display: block; margin-top: 4px; opacity: .88; font-size: 14px; line-height: 1.5; }
+.program-slide-list span { display: block; margin-top: 4px; opacity: .95; font-size: 14px; line-height: 1.5; }
 .program-slide-cta { position: relative; display: inline-flex; padding: 13px 22px; border-radius: 999px; background: var(--white); color: var(--ink); font-size: 14px; font-weight: 700; }
 .program-slide.family-adventure .program-slide-cta { background: #53141d; color: var(--white); }
 .program-slide.family-impact .program-slide-cta { background: var(--ink); color: var(--white); }
