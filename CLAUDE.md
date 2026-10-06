@@ -193,7 +193,7 @@ Lainnya:
   sembunyi saat mengetik (`body.is-typing`) dan saat menu terbuka. Kalau tim tidak setuju: revert commit tab bar
   (balik total) atau cabut tab tapi pertahankan `.nav-extra` Cek status/Relawan/FAQ di hamburger (jalan tengah). Hamburger di HP menyembunyikan 4 link itu dan mendapat `.nav-extra`
   dari JS: "Cek status pendaftaran" (paling atas), Relawan, FAQ (disembunyikan ≥961px). Footer dapat ruang bawah lewat
-  `.has-tab-bar .site-footer::after`. Tab "Kegiatanku" sengaja **belum** dibuat (pre-launch, isinya akan kosong; pengingat
+  `.has-tab-bar .site-footer::after`. Hero Beranda HP/tablet (tombol, strip "Berikutnya", titik slider) dinaikkan setinggi tab bar lewat `--tab-bar-space` (dulu tombol hero tertutup tab bar). Tab "Kegiatanku" sengaja **belum** dibuat (pre-launch, isinya akan kosong; pengingat
   `renderMyRegistration` sudah menutup kebutuhan); buat bareng Kartu Relawan tahap 2. Belum dicek di iPhone asli (risiko
   bertumpuk dengan bar Safari).
 - Motion Beranda ala dashdigital.studio (Okt 2026, keputusan user, **Beranda dulu**; lebarkan ke halaman
