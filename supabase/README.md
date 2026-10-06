@@ -523,10 +523,12 @@ the transaction with `POST /api/v2/transaction` (signed with the merchant key), 
 reference, then applies `settlement`/`expire`/`cancel` through the RPC with `p_provider = 'ipaymu'`.
 Recovery of an expired pending iPaymu attempt also re-reads it, so a missed callback still confirms.
 
-Not verified against a live iPaymu account yet (written from the public docs): the response
-field holding the QRIS payload, `expiredType: "minutes"`, and which amount field
-(`Amount`/`SubTotal`/`Total`) equals our price. Check the function logs on the first sandbox
-transaction ("iPaymu charge rejected", "iPaymu webhook not applied").
+Sandbox verified end to end (7 Oct 2026): QR shown, survives reload, paid -> "Lunas". The sandbox
+`QrString` is a printable placeholder ("IPAYMU...", not EMV), so `qr_string` accepts any printable
+20..1024 chars (migration `20261017020000`) and the site draws it; `QrImage` is the fallback.
+Simulate a sandbox payment with https://sandbox.ipaymu.com/send-notify (menu "Tes Notify"): it
+really marks the transaction paid, so the webhook's re-check sees it. Production payload and
+amount fields are not seen yet; watch the logs on the first real transaction.
 
 Whitelist the site domain in the iPaymu dashboard. iPaymu reviewers test a real transaction
 on the site before approving, so switch `PAYMENT_PROVIDER=ipaymu` with sandbox keys first.
