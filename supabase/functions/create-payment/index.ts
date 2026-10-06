@@ -380,12 +380,19 @@ const resolveIpaymuCharge = async (
   const data = charged.data;
   const transactionId = data?.TransactionId !== undefined && data?.TransactionId !== null ? String(data.TransactionId) : "";
   const qrString = data ? ipaymuQrString(data) : null;
-  if (!charged.ok || !data || !transactionId || !qrString) {
+  // Without a standard QRIS payload the site shows iPaymu's own QR image (host allowed in CSP img-src).
+  const qrImage = typeof data?.QrImage === "string" && /^https:\/\/[a-z0-9.-]*ipaymu\.com\//i.test(data.QrImage)
+    ? data.QrImage : null;
+  if (!charged.ok || !data || !transactionId || (!qrString && !qrImage)) {
     const definitive = charged.response.status >= 400 && charged.response.status < 500 || (charged.ok && !transactionId);
     console.error("iPaymu charge rejected", {
       order_id: attempt.order_id, http_status: charged.response.status,
       status: charged.json?.Status ?? null, message: charged.json?.Message ?? null,
       has_transaction_id: Boolean(transactionId), has_qr_string: Boolean(qrString),
+      // Shape only: the QR payload is public (shown to the payer), the image host decides the CSP.
+      qr_string_shape: typeof data?.QrString === "string"
+        ? `${data.QrString.length} chars, starts "${data.QrString.slice(0, 6)}"` : null,
+      qr_image_host: typeof data?.QrImage === "string" ? data.QrImage.replace(/^(https?:\/\/[^/]+).*$/, "$1") : null,
       // Names and value types only (no values), to find the QRIS field if it moves again.
       data_fields: data ? Object.entries(data).map(([key, value]) =>
         `${key}:${value === null ? "null" : Array.isArray(value) ? "array" : typeof value}`) : null,
@@ -396,15 +403,21 @@ const resolveIpaymuCharge = async (
   const ownExpiry = new Date(createdAt.getTime() + minutes * 60 * 1000);
   const providerExpiry = parseTime(data.Expired);
   const expiresAt = (providerExpiry && providerExpiry < ownExpiry ? providerExpiry : ownExpiry).toISOString();
-  // qr_url is the fallback image; the site draws qr_string, so a non-https value is replaced.
-  const qrUrl = typeof data.QrImage === "string" && /^https:\/\//.test(data.QrImage)
-    ? data.QrImage : `${config.base}/payment/${encodeURIComponent(transactionId)}`;
+  if (!qrString) {
+    console.warn("iPaymu QRIS payload missing, showing QrImage", {
+      order_id: attempt.order_id,
+      qr_string_shape: typeof data.QrString === "string"
+        ? `${data.QrString.length} chars, starts "${data.QrString.slice(0, 6)}"` : null,
+    });
+  }
+  // qr_url is the fallback image; the site draws qr_string when there is one.
+  const qrUrl = qrImage ?? `${config.base}/payment/${encodeURIComponent(transactionId)}`;
   const finalized = await finalize(url, serviceKey, attempt, { transaction_id: transactionId }, qrUrl, expiresAt);
   if (!finalized) {
     console.error("Payment attempt finalization failed", { order_id: attempt.order_id, attempt_id: attempt.attempt_id });
     return errorResponse(500, "SERVER_ERROR");
   }
-  await storeQrString(url, serviceKey, attempt.attempt_id, qrString);
+  if (qrString) await storeQrString(url, serviceKey, attempt.attempt_id, qrString);
   return jsonResponse(successStatus, { ...finalized, qr_string: qrString, payment_deadline: attempt.payment_deadline ?? null });
 };
 
