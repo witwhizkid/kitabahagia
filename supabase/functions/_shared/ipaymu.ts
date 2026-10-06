@@ -10,12 +10,19 @@ const IPAYMU_API_BASE: Record<string, string> = {
 };
 
 export const ipaymuConfig = (): IpaymuConfig | null => {
-  const base = IPAYMU_API_BASE[Deno.env.get("IPAYMU_ENV") ?? ""];
+  const base = IPAYMU_API_BASE[(Deno.env.get("IPAYMU_ENV") ?? "").trim().toLowerCase()];
   const va = Deno.env.get("IPAYMU_VA")?.trim();
   const apiKey = Deno.env.get("IPAYMU_API_KEY")?.trim();
   if (!base || !va || !apiKey) return null;
   return { base, va, apiKey };
 };
+
+// Names only, never values: tells the function logs which secret is missing or invalid.
+export const ipaymuConfigProblems = () => [
+  IPAYMU_API_BASE[(Deno.env.get("IPAYMU_ENV") ?? "").trim().toLowerCase()] ? null : "IPAYMU_ENV (sandbox/production)",
+  Deno.env.get("IPAYMU_VA")?.trim() ? null : "IPAYMU_VA",
+  Deno.env.get("IPAYMU_API_KEY")?.trim() ? null : "IPAYMU_API_KEY",
+].filter(Boolean);
 
 const encoder = new TextEncoder();
 const toHex = (buffer: ArrayBuffer) =>

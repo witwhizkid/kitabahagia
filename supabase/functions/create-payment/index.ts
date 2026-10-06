@@ -1,4 +1,4 @@
-import { checkIpaymuTransaction, ipaymuConfig, ipaymuRequest, type IpaymuConfig } from "../_shared/ipaymu.ts";
+import { checkIpaymuTransaction, ipaymuConfig, ipaymuConfigProblems, ipaymuRequest, type IpaymuConfig } from "../_shared/ipaymu.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -521,7 +521,11 @@ Deno.serve(async (request) => {
   const ipaymu = ipaymuConfig();
   const ready = provider === "ipaymu" ? Boolean(ipaymu) : provider === "midtrans" && Boolean(midtransKey && midtransBase);
   if (!url || !serviceKey || !ready) {
-    console.error("Missing or invalid server payment configuration");
+    console.error("Missing or invalid server payment configuration", {
+      payment_provider: provider,
+      missing: provider === "ipaymu" ? ipaymuConfigProblems()
+        : provider === "midtrans" ? ["MIDTRANS_ENV/MIDTRANS_SERVER_KEY"] : ["PAYMENT_PROVIDER (midtrans/ipaymu)"],
+    });
     return errorResponse(500, "SERVER_ERROR");
   }
 
