@@ -324,12 +324,26 @@ const applyIpaymuPaid = async (url: string, key: string, orderId: string, transa
   }).catch(() => null);
   return Boolean(result?.response.ok);
 };
+// The field name of the QRIS payload is not documented clearly, so any EMV QRIS string
+// (starts with "000201") in the response is used, preferring the likely names first.
+const isQrisPayload = (value: unknown): value is string =>
+  typeof value === "string" && /^000201[\x20-\x7E]{14,1018}$/.test(value.trim());
 const ipaymuQrString = (data: Record<string, unknown>) => {
-  for (const field of ["QrString", "QrisString", "PaymentNo"]) {
-    const value = data[field];
-    if (typeof value === "string" && /^000201[\x20-\x7E]{14,1018}$/.test(value)) return value;
+  for (const field of ["QrString", "QrisString", "QRString", "PaymentNo"]) {
+    if (isQrisPayload(data[field])) return (data[field] as string).trim();
   }
-  return null;
+  const seen = new Set<unknown>();
+  const search = (value: unknown, depth: number): string | null => {
+    if (isQrisPayload(value)) return value.trim();
+    if (!value || typeof value !== "object" || depth > 3 || seen.has(value)) return null;
+    seen.add(value);
+    for (const item of Object.values(value as Record<string, unknown>)) {
+      const found = search(item, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  };
+  return search(data, 0);
 };
 
 const resolveIpaymuCharge = async (
@@ -372,6 +386,9 @@ const resolveIpaymuCharge = async (
       order_id: attempt.order_id, http_status: charged.response.status,
       status: charged.json?.Status ?? null, message: charged.json?.Message ?? null,
       has_transaction_id: Boolean(transactionId), has_qr_string: Boolean(qrString),
+      // Names and value types only (no values), to find the QRIS field if it moves again.
+      data_fields: data ? Object.entries(data).map(([key, value]) =>
+        `${key}:${value === null ? "null" : Array.isArray(value) ? "array" : typeof value}`) : null,
     });
     if (definitive) await setTerminal(url, serviceKey, attempt.attempt_id, "failed", `ipaymu_${charged.response.status}`);
     return errorResponse(definitive ? 502 : 409, definitive ? "PAYMENT_PROVIDER_ERROR" : "PAYMENT_IN_PROGRESS");
