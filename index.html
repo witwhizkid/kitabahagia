@@ -17,7 +17,7 @@
   <meta content="Kita Bahagia | Bahagia Bersama, Berbagi Makna" name="twitter:title"/>
   <meta content="Ruang untuk berbagi, bertemu, dan menjalani kegiatan sosial bersama." name="twitter:description"/>
   <meta content="https://kitabahagia.id/img/og/beranda.jpg" name="twitter:image"/>
-  <link rel="preload" as="image" href="img/hero-volunteer-mobile.webp" media="(max-width: 767px)" fetchpriority="high"/>
+  <link rel="preload" as="image" href="img/hero-volunteer-mobile.webp" imagesrcset="img/hero-volunteer-mobile-540.webp 540w, img/hero-volunteer-mobile-720.webp 720w, img/hero-volunteer-mobile.webp 900w" imagesizes="100vw" media="(max-width: 767px)" fetchpriority="high"/>
   <link rel="preload" as="image" href="img/hero-volunteer-1920.webp" media="(min-width: 768px)" fetchpriority="high"/>
   <link href="https://cmrdapfuqtjlmpepfwfq.supabase.co" rel="preconnect" crossorigin/>
   <link rel="preload" href="fonts/instrument-sans-latin.woff2" as="font" type="font/woff2" crossorigin/>
@@ -92,7 +92,7 @@
     <div class="hero-campaign-slider" data-hero-slider>
      <div class="hero-campaign-track">
       <article class="hero-slide active">
-       <picture><source media="(max-width: 767px)" srcset="img/hero-volunteer-mobile.webp" width="900" height="1607"/><img alt="Relawan Kita Bahagia berfoto bersama adik-adik sambil memegang hasil masakan" src="img/hero-volunteer-1920.webp" width="1920" height="1280" fetchpriority="high" decoding="async"/></picture>
+       <picture><source media="(max-width: 767px)" srcset="img/hero-volunteer-mobile-540.webp 540w, img/hero-volunteer-mobile-720.webp 720w, img/hero-volunteer-mobile.webp 900w" sizes="100vw" width="900" height="1607"/><img alt="Relawan Kita Bahagia berfoto bersama adik-adik sambil memegang hasil masakan" src="img/hero-volunteer-1920.webp" width="1920" height="1280" fetchpriority="high" decoding="async"/></picture>
        <div class="container hero-campaign-inner">
         <div class="hero-campaign-copy">
          <h1>Bahagia Bersama <span class="hero-desktop-break"></span>Berbagi <em class="hero-pill">Makna</em><span class="hero-desktop-break"></span><span></span></h1>
@@ -104,7 +104,7 @@
        </div>
       </article>
       <article class="hero-slide">
-       <picture><source media="(max-width: 767px)" data-srcset="img/hero-slide-2-mobile.webp" width="900" height="1607"/><img alt="Kegiatan Kebersamaan Kita Bahagia" data-src="img/hero-slide-2-1920.webp" width="1920" height="1280" decoding="async"/></picture>
+       <picture><source media="(max-width: 767px)" data-srcset="img/hero-slide-2-mobile-540.webp 540w, img/hero-slide-2-mobile-720.webp 720w, img/hero-slide-2-mobile.webp 900w" sizes="100vw" width="900" height="1607"/><img alt="Kegiatan Kebersamaan Kita Bahagia" data-src="img/hero-slide-2-1920.webp" width="1920" height="1280" decoding="async"/></picture>
        <div class="container hero-campaign-inner">
         <div class="hero-campaign-copy">
          <h2 aria-hidden="true">Bahagia Bersama <span class="hero-desktop-break"></span>Berbagi <em class="hero-pill">Makna</em><span class="hero-desktop-break"></span><span></span></h2>
@@ -116,7 +116,7 @@
        </div>
       </article>
       <article class="hero-slide">
-       <picture><source media="(max-width: 767px)" data-srcset="img/hero-slide-3-mobile.webp" width="900" height="1452"/><img alt="Relawan dan komunitas hadir bersama" data-src="img/hero-slide-3-1920.webp" width="1920" height="1078" decoding="async"/></picture>
+       <picture><source media="(max-width: 767px)" data-srcset="img/hero-slide-3-mobile-540.webp 540w, img/hero-slide-3-mobile-720.webp 720w, img/hero-slide-3-mobile.webp 900w" sizes="100vw" width="900" height="1452"/><img alt="Relawan dan komunitas hadir bersama" data-src="img/hero-slide-3-1920.webp" width="1920" height="1078" decoding="async"/></picture>
        <div class="container hero-campaign-inner">
         <div class="hero-campaign-copy">
          <h2 aria-hidden="true">Bahagia Bersama <span class="hero-desktop-break"></span>Berbagi <em class="hero-pill">Makna</em><span class="hero-desktop-break"></span><span></span></h2>
@@ -195,7 +195,7 @@
     </div>
     <div class="program-carousel" data-program-carousel role="region" aria-roledescription="carousel" aria-label="Program Kita Bahagia">
      <div class="program-track" tabindex="0">
-      <article class="program-slide family-reguler" role="group" aria-roledescription="slide" aria-label="Program Reguler">
+      <div class="program-slide family-reguler" role="group" aria-roledescription="slide" aria-label="Program Reguler">
        <div class="program-slide-copy">
         <h3>Program Reguler</h3>
         <p>Permainan, sesi belajar, dan workshop kreatif bareng warga, dalam kegiatan singkat.</p>
@@ -209,8 +209,8 @@
        <figure class="program-slide-photo">
         <img alt="Peserta mengikuti kegiatan bersama di ruang komunitas" src="img/home-program-regular-1280.webp" srcset="img/home-program-regular-640.webp 640w, img/home-program-regular-1280.webp 1280w" sizes="(max-width: 1023px) 86vw, 500px" width="1920" height="1078" loading="lazy" decoding="async"/>
        </figure>
-      </article>
-      <article class="program-slide family-adventure" role="group" aria-roledescription="slide" aria-label="Program Unique">
+      </div>
+      <div class="program-slide family-adventure" role="group" aria-roledescription="slide" aria-label="Program Unique">
        <div class="program-slide-copy">
         <h3>Program Unique</h3>
         <p>Eksplorasi tempat dan aktivitas kelompok di suasana yang beda dari biasanya.</p>
@@ -222,8 +222,8 @@
        <figure class="program-slide-photo">
         <img alt="Relawan dan peserta berfoto di depan rumah adat" src="img/home-program-unique-1280.webp" srcset="img/home-program-unique-640.webp 640w, img/home-program-unique-1280.webp 1280w" sizes="(max-width: 1023px) 86vw, 500px" width="1920" height="1078" loading="lazy" decoding="async"/>
        </figure>
-      </article>
-      <article class="program-slide family-impact" role="group" aria-roledescription="slide" aria-label="Program Gratis">
+      </div>
+      <div class="program-slide family-impact" role="group" aria-roledescription="slide" aria-label="Program Gratis">
        <div class="program-slide-copy">
         <h3>Program Gratis</h3>
         <p>Aksi bersama masyarakat: berbagi kebutuhan, sehari mengajar, sampai kegiatan lingkungan.</p>
@@ -236,7 +236,7 @@
        <figure class="program-slide-photo">
         <img alt="Relawan berkumpul bersama anak-anak sekolah" src="img/home-program-impactful-1280.webp" srcset="img/home-program-impactful-640.webp 640w, img/home-program-impactful-1280.webp 1280w" sizes="(max-width: 1023px) 86vw, 500px" width="1920" height="1280" loading="lazy" decoding="async"/>
        </figure>
-      </article>
+      </div>
      </div>
      <button class="program-arrow is-prev" type="button" aria-label="Program sebelumnya" data-program-prev disabled>&lsaquo;</button>
      <button class="program-arrow is-next" type="button" aria-label="Program berikutnya" data-program-next>&rsaquo;</button>
