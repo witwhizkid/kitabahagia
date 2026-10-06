@@ -509,7 +509,7 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   dikirim 6 Okt) dipasang sebagai provider kedua: `PAYMENT_PROVIDER` (`midtrans` default / `ipaymu`),
   `IPAYMU_ENV`/`IPAYMU_VA`/`IPAYMU_API_KEY`, `_shared/ipaymu.ts`, `ipaymu-webhook` (status dibaca ulang dari
   API iPaymu, callback tidak dipercaya), migrasi `20261017010000`. iPaymu baru approve kalau web sudah
-  terintegrasi + bisa tes transaksi (sandbox dulu) + domain di-whitelist. Teks FAQ/Ketentuan/Privasi
+  terintegrasi + bisa tes transaksi (sandbox dulu) + domain di-whitelist. Sandbox (akun sandbox milik user) **sudah dites ujung ke ujung** 7 Okt 2026: QR tampil, tahan refresh, simulasi bayar lewat sandbox.ipaymu.com/send-notify → Lunas. Setelah owner di-approve: ganti 3 secret ke kunci production owner (`IPAYMU_ENV=production`). Teks FAQ/Ketentuan/Privasi
   menyebut "iPaymu atau Midtrans". Detail: "iPaymu" di `supabase/README.md`. Cadangan pasti jalan: QRIS
   statis owner + konfirmasi manual (belum dibangun). Opsi jangka panjang: PT Perorangan.
 
