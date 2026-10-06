@@ -501,6 +501,36 @@ Set the Payment Notification URL in the Midtrans dashboard (Sandbox and Producti
 
 The webhook accepts POST JSON notifications, checks Midtrans SHA-512 signatures with the server-only `MIDTRANS_SERVER_KEY`, and applies payment state through the service-role-only `apply_midtrans_notification` RPC. It rejects unknown orders, identity/amount mismatches, and stale status downgrades. Do not mark payment paid from the browser or by editing database rows.
 
+## iPaymu (second QRIS provider, Oct 2026)
+
+Midtrans approval was still pending, so iPaymu was added next to it. Migration
+`20261017010000_ipaymu_provider.sql` allows `payment_attempts.provider = 'ipaymu'` and gives
+`apply_midtrans_notification` a `p_provider` argument (default `midtrans`, so the Midtrans
+webhook is unchanged). The frontend, seat hold, QR drawing and `payment-status` are shared.
+
+Function secrets:
+
+- `PAYMENT_PROVIDER`: `midtrans` (default when unset) or `ipaymu`. Picks who makes **new**
+  QRIS. Attempts already made by the other provider are still recovered while its secrets stay set.
+- `IPAYMU_ENV`: `sandbox` (https://sandbox.ipaymu.com) or `production` (https://my.ipaymu.com).
+- `IPAYMU_VA`, `IPAYMU_API_KEY`: from the iPaymu dashboard (Integration / API Key) of that environment.
+
+`create-payment` calls `POST /api/v2/payment/direct` (`paymentMethod`/`paymentChannel` `qris`,
+`referenceId` = our `order_id`, `expired` in whole minutes, never past `payment_deadline`,
+`notifyUrl` = `ipaymu-webhook`) and stores the QRIS payload (`QrString`/`PaymentNo`).
+`ipaymu-webhook` (deploy with `--no-verify-jwt`) does **not** trust the callback body: it re-reads
+the transaction with `POST /api/v2/transaction` (signed with the merchant key), checks the
+reference, then applies `settlement`/`expire`/`cancel` through the RPC with `p_provider = 'ipaymu'`.
+Recovery of an expired pending iPaymu attempt also re-reads it, so a missed callback still confirms.
+
+Not verified against a live iPaymu account yet (written from the public docs): the response
+field holding the QRIS payload, `expiredType: "minutes"`, and which amount field
+(`Amount`/`SubTotal`/`Total`) equals our price. Check the function logs on the first sandbox
+transaction ("iPaymu charge rejected", "iPaymu webhook not applied").
+
+Whitelist the site domain in the iPaymu dashboard. iPaymu reviewers test a real transaction
+on the site before approving, so switch `PAYMENT_PROVIDER=ipaymu` with sandbox keys first.
+
 ## Midtrans environment
 
 `create-payment` and `midtrans-webhook` read two function secrets:

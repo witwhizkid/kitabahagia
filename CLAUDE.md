@@ -506,6 +506,14 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   approve sampai akhir Oktober. Yang diganti cuma `create-payment` +
   `midtrans-webhook`, CSP, env, dan teks FAQ/Ketentuan/Privasi; frontend QR,
   seat-hold, `payment-status` tetap.
+  Okt 2026: Duitku, Tripay, DOKU (personal = payment link saja) menolak akun perorangan untuk
+  "penjualan tiket event" (minta PT/CV + NIB). **iPaymu** (akun Merchant atas nama owner, verifikasi
+  dikirim 6 Okt) dipasang sebagai provider kedua: `PAYMENT_PROVIDER` (`midtrans` default / `ipaymu`),
+  `IPAYMU_ENV`/`IPAYMU_VA`/`IPAYMU_API_KEY`, `_shared/ipaymu.ts`, `ipaymu-webhook` (status dibaca ulang dari
+  API iPaymu, callback tidak dipercaya), migrasi `20261017010000`. iPaymu baru approve kalau web sudah
+  terintegrasi + bisa tes transaksi (sandbox dulu) + domain di-whitelist. Teks FAQ/Ketentuan/Privasi
+  menyebut "iPaymu atau Midtrans". Detail: "iPaymu" di `supabase/README.md`. Cadangan pasti jalan: QRIS
+  statis owner + konfirmasi manual (belum dibangun). Opsi jangka panjang: PT Perorangan.
 
 
 Beranda "Kenapa ikut KB?" (Okt 2026, **menunggu persetujuan owner**; user suka dua mockup, belum memilih):

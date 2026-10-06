@@ -1,3 +1,5 @@
+import { checkIpaymuTransaction, ipaymuConfig, ipaymuRequest, type IpaymuConfig } from "../_shared/ipaymu.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -292,6 +294,212 @@ const resolveCharge = async (
   });
 };
 
+
+// ---- iPaymu (PAYMENT_PROVIDER=ipaymu) -------------------------------------------
+// Same attempt lifecycle as Midtrans: prepare -> charge -> finalize; the QRIS payload is
+// drawn by the site. Paid state arrives through ipaymu-webhook (re-checked with iPaymu).
+const restRows = async (url: string, key: string, path: string) => {
+  const response = await fetch(`${url}/rest/v1/${path}`, { headers: { "apikey": key, "Authorization": `Bearer ${key}` } })
+    .catch(() => null);
+  const rows = response?.ok ? await response.json().catch(() => null) : null;
+  return Array.isArray(rows) ? rows as Array<Record<string, unknown>> : null;
+};
+const attemptRow = async (url: string, key: string, attemptId: string) =>
+  (await restRows(url, key, `payment_attempts?select=provider,provider_transaction_id&id=eq.${encodeURIComponent(attemptId)}&limit=1`))?.[0] ?? null;
+const stampIpaymu = async (url: string, key: string, attemptId: string) => {
+  const response = await fetch(
+    `${url}/rest/v1/payment_attempts?id=eq.${encodeURIComponent(attemptId)}&status=eq.creating`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "apikey": key, "Authorization": `Bearer ${key}`, "Prefer": "return=minimal" },
+      body: JSON.stringify({ provider: "ipaymu" }),
+    },
+  ).catch(() => null);
+  return Boolean(response?.ok);
+};
+const applyIpaymuPaid = async (url: string, key: string, orderId: string, transactionId: string, amount: number) => {
+  const result = await rpc(url, key, "apply_midtrans_notification", {
+    p_order_id: orderId, p_provider_transaction_id: transactionId, p_gross_amount: amount,
+    p_transaction_status: "settlement", p_fraud_status: null, p_provider: "ipaymu",
+  }).catch(() => null);
+  return Boolean(result?.response.ok);
+};
+const ipaymuQrString = (data: Record<string, unknown>) => {
+  for (const field of ["QrString", "QrisString", "PaymentNo"]) {
+    const value = data[field];
+    if (typeof value === "string" && /^000201[\x20-\x7E]{14,1018}$/.test(value)) return value;
+  }
+  return null;
+};
+
+const resolveIpaymuCharge = async (
+  url: string, serviceKey: string, config: IpaymuConfig, attempt: Attempt, input: PaymentRequest,
+  successStatus: 200 | 201,
+) => {
+  const createdAt = parseTime(attempt.created_at);
+  if (!createdAt) return errorResponse(500, "SERVER_ERROR");
+  // iPaymu counts expiry in whole minutes, so round down to stay inside payment_deadline.
+  const minutes = Math.floor(qrSeconds(attempt, createdAt) / 60);
+  if (minutes < 1) {
+    await setTerminal(url, serviceKey, attempt.attempt_id, "cancelled", "payment_deadline_passed");
+    return errorResponse(409, "PAYMENT_DEADLINE_PASSED");
+  }
+  if (!await stampIpaymu(url, serviceKey, attempt.attempt_id)) return errorResponse(500, "SERVER_ERROR");
+  const registration = (await restRows(url, serviceKey,
+    `registrations?select=name,phone&registration_code=eq.${encodeURIComponent(attempt.registration_code)}&limit=1`))?.[0];
+  if (!registration) return errorResponse(500, "SERVER_ERROR");
+
+  const charged = await ipaymuRequest(config, "/api/v2/payment/direct", {
+    name: String(registration.name ?? "").slice(0, 100),
+    phone: String(registration.phone ?? "").slice(0, 20),
+    email: input.email,
+    amount: attempt.amount,
+    notifyUrl: `${url}/functions/v1/ipaymu-webhook`,
+    expired: minutes,
+    expiredType: "minutes",
+    comments: attempt.event_title.slice(0, 100),
+    referenceId: attempt.order_id,
+    paymentMethod: "qris",
+    paymentChannel: "qris",
+  }).catch(() => null);
+  if (!charged) return errorResponse(409, "PAYMENT_IN_PROGRESS");
+  const data = charged.data;
+  const transactionId = data?.TransactionId !== undefined && data?.TransactionId !== null ? String(data.TransactionId) : "";
+  const qrString = data ? ipaymuQrString(data) : null;
+  if (!charged.ok || !data || !transactionId || !qrString) {
+    const definitive = charged.response.status >= 400 && charged.response.status < 500 || (charged.ok && !transactionId);
+    console.error("iPaymu charge rejected", {
+      order_id: attempt.order_id, http_status: charged.response.status,
+      status: charged.json?.Status ?? null, message: charged.json?.Message ?? null,
+      has_transaction_id: Boolean(transactionId), has_qr_string: Boolean(qrString),
+    });
+    if (definitive) await setTerminal(url, serviceKey, attempt.attempt_id, "failed", `ipaymu_${charged.response.status}`);
+    return errorResponse(definitive ? 502 : 409, definitive ? "PAYMENT_PROVIDER_ERROR" : "PAYMENT_IN_PROGRESS");
+  }
+  const ownExpiry = new Date(createdAt.getTime() + minutes * 60 * 1000);
+  const providerExpiry = parseTime(data.Expired);
+  const expiresAt = (providerExpiry && providerExpiry < ownExpiry ? providerExpiry : ownExpiry).toISOString();
+  // qr_url is the fallback image; the site draws qr_string, so a non-https value is replaced.
+  const qrUrl = typeof data.QrImage === "string" && /^https:\/\//.test(data.QrImage)
+    ? data.QrImage : `${config.base}/payment/${encodeURIComponent(transactionId)}`;
+  const finalized = await finalize(url, serviceKey, attempt, { transaction_id: transactionId }, qrUrl, expiresAt);
+  if (!finalized) {
+    console.error("Payment attempt finalization failed", { order_id: attempt.order_id, attempt_id: attempt.attempt_id });
+    return errorResponse(500, "SERVER_ERROR");
+  }
+  await storeQrString(url, serviceKey, attempt.attempt_id, qrString);
+  return jsonResponse(successStatus, { ...finalized, qr_string: qrString, payment_deadline: attempt.payment_deadline ?? null });
+};
+
+// A stale 'creating' attempt never showed a QR, so it is cancelled and replaced. A pending
+// one past its expiry is re-read from iPaymu first, so a missed callback still confirms it.
+const recoverIpaymu = async (
+  url: string, serviceKey: string, config: IpaymuConfig, attempt: Attempt, input: PaymentRequest,
+): Promise<Attempt | Response> => {
+  if (attempt.local_status === "creating") {
+    if (!await setTerminal(url, serviceKey, attempt.attempt_id, "cancelled", "ipaymu_create_unconfirmed")) {
+      return errorResponse(500, "SERVER_ERROR");
+    }
+    return await prepare(url, serviceKey, input);
+  }
+  const row = await attemptRow(url, serviceKey, attempt.attempt_id);
+  const transactionId = typeof row?.provider_transaction_id === "string" ? row.provider_transaction_id : "";
+  if (transactionId) {
+    const transaction = await checkIpaymuTransaction(config, transactionId);
+    if (!transaction) return errorResponse(409, "PAYMENT_IN_PROGRESS");
+    if (transaction.state === "paid") {
+      if (transaction.referenceId === attempt.order_id) {
+        await applyIpaymuPaid(url, serviceKey, attempt.order_id, transactionId, transaction.amount);
+      }
+      return errorResponse(409, "PAYMENT_AWAITING_CONFIRMATION");
+    }
+  }
+  if (!await setTerminal(url, serviceKey, attempt.attempt_id, "expired", "ipaymu_expired")) {
+    return errorResponse(500, "SERVER_ERROR");
+  }
+  return await prepare(url, serviceKey, input);
+};
+
+// ---- Midtrans recovery (unchanged behaviour, moved into a function) ---------------
+const recoverMidtrans = async (
+  url: string, serviceKey: string, midtransKey: string, midtransBase: string,
+  attempt: Attempt, input: PaymentRequest,
+): Promise<Attempt | Response> => {
+  let response: Response;
+  let provider: Record<string, unknown> | null;
+  try {
+    response = await fetch(
+      `${midtransBase}/v2/${encodeURIComponent(attempt.order_id)}/status`,
+      { method: "GET", headers: midtransHeaders(midtransKey) },
+    );
+    provider = await readProvider(response);
+  } catch {
+    return errorResponse(409, "PAYMENT_IN_PROGRESS");
+  }
+
+  const notFound = response.status === 404 || provider?.status_code === "404";
+  if (notFound) {
+    return attempt.local_status === "creating"
+      ? await resolveCharge(url, serviceKey, midtransKey, midtransBase, attempt, 200)
+      : errorResponse(409, "PAYMENT_IN_PROGRESS");
+  } else {
+    if (!response.ok || !provider) return errorResponse(502, "PAYMENT_PROVIDER_ERROR");
+    if (!identityMatches(provider, attempt) || typeof provider.transaction_status !== "string") {
+      return errorResponse(502, "PAYMENT_PROVIDER_ERROR");
+    }
+    const status = provider.transaction_status;
+    if (["settlement", "capture"].includes(status)) {
+      return errorResponse(409, "PAYMENT_AWAITING_CONFIRMATION");
+    }
+    if (["expire", "cancel", "deny"].includes(status)) {
+      const terminal = status === "expire" ? "expired" : status === "cancel" ? "cancelled" : "failed";
+      if (!await setTerminal(url, serviceKey, attempt.attempt_id, terminal, status)) {
+        return errorResponse(500, "SERVER_ERROR");
+      }
+      return await prepare(url, serviceKey, input);
+    } else if (status === "pending") {
+      const expiry = parseTime(provider.expiry_time) ?? parseTime(attempt.expires_at);
+      if (!expiry) return errorResponse(409, "PAYMENT_IN_PROGRESS");
+      if (expiry > new Date()) {
+        if (attempt.local_status === "creating") {
+          return await resolveCharge(url, serviceKey, midtransKey, midtransBase, attempt, 200);
+        }
+        return attempt.qr_url
+          ? pendingResponse(
+            attempt, attempt.qr_url, expiry.toISOString(), await readQrString(url, serviceKey, attempt.attempt_id),
+          )
+          : errorResponse(409, "PAYMENT_IN_PROGRESS");
+      }
+
+      let expireResponse: Response;
+      let expiredProvider: Record<string, unknown> | null;
+      try {
+        expireResponse = await fetch(
+          `${midtransBase}/v2/${encodeURIComponent(attempt.order_id)}/expire`,
+          { method: "POST", headers: midtransHeaders(midtransKey, `expire-${attempt.attempt_id}`) },
+        );
+        expiredProvider = await readProvider(expireResponse);
+      } catch {
+        return errorResponse(409, "PAYMENT_IN_PROGRESS");
+      }
+      if (!expireResponse.ok || !expiredProvider || !identityMatches(expiredProvider, attempt)) {
+        return errorResponse(409, "PAYMENT_IN_PROGRESS");
+      }
+      if (["settlement", "capture"].includes(String(expiredProvider.transaction_status))) {
+        return errorResponse(409, "PAYMENT_AWAITING_CONFIRMATION");
+      }
+      if (expiredProvider.transaction_status !== "expire") return errorResponse(409, "PAYMENT_IN_PROGRESS");
+      if (!await setTerminal(url, serviceKey, attempt.attempt_id, "expired", "expire")) {
+        return errorResponse(500, "SERVER_ERROR");
+      }
+      return await prepare(url, serviceKey, input);
+    } else {
+      return errorResponse(409, "PAYMENT_IN_PROGRESS");
+    }
+  }
+  return errorResponse(409, "PAYMENT_IN_PROGRESS");
+};
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
   if (request.method !== "POST") return errorResponse(405, "INVALID_REQUEST");
@@ -303,16 +511,21 @@ Deno.serve(async (request) => {
   const input = validateRequest(body);
   if (!input) return errorResponse(400, "INVALID_REQUEST");
 
+  // PAYMENT_PROVIDER picks who makes new QRIS (default midtrans). Attempts already made by
+  // the other provider are still recovered with that provider while its secrets are set.
   const url = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const provider = (Deno.env.get("PAYMENT_PROVIDER") ?? "midtrans").trim().toLowerCase();
   const midtransKey = Deno.env.get("MIDTRANS_SERVER_KEY");
   const midtransBase = midtransKey ? midtransApiBase(midtransKey) : null;
-  if (!url || !serviceKey || !midtransKey || !midtransBase) {
+  const ipaymu = ipaymuConfig();
+  const ready = provider === "ipaymu" ? Boolean(ipaymu) : provider === "midtrans" && Boolean(midtransKey && midtransBase);
+  if (!url || !serviceKey || !ready) {
     console.error("Missing or invalid server payment configuration");
     return errorResponse(500, "SERVER_ERROR");
   }
 
-  let prepared = await prepare(url, serviceKey, input);
+  const prepared = await prepare(url, serviceKey, input);
   if (prepared instanceof Response) return prepared;
   let attempt = prepared;
   if (attempt.is_reused) {
@@ -324,84 +537,25 @@ Deno.serve(async (request) => {
   }
 
   if (attempt.needs_recovery) {
-    let response: Response;
-    let provider: Record<string, unknown> | null;
-    try {
-      response = await fetch(
-        `${midtransBase}/v2/${encodeURIComponent(attempt.order_id)}/status`,
-        { method: "GET", headers: midtransHeaders(midtransKey) },
-      );
-      provider = await readProvider(response);
-    } catch {
-      return errorResponse(409, "PAYMENT_IN_PROGRESS");
-    }
-
-    const notFound = response.status === 404 || provider?.status_code === "404";
-    if (notFound) {
-      return attempt.local_status === "creating"
-        ? await resolveCharge(url, serviceKey, midtransKey, midtransBase, attempt, 200)
-        : errorResponse(409, "PAYMENT_IN_PROGRESS");
+    const attemptProvider = (await attemptRow(url, serviceKey, attempt.attempt_id))?.provider;
+    let recovered: Attempt | Response;
+    if (attemptProvider === "ipaymu") {
+      if (!ipaymu) return errorResponse(409, "PAYMENT_IN_PROGRESS");
+      recovered = await recoverIpaymu(url, serviceKey, ipaymu, attempt, input);
+    } else if (attempt.local_status === "creating" && provider === "ipaymu") {
+      // A Midtrans attempt that never got a QR is simply replaced by an iPaymu one.
+      recovered = await setTerminal(url, serviceKey, attempt.attempt_id, "cancelled", "provider_switched")
+        ? await prepare(url, serviceKey, input) : errorResponse(500, "SERVER_ERROR");
     } else {
-      if (!response.ok || !provider) return errorResponse(502, "PAYMENT_PROVIDER_ERROR");
-      if (!identityMatches(provider, attempt) || typeof provider.transaction_status !== "string") {
-        return errorResponse(502, "PAYMENT_PROVIDER_ERROR");
-      }
-      const status = provider.transaction_status;
-      if (["settlement", "capture"].includes(status)) {
-        return errorResponse(409, "PAYMENT_AWAITING_CONFIRMATION");
-      }
-      if (["expire", "cancel", "deny"].includes(status)) {
-        const terminal = status === "expire" ? "expired" : status === "cancel" ? "cancelled" : "failed";
-        if (!await setTerminal(url, serviceKey, attempt.attempt_id, terminal, status)) {
-          return errorResponse(500, "SERVER_ERROR");
-        }
-        prepared = await prepare(url, serviceKey, input);
-        if (prepared instanceof Response) return prepared;
-        attempt = prepared;
-      } else if (status === "pending") {
-        const expiry = parseTime(provider.expiry_time) ?? parseTime(attempt.expires_at);
-        if (!expiry) return errorResponse(409, "PAYMENT_IN_PROGRESS");
-        if (expiry > new Date()) {
-          if (attempt.local_status === "creating") {
-            return await resolveCharge(url, serviceKey, midtransKey, midtransBase, attempt, 200);
-          }
-          return attempt.qr_url
-            ? pendingResponse(
-              attempt, attempt.qr_url, expiry.toISOString(), await readQrString(url, serviceKey, attempt.attempt_id),
-            )
-            : errorResponse(409, "PAYMENT_IN_PROGRESS");
-        }
-
-        let expireResponse: Response;
-        let expiredProvider: Record<string, unknown> | null;
-        try {
-          expireResponse = await fetch(
-            `${midtransBase}/v2/${encodeURIComponent(attempt.order_id)}/expire`,
-            { method: "POST", headers: midtransHeaders(midtransKey, `expire-${attempt.attempt_id}`) },
-          );
-          expiredProvider = await readProvider(expireResponse);
-        } catch {
-          return errorResponse(409, "PAYMENT_IN_PROGRESS");
-        }
-        if (!expireResponse.ok || !expiredProvider || !identityMatches(expiredProvider, attempt)) {
-          return errorResponse(409, "PAYMENT_IN_PROGRESS");
-        }
-        if (["settlement", "capture"].includes(String(expiredProvider.transaction_status))) {
-          return errorResponse(409, "PAYMENT_AWAITING_CONFIRMATION");
-        }
-        if (expiredProvider.transaction_status !== "expire") return errorResponse(409, "PAYMENT_IN_PROGRESS");
-        if (!await setTerminal(url, serviceKey, attempt.attempt_id, "expired", "expire")) {
-          return errorResponse(500, "SERVER_ERROR");
-        }
-        prepared = await prepare(url, serviceKey, input);
-        if (prepared instanceof Response) return prepared;
-        attempt = prepared;
-      } else {
-        return errorResponse(409, "PAYMENT_IN_PROGRESS");
-      }
+      if (!midtransKey || !midtransBase) return errorResponse(409, "PAYMENT_IN_PROGRESS");
+      recovered = await recoverMidtrans(url, serviceKey, midtransKey, midtransBase, attempt, input);
     }
+    if (recovered instanceof Response) return recovered;
+    attempt = recovered;
   }
 
   if (attempt.needs_recovery || attempt.is_reused) return errorResponse(409, "PAYMENT_IN_PROGRESS");
-  return await resolveCharge(url, serviceKey, midtransKey, midtransBase, attempt, 201);
+  return provider === "ipaymu" && ipaymu
+    ? await resolveIpaymuCharge(url, serviceKey, ipaymu, attempt, input, 201)
+    : await resolveCharge(url, serviceKey, midtransKey!, midtransBase!, attempt, 201);
 });
