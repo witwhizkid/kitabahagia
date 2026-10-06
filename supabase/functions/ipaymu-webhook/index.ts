@@ -1,5 +1,5 @@
 import { sendConfirmationEmail } from "../_shared/registration-email.ts";
-import { checkIpaymuTransaction, ipaymuConfig } from "../_shared/ipaymu.ts";
+import { checkIpaymuTransaction, ipaymuConfig, ipaymuConfigProblems } from "../_shared/ipaymu.ts";
 
 // iPaymu notifyUrl. The callback body is only used to learn which transaction changed:
 // its state is re-read from iPaymu with the merchant's signed request before anything is
@@ -51,7 +51,7 @@ Deno.serve(async (request) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const config = ipaymuConfig();
   if (!url || !serviceKey || !config) {
-    console.error("iPaymu webhook configuration unavailable");
+    console.error("iPaymu webhook configuration unavailable", { missing: ipaymuConfigProblems() });
     return response(503, "UNAVAILABLE");
   }
 
