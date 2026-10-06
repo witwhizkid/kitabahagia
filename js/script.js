@@ -1719,7 +1719,8 @@ if (registrationForm) {
   };
 
   // QRIS payload from Midtrans, drawn as our own QR instead of the Midtrans poster image.
-  const validQrString = (value) => typeof value === 'string' && /^000201[\x20-\x7E]{14,1018}$/.test(value);
+  // QRIS payloads start with 000201; the iPaymu sandbox sends a printable placeholder instead.
+  const validQrString = (value) => typeof value === 'string' && /^[\x20-\x7E]{20,1024}$/.test(value);
   // The payload only counts for the QR image it arrived with, so a renewed QR never shows a stale code.
   const qrStringFor = (data) => (data?.qr_payload?.url === data?.qr_url ? data.qr_payload.value : null);
   const buildQr = (value) => {

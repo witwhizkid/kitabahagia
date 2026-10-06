@@ -328,10 +328,15 @@ const applyIpaymuPaid = async (url: string, key: string, orderId: string, transa
 // (starts with "000201") in the response is used, preferring the likely names first.
 const isQrisPayload = (value: unknown): value is string =>
   typeof value === "string" && /^000201[\x20-\x7E]{14,1018}$/.test(value.trim());
+// iPaymu sandbox returns a placeholder QrString ("IPAYMU...", not EMV); it is still drawn so
+// the payment screen can be tested (sandbox payments are simulated from the dashboard).
+const isPrintablePayload = (value: unknown): value is string =>
+  typeof value === "string" && /^[\x20-\x7E]{20,1024}$/.test(value.trim());
 const ipaymuQrString = (data: Record<string, unknown>) => {
   for (const field of ["QrString", "QrisString", "QRString", "PaymentNo"]) {
     if (isQrisPayload(data[field])) return (data[field] as string).trim();
   }
+  if (isPrintablePayload(data.QrString)) return data.QrString.trim();
   const seen = new Set<unknown>();
   const search = (value: unknown, depth: number): string | null => {
     if (isQrisPayload(value)) return value.trim();
