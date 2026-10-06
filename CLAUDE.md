@@ -365,6 +365,9 @@ Lainnya:
   Foto kelas lama (`hero-relawan*.webp`) masih dipakai di halaman lain.
 - Midtrans sandbox/production dipilih lewat `MIDTRANS_ENV`; payload QRIS mentah
   disimpan dan QR digambar sendiri (`js/vendor/qrcode-generator.min.js`).
+  QR digambar **bulat** (Okt 2026, permintaan user: kotak polos kurang playful dibanding gambar QR Midtrans):
+  titik bulat 0,9 modul warna `#2a0e13`, tiga "mata" pojok membulat maroon `#7a1f2b` (`qrSvgMarkup` di layar,
+  `drawRoundedQr` di poster unduhan). Dicek ZXing: terbaca di ukuran penuh sampai ±160px. Jangan kecilkan titik/pudarkan warna.
 - Jendela pembayaran/seat-hold diatur per kegiatan dari admin
   (`payment_window_minutes`, pilihan 5/10/15/30 menit, 1/3/24 jam; 5 menit ditambah Okt 2026 atas
   permintaan owner, migrasi `20261016010000`); lihat "Seat-hold rules" di `supabase/README.md`.

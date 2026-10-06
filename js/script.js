@@ -1735,16 +1735,64 @@ if (registrationForm) {
     }
   };
   const QR_QUIET_ZONE = 4;
+  // Rounded QR in KB colours: round dots and soft "eyes" (finder patterns), like the provider QR
+  // images. Dots stay 0.9 of a module and colours stay dark on white, so every QRIS app reads it.
+  const QR_DOT = '#2a0e13';
+  const QR_EYE = '#7a1f2b';
+  const qrEyes = (count) => [[0, 0], [0, count - 7], [count - 7, 0]];
+  const inQrEye = (count, row, col) => qrEyes(count).some(([r, c]) => row >= r && row < r + 7 && col >= c && col < c + 7);
+  const roundedRectPath = (x, y, w, h, r) =>
+    `M${x + r} ${y}h${w - 2 * r}a${r} ${r} 0 0 1 ${r} ${r}v${h - 2 * r}a${r} ${r} 0 0 1 ${-r} ${r}h${-(w - 2 * r)}a${r} ${r} 0 0 1 ${-r} ${-r}v${-(h - 2 * r)}a${r} ${r} 0 0 1 ${r} ${-r}z`;
   const qrSvgMarkup = (qr) => {
     const count = qr.getModuleCount();
     const size = count + QR_QUIET_ZONE * 2;
-    let path = '';
+    let dots = '';
     for (let row = 0; row < count; row += 1) {
       for (let col = 0; col < count; col += 1) {
-        if (qr.isDark(row, col)) path += `M${col + QR_QUIET_ZONE} ${row + QR_QUIET_ZONE}h1v1h-1z`;
+        if (!qr.isDark(row, col) || inQrEye(count, row, col)) continue;
+        const cx = col + QR_QUIET_ZONE + 0.5;
+        const cy = row + QR_QUIET_ZONE + 0.5;
+        dots += `M${cx - 0.45} ${cy}a.45 .45 0 1 0 .9 0a.45 .45 0 1 0 -.9 0z`;
       }
     }
-    return `<svg viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" aria-hidden="true"><rect width="${size}" height="${size}" fill="#fff"/><path d="${path}" fill="#231f20"/></svg>`;
+    const eyes = qrEyes(count).map(([r, c]) => {
+      const x = c + QR_QUIET_ZONE;
+      const y = r + QR_QUIET_ZONE;
+      return roundedRectPath(x, y, 7, 7, 2.2) + roundedRectPath(x + 1, y + 1, 5, 5, 1.5) + roundedRectPath(x + 2, y + 2, 3, 3, 1);
+    }).join('');
+    return `<svg viewBox="0 0 ${size} ${size}" aria-hidden="true"><rect width="${size}" height="${size}" fill="#fff"/><path d="${dots}" fill="${QR_DOT}"/><path d="${eyes}" fill="${QR_EYE}" fill-rule="evenodd"/></svg>`;
+  };
+  // Same drawing on a canvas, for the downloadable QRIS poster.
+  const drawRoundedQr = (context, qr, qrX, qrY, cell) => {
+    const count = qr.getModuleCount();
+    const roundRect = (x, y, w, h, r) => {
+      if (typeof context.roundRect === 'function') context.roundRect(x, y, w, h, r);
+      else context.rect(x, y, w, h);
+    };
+    context.fillStyle = QR_DOT;
+    context.beginPath();
+    for (let row = 0; row < count; row += 1) {
+      for (let col = 0; col < count; col += 1) {
+        if (!qr.isDark(row, col) || inQrEye(count, row, col)) continue;
+        const cx = qrX + (col + 0.5) * cell;
+        const cy = qrY + (row + 0.5) * cell;
+        context.moveTo(cx + cell * 0.45, cy);
+        context.arc(cx, cy, cell * 0.45, 0, Math.PI * 2);
+      }
+    }
+    context.fill();
+    context.fillStyle = QR_EYE;
+    qrEyes(count).forEach(([r, c]) => {
+      const x = qrX + c * cell;
+      const y = qrY + r * cell;
+      context.beginPath();
+      roundRect(x, y, 7 * cell, 7 * cell, 2.2 * cell);
+      roundRect(x + cell, y + cell, 5 * cell, 5 * cell, 1.5 * cell);
+      context.fill('evenodd');
+      context.beginPath();
+      roundRect(x + 2 * cell, y + 2 * cell, 3 * cell, 3 * cell, cell);
+      context.fill();
+    });
   };
 
   // "Sampai jumpa" card on the success screens (free confirmation and paid). Selection applicants
@@ -3330,12 +3378,7 @@ if (registrationForm) {
     const qrPixels = cell * count;
     const qrX = cardX + Math.round((cardSize - qrPixels) / 2);
     const qrY = cardY + Math.round((cardSize - qrPixels) / 2);
-    context.fillStyle = '#231f20';
-    for (let row = 0; row < count; row += 1) {
-      for (let col = 0; col < count; col += 1) {
-        if (qr.isDark(row, col)) context.fillRect(qrX + col * cell, qrY + row * cell, cell, cell);
-      }
-    }
+    drawRoundedQr(context, qr, qrX, qrY, cell);
 
     context.textAlign = 'center';
     context.fillStyle = '#6f6667';
