@@ -493,6 +493,7 @@ button { font: inherit; }
   .tab-bar a[aria-current="page"] { color: var(--maroon); font-weight: 700; }
   .tab-bar a[aria-current="page"] .tab-bar-icon { background: var(--maroon); color: var(--white); }
   .is-typing .tab-bar, .mobile-menu-open .tab-bar { opacity: 0; transform: translateY(calc(100% + 24px)); pointer-events: none; }
+  .has-tab-bar { --tab-bar-space: calc(76px + max(12px, env(safe-area-inset-bottom))); }
   .has-tab-bar .site-footer::after { content: ""; display: block; height: calc(88px + env(safe-area-inset-bottom)); }
   .has-tab-bar .site-header .nav > a:is([href$="index.html"], [href$="jadwal.html"], [href$="program.html"], [href$="kisah.html"]) { display: none; }
 }
@@ -4984,7 +4985,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
     width: min(100% - 36px,520px);
     min-height: 0;
     margin: 0 auto 0 clamp(18px,5vw,48px);
-    padding: 0 0 clamp(54px,6svh,68px);
+    padding: 0 0 calc(clamp(54px,6svh,68px) + var(--tab-bar-space, 0px));
   }
   .home-page .hero-slide:first-child .hero-campaign-copy { display: block; }
   .home-page .hero-campaign-copy :is(h1, h2) {
@@ -5036,7 +5037,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
     position: absolute;
     z-index: 5;
     right: 12px;
-    bottom: 10px;
+    bottom: calc(10px + var(--tab-bar-space, 0px));
     left: auto;
     width: auto;
     margin: 0;
@@ -5053,7 +5054,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .home-page .hero-slide:first-child .hero-campaign-inner {
     width: calc(100% - 36px);
     margin-left: 18px;
-    padding-bottom: 58px;
+    padding-bottom: calc(58px + var(--tab-bar-space, 0px));
   }
   .home-page .hero-campaign-copy :is(h1, h2) { font-size: clamp(38px,10.2vw,43px); }
   .home-page .hero-campaign-copy p { max-width: 34ch; }
@@ -6496,11 +6497,11 @@ h3 {
 /* Tablets keep the slider dots at the bottom right, so the strip takes the left side. Phones hide the
    dots while the strip shows (the slider autoplays), giving the strip the full row. */
 @media (max-width: 1023px) {
-  .home-page .hero-next { right: 124px; left: clamp(18px, 5vw, 48px); bottom: 10px; max-width: 560px; gap: 8px; padding-top: 7px; font-size: 12.5px; }
+  .home-page .hero-next { right: 124px; left: clamp(18px, 5vw, 48px); bottom: calc(10px + var(--tab-bar-space, 0px)); max-width: 560px; gap: 8px; padding-top: 7px; font-size: 12.5px; }
   .home-page .hero-next-label { font-size: 10px; }
 }
 @media (max-width: 767px) {
-  .home-page .hero-next { right: 18px; left: 18px; bottom: 14px; max-width: none; gap: 10px; }
+  .home-page .hero-next { right: 18px; left: 18px; bottom: calc(14px + var(--tab-bar-space, 0px)); max-width: none; gap: 10px; }
   .home-page .hero-next:not([hidden]) ~ .hero-campaign-dots { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
