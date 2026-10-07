@@ -44,7 +44,8 @@ Deno.serve(async (request) => {
   const rawLimit = Number.parseInt(url.searchParams.get("limit") || "50", 10);
   const limit = Number.isFinite(rawLimit) ? Math.min(50, Math.max(1, rawLimit)) : 50;
   const query = new URLSearchParams({
-    select: storyProjection,
+    // The list brings the related event's family and place for the Beranda story reel.
+    select: `${storyProjection},event:events(program_key,location,is_public,archived_at)`,
     status: "eq.published",
     archived_at: "is.null",
     order: "published_at.desc.nullslast,slug.asc",
@@ -68,10 +69,13 @@ Deno.serve(async (request) => {
   // Only a public, unarchived event is exposed, and only what the gallery needs.
   const stories = rows.map(({ event, ...story }: Record<string, unknown>) => {
     const related = event as Record<string, unknown> | null | undefined;
-    if (!slug) return story;
+    const visible = related && related.is_public === true && !related.archived_at;
+    if (!slug) {
+      return { ...story, event: visible ? { program_key: related.program_key ?? null, location: related.location ?? null } : null };
+    }
     return {
       ...story,
-      event: related && related.is_public === true && !related.archived_at ? {
+      event: visible ? {
         slug: related.slug,
         title: related.title,
         documentation_url: related.documentation_url ?? null,

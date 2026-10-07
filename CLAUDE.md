@@ -234,7 +234,7 @@ Lainnya:
   lebih lambat, copy/titik/strip memudar + naik 60px (di 46vh pertama; `.hero-next` = dua animasi, fade dulu lalu
   entrance supaya entrance tetap menang); browser tanpa scroll timeline: hero diam, lembaran tetap naik; `.impact-editorial` = lembaran krem (z-index 1, sudut
   atas 28px / HP 20px, bayangan) yang naik menutupi hero. Tidak ada yang di-`scale` (ringan di HP lemah).
-  Foto Jejak, Tentang, kisah utama tetap bergeser ±5% (CSS scroll-driven, `scale` 1.12; Firefox/Safari lama diam).
+  Foto Jejak dan Tentang tetap bergeser ±5% (CSS scroll-driven, `scale` 1.12; Firefox/Safari lama diam).
 - Loader Beranda (Okt 2026, ref. studio-onto.com, disetujui dengan syarat): `js/loader-gate.js` (render-blocking
   di `<head>` index.html, sengaja) menambah `html.loader-on` hanya kalau Beranda halaman pertama kunjungan
   (`sessionStorage kb_visit`, diisi `script.js` di setiap halaman) dan motion diizinkan. `.kb-loader`: panel maroon,
@@ -246,7 +246,7 @@ Lainnya:
   menyala kata demi kata sesuai scroll (JS, opacity .16→1); footer Beranda terbuka di bawah `main` yang jadi
   lembaran bersudut bawah 28px (`html.footer-reveal`, footer `sticky; bottom:0`) hanya kalau tinggi footer muat
   di layar (HP: footer biasa). Wordmark "Kita Bahagia" raksasa di footer sudah dicoba dan ditolak user (jelek).
-- Foto Jejak + foto kisah utama Beranda = **cetakan jurnal** (Okt 2026, mengganti block reveal ala Eleos yang
+- Foto Jejak Beranda = **cetakan jurnal** (kisah utama dulu juga, diganti reel Kisah Okt 2026) (Okt 2026, mengganti block reveal ala Eleos yang
   terasa dingin): bingkai krem lewat `box-shadow` spread (crop + zoom hover tetap), miring -1°; saat terlihat
   `.journal-print.is-in` memudar masuk, naik 18px, dan miringnya mengendap dari -2,6° (.9–1,1s). Tanpa selotip
   (wrapper `overflow:hidden` akan memotongnya). `img/block-mask.png` dihapus.
@@ -268,6 +268,14 @@ Lainnya:
   panah keyboard di track. Lebar pakai container query (`cqw`) supaya scrollbar Windows tidak menggeser tengah;
   kartu terakhir diberi `margin-right` (padding akhir flex scroll tidak ikut dihitung). ≤1023px: foto di atas, snap
   `start`, tanpa panah. CSS lama `.program-card`/`.program-grid`/`.program-stage` (±150 aturan) dihapus.
+- Kisah Beranda (Okt 2026, mockup disetujui user; dulu 1 kisah besar + 2 kecil, ±1.470px di HP): latar maroon tergelap KB
+  `#2a0e13` + **ambient** = salinan kecil (64px, transform Supabase) foto sampul kisah yang aktif, diburamkan, berganti pelan
+  saat digeser (desktop: juga saat hover/fokus). Judul "Cerita yang dibawa pulang relawan." + tombol pil krem "Semua kisah →"
+  (hover emas). Garis progres ala Story IG (tombol per kisah, emas; tersembunyi kalau semua kartu muat). Kartu editorial tanpa
+  bingkai: foto 4:5 (HP 1:1.08) sudut 18px, titik warna program + "Program X · tempat" (dari `stories.event_id` →
+  `public-stories` list mengirim `event.program_key/location`; kosong = tanggal terbit), ringkasan sebagai kutipan Newsreader
+  miring (maks. 4 baris), garis tipis, judul kecil + "N menit →". Penutup teks: "Kisah berikutnya bisa dari kamu." + "Cari
+  kegiatan →". HP/tablet: kartu tidak aktif pudar .42. Sengaja **tidak** playful (kisah = artikel, nada lebih dalam).
 - Testimoni Beranda (Okt 2026, ref. gojek.io "open source"): tumpukan kartu miring di latar krem; judul + kalimat
   kecil + panah bulat + "n / 5" di kiri, kartu di kanan (HP bertumpuk). JS testimoni lama (autoplay 5 s, panah,
   pengumuman sr-only) tetap; `updateTestimonials` menambah `data-stack` (0 depan, 1–2 mengintip) dan `.is-thrown`
