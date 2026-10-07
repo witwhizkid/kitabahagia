@@ -212,6 +212,114 @@
     }
   };
 
+  // Beranda reel: program family + place come from the story's related event (public-stories list).
+  const storyFamilies = {
+    masyarakat_reguler: ["family-reguler", "Program Reguler"],
+    adventure_unique: ["family-adventure", "Program Unique"],
+    impactful_action: ["family-impact", "Program Gratis"],
+  };
+  const readingMinutes = (story) => Math.max(1, Math.round(String(story.body || "").trim().split(/\s+/).length / 200));
+
+  const makeReelCard = (story) => {
+    const article = document.createElement("article");
+    article.className = "story-reel-card";
+    const family = storyFamilies[story.event?.program_key];
+    if (family) article.classList.add(family[0]);
+    const image = makeImage(story);
+    if (image) {
+      image.sizes = "(max-width: 767px) 78vw, 380px";
+      const photo = document.createElement("div");
+      photo.className = "story-reel-photo";
+      photo.append(image);
+      article.append(photo);
+    }
+    const meta = document.createElement("p");
+    meta.className = "story-reel-meta";
+    const place = String(story.event?.location || "").split(",")[0].trim();
+    const date = publishedDate(story);
+    meta.textContent = [family?.[1], place].filter(Boolean).join(" · ") || (date ? storyDateFormatter.format(date) : "Kisah relawan");
+    article.append(meta);
+    if (story.excerpt) {
+      const quote = document.createElement("p");
+      quote.className = "story-reel-quote";
+      quote.textContent = `“${story.excerpt}”`;
+      article.append(quote);
+    }
+    const foot = document.createElement("div");
+    foot.className = "story-reel-foot";
+    const heading = document.createElement("h3");
+    const link = document.createElement("a");
+    link.href = detailHref(story.slug);
+    link.textContent = story.title;
+    heading.append(link);
+    const minutes = document.createElement("span");
+    minutes.textContent = `${readingMinutes(story)} menit →`;
+    foot.append(heading, minutes);
+    article.append(foot);
+    return article;
+  };
+
+  // Story-style progress + ambient backdrop follow whichever item is snapped first (or hovered on desktop).
+  const runStoryReel = (track, progress, ambient, stories) => {
+    const items = [...track.children];
+    const cards = items.filter((item) => item.classList.contains("story-reel-card"));
+    ambient.replaceChildren(...stories.map((story) => {
+      const layer = document.createElement("img");
+      layer.alt = "";
+      layer.decoding = "async";
+      layer.loading = "lazy";
+      if (story.cover_image_url) layer.src = transformedStoryImage(story.cover_image_url, 64);
+      else layer.hidden = true;
+      return layer;
+    }));
+    progress.replaceChildren(...cards.map((card, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.setAttribute("aria-label", `Kisah ${index + 1} dari ${cards.length}`);
+      button.addEventListener("click", () => track.scrollTo({
+        left: card.offsetLeft - items[0].offsetLeft,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      }));
+      return button;
+    }));
+    let active = -1;
+    const setActive = (index) => {
+      if (index === active) return;
+      active = index;
+      items.forEach((item, i) => item.classList.toggle("is-active", i === index));
+      [...ambient.children].forEach((layer, i) => layer.classList.toggle("is-on", i === Math.min(index, cards.length - 1)));
+      [...progress.children].forEach((button, i) => {
+        button.classList.toggle("is-done", i <= index);
+        if (i === Math.min(index, cards.length - 1)) button.setAttribute("aria-current", "true");
+        else button.removeAttribute("aria-current");
+      });
+    };
+    const fromScroll = () => {
+      if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 4 && track.scrollLeft > 0) return setActive(items.length - 1);
+      let nearest = 0;
+      items.forEach((item, i) => {
+        const distance = Math.abs(item.offsetLeft - items[0].offsetLeft - track.scrollLeft);
+        if (distance < Math.abs(items[nearest].offsetLeft - items[0].offsetLeft - track.scrollLeft)) nearest = i;
+      });
+      setActive(nearest);
+    };
+    let queued = false;
+    track.addEventListener("scroll", () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => { queued = false; fromScroll(); });
+    }, { passive: true });
+    const canHover = window.matchMedia("(hover: hover)");
+    items.forEach((item, i) => {
+      item.addEventListener("pointerenter", () => { if (canHover.matches) setActive(i); });
+      item.addEventListener("focusin", () => setActive(i));
+    });
+    const fit = () => { progress.hidden = track.scrollWidth <= track.clientWidth + 4; };
+    window.addEventListener("resize", fit, { passive: true });
+    fit();
+    setActive(0);
+  };
+
   const renderHomepageStories = async () => {
     const container = document.querySelector("[data-home-stories]");
     if (!container) return;
@@ -219,25 +327,24 @@
     container.hidden = true;
     setState(state, "loading", "Memuat kisah terbaru…");
     try {
-      const stories = await fetchPublicStories({ limit: 3 });
+      const stories = await fetchPublicStories({ limit: 6 });
       if (!stories.length) {
         setState(state, "empty", "Belum ada kisah yang diterbitkan.");
         return;
       }
-      container.replaceChildren();
-      container.classList.toggle("has-single-story", stories.length === 1);
-      container.append(makeStoryCard(stories[0], "kisah-entry kisah-entry-featured", 3, true));
-      if (stories.length > 1) {
-        const secondary = document.createElement("div");
-        secondary.className = "kisah-secondary-list";
-        stories.slice(1).forEach((story) => secondary.append(
-          makeStoryCard(story, "kisah-entry kisah-entry-secondary", 3),
-        ));
-        container.append(secondary);
-      }
+      const closing = document.createElement("div");
+      closing.className = "story-reel-end";
+      const line = document.createElement("p");
+      line.textContent = "Kisah berikutnya bisa dari kamu.";
+      const cta = document.createElement("a");
+      cta.href = "jadwal.html";
+      cta.textContent = "Cari kegiatan →";
+      closing.append(line, cta);
+      container.replaceChildren(...stories.map(makeReelCard), closing);
       state.hidden = true;
       state.removeAttribute("aria-busy");
       container.hidden = false;
+      runStoryReel(container, document.querySelector("[data-story-progress]"), document.querySelector("[data-story-ambient]"), stories);
     } catch {
       setState(state, "error", "Kisah belum dapat dimuat.", renderHomepageStories);
     }

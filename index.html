@@ -267,16 +267,17 @@
    </section>
 
    <section class="section kisah-preview" aria-labelledby="homeKisahTitle">
+    <div class="story-ambient" data-story-ambient aria-hidden="true"></div>
     <div class="container">
      <div class="kisah-section-heading">
-    <div class="kisah-section-intro">
-     <h2 id="homeKisahTitle">Yang kami catat dari setiap kegiatan.</h2>
-     <p>Tulisan tim tentang kegiatan yang dijalankan dan hal yang kami pelajari di lapangan.</p>
-    </div>
-      <a class="kisah-text-link" href="kisah.html">Lihat semua kisah <span aria-hidden="true">&rarr;</span></a>
+      <div class="kisah-section-intro">
+       <h2 id="homeKisahTitle">Cerita yang dibawa pulang relawan.</h2>
+      </div>
+      <a class="btn story-reel-all" href="kisah.html">Semua kisah →</a>
      </div>
+     <div class="story-reel-progress" data-story-progress hidden></div>
      <p class="kisah-data-state is-loading" data-home-stories-state data-skeleton="preview" role="status" aria-live="polite" aria-busy="true"><span>Kisah terbaru sedang dimuat</span></p>
-     <div class="kisah-grid kisah-preview-grid" data-home-stories hidden></div>
+     <div class="story-reel" data-home-stories aria-label="Kisah terbaru" hidden></div>
     </div>
    </section>
    <section class="section testimonial-section" aria-labelledby="homeTestimonialTitle">

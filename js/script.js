@@ -1072,16 +1072,11 @@ if (homeMotion) {
   const fitFooter = () => document.documentElement.classList.toggle('footer-reveal', !!footer && footer.offsetHeight < window.innerHeight - 40);
   fitFooter();
   window.addEventListener('resize', fitFooter, { passive: true });
-  // Journal prints settle into place once seen; the featured story arrives later from js/stories.js.
-  const journalPrint = (scope) => scope.querySelectorAll('.impact-editorial-image, .kisah-preview .kisah-entry-featured .kisah-image-link')
-    .forEach((photo) => {
-      if (photo.classList.contains('journal-print')) return;
-      photo.classList.add('journal-print');
-      inView.observe(photo);
-    });
-  journalPrint(document);
-  const storyPreview = document.querySelector('.home-page .kisah-preview');
-  if (storyPreview) new MutationObserver(() => journalPrint(storyPreview)).observe(storyPreview, { childList: true, subtree: true });
+  // Journal prints settle into place once seen.
+  document.querySelectorAll('.impact-editorial-image').forEach((photo) => {
+    photo.classList.add('journal-print');
+    inView.observe(photo);
+  });
   document.querySelectorAll('.home-page .kisah-section-heading')
     .forEach((rule) => { rule.classList.add('draw-rule'); inView.observe(rule); });
   document.querySelectorAll('.home-page main .btn').forEach((button) => {
