@@ -871,6 +871,8 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   position: relative;
 }
 .home-page .impact-editorial + .home-upcoming-section,
+.home-page .home-upcoming-section + .home-program-section,
+.home-page .home-program-section + .home-about-teaser,
 .home-page .testimonial-section + .home-closing-section {
   border-top: 1px solid var(--line);
 }
@@ -882,36 +884,25 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   border-radius: var(--radius-photo);
 }
 
-/* Marquee (Oct 2026, Awwwards stage 2): one slow band of KB phrases opening the dark programs section.
-   Two identical halves slide by -50% so the loop is seamless; still under reduced motion. */
-.kb-marquee { margin: -24px 0 56px; overflow: hidden; border-block: 1px solid rgba(255, 248, 239, .14); }
-.kb-marquee-track { display: flex; width: max-content; animation: kb-marquee 38s linear infinite; }
-.kb-marquee-track > div { display: flex; flex: none; align-items: center; }
-.kb-marquee span { padding: 18px 28px; color: #f6e6d6; font: 600 clamp(22px, 2.4vw, 34px)/1 "Instrument Sans", "DM Sans", sans-serif; letter-spacing: -.02em; white-space: nowrap; }
-.kb-marquee i { flex: none; width: 12px; height: 12px; border-radius: 50%; background: #efb635; }
-.kb-marquee i:nth-of-type(2n) { background: #ff8f86; }
-@media (hover: hover) { .kb-marquee:hover .kb-marquee-track { animation-play-state: paused; } }
-@keyframes kb-marquee { to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) { .kb-marquee-track { animation: none; } }
-@media (max-width: 767px) { .kb-marquee { margin: -8px 0 36px; } .kb-marquee span { padding: 14px 20px; } }
 
-/* Beranda programs (Oct 2026, after gojek.io): big swipeable cards on a dark maroon stage. JS marks the
+/* Beranda programs (Oct 2026, after gojek.io): big swipeable cards on the cream page (dark stage dropped
+   so Kisah stays the only dark band). JS marks the
    centred card .is-on and lights its word in the headline; without JS every card stays bright. */
-.home-page .home-program-section { background: #2a0e13; color: var(--white); overflow: hidden; }
-.program-lead { max-width: 1120px; margin: 0 0 32px; color: var(--white); font-size: clamp(30px, 3vw, 42px); line-height: 1.12; letter-spacing: -.035em; }
-.program-lead-word { transition: color .4s var(--ease); }
-.program-lead-word.is-on.family-reguler { color: #ff8f86; }
-.program-lead-word.is-on.family-adventure { color: #f6e6d6; }
-.program-lead-word.is-on.family-impact { color: #efb635; }
+.home-page .home-program-section { background: var(--cream); color: var(--ink); overflow: hidden; }
+.program-lead { max-width: 1120px; margin: 0 0 32px; color: var(--ink); font-size: clamp(30px, 3vw, 42px); line-height: 1.12; letter-spacing: -.035em; }
+.program-lead-word { text-decoration: underline transparent; text-decoration-thickness: .12em; text-underline-offset: .14em; transition: color .4s var(--ease), text-decoration-color .4s var(--ease); }
+.program-lead-word.is-on.family-reguler { color: #c23a3f; text-decoration-color: #c23a3f; }
+.program-lead-word.is-on.family-adventure { color: #53141d; text-decoration-color: #e2c6aa; }
+.program-lead-word.is-on.family-impact { color: #8f5d00; text-decoration-color: #efb635; }
 .program-carousel { --slide: min(1080px, 82cqw); --edge: calc((100cqw - var(--slide)) / 2); position: relative; container-type: inline-size; }
 .program-track { position: relative; display: flex; gap: 24px; padding: 4px 0 4px var(--edge); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .program-track::-webkit-scrollbar { display: none; }
-.program-track:focus-visible { outline: 3px solid var(--white); outline-offset: 4px; }
+.program-track:focus-visible { outline: 3px solid var(--maroon); outline-offset: 4px; }
 .program-slide { flex: 0 0 var(--slide); scroll-snap-align: center; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 36px; align-items: center; min-height: clamp(380px, calc(100svh - 300px), 500px); padding: 36px 40px 36px 52px; border-radius: 48px; transition: opacity .4s var(--ease), transform .4s var(--ease); }
 .program-slide:last-child { margin-right: var(--edge); }
 .program-carousel.is-ready .program-slide:not(.is-on) { opacity: .55; transform: scale(.96); }
 .program-slide.family-reguler { background: #c23a3f; color: var(--white); }
-.program-slide.family-adventure { background: #f6e6d6; color: #53141d; }
+.program-slide.family-adventure { background: #f6e6d6; color: #53141d; box-shadow: inset 0 0 0 1px rgba(83, 20, 29, .1); }
 .program-slide.family-impact { background: #efb635; color: var(--ink); }
 .program-slide h3 { margin: 0 0 8px; color: inherit; font-size: clamp(28px, 2.6vw, 38px); letter-spacing: -.03em; }
 .program-slide-copy > p { margin: 0 0 22px; opacity: .95; font-size: 15px; line-height: 1.6; }
@@ -924,15 +915,15 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .program-slide-cta:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
 .program-slide-photo { align-self: stretch; min-height: 0; margin: 0; overflow: hidden; border-radius: 36px; box-shadow: 0 0 0 8px rgba(255, 255, 255, .18); rotate: 1.5deg; }
 .program-slide-photo img { width: 100%; height: 100%; object-fit: cover; }
-.program-arrow { position: absolute; top: 50%; z-index: 2; display: grid; place-items: center; width: 52px; height: 52px; margin-top: -56px; border: 0; border-radius: 50%; background: var(--white); color: var(--ink); font-size: 30px; line-height: 1; cursor: pointer; transition: opacity .2s var(--ease); }
+.program-arrow { position: absolute; top: 50%; z-index: 2; display: grid; place-items: center; width: 52px; height: 52px; margin-top: -56px; border: 0; border-radius: 50%; background: var(--ink); color: var(--white); font-size: 30px; line-height: 1; cursor: pointer; transition: opacity .2s var(--ease); }
 .program-arrow.is-prev { left: max(12px, calc(var(--edge) - 76px)); }
 .program-arrow.is-next { right: max(12px, calc(var(--edge) - 76px)); }
 .program-arrow:disabled { opacity: .3; cursor: default; }
-.program-arrow:focus-visible { outline: 3px solid var(--white); outline-offset: 3px; }
+.program-arrow:focus-visible { outline: 3px solid var(--maroon); outline-offset: 3px; }
 .program-dots { display: flex; justify-content: center; gap: 4px; margin-top: 24px; }
 .program-dots button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; background: none; cursor: pointer; }
-.program-dots button::before { content: ""; width: 8px; height: 8px; border-radius: 99px; background: rgba(255, 255, 255, .3); transition: width .3s var(--ease), background-color .3s var(--ease); }
-.program-dots button[aria-current="true"]::before { width: 28px; background: var(--white); }
+.program-dots button::before { content: ""; width: 8px; height: 8px; border-radius: 99px; background: rgba(35, 31, 32, .2); transition: width .3s var(--ease), background-color .3s var(--ease); }
+.program-dots button[aria-current="true"]::before { width: 28px; background: var(--maroon); }
 @media (max-width: 1023px) {
   .program-carousel { --slide: 86cqw; --edge: 18px; }
   .program-track { gap: 12px; scroll-padding-inline: var(--edge); }

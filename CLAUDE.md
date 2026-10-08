@@ -259,8 +259,9 @@ Lainnya:
   wipe atas→bawah (`hero-title-in`); HP/tablet hanya teks slide pertama. Mati saat
   reduced motion.
 - Program Beranda (Okt 2026, ref. gojek.io, mockup disetujui; mengganti foto menempel + tirai `.program-stage`):
-  section latar maroon gelap `#2a0e13`, judul "Mau mulai dari yang **dekat**, yang **seru**, atau yang **berdampak**?"
-  (kata = Reguler/Unique/Gratis, menyala sesuai kartu yang di tengah), lalu carousel geser `[data-program-carousel]`:
+  section latar krem halaman (Okt 2026, dulu maroon gelap `#2a0e13`; diganti supaya bagian gelap Beranda cuma Kisah, user: HP
+  keramean), judul "Mau mulai dari yang **dekat**, yang **seru**, atau yang **berdampak**?"
+  (kata = Reguler/Unique/Gratis, berwarna + garis bawah sesuai kartu yang di tengah; kartu Unique krem diberi garis tipis), lalu carousel geser `[data-program-carousel]`:
   satu kartu besar per program (sudut 48px, tinggi ikut layar `clamp(380px, 100svh - 300px, 500px)` supaya judul satu baris +
   kartu muat di laptop 1366×682 tanpa scroll; Reguler merah bata `#c23a3f`, Unique krem `#f6e6d6`, Gratis emas `#efb635`),
   isi nama + kalimat + daftar program huruf kecil tebal + tombol pil ke program.html + foto miring 1,5°. Kartu yang
@@ -298,7 +299,7 @@ Lainnya:
   sobekan Lokasi/Tanggal/Relawan sejak, tombol emas kitabahagia.id/link; tinggi kartu ikut panjang nama). Pratinjau di halaman = canvas gambar yang sama
   (`drawVolunteerStory`, lebar maks. 320px, 9:16, efek miring + kilau tetap), jadi yang dilihat = yang dibagikan; kartu HTML lama dihapus. Foto + lokasi dari
   `public-certificate` (`event_photo` = foto dokumentasi pertama, kalau tidak ada poster; `event_location`). (3) **Marquee** pita frasa KB di atas Program
-  Beranda (38 s, berhenti saat hover/reduced motion). Foto ikut kursor + galeri geser mendatar (tahap 2 Awwwards)
+  Beranda **dihapus** Okt 2026 (user: Beranda HP keramean; judul Program sudah menyampaikan hal yang sama). Foto ikut kursor + galeri geser mendatar (tahap 2 Awwwards)
   sengaja tidak dibuat: daftar Kisah sudah berfoto dan carousel mendatar sudah ada di Program/testimoni/dokumentasi.
 - Paket ref. Okt 2026 #2: (1) "Bagikan ke Story" di kartu "Ajak teman ikut" layar sukses: gambar 1080×1920 digambar
   di canvas (`makeStoryImage`: latar maroon gelap, kartu merah bata "Aku ikut <kegiatan>", tgl · lokasi, "Yuk, ikut juga!
