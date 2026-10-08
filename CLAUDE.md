@@ -431,7 +431,9 @@ Lainnya:
   bukan akun sendiri; menghapus user Auth (baris `admin_users` ikut terhapus).
 - Admin → Pendaftar (tahap 1 "ala Linear", tampilan tetap KB): toolbar satu baris
   (cari dengan jeda 300 ms, filter langsung berlaku, Reset hanya saat ada filter,
-  total, Ekspor CSV untuk semua kegiatan); satu header kolom lalu baris padat tanpa
+  total, **Ekspor Excel** untuk semua kegiatan; Okt 2026 dulu CSV polos: `.xlsx` dirakit di browser oleh `js/admin-xlsx.js`
+  tanpa library (ZIP tanpa kompresi): pita judul maroon + nama kegiatan, header krem menempel + filter, baris selang-seling,
+  Status/Hadir berwarna, WhatsApp sebagai teks supaya 0 di depan tidak hilang, tanggal WIB; kolom Kegiatan hanya saat semua kegiatan); satu header kolom lalu baris padat tanpa
   label berulang (Pendaftar · Kegiatan+kode · Status+bayar+riwayat · Terdaftar ·
   Detail); seluruh baris membuka Detail; status = titik warna + teks; ringkasan
   seleksi satu baris; command bar "N dipilih · Terima · Cadangan · Tolak" hanya

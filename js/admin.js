@@ -952,23 +952,50 @@
     }
   };
 
-  const csvCell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
-  const exportRegistrationsCsv = () => {
-    const columns = ["Kode", "Nama", "Email", "WhatsApp", "Domisili", "Instansi", "Usia", "Instagram/TikTok", "Tahu dari", "Definisi bahagia", "Jawaban seleksi", "Link portofolio", "Status", "Hadir", "Terdaftar"];
-    const rows = registrations.map((applicant) => [
-      applicant.registration_code, applicant.name, applicant.email, applicant.phone, applicant.domicile,
-      applicant.institution, applicant.age, applicant.social_account,
-      referralSourceLabels[applicant.referral_source] || applicant.referral_source, applicant.reason, applicant.selection_answer, applicant.portfolio_url,
-      selectionEnabled() && applicant.registration_status === "confirmed"
-        ? "Diterima" : registrationStatusLabels[applicant.registration_status] || applicant.registration_status,
-      applicant.registration_status !== "confirmed" ? "" : applicant.attended_at ? "Ya" : applicant.absent_at ? "Tidak" : "",
-      formatDateTime(applicant.created_at),
-    ]);
-    const csv = `\uFEFF${[columns, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n")}`;
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  // Excel export in KB colours (js/admin-xlsx.js): title band, cream header with filter, zebra rows,
+  // coloured status/attendance, WhatsApp kept as text so the leading 0 survives.
+  const statusTones = { confirmed: "green", applied: "gold", pending_payment: "gold", waitlisted: "cream" };
+  const exportRegistrations = () => {
+    const event = selectedRegistrationEvent();
+    const columns = [
+      { label: "Kode", width: 20 }, { label: "Nama", width: 26 },
+      ...(event ? [] : [{ label: "Kegiatan", width: 30 }]),
+      { label: "Email", width: 30 }, { label: "WhatsApp", width: 16 }, { label: "Domisili", width: 16 },
+      { label: "Instansi", width: 24 }, { label: "Usia", width: 7, kind: "number" }, { label: "Instagram/TikTok", width: 20 },
+      { label: "Tahu dari", width: 16 }, { label: "Definisi bahagia", width: 42, kind: "wrap" },
+      { label: "Jawaban seleksi", width: 42, kind: "wrap" }, { label: "Link portofolio", width: 26 },
+      { label: "Status", width: 18 }, { label: "Hadir", width: 9 }, { label: "Terdaftar", width: 19 },
+    ];
+    const rows = registrations.map((applicant) => {
+      const status = applicant.registration_status;
+      const statusLabel = selectionEnabled() && status === "confirmed"
+        ? "Diterima" : registrationStatusLabels[status] || status;
+      const attended = status !== "confirmed" ? "" : applicant.attended_at ? "Ya" : applicant.absent_at ? "Tidak" : "";
+      return [
+        applicant.registration_code, applicant.name,
+        ...(event ? [] : [applicant.events?.title || ""]),
+        applicant.email, applicant.phone, applicant.domicile, applicant.institution, applicant.age, applicant.social_account,
+        referralSourceLabels[applicant.referral_source] || applicant.referral_source, applicant.reason,
+        applicant.selection_answer, applicant.portfolio_url,
+        { value: statusLabel, tone: statusTones[status] || "grey" },
+        { value: attended, tone: attended === "Ya" ? "green" : "grey" },
+        applicant.created_at ? new Date(applicant.created_at) : "",
+      ];
+    });
+    const exportedAt = new Intl.DateTimeFormat("id-ID", {
+      day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta",
+    }).format(new Date());
+    const blob = window.KBXlsx.build({
+      sheetName: "Pendaftar",
+      title: `Kita Bahagia · ${event?.title || "Semua kegiatan"}`,
+      subtitle: `${rows.length} pendaftar · diekspor ${exportedAt} WIB`,
+      columns,
+      rows,
+    });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `pendaftar-${selectedRegistrationEvent()?.slug || "kegiatan"}.csv`;
+    link.download = `pendaftar-${event?.slug || "kegiatan"}.xlsx`;
     document.body.append(link);
     link.click();
     link.remove();
@@ -1035,7 +1062,7 @@
     const codes = [...registrationsList.querySelectorAll("[data-applicant-select]:checked")].map((checkbox) => checkbox.value);
     void markAttendance(codes, button.dataset.attendanceBulk);
   }));
-  $("#registrations-export").addEventListener("click", exportRegistrationsCsv);
+  $("#registrations-export").addEventListener("click", exportRegistrations);
   applicantDialog.querySelector(".applicant-dialog-close").addEventListener("click", () => applicantDialog.close());
   applicantDialog.addEventListener("click", (event) => { if (event.target === applicantDialog) applicantDialog.close(); });
   applicantDialog.querySelectorAll("[data-applicant-attendance]").forEach((button) => button.addEventListener("click", async () => {
