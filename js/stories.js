@@ -227,7 +227,7 @@
     if (family) article.classList.add(family[0]);
     const image = makeImage(story);
     if (image) {
-      image.sizes = "(max-width: 767px) 78vw, 380px";
+      image.sizes = "(max-width: 767px) 78vw, 320px";
       const photo = document.createElement("div");
       photo.className = "story-reel-photo";
       photo.append(image);
