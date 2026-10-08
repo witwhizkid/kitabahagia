@@ -958,10 +958,10 @@
   const exportRegistrations = () => {
     const event = selectedRegistrationEvent();
     const columns = [
-      { label: "Kode", width: 20 }, { label: "Nama", width: 26 },
+      { label: "Kode", width: 23 }, { label: "Nama", width: 26 },
       ...(event ? [] : [{ label: "Kegiatan", width: 30 }]),
-      { label: "Email", width: 30 }, { label: "WhatsApp", width: 16 }, { label: "Domisili", width: 16 },
-      { label: "Instansi", width: 24 }, { label: "Usia", width: 7, kind: "number" }, { label: "Instagram/TikTok", width: 20 },
+      { label: "Email", width: 34 }, { label: "WhatsApp", width: 18 }, { label: "Domisili", width: 16 },
+      { label: "Instansi", width: 24 }, { label: "Usia", width: 9, kind: "number" }, { label: "Instagram/TikTok", width: 20 },
       { label: "Tahu dari", width: 16 }, { label: "Definisi bahagia", width: 42, kind: "wrap" },
       { label: "Jawaban seleksi", width: 42, kind: "wrap" }, { label: "Link portofolio", width: 26 },
       { label: "Status", width: 18 }, { label: "Hadir", width: 9 }, { label: "Terdaftar", width: 19 },
