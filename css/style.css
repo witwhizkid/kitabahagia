@@ -943,9 +943,15 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   .program-arrow { display: none; }
 }
 @media (max-width: 767px) {
-  .program-lead { margin-bottom: 32px; font-size: 28px; }
-  .program-slide-list { grid-template-columns: 1fr; gap: 14px; margin-bottom: 24px; }
-  .program-slide-list strong { font-size: 21px; }
+  .program-lead { margin-bottom: 24px; font-size: 28px; }
+  .program-slide { gap: 16px; padding: 10px 10px 20px; border-radius: 28px; }
+  .program-slide-photo { aspect-ratio: 16 / 9; border-radius: 20px; }
+  .program-slide h3 { font-size: 26px; }
+  .program-slide-copy > p { margin-bottom: 14px; font-size: 14px; line-height: 1.5; }
+  .program-slide-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .program-slide-list strong { display: inline-block; padding: 7px 12px; border-radius: 99px; background: color-mix(in srgb, currentColor 12%, transparent); font-size: 13px; letter-spacing: 0; }
+  .program-slide-list span { display: none; }
+  .program-slide-cta { padding: 11px 18px; font-size: 13px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .program-slide, .program-lead-word, .program-dots button::before { transition: none; }
@@ -4169,9 +4175,9 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .story-reel-progress button::after { width: 0; background: #efb635; transition: width .6s var(--ease); }
 .story-reel-progress button.is-done::after { width: 100%; }
 .story-reel-progress button:focus-visible { outline: 2px solid #efb635; outline-offset: 2px; }
-.story-reel { display: flex; gap: 24px; margin: 22px calc(50% - 50vw) 0; padding: 4px calc(50vw - 50%) 8px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: calc(50vw - 50%); overscroll-behavior-x: contain; scrollbar-width: none; }
+.story-reel { display: flex; gap: 24px; margin: 22px calc(50% - 50vw) 0; padding: 4px calc(50vw - 50%) 8px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: max(var(--container-gutter), calc((100vw - var(--container-max)) / 2)); overscroll-behavior-x: contain; scrollbar-width: none; }
 .story-reel::-webkit-scrollbar { display: none; }
-.story-reel > * { scroll-snap-align: start; transition: opacity .5s var(--ease); }
+.story-reel > * { scroll-snap-align: start; scroll-snap-stop: always; transition: opacity .5s var(--ease); }
 .story-reel-card { position: relative; flex: 0 0 clamp(260px, 24vw, 320px); min-width: 0; --story-dot: #efb635; }
 .story-reel-card.family-reguler { --story-dot: #ff8f86; }
 .story-reel-card.family-adventure { --story-dot: #f6e6d6; }
