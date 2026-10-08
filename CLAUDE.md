@@ -267,7 +267,8 @@ Lainnya:
   tidak di tengah redup (.55, scale .96) hanya setelah JS siap (`.is-ready`). Panah bulat (≥1024px), titik = tombol,
   panah keyboard di track. Lebar pakai container query (`cqw`) supaya scrollbar Windows tidak menggeser tengah;
   kartu terakhir diberi `margin-right` (padding akhir flex scroll tidak ikut dihitung). ≤1023px: foto di atas, snap
-  `start`, tanpa panah. CSS lama `.program-card`/`.program-grid`/`.program-stage` (±150 aturan) dihapus.
+  `start`, tanpa panah. HP ≤767px (Okt 2026, user: kartu ketinggian): foto 16:9, nama program jadi pil kecil tanpa
+  keterangannya, teks + tombol lebih kecil. CSS lama `.program-card`/`.program-grid`/`.program-stage` (±150 aturan) dihapus.
 - Kisah Beranda (Okt 2026, mockup disetujui user; dulu 1 kisah besar + 2 kecil, ±1.470px di HP): latar maroon tergelap KB
   `#2a0e13` + **ambient** = salinan kecil (64px, transform Supabase) foto sampul kisah yang aktif, diburamkan, berganti pelan
   saat digeser (desktop: juga saat hover/fokus). Judul "Cerita yang dibawa pulang relawan." + tombol pil krem "Semua kisah →"
@@ -275,7 +276,8 @@ Lainnya:
   bingkai: lebar 260–320px, foto 4:3 (HP 1:1.08) sudut 18px (desktop sempat 380px 4:5, user: kegedean; ref. ukuran blog Gama Dharma), titik warna program + "Program X · tempat" (dari `stories.event_id` →
   `public-stories` list mengirim `event.program_key/location`; kosong = tanggal terbit), ringkasan sebagai kutipan Newsreader
   miring (maks. 4 baris), garis tipis, judul kecil + "N menit →". Penutup teks: "Kisah berikutnya bisa dari kamu." + "Cari
-  kegiatan →". HP/tablet: kartu tidak aktif pudar .42. Sengaja **tidak** playful (kisah = artikel, nada lebih dalam).
+  kegiatan →". HP/tablet: kartu tidak aktif pudar .42. Snap per kartu (`scroll-snap-stop: always`); `scroll-padding` pakai
+  `--container-gutter` (persen di scroll-padding dihitung dari lebar track, dulu kartu nempel ke tepi layar HP). Sengaja **tidak** playful (kisah = artikel, nada lebih dalam).
 - Testimoni Beranda (Okt 2026, ref. gojek.io "open source"): tumpukan kartu miring di latar krem; judul + kalimat
   kecil + panah bulat + "n / 5" di kiri, kartu di kanan (HP bertumpuk). JS testimoni lama (autoplay 5 s, panah,
   pengumuman sr-only) tetap; `updateTestimonials` menambah `data-stack` (0 depan, 1–2 mengintip) dan `.is-thrown`
