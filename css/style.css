@@ -4532,16 +4532,22 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .testimonial-slide:not([data-stack="0"]) .testimonial-slide-inner > * { visibility: hidden; }
 .testimonial-slide:not([data-stack="0"]) { pointer-events: none; }
 @media (max-width: 767px) {
-  .home-page .testimonial-section { padding-block: 64px; }
+  /* Phones: one flat card at a time (colours still rotate), no tilted stack; the track takes the tallest quote. */
+  .home-page .testimonial-section { padding-block: 48px 52px; }
   .testimonial-shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; }
-  .testimonial-carousel { grid-column: 1; grid-row: 2; margin-top: 28px; }
-  .testimonial-nav { grid-row: 3; margin-top: 34px; }
-  .testimonial-track { height: 400px; }
-  .testimonial-slide { inset: 0 22px 22px 0; }
-  .testimonial-slide[data-stack="1"] { transform: translate(12px, 10px) rotate(2.5deg); }
-  .testimonial-slide[data-stack="2"] { transform: translate(22px, 20px) rotate(-3deg); }
-  .testimonial-slide-inner { padding: 28px 26px 24px; border-radius: 24px; }
-  .testimonial-slide blockquote { font-size: 19px; }
+  .testimonial-section .center-heading h2 { font-size: 30px; }
+  .testimonial-note { display: none; }
+  .testimonial-carousel { grid-column: 1; grid-row: 2; margin-top: 20px; }
+  .testimonial-nav { grid-row: 3; margin-top: 16px; }
+  .testimonial-track { display: grid; height: auto; }
+  .testimonial-slide { position: relative; inset: auto; grid-area: 1 / 1; }
+  .testimonial-slide, .testimonial-slide[data-stack], .testimonial-slide.is-thrown { transform: none; }
+  .testimonial-slide:not([data-stack="0"]) { opacity: 0; }
+  .testimonial-slide-inner { gap: 16px; padding: 22px 22px 18px; border-radius: 22px; }
+  .testimonial-slide-inner::before { height: 28px; font-size: 64px; }
+  .testimonial-slide blockquote { font-size: 17px; font-weight: 500; line-height: 1.45; }
+  .testimonial-slide .person { padding-top: 12px; }
+  .testimonial-arrow { width: 44px; height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .testimonial-slide, .testimonial-arrow { transition: none; }
@@ -4562,18 +4568,19 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   display: block;
   margin-top: auto;
   padding: 18px 112px 0 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent);
   text-align: left;
 }
 .home-page .person div { display: flex; align-items: baseline; gap: 10px; }
 .home-page .person strong,
 .home-page .person span { font-family: "DM Sans", sans-serif; }
-.home-page .person strong { color: var(--ink); font-size: 14px; font-weight: 700; }
-.home-page .person span { color: var(--muted); font-size: 13px; }
+/* Names follow the card colour (grey role text was unreadable on the red/maroon cards). */
+.home-page .person strong { color: inherit; font-size: 14px; font-weight: 700; }
+.home-page .person span { color: inherit; opacity: .85; font-size: 13px; }
 .home-page .person span::before {
   content: "—";
   margin-right: 10px;
-  color: var(--maroon);
+  color: inherit;
 }
 
 @media (max-width: 700px) {

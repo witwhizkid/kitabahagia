@@ -284,6 +284,9 @@ Lainnya:
   pengumuman sr-only) tetap; `updateTestimonials` menambah `data-stack` (0 depan, 1–2 mengintip) dan `.is-thrown`
   (kartu terakhir dilempar ke kiri). Warna kartu bergilir: merah bata, emas, maroon gelap, kertas, merah muda.
   Kartu selain depan `pointer-events: none` (kartu terlempar sempat menutupi panah). CSS testimoni lama dihapus.
+  HP ≤767px (Okt 2026, user: Beranda HP keramean): satu kartu datar (warna tetap bergilir, tanpa miring/tumpukan,
+  tinggi = kutipan terpanjang), kalimat kecil di bawah judul disembunyikan. Nama + peran relawan ikut warna kartu (dulu abu-abu,
+  tidak terbaca di kartu merah/maroon).
 - "Daftar cuma 2 menit" (bingkai HP + 3 langkah, ref. bank Jago) **dicoba lalu dihapus** (Okt 2026, user: tidak efektif
   di HP dan memanjangkan Beranda). Jangan tambahkan lagi.
   Catatan: aturan `.btn` ketiga (sekitar baris 6150) sempat masih `--radius-lg` 6px, jadi "semua tombol pil" baru
