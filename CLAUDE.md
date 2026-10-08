@@ -272,7 +272,7 @@ Lainnya:
   `#2a0e13` + **ambient** = salinan kecil (64px, transform Supabase) foto sampul kisah yang aktif, diburamkan, berganti pelan
   saat digeser (desktop: juga saat hover/fokus). Judul "Cerita yang dibawa pulang relawan." + tombol pil krem "Semua kisah →"
   (hover emas). Garis progres ala Story IG (tombol per kisah, emas; tersembunyi kalau semua kartu muat). Kartu editorial tanpa
-  bingkai: foto 4:5 (HP 1:1.08) sudut 18px, titik warna program + "Program X · tempat" (dari `stories.event_id` →
+  bingkai: lebar 260–320px, foto 4:3 (HP 1:1.08) sudut 18px (desktop sempat 380px 4:5, user: kegedean; ref. ukuran blog Gama Dharma), titik warna program + "Program X · tempat" (dari `stories.event_id` →
   `public-stories` list mengirim `event.program_key/location`; kosong = tanggal terbit), ringkasan sebagai kutipan Newsreader
   miring (maks. 4 baris), garis tipis, judul kecil + "N menit →". Penutup teks: "Kisah berikutnya bisa dari kamu." + "Cari
   kegiatan →". HP/tablet: kartu tidak aktif pudar .42. Sengaja **tidak** playful (kisah = artikel, nada lebih dalam).
