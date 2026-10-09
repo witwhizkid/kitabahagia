@@ -24,6 +24,8 @@ type Registration = {
   registration_status: string;
   payment_status: string;
   payment_deadline: string | null;
+  manual_amount: number | null;
+  payment_proof_submitted_at: string | null;
 };
 
 type Event = {
@@ -87,7 +89,7 @@ Deno.serve(async (request) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !serviceKey) return errorResponse(500, "SERVER_ERROR");
 
-  const registrationQuery = `registrations?select=id,event_id,registration_code,registration_status,payment_status,payment_deadline&registration_code=eq.${encodeURIComponent(input.registration_code)}&email=eq.${encodeURIComponent(input.email)}&limit=1`;
+  const registrationQuery = `registrations?select=id,event_id,registration_code,registration_status,payment_status,payment_deadline,manual_amount,payment_proof_submitted_at&registration_code=eq.${encodeURIComponent(input.registration_code)}&email=eq.${encodeURIComponent(input.email)}&limit=1`;
   const registrations = await restQuery<Registration>(url, serviceKey, registrationQuery).catch(() => null);
   const registration = registrations?.[0];
   if (!registration) return errorResponse(404, "REGISTRATION_NOT_FOUND");
@@ -123,5 +125,9 @@ Deno.serve(async (request) => {
     expires_at: attempt?.expires_at ?? null,
     payment_deadline: registration.payment_deadline ?? null,
     whatsapp_group_url: whatsappGroupUrl,
+    // Manual QRIS: the amount to transfer and whether a proof is waiting for an admin.
+    payment_method: registration.manual_amount ? "manual" : "gateway",
+    manual_amount: registration.manual_amount ?? null,
+    proof_submitted: Boolean(registration.payment_proof_submitted_at),
   });
 });

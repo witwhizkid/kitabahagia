@@ -308,6 +308,12 @@
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ registration_codes, attendance }),
   });
+  // Manual QRIS: payment: "paid" | "rejected" for one registrant with an uploaded proof.
+  const manualPaymentRequest = (registrationCode, payment) => authorizedRequest(adminRegistrationsUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ registration_codes: [registrationCode], payment }),
+  });
   const attendanceState = (registration) => registration.attended_at ? "present" : registration.absent_at ? "absent" : "";
 
   const adminUsersRequest = (method = "GET", body) => authorizedRequest(adminUsersUrl, {
@@ -749,6 +755,65 @@
       }
     }
   };
+  // Manual QRIS: the uploaded payment screenshot (signed URL) with "Tandai lunas" / "Tolak".
+  const loadPaymentProof = async (registration) => {
+    const field = applicantDialogContent.querySelector(".applicant-payment-proof-field");
+    if (!field) return;
+    try {
+      const result = await applicantProofRequest(registration.registration_code);
+      if (currentDialogApplicant()?.registration_code !== registration.registration_code) return;
+      const href = result.payment_proof?.signed_url ? new URL(result.payment_proof.signed_url) : null;
+      if (!href || href.origin !== new URL(CONFIG.supabaseUrl).origin) {
+        field.querySelector("p").textContent = "Bukti tidak dapat dimuat.";
+        return;
+      }
+      const image = document.createElement("img");
+      image.className = "applicant-proof-preview";
+      image.src = href.href;
+      image.alt = "Screenshot bukti pembayaran pendaftar";
+      image.referrerPolicy = "no-referrer";
+      field.querySelector("p").replaceChildren(externalLink(href.href, "Buka ukuran penuh"));
+      field.append(image);
+      const waiting = registration.registration_status === "pending_payment" && registration.payment_status !== "paid";
+      if (!waiting) return;
+      const actions = document.createElement("div");
+      actions.className = "applicant-payment-actions";
+      const decide = async (payment) => {
+        if (payment === "rejected" && !(await confirmAction(
+          "Bukti ditolak, slot pendaftar ini dilepas. Hubungi pendaftar lewat WhatsApp kalau perlu.",
+          { title: "Tolak bukti pembayaran?", confirmLabel: "Tolak", danger: true },
+        ))) return;
+        actions.querySelectorAll("button").forEach((button) => { button.disabled = true; });
+        try {
+          await manualPaymentRequest(registration.registration_code, payment);
+          await refreshRegistrations();
+          showToast(payment === "paid" ? "Pembayaran dikonfirmasi. Email konfirmasi dikirim." : "Bukti pembayaran ditolak.");
+          if (applicantDialog.open && registrations.some((item) => item.registration_code === registration.registration_code)) {
+            showApplicant(registration.registration_code);
+          }
+        } catch (error) {
+          setFeedback($("#applicant-dialog-feedback"), error.message || "Keputusan pembayaran belum dapat disimpan.", "error");
+          actions.querySelectorAll("button").forEach((button) => { button.disabled = false; });
+        }
+      };
+      const paid = document.createElement("button");
+      paid.type = "button";
+      paid.className = "button button-primary";
+      paid.textContent = "Tandai lunas";
+      paid.addEventListener("click", () => decide("paid"));
+      const reject = document.createElement("button");
+      reject.type = "button";
+      reject.className = "button button-secondary";
+      reject.textContent = "Tolak";
+      reject.addEventListener("click", () => decide("rejected"));
+      actions.append(paid, reject);
+      field.append(actions);
+    } catch (error) {
+      if (currentDialogApplicant()?.registration_code === registration.registration_code) {
+        setFeedback($("#applicant-dialog-feedback"), error.message || "Bukti pembayaran belum dapat dibuka.", "error");
+      }
+    }
+  };
   const syncSelectionDecisionControls = () => {
     const applicant = currentDialogApplicant();
     const status = applicant?.payment_expired ? "expired" : applicant?.registration_status;
@@ -812,6 +877,16 @@
       ? "Tidak perlu bayar" : paymentStatusLabels[paymentStatus] || paymentStatus || "-");
     if (applicant.payment_deadline && paymentStatus !== "not_required") {
       appendApplicantField("Batas pembayaran", formatDateTime(applicant.payment_deadline));
+    }
+    if (applicant.manual_amount) {
+      appendApplicantField("Nominal transfer (QRIS manual)", `Rp${Number(applicant.manual_amount).toLocaleString("id-ID")}`);
+      if (applicant.payment_proof_submitted_at) {
+        appendApplicantField("Bukti pembayaran", "Memuat bukti…", { wide: true });
+        applicantGroup.lastElementChild.classList.add("applicant-payment-proof-field");
+        void loadPaymentProof(applicant);
+      } else if (status === "pending_payment") {
+        appendApplicantField("Bukti pembayaran", "Belum diunggah");
+      }
     }
     if (status === "confirmed") {
       appendApplicantField("Kehadiran", applicant.attended_at ? `Hadir · ditandai ${formatDateTime(applicant.attended_at)}`

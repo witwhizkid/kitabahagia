@@ -367,6 +367,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
 .applicant-detail-field p { margin: 0; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-wrap; }
 .applicant-file-links { display: flex; flex-wrap: wrap; gap: 0 20px; }
 .applicant-proof-preview { display: block; max-width: min(100%, 480px); max-height: 260px; margin-top: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); object-fit: contain; }
+.applicant-payment-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .applicant-dialog-footer { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); }
 .applicant-dialog-footer .button { min-height: 42px; }
 @keyframes applicant-dialog-in { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }

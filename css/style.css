@@ -2415,6 +2415,14 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-page .payment-check, .registration-page .payment-retry { width:min(100%, 420px); min-height:48px; margin-top:18px; }
 .registration-page .payment-retry[hidden], .registration-page .payment-check[hidden] { display:none; }
 .registration-page .payment-retry-error { width:100%; text-align:center; }
+/* Manual QRIS (PAYMENT_PROVIDER=manual): exact-amount note + payment screenshot upload. */
+.registration-page .manual-proof { order:2; display:grid; gap:12px; width:100%; margin-top:18px; padding:18px; border-radius:22px; background:#fbe4e1; color:#53141d; text-align:left; }
+.registration-page .manual-proof[hidden] { display:none; }
+.registration-page .manual-proof-note { margin:0; font-size:13px; line-height:1.55; }
+.registration-page .manual-proof-field { display:grid; gap:6px; font-size:13px; font-weight:700; }
+.registration-page .manual-proof-field input { width:100%; padding:10px; border:1px dashed rgba(83,20,29,.35); border-radius:14px; background:#fff; font:inherit; font-weight:500; }
+.registration-page .manual-proof-field small { color:#7a5a5e; font-weight:500; line-height:1.45; }
+.registration-page .manual-proof .btn { width:100%; justify-content:center; }
 .registration-page .payment-guide { width:100%; margin-top:24px; padding-top:17px; border-top:1px solid var(--line); }
 .registration-page .payment-guide h3 { margin:0 0 8px; font-size:15px; }
 .registration-page .payment-guide ol { display:grid; gap:5px; margin:0; padding-left:20px; color:var(--muted); font-size:12px; line-height:1.5; }
@@ -2441,6 +2449,7 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-page .payment-stage.payment_deadline_passed .payment-qr-section { display:none; }
 .registration-page .payment-stage.payment_paid .payment-primary { padding-top:26px; }
 .registration-page .payment-stage.payment_paid .payment-state p { font-size:15px; }
+.registration-page .payment-stage.payment_processing .payment-intro,
 .registration-page .payment-stage.payment_paid .payment-intro,
 .registration-page .payment-stage.payment_expired .payment-intro,
 .registration-page .payment-stage.payment_failed .payment-intro,

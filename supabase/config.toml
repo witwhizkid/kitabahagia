@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.public-certificate]
 verify_jwt = false
+
+[functions.submit-payment-proof]
+verify_jwt = false

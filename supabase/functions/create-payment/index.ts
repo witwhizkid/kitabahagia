@@ -1,3 +1,4 @@
+import { qrisWithAmount, staticQrisPayload } from "../_shared/manual-qris.ts";
 import { checkIpaymuTransaction, ipaymuConfig, ipaymuConfigProblems, ipaymuRequest, type IpaymuConfig } from "../_shared/ipaymu.ts";
 
 const corsHeaders = {
@@ -295,6 +296,45 @@ const resolveCharge = async (
 };
 
 
+// ---- Manual QRIS (PAYMENT_PROVIDER=manual) ----------------------------------------
+// No gateway: the owner's static QRIS with the registration's unique amount filled in.
+// The registrant uploads a proof (submit-payment-proof) and an admin confirms it.
+const manualPayment = async (url: string, key: string, input: PaymentRequest) => {
+  const staticPayload = staticQrisPayload();
+  if (!staticPayload) {
+    console.error("QRIS_STATIC_PAYLOAD is not a valid QRIS payload");
+    return errorResponse(500, "SERVER_ERROR");
+  }
+  const prepared = await rpc(url, key, "prepare_manual_payment", {
+    p_registration_code: input.registration_code,
+    p_email: input.email,
+  }).catch(() => null);
+  const result = prepared?.result && typeof prepared.result === "object" ? prepared.result as Record<string, unknown> : null;
+  if (!prepared?.response.ok || !result) {
+    const code = typeof result?.message === "string" ? result.message : "SERVER_ERROR";
+    const status = code === "REGISTRATION_NOT_FOUND" ? 404 : conflictErrors.has(code) ? 409 : 500;
+    return errorResponse(status, code in messages ? code : "SERVER_ERROR");
+  }
+  const amount = Number(result.amount);
+  const qrString = qrisWithAmount(staticPayload, amount);
+  if (!qrString) return errorResponse(500, "SERVER_ERROR");
+  const deadline = typeof result.payment_deadline === "string" ? result.payment_deadline : null;
+  return jsonResponse(200, {
+    registration_code: result.registration_code,
+    event_title: result.event_title,
+    amount,
+    base_amount: Number(result.base_amount),
+    payment_status: "pending",
+    payment_method: "manual",
+    qr_url: null,
+    qr_string: qrString,
+    expires_at: deadline,
+    payment_deadline: deadline,
+    order_id: null,
+    proof_submitted: Boolean(result.proof_submitted_at),
+  });
+};
+
 // ---- iPaymu (PAYMENT_PROVIDER=ipaymu) -------------------------------------------
 // Same attempt lifecycle as Midtrans: prepare -> charge -> finalize; the QRIS payload is
 // drawn by the site. Paid state arrives through ipaymu-webhook (re-checked with iPaymu).
@@ -551,6 +591,10 @@ Deno.serve(async (request) => {
   const url = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const provider = (Deno.env.get("PAYMENT_PROVIDER") ?? "midtrans").trim().toLowerCase();
+  if (provider === "manual") {
+    if (!url || !serviceKey) return errorResponse(500, "SERVER_ERROR");
+    return await manualPayment(url, serviceKey, input);
+  }
   const midtransKey = Deno.env.get("MIDTRANS_SERVER_KEY");
   const midtransBase = midtransKey ? midtransApiBase(midtransKey) : null;
   const ipaymu = ipaymuConfig();
@@ -559,7 +603,7 @@ Deno.serve(async (request) => {
     console.error("Missing or invalid server payment configuration", {
       payment_provider: provider,
       missing: provider === "ipaymu" ? ipaymuConfigProblems()
-        : provider === "midtrans" ? ["MIDTRANS_ENV/MIDTRANS_SERVER_KEY"] : ["PAYMENT_PROVIDER (midtrans/ipaymu)"],
+        : provider === "midtrans" ? ["MIDTRANS_ENV/MIDTRANS_SERVER_KEY"] : ["PAYMENT_PROVIDER (midtrans/ipaymu/manual)"],
     });
     return errorResponse(500, "SERVER_ERROR");
   }

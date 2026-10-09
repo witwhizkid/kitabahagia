@@ -48,6 +48,9 @@ const registrationProjection = [
   "registration_status",
   "payment_status",
   "payment_deadline",
+  "manual_amount",
+  "payment_proof_submitted_at",
+  "payment_reviewed_at",
   "created_at",
   "events!inner(slug,title,event_date,start_time,end_at,registration_mode)",
 ].join(",");
@@ -68,6 +71,11 @@ const attendanceErrors: Record<string, [number, string]> = {
   INVALID_REQUEST: [400, "Pilih pendaftar dari satu kegiatan saja."],
 };
 const attendanceStates = new Set(["present", "absent", "clear"]);
+const manualPaymentErrors: Record<string, [number, string]> = {
+  PAYMENT_ALREADY_PAID: [409, "Pembayaran ini sudah dikonfirmasi."],
+  PAYMENT_NOT_ELIGIBLE: [409, "Pendaftar ini tidak sedang menunggu pengecekan bukti bayar."],
+  REGISTRATION_NOT_FOUND: [404, "Pendaftar tidak ditemukan."],
+};
 const paymentStatuses = new Set(["not_required", "unpaid", "pending", "paid", "failed", "expired", "refunded"]);
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -180,6 +188,23 @@ Deno.serve(async (request) => {
       const [status, message] = attendanceErrors[code] ?? [500, "Kehadiran belum dapat disimpan."];
       return fail(status, code in attendanceErrors ? code : "SERVER_ERROR", message);
     }
+    // Manual QRIS: { registration_codes: [code], payment: "paid" | "rejected" } for one proof.
+    if (body && typeof body === "object" && !Array.isArray(body) && "payment" in body) {
+      if (Object.keys(body).some((key) => !["registration_codes", "payment"].includes(key))
+        || !validCodes || (codes as string[]).length !== 1 || !["paid", "rejected"].includes(String(body.payment))) {
+        return fail(400, "INVALID_REQUEST", "Data pembayaran tidak valid.");
+      }
+      const code = (codes as string[])[0];
+      const response = await rpc("review_manual_payment", { p_registration_code: code, p_decision: body.payment, p_actor: adminId });
+      const result = await response.json().catch(() => null) as Record<string, unknown> | null;
+      if (response.ok && result) {
+        if (body.payment === "paid") await inBackground(sendConfirmationEmail(supabaseUrl, serviceKey, { code }));
+        return json(200, { registrations: [], total: 0, payment: result });
+      }
+      const reason = typeof result?.message === "string" ? result.message : "";
+      const [status, message] = manualPaymentErrors[reason] ?? [500, "Keputusan pembayaran belum dapat disimpan."];
+      return fail(status, reason in manualPaymentErrors ? reason : "SERVER_ERROR", message);
+    }
     const decision = body?.decision;
     if (!body || Object.keys(body).some((key) => !["registration_codes", "decision"].includes(key))
       || !validCodes || typeof decision !== "string" || !decisions.has(decision)) {
@@ -210,7 +235,7 @@ Deno.serve(async (request) => {
   if (proofCode !== null) {
     if (!registrationCodePattern.test(proofCode)) return fail(400, "INVALID_REQUEST", "Kode pendaftar tidak valid.");
     const proofQuery = new URLSearchParams({
-      select: "instagram_proof_path,cv_path,events!inner(slug,price,registration_mode)",
+      select: "registration_code,instagram_proof_path,cv_path,payment_proof_path,events!inner(slug,price,registration_mode)",
       registration_code: `eq.${proofCode}`,
       limit: "1",
     });
@@ -221,13 +246,12 @@ Deno.serve(async (request) => {
     if (!proofResponse.ok || !Array.isArray(proofRows)) return fail(500, "SERVER_ERROR", "Berkas pendaftar belum dapat dimuat.");
     const row = proofRows[0];
     const event = row?.events as { slug?: string; price?: number; registration_mode?: string } | undefined;
-    if (!row || event?.registration_mode !== "selection" || Number(event.price) !== 0) {
-      return json(200, { proof: null, cv: null });
-    }
+    if (!row) return json(200, { proof: null, cv: null, payment_proof: null });
+    const selectionFiles = event?.registration_mode === "selection" && Number(event.price) === 0;
 
     const expiresIn = 600;
-    const sign = async (bucket: string, path: unknown, extensions: string) => {
-      if (typeof path !== "string" || !path.startsWith(`${event.slug}/`)) return null;
+    const sign = async (bucket: string, path: unknown, extensions: string, prefix = event?.slug) => {
+      if (typeof path !== "string" || !prefix || !path.startsWith(`${prefix}/`)) return null;
       const objectName = path.split("/").at(-1) || "";
       if (!new RegExp(`^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\.(${extensions})$`).test(objectName)) {
         throw new Error("INVALID_PATH");
@@ -253,8 +277,9 @@ Deno.serve(async (request) => {
     };
     try {
       return json(200, {
-        proof: await sign("instagram-proofs", row.instagram_proof_path, "jpg|png|webp"),
-        cv: await sign("selection-cvs", row.cv_path, "pdf"),
+        proof: selectionFiles ? await sign("instagram-proofs", row.instagram_proof_path, "jpg|png|webp") : null,
+        cv: selectionFiles ? await sign("selection-cvs", row.cv_path, "pdf") : null,
+        payment_proof: await sign("payment-proofs", row.payment_proof_path, "jpg|png|webp", String(row.registration_code)),
       });
     } catch {
       return fail(500, "SERVER_ERROR", "Berkas pendaftar belum dapat dibuka.");
