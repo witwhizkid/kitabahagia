@@ -535,8 +535,12 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   verifikasi ditolak "integrasikan website" (tes reviewer masuk ke sandbox user, bukan akun owner); CS WA bilang pengecekan IP bisa
   dinonaktifkan lewat email support@ipaymu.com, owner sudah mengirim permohonan. Kalau ditolak: jembatan/proxy ber-IP statis (VPS)
   + alamat API iPaymu dari secret. Sementara `PAYMENT_PROVIDER=midtrans` (sandbox) selama review Midtrans. Teks FAQ/Ketentuan/Privasi
-  menyebut "iPaymu atau Midtrans". Detail: "iPaymu" di `supabase/README.md`. Cadangan pasti jalan: QRIS
-  statis owner + konfirmasi manual (belum dibangun). Opsi jangka panjang: PT Perorangan.
+  menyebut "iPaymu atau Midtrans". Detail: "iPaymu" di `supabase/README.md`. Cadangan: **QRIS manual dibangun 9 Okt 2026** (`PAYMENT_PROVIDER=manual`,
+  untuk oprec kegiatan 18 Okt sebelum gateway approve): QRIS statis GoPay Merchant owner ("Kita Bahagia Indonesia") diubah jadi
+  QRIS bernominal (nominal unik = harga + 1..499, tertanam di QR, digambar bulat seperti biasa); peserta unggah screenshot bukti
+  (`submit-payment-proof`, bucket privat `payment-proofs`), slot ditahan 24 jam sejak unggah; admin Detail pendaftar = foto bukti +
+  "Tandai lunas" (terkonfirmasi + email) / "Tolak" (slot dilepas). Sertifikat/hadir/grup WA jalan seperti pendaftar lunas lainnya.
+  Jendela bayar kegiatan minimal 1 jam. Detail: "Manual QRIS" di `supabase/README.md`. Opsi jangka panjang: PT Perorangan.
 
 
 Beranda "Kenapa ikut KB?" (Okt 2026, **menunggu persetujuan owner**; user suka dua mockup, belum memilih):
