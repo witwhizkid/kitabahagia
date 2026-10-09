@@ -538,7 +538,13 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   QRIS bernominal (nominal unik = harga + 1..499, tertanam di QR, digambar bulat seperti biasa); peserta unggah screenshot bukti
   (`submit-payment-proof`, bucket privat `payment-proofs`), slot ditahan 24 jam sejak unggah; admin Detail pendaftar = foto bukti +
   "Tandai lunas" (terkonfirmasi + email) / "Tolak" (slot dilepas). Sertifikat/hadir/grup WA jalan seperti pendaftar lunas lainnya.
-  Jendela bayar kegiatan minimal 1 jam. Detail: "Manual QRIS" di `supabase/README.md`. Opsi jangka panjang: PT Perorangan.
+  Jendela bayar kegiatan minimal 1 jam. Detail: "Manual QRIS" di `supabase/README.md`.
+  **Belum di-deploy, menunggu keputusan owner (dibahas 9 Okt 2026):** alur verifikasinya. Yang dibangun = A (cek dulu, baru
+  terkonfirmasi; peserta menunggu ≤24 jam). Usulan Claude = **C**: unggah bukti → langsung terkonfirmasi (layar sukses, email,
+  link grup), admin dapat badge "Bukti belum dicek" + pengingat di Beranda admin, lalu "Valid" / "Batalkan" (kuota kembali +
+  draf WA) sambil mencocokkan nominal unik di mutasi GoPay Merchant; **grup WA pakai "Setujui anggota baru"** supaya bukti palsu
+  tertahan di pintu grup (tanpa kode). Alternatif: link grup baru dikirim setelah Valid (butuh kode email tambahan). Kalau C
+  disetujui: ubah `submit_payment_proof` (confirmed saat unggah) + tombol admin (±½ hari). Opsi jangka panjang: PT Perorangan.
 
 
 Web sengaja tidak ditambah fitur baru sampai pemicunya terjadi (roadmap:
