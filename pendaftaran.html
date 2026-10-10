@@ -267,7 +267,13 @@
             <div class="payment-state payment_pending" data-payment-state="payment_pending" role="status" aria-live="polite"><strong>Menunggu pembayaran</strong><p>Menunggu status pembayaran.</p></div>
             <form class="manual-proof" data-manual-proof novalidate hidden>
               <p class="manual-proof-note">Nominal sudah terisi otomatis saat QR di-scan. <strong>Bayar tepat sesuai total di atas</strong>, lalu unggah buktinya. Admin tetap mencocokkan setiap bukti dengan pembayaran yang masuk; bukti yang tidak cocok membatalkan pendaftaran.</p>
-              <label class="manual-proof-field"><span>Bukti pembayaran</span><input type="file" name="proof" accept="image/jpeg,image/png,image/webp" data-manual-proof-file><small>Screenshot halaman "Pembayaran berhasil" dari aplikasimu (JPG, PNG, atau WebP).</small></label>
+              <label class="manual-proof-drop" data-manual-proof-drop>
+                <input type="file" name="proof" accept="image/jpeg,image/png,image/webp" data-manual-proof-file>
+                <span class="manual-proof-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="1.8"/><path d="m21 15-4.5-4.5L6 21"/></svg></span>
+                <canvas class="manual-proof-preview" data-manual-proof-preview hidden></canvas>
+                <strong data-manual-proof-label>Pilih screenshot bukti bayar</strong>
+                <small data-manual-proof-hint>Ketuk di sini untuk memilih dari galeri. Screenshot halaman "Pembayaran berhasil" (JPG, PNG, atau WebP).</small>
+              </label>
               <button class="btn btn-primary" type="submit" data-manual-proof-submit>Kirim bukti pembayaran</button>
               <p class="payment-retry-error" data-manual-proof-error role="alert" hidden></p>
             </form>
