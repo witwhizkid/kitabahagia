@@ -566,15 +566,10 @@ menayangkan sendiri atau perlu persetujuan admin; sertifikat tetap admin umum? (
 bergantian 1–3/4–6 tiap bulan? Sementara itu ketua tim kegiatan 18 Okt boleh diundang sebagai Admin biasa.
 
 
-Beranda "Kenapa ikut KB?" (Okt 2026, **menunggu persetujuan owner**; user suka dua mockup, belum memilih):
-bagian "yang kamu bawa pulang" berisi 4 hal: Sertifikat ber-QR (email, bisa dicek keasliannya), Kartu Relawan (Story),
-Foto dokumentasi (dikurasi tim dokum), Teman baru (grup WA per kegiatan). Ide dari perbandingan situs komunitas lain
-(Gama Dharma punya daftar alasan ikut). Mockup A: latar krem, judul "Ikut sekali, yang kamu bawa pulang lebih dari
-sekadar cerita.", 4 kartu warna keluarga KB (merah bata/maroon gelap/krem/emas) masing-masing dengan contoh benda miring,
-HP grid 2×2, tombol "Lihat kegiatan terdekat →" + "Kegiatan gratis juga dapat semuanya."; saran: taruh tepat setelah
-Kegiatan Terdekat. Mockup B: latar maroon gelap, daftar 4 poin kiri + tumpukan benda (sertifikat, kartu, foto, chat WA)
-kanan; risiko dua bagian gelap di Beranda. Contoh sertifikat di versi publik **tanpa tanda tangan asli** (nama "Nama Kamu",
-tanda tangan diburamkan). Tanpa nomor 01–04 dan tanpa label kapital kecil (aturan yang sudah ada).
+"Yang kamu bawa pulang" (Okt 2026, **keputusan owner**: bukan di Beranda, tapi strip kecil di **halaman Program**, ala
+"Area Berkelana" gamadharma.org; mockup A/B Beranda batal): `.take-home` antara bab Program dan "Jangan cuma lihat. Ikut.";
+panel maroon gelap bersudut 28px, judul kiri + "Kegiatan gratis juga dapat semuanya.", 4 kartu kaca kecil berikon garis emas
+(Sertifikat ber-QR, Kartu Relawan, Foto dokumentasi, Teman baru); ≤960px judul di atas, kartu geser (156px). Tanpa nomor/label kapital.
 Logo mitra (keputusan user Okt 2026, menunggu file logo dari owner): grid `.collaboration-partners` di kolaborasi.html
 (placeholder Mitra A/B/C, `hidden`) diisi dulu = versi lengkap (logo, nama, bentuk kerja sama) untuk calon mitra.
 Beranda baru dapat versi ringkas kalau sudah ≥4–5 logo: satu baris logo kecil satu warna + "Pernah berkolaborasi dengan"
