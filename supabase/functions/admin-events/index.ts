@@ -317,6 +317,23 @@ Deno.serve(async (request) => {
     return fail(400, "INVALID_EVENT", validated.error);
   }
   if (request.method === "PATCH" && Object.keys(validated.data).length === 0) return fail(400, "INVALID_EVENT", "Tidak ada perubahan untuk disimpan.");
+  // Share links (maps.app.goo.gl) are expanded once to the /maps/place/<name, full address>/ URL,
+  // so the page's embedded map can search the full address (the bare venue name sometimes
+  // lands in open sea). A failed lookup keeps the short link.
+  const shortMapsUrl = typeof validated.data.location_url === "string" ? new URL(validated.data.location_url) : null;
+  if (shortMapsUrl && ["maps.app.goo.gl", "goo.gl"].includes(shortMapsUrl.hostname)) {
+    const hop = await fetch(shortMapsUrl, { redirect: "manual", signal: AbortSignal.timeout(5000) }).catch(() => null);
+    const target = hop?.headers.get("location");
+    try {
+      const expanded = target ? new URL(target) : null;
+      if (expanded && expanded.protocol === "https:" && /^(www\.)?google\.(com|co\.id)$/.test(expanded.hostname)
+        && expanded.pathname.startsWith("/maps/place/") && expanded.pathname.length <= 900) {
+        validated.data.location_url = `${expanded.origin}${expanded.pathname}`;
+      }
+    } catch {
+      // Keep the short link.
+    }
+  }
 
   const endpoint = request.method === "POST"
     ? `${supabaseUrl}/rest/v1/events?select=${encodeURIComponent(eventProjection)}`
