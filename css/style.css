@@ -6593,6 +6593,7 @@ html.home-motion .home-page .impact-editorial { position: relative; z-index: 1; 
 .kb-loader { display: none; }
 html.loader-on .kb-loader { position: fixed; inset: 0; z-index: 1001; display: grid; place-items: center; background: var(--maroon); animation: loader-open .6s .95s cubic-bezier(.65, 0, .35, 1) forwards; }
 html.loader-skip .kb-loader { animation: loader-open .4s cubic-bezier(.65, 0, .35, 1) forwards; }
+html.loader-hold .kb-loader, html.loader-hold .kb-loader * { animation-play-state: paused; }
 .kb-loader-mark { position: relative; width: 104px; animation: loader-mark-out .5s .9s cubic-bezier(.65, 0, .35, 1) both; }
 .kb-loader-mark img { display: block; width: 100%; height: auto; }
 .kb-loader-dots { position: absolute; inset: 0; transform-origin: 50% 22%; animation: loader-dots-in .5s .05s cubic-bezier(.34, 1.56, .64, 1) both; }

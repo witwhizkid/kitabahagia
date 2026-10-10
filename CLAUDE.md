@@ -243,6 +243,8 @@ Lainnya:
   dua bulatan logo muncul (`loader-dots.webp`), badan logo tergambar kiri→kanan (`loader-body.webp`), lalu panel
   terbuka ke atas (±1,55s); tap/tombol apa pun = skip (`loader-skip`), hanya sebelum 0,85s (sesudahnya sentuhan pertama untuk scroll dulu memutar ulang panel = efek dobel). Perangkat kuat (≥6 core, RAM ≥4 GB; `loader-portal`) tidak membuka panel ke atas: setelah logo tergambar, panel di-mask bentuk logo (`loader-mask.webp`, `mask-composite: exclude`) dan lubangnya membesar ±0,75s sampai hero terlihat "tembus lewat logo"; HP lemah (`loader-land`): logo yang sudah tergambar terbang dan mengecil ke pil "Makna" (posisi diukur JS di `loader-gate.js`, hanya transform) sementara panel memudar; pil terisi 1,3s. Kalau pil tidak terukur, tetap panel naik. Entrance hero slide 1 + pil + strip ditunda
   selama loader; kelas dilepas setelah 3,2s. Lighthouse lokal (4 run): tidak turun berarti; cek PageSpeed live.
+  Okt 2026 (user: "kadang hero muncul duluan"): Chrome bisa prerender Beranda saat alamat diketik; saat `document.prerendering`
+  panel ditahan (`html.loader-hold` = animasi paused) dan timer baru jalan di `prerenderingchange`; Back (bfcache) melepas kelas loader.
 - Tahap 1 pola Awwwards (Okt 2026, keputusan user; tahap 2 = marquee, galeri geser mendatar, foto ikut kursor,
   setelah uji coba tim): kalimat manifesto teaser Tentang di Beranda (`.ink-heading`, tidak ikut tirai per kata)
   menyala kata demi kata sesuai scroll (JS, opacity .16→1); footer Beranda terbuka di bawah `main` yang jadi
