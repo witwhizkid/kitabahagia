@@ -353,6 +353,8 @@ Lainnya:
   Admin punya aplikasi terpisah "KB Admin" (Okt 2026, permintaan user): `admin/manifest.json` (`id`/`scope`/`start_url`
   `/admin/`, ikon sama) + `theme-color`/`apple-touch-icon` di `admin/index.html`; dipasang lewat menu browser (tanpa tombol).
   iPhone: login ulang sekali di aplikasi terpasang (penyimpanan terpisah dari Safari).
+  Kalau aplikasi publik (scope `/`) sudah terpasang, Chrome menawarkan "Open in app" di /admin dan aplikasi yang
+  terbuka = web publik: hapus aplikasi publik dulu, pasang KB Admin, baru pasang lagi aplikasi publik (dicek user, Okt 2026).
 - SEO beranda: JSON-LD `WebSite` + `NGO` (nama, logo 320, email, `sameAs` IG/TikTok/LinkedIn) di
   `<head>` `index.html` + `og:site_name`. JSON-LD bukan skrip yang dijalankan, jadi aman dari CSP
   (dicek: tanpa "Refused"). Search Console sudah terverifikasi (domain), sitemap sudah dikirim.
@@ -563,6 +565,20 @@ tanpa kegiatan ikut siapa? (2) kegiatan gratis akhir bulan milik tim tertentu at
 menayangkan sendiri atau perlu persetujuan admin; sertifikat tetap admin umum? (4) ketua tim tetap orangnya walau tim
 bergantian 1–3/4–6 tiap bulan? Sementara itu ketua tim kegiatan 18 Okt boleh diundang sebagai Admin biasa.
 
+
+"Yang kamu bawa pulang" (Okt 2026, **keputusan owner**: bukan di Beranda, tapi strip kecil di **halaman Program**, ala
+"Area Berkelana" gamadharma.org; mockup A/B Beranda batal): `.take-home` antara bab Program dan "Jangan cuma lihat. Ikut.";
+panel maroon gelap bersudut 28px, judul kiri + "Kegiatan gratis juga dapat semuanya.", 4 kartu kaca kecil berikon garis emas
+(Sertifikat ber-QR, Kartu Relawan, Foto dokumentasi, Teman baru); ≤960px judul di atas, kartu geser (156px). Tanpa nomor/label kapital.
+Logo mitra (keputusan user Okt 2026, menunggu file logo dari owner): grid `.collaboration-partners` di kolaborasi.html
+(placeholder Mitra A/B/C, `hidden`) diisi dulu = versi lengkap (logo, nama, bentuk kerja sama) untuk calon mitra.
+Beranda baru dapat versi ringkas kalau sudah ≥4–5 logo: satu baris logo kecil satu warna + "Pernah berkolaborasi dengan"
++ link "Lihat semua →" ke Kolaborasi, tepat di bawah angka Jejak; tidak berjalan (sudah ada marquee). Syarat: izin
+tertulis tiap mitra (WA/email cukup), file SVG atau PNG transparan versi lengkap (bukan screenshot).
+Ide lain dari perbandingan (belum diminta): laporan tahunan /
+dashboard dampak; Kartu Relawan tahap 2 (jumlah kegiatan + jam, stempel per kegiatan, warna naik level 1/3/5+; butuh data
+lintas sertifikat per relawan, jaga privasi). Domain: jaga perpanjangan `kitabahagia.id` (domain lama Sabang Merauke
+diambil situs judi).
 
 Web sengaja tidak ditambah fitur baru sampai pemicunya terjadi (roadmap:
 4 kegiatan/bulan, tim ± 70 orang; 24 perancang program = 6 tim × 4 orang,
