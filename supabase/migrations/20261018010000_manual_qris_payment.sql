@@ -1,8 +1,9 @@
 -- Manual QRIS payment (Oct 2026): fallback while no payment gateway is approved.
--- create-payment (PAYMENT_PROVIDER=manual) gives each unpaid registration a unique amount
--- (price + 1..499) that is embedded in the owner's static QRIS; the registrant pays and
--- uploads a proof (private bucket payment-proofs), which holds the seat for 24 more hours;
--- an admin then marks it paid (registration confirmed) or rejects it (seat released).
+-- create-payment (PAYMENT_PROVIDER=manual) embeds the event price (set by the admin) in the
+-- owner's static QRIS; the registrant pays and uploads a proof (private bucket
+-- payment-proofs), which confirms the registration right away (owner decision "C", Oct 2026).
+-- An admin then matches it against the GoPay Merchant mutations and marks it valid, or
+-- cancels it (seat released).
 -- payment_attempts is not used for manual payments.
 -- Rollback: supabase/rollback/20261018010000_manual_qris_payment.down.sql
 
@@ -19,9 +20,11 @@ alter table public.registrations
   add constraint registrations_manual_amount_positive check (manual_amount is null or manual_amount > 0);
 
 comment on column public.registrations.manual_amount is
-  'Manual QRIS: amount to transfer (price + unique 1..499) so the admin can match the payment.';
+  'Manual QRIS: amount embedded in the QR (the event price at the time).';
 comment on column public.registrations.payment_proof_path is
   'Manual QRIS: object path in the private payment-proofs bucket.';
+comment on column public.registrations.payment_reviewed_at is
+  'Manual QRIS: when an admin checked the proof (null = confirmed but not checked yet).';
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('payment-proofs', 'payment-proofs', false, 2097152,
@@ -42,7 +45,6 @@ declare
   v_registration public.registrations%rowtype;
   v_title text;
   v_amount integer;
-  v_try integer := 0;
 begin
   select registration.* into v_registration
     from public.registrations as registration
@@ -66,21 +68,8 @@ begin
     raise exception using errcode = 'P0001', message = 'PAYMENT_DEADLINE_PASSED';
   end if;
 
-  v_amount := v_registration.manual_amount;
-  if v_amount is null then
-    -- Unique among manual payments still waiting, so a bank mutation points to one person.
-    loop
-      v_amount := v_registration.amount + 1 + pg_catalog.floor(pg_catalog.random() * 499)::integer;
-      exit when not exists (
-        select 1 from public.registrations as other
-         where other.manual_amount = v_amount
-           and other.registration_status = 'pending_payment'
-           and other.payment_status <> 'paid'
-           and (other.payment_deadline is null or other.payment_deadline > pg_catalog.now())
-      );
-      v_try := v_try + 1;
-      exit when v_try >= 40;
-    end loop;
+  v_amount := v_registration.amount;
+  if v_registration.manual_amount is distinct from v_amount then
     update public.registrations set manual_amount = v_amount where id = v_registration.id;
   end if;
 
@@ -89,14 +78,14 @@ begin
     'registration_code', v_registration.registration_code,
     'event_title', v_title,
     'amount', v_amount,
-    'base_amount', v_registration.amount,
     'payment_deadline', v_registration.payment_deadline,
     'proof_submitted_at', v_registration.payment_proof_submitted_at
   );
 end;
 $$;
 
--- Records an uploaded proof; returns the previous object path so the caller can delete it.
+-- Records an uploaded proof and confirms the registration (the seat was still held, so no
+-- capacity check is needed); the admin checks it afterwards in review_manual_payment.
 create or replace function public.submit_payment_proof(p_registration_code text, p_email text, p_path text)
 returns jsonb
 language plpgsql
@@ -105,7 +94,6 @@ set search_path = ''
 as $$
 declare
   v_registration public.registrations%rowtype;
-  v_deadline timestamptz;
 begin
   if p_path is null or p_path !~ '^KB-[A-Z0-9-]{6,40}/[0-9a-f-]{36}\.(jpg|png|webp)$' then
     raise exception using errcode = 'P0001', message = 'INVALID_REQUEST';
@@ -129,24 +117,19 @@ begin
     raise exception using errcode = 'P0001', message = 'PAYMENT_DEADLINE_PASSED';
   end if;
 
-  -- The seat stays held for 24 hours from the (latest) upload while an admin checks it.
-  v_deadline := greatest(coalesce(v_registration.payment_deadline, pg_catalog.now()),
-                         pg_catalog.now() + interval '24 hours');
   update public.registrations
      set payment_proof_path = p_path,
          payment_proof_submitted_at = pg_catalog.now(),
-         payment_status = 'pending',
-         payment_deadline = v_deadline
+         registration_status = 'confirmed',
+         payment_status = 'paid',
+         payment_reference = 'MANUAL-' || v_registration.registration_code
    where id = v_registration.id;
-  return pg_catalog.jsonb_build_object(
-    'previous_path', v_registration.payment_proof_path,
-    'payment_deadline', v_deadline
-  );
+  return pg_catalog.jsonb_build_object('registration_code', v_registration.registration_code);
 end;
 $$;
 
--- Admin decision on a manual payment: 'paid' confirms the registration (also after the
--- hold lapsed, like a late gateway settlement); 'rejected' fails it and frees the seat.
+-- Admin check of an unchecked manual payment: 'valid' records the check; 'cancelled'
+-- cancels the registration (seat released) when the proof does not match a real payment.
 create or replace function public.review_manual_payment(p_registration_code text, p_decision text, p_actor uuid)
 returns jsonb
 language plpgsql
@@ -156,7 +139,7 @@ as $$
 declare
   v_registration public.registrations%rowtype;
 begin
-  if p_decision not in ('paid', 'rejected') then
+  if p_decision not in ('valid', 'cancelled') then
     raise exception using errcode = 'P0001', message = 'INVALID_DECISION';
   end if;
   select registration.* into v_registration
@@ -166,23 +149,20 @@ begin
   if not found then
     raise exception using errcode = 'P0001', message = 'REGISTRATION_NOT_FOUND';
   end if;
-  if v_registration.payment_status = 'paid' then
-    raise exception using errcode = 'P0001', message = 'PAYMENT_ALREADY_PAID';
+  if v_registration.payment_reviewed_at is not null then
+    raise exception using errcode = 'P0001', message = 'PAYMENT_ALREADY_REVIEWED';
   end if;
-  if v_registration.registration_status <> 'pending_payment' or v_registration.payment_proof_path is null then
+  if v_registration.registration_status <> 'confirmed' or v_registration.payment_proof_path is null then
     raise exception using errcode = 'P0001', message = 'PAYMENT_NOT_ELIGIBLE';
   end if;
 
-  if p_decision = 'paid' then
+  if p_decision = 'valid' then
     update public.registrations
-       set registration_status = 'confirmed', payment_status = 'paid',
-           payment_reference = 'MANUAL-' || v_registration.registration_code,
-           payment_reviewed_at = pg_catalog.now(), payment_reviewed_by = p_actor
+       set payment_reviewed_at = pg_catalog.now(), payment_reviewed_by = p_actor
      where id = v_registration.id;
   else
     update public.registrations
-       set payment_status = 'failed',
-           payment_deadline = least(coalesce(payment_deadline, pg_catalog.now()), pg_catalog.now()),
+       set registration_status = 'cancelled', payment_status = 'failed',
            payment_reviewed_at = pg_catalog.now(), payment_reviewed_by = p_actor
      where id = v_registration.id;
   end if;

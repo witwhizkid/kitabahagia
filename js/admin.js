@@ -99,6 +99,9 @@
     expired: "Kedaluwarsa",
     refunded: "Dikembalikan",
   };
+  // Manual QRIS (alur C): confirmed on upload, so the proof still waits for an admin check.
+  const proofUnchecked = (registration) => registration.registration_status === "confirmed"
+    && Boolean(registration.payment_proof_submitted_at) && !registration.payment_reviewed_at;
 
   const referralSourceLabels = {
     instagram: "Instagram",
@@ -308,7 +311,7 @@
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ registration_codes, attendance }),
   });
-  // Manual QRIS: payment: "paid" | "rejected" for one registrant with an uploaded proof.
+  // Manual QRIS: payment: "valid" | "cancelled" for one registrant whose proof is unchecked.
   const manualPaymentRequest = (registrationCode, payment) => authorizedRequest(adminRegistrationsUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -548,6 +551,7 @@
           <div class="registration-state">
             <span class="status-token ${statusTone(registrationStatus)}">${escapeHtml(selectionStatus)}</span>
             ${showPayment ? `<span class="registration-sub registration-payment ${statusTone(paymentStatus)}">${escapeHtml(paymentStatusLabels[paymentStatus] || paymentStatus)}</span>` : ""}
+            ${proofUnchecked(registration) ? '<span class="proof-check-token">Bukti belum dicek</span>' : ""}
             ${registrationStatus !== "confirmed" ? "" : registration.attended_at ? '<span class="attendance-token">Hadir</span>'
               : registration.absent_at ? '<span class="attendance-token is-absent">Tidak hadir</span>' : ""}
             ${isSelectionEvent ? `<span class="applicant-history">${historyCount ? `Pernah ikut ${historyCount}×` : "Peserta baru"}</span>` : ""}
@@ -755,7 +759,8 @@
       }
     }
   };
-  // Manual QRIS: the uploaded payment screenshot (signed URL) with "Tandai lunas" / "Tolak".
+  // Manual QRIS: the uploaded payment screenshot (signed URL); while unchecked, "Valid" records
+  // the check and "Batalkan" cancels the registration (seat released) and offers a WA draft.
   const loadPaymentProof = async (registration) => {
     const field = applicantDialogContent.querySelector(".applicant-payment-proof-field");
     if (!field) return;
@@ -774,23 +779,36 @@
       image.referrerPolicy = "no-referrer";
       field.querySelector("p").replaceChildren(externalLink(href.href, "Buka ukuran penuh"));
       field.append(image);
-      const waiting = registration.registration_status === "pending_payment" && registration.payment_status !== "paid";
-      if (!waiting) return;
+      if (registration.payment_reviewed_at) {
+        const checked = document.createElement("p");
+        checked.className = "applicant-proof-checked";
+        const phone = registration.registration_status === "cancelled" ? normalizeWhatsApp(registration.phone) : "";
+        checked.textContent = registration.registration_status === "cancelled"
+          ? `Dibatalkan ${formatDateTime(registration.payment_reviewed_at)}${phone ? " · " : ""}`
+          : `Sudah dicek ${formatDateTime(registration.payment_reviewed_at)}`;
+        if (phone) {
+          const message = `Halo ${registration.name}, kami belum menemukan pembayaran untuk pendaftaran ${registration.events?.title || "kegiatan Kita Bahagia"} (kode ${registration.registration_code}), jadi pendaftaranmu kami batalkan. Kalau kamu merasa sudah membayar, balas pesan ini dengan bukti mutasinya ya.`;
+          checked.append(externalLink(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "Kabari lewat WhatsApp"));
+        }
+        field.append(checked);
+      }
+      if (!proofUnchecked(registration)) return;
       const actions = document.createElement("div");
       actions.className = "applicant-payment-actions";
       const decide = async (payment) => {
-        if (payment === "rejected" && !(await confirmAction(
-          "Bukti ditolak, slot pendaftar ini dilepas. Hubungi pendaftar lewat WhatsApp kalau perlu.",
-          { title: "Tolak bukti pembayaran?", confirmLabel: "Tolak", danger: true },
+        if (payment === "cancelled" && !(await confirmAction(
+          "Pendaftaran dibatalkan dan kuotanya kembali dibuka. Setelah ini kabari pendaftar lewat WhatsApp, dan keluarkan dari grup kalau sudah masuk.",
+          { title: "Batalkan pendaftaran ini?", confirmLabel: "Batalkan", danger: true },
         ))) return;
         actions.querySelectorAll("button").forEach((button) => { button.disabled = true; });
         try {
           await manualPaymentRequest(registration.registration_code, payment);
           await refreshRegistrations();
-          showToast(payment === "paid" ? "Pembayaran dikonfirmasi. Email konfirmasi dikirim." : "Bukti pembayaran ditolak.");
-          if (applicantDialog.open && registrations.some((item) => item.registration_code === registration.registration_code)) {
-            showApplicant(registration.registration_code);
-          }
+          showToast(payment === "valid" ? "Bukti pembayaran valid." : "Pendaftaran dibatalkan. Kuota kembali dibuka.");
+          // Under the "Bukti belum dicek" filter the row leaves the list, so the panel closes too.
+          if (registrations.some((item) => item.registration_code === registration.registration_code)) {
+            if (applicantDialog.open) showApplicant(registration.registration_code);
+          } else if (applicantDialog.open) applicantDialog.close();
         } catch (error) {
           setFeedback($("#applicant-dialog-feedback"), error.message || "Keputusan pembayaran belum dapat disimpan.", "error");
           actions.querySelectorAll("button").forEach((button) => { button.disabled = false; });
@@ -799,13 +817,13 @@
       const paid = document.createElement("button");
       paid.type = "button";
       paid.className = "button button-primary";
-      paid.textContent = "Tandai lunas";
-      paid.addEventListener("click", () => decide("paid"));
+      paid.textContent = "Valid";
+      paid.addEventListener("click", () => decide("valid"));
       const reject = document.createElement("button");
       reject.type = "button";
       reject.className = "button button-secondary";
-      reject.textContent = "Tolak";
-      reject.addEventListener("click", () => decide("rejected"));
+      reject.textContent = "Batalkan";
+      reject.addEventListener("click", () => decide("cancelled"));
       actions.append(paid, reject);
       field.append(actions);
     } catch (error) {
@@ -881,6 +899,7 @@
     if (applicant.manual_amount) {
       appendApplicantField("Nominal transfer (QRIS manual)", `Rp${Number(applicant.manual_amount).toLocaleString("id-ID")}`);
       if (applicant.payment_proof_submitted_at) {
+        appendApplicantField("Diunggah", formatDateTime(applicant.payment_proof_submitted_at));
         appendApplicantField("Bukti pembayaran", "Memuat bukti…", { wide: true });
         applicantGroup.lastElementChild.classList.add("applicant-payment-proof-field");
         void loadPaymentProof(applicant);
@@ -1913,6 +1932,10 @@
   const homeTasks = () => {
     const counts = seatCounts();
     const tasks = [];
+    const unchecked = home.registrations.filter(proofUnchecked).length;
+    if (unchecked) {
+      tasks.push({ tone: "deadline", text: `<strong>${unchecked} bukti bayar</strong> belum dicek ke mutasi GoPay`, go: "registrations", event: "", payment: "unchecked" });
+    }
     events.filter((event) => !event.archived_at && event.event_date).forEach((event) => {
       const title = `<strong>${escapeHtml(event.title)}</strong>`;
       const untilStart = daysFromToday(event.event_date);
@@ -2080,7 +2103,7 @@
 
     const tasks = homeTasks();
     $("#home-tasks").innerHTML = tasks.length ? tasks.map((task) => `
-      <li><button class="home-task is-${task.tone}" type="button" data-home-go="${task.go}" data-home-event="${escapeHtml(task.event)}"${task.lifecycle ? ` data-home-lifecycle="${task.lifecycle}"` : ""}>
+      <li><button class="home-task is-${task.tone}" type="button" data-home-go="${task.go}" data-home-event="${escapeHtml(task.event)}"${task.lifecycle ? ` data-home-lifecycle="${task.lifecycle}"` : ""}${task.payment ? ` data-home-payment="${task.payment}"` : ""}>
         <span class="home-task-dot" aria-hidden="true"></span><span class="home-task-text">${task.text}</span><span class="home-task-arrow" aria-hidden="true">→</span>
       </button></li>`).join("")
       : `<li class="home-all-done"><span aria-hidden="true">☕</span> Aman semua. Ngopi dulu ges.</li>`;
@@ -2117,9 +2140,9 @@
   };
 
   // Shortcuts from Beranda into a filtered tab.
-  const openRegistrations = async ({ event = "", status = "", lifecycle = "active" } = {}) => {
+  const openRegistrations = async ({ event = "", status = "", lifecycle = "active", payment = "" } = {}) => {
     $("#registration-search").value = "";
-    $("#payment-status-filter").value = "";
+    $("#payment-status-filter").value = payment;
     $("#registration-status-filter").value = status;
     registrationLifecycle = lifecycle;
     document.querySelectorAll("[data-registration-lifecycle]").forEach((tab) => {
@@ -2158,7 +2181,7 @@
       const target = events.find((item) => item.slug === slug);
       return target ? showForm(target) : showEvents();
     }
-    return void openRegistrations({ event: slug, lifecycle: go.dataset.homeLifecycle || "active" });
+    return void openRegistrations({ event: slug, lifecycle: go.dataset.homeLifecycle || "active", payment: go.dataset.homePayment || "" });
   });
 
   const showEvents = () => {

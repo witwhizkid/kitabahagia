@@ -506,29 +506,33 @@ The webhook accepts POST JSON notifications, checks Midtrans SHA-512 signatures 
 `PAYMENT_PROVIDER=manual` lets paid events run before Midtrans/iPaymu is approved.
 Migration `20261018010000_manual_qris_payment.sql` (rollback in `supabase/rollback/`).
 
-- `create-payment` calls `prepare_manual_payment`: the registration gets a unique
-  `manual_amount` (price + 1..499, unique among waiting manual payments) and the response
+- `create-payment` calls `prepare_manual_payment`: `manual_amount` = the registration amount
+  (the event price set by the admin; no random suffix, owner decision Oct 2026) and the response
   carries `qr_string` = the owner's static QRIS (`_shared/manual-qris.ts`, GoPay Merchant
   "Kita Bahagia Indonesia", NMID ID1026502348109; override with secret `QRIS_STATIC_PAYLOAD`)
   turned into a QRIS with that amount (tag 54, point of initiation 12, CRC recomputed), so the
   payer's app fills in the exact amount. `payment_attempts` is not used.
 - `submit-payment-proof` (deploy with `--no-verify-jwt`): multipart `registration_code`,
   `email`, `proof` (JPG/PNG/WebP, 2 MB; the page shrinks screenshots first) → private bucket
-  `payment-proofs` at `<code>/<uuid>.<ext>` → `submit_payment_proof` sets `payment_status =
-  pending`, `payment_proof_submitted_at`, and extends `payment_deadline` to 24 hours after the
-  upload, so the seat stays held while an admin checks. A re-upload replaces the old file.
-- `payment-status` adds `payment_method` (`manual`/`gateway`), `manual_amount`, `proof_submitted`.
-- `admin-registrations`: `?proof=<code>` also signs `payment_proof`; POST
-  `{ registration_codes: [code], payment: "paid" | "rejected" }` runs `review_manual_payment`.
-  Paid = confirmed + `payment_reference = MANUAL-<code>` + the usual confirmation email (works
-  after the hold lapsed, like a late gateway settlement). Rejected = `payment_status = failed`
-  and the deadline set to now (seat released).
+  `payment-proofs` at `<code>/<uuid>.<ext>` → `submit_payment_proof` **confirms right away**
+  (alur C, owner decision Oct 2026): `registration_status = confirmed`, `payment_status = paid`,
+  `payment_reference = MANUAL-<code>`, and the usual confirmation email (with the WA group link)
+  goes out. Only one upload per registration (a second one gets `PAYMENT_ALREADY_PAID`).
+- `payment-status` adds `payment_method` (`manual`/`gateway`) and `manual_amount`.
+- `admin-registrations`: `payment_status=unchecked` lists confirmed manual payments with
+  `payment_reviewed_at` still null ("Bukti belum dicek"); `?proof=<code>` also signs
+  `payment_proof`; POST `{ registration_codes: [code], payment: "valid" | "cancelled" }` runs
+  `review_manual_payment` once per registration. Valid = records `payment_reviewed_at/by`.
+  Cancelled = `registration_status = cancelled`, `payment_status = failed` (seat released); the
+  admin panel then offers a WA draft. Remove the person from the WA group by hand; the group
+  should use "Approve new members" so a fake proof is caught at the door.
 - Set the event's payment window to at least 1 hour: the registrant must pay and upload
   within it.
 
 Deploy order: migration → `create-payment`, `payment-status`, `admin-registrations`,
 `submit-payment-proof` → set `PAYMENT_PROVIDER=manual`. Switching back to `midtrans`/`ipaymu`
-needs no data change; manual registrations keep their proof and can still be reviewed.
+needs no data change; manual registrations keep their proof and can still be checked.
+Admin Beranda shows "N bukti bayar belum dicek" (from active registrations) linking to the filter.
 
 ## iPaymu (second QRIS provider, Oct 2026)
 

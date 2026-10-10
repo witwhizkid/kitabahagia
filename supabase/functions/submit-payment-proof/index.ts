@@ -1,7 +1,15 @@
 // Manual QRIS (PAYMENT_PROVIDER=manual): the registrant uploads a payment proof
 // (multipart: registration_code, email, proof). The image goes to the private
-// payment-proofs bucket; submit_payment_proof records it and holds the seat 24 hours
-// longer while an admin checks it in admin-registrations.
+// payment-proofs bucket; submit_payment_proof confirms the registration right away and
+// the confirmation email goes out. An admin checks the proof later in admin-registrations
+// ("Bukti belum dicek" -> Valid / Batalkan).
+import { sendConfirmationEmail } from "../_shared/registration-email.ts";
+
+const inBackground = async (task: Promise<void>) => {
+  const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (promise: Promise<unknown>) => void } }).EdgeRuntime;
+  if (runtime?.waitUntil) runtime.waitUntil(task);
+  else await task;
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,7 +26,7 @@ const messages: Record<string, string> = {
   INVALID_REQUEST: "Data tidak valid.",
   INVALID_PROOF: "Unggah bukti pembayaran dalam format JPG, PNG, atau WebP dengan ukuran maksimal 2 MB.",
   REGISTRATION_NOT_FOUND: "Pendaftaran tidak ditemukan.",
-  PAYMENT_ALREADY_PAID: "Pembayaran untuk pendaftaran ini sudah dikonfirmasi.",
+  PAYMENT_ALREADY_PAID: "Bukti pembayaran untuk pendaftaran ini sudah diterima.",
   PAYMENT_NOT_ELIGIBLE: "Pendaftaran ini belum dapat menerima bukti pembayaran.",
   PAYMENT_DEADLINE_PASSED: "Batas waktu pembayaran sudah lewat. Hubungi admin dengan kode pendaftaranmu.",
   SERVER_ERROR: "Bukti belum dapat diunggah. Coba lagi sebentar.",
@@ -103,12 +111,6 @@ Deno.serve(async (request) => {
     const status = reason === "REGISTRATION_NOT_FOUND" ? 404 : reason in messages && reason !== "SERVER_ERROR" ? 409 : 500;
     return errorResponse(status, reason in messages ? reason : "SERVER_ERROR");
   }
-  // A re-upload replaces the earlier proof.
-  if (typeof result.previous_path === "string" && result.previous_path !== path) await remove(result.previous_path);
-  return jsonResponse(200, {
-    success: true,
-    registration_code: code,
-    payment_deadline: result.payment_deadline ?? null,
-    proof_submitted: true,
-  });
+  await inBackground(sendConfirmationEmail(url, serviceKey, { code }));
+  return jsonResponse(200, { success: true, registration_code: code, registration_status: "confirmed", payment_status: "paid" });
 });

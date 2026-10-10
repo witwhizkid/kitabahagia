@@ -542,14 +542,12 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   (`submit-payment-proof`, bucket privat `payment-proofs`), slot ditahan 24 jam sejak unggah; admin Detail pendaftar = foto bukti +
   "Tandai lunas" (terkonfirmasi + email) / "Tolak" (slot dilepas). Sertifikat/hadir/grup WA jalan seperti pendaftar lunas lainnya.
   Jendela bayar kegiatan minimal 1 jam. Detail: "Manual QRIS" di `supabase/README.md`.
-  **Belum di-deploy, menunggu keputusan owner (dibahas 9 Okt 2026):** alur verifikasinya. Yang dibangun = A (cek dulu, baru
-  terkonfirmasi; peserta menunggu ≤24 jam). Usulan Claude = **C**: unggah bukti → langsung terkonfirmasi (layar sukses, email,
-  link grup), admin dapat badge "Bukti belum dicek" + pengingat di Beranda admin, lalu "Valid" / "Batalkan" (kuota kembali +
-  draf WA) sambil mencocokkan nominal unik di mutasi GoPay Merchant; **grup WA pakai "Setujui anggota baru"** supaya bukti palsu
-  tertahan di pintu grup (tanpa kode). Alternatif: link grup baru dikirim setelah Valid (butuh kode email tambahan). Kalau C
-  disetujui: ubah `submit_payment_proof` (confirmed saat unggah) + tombol admin (±½ hari). Opsi jangka panjang: PT Perorangan.
-  Sisi admin QRIS manual (Tandai lunas/Tolak, foto bukti) belum dites di browser. Kurang: antrean cek bukti (filter/badge
-  "Bukti belum dicek" di Pendaftar, nominal unik terlihat di baris, pengingat di Beranda admin); kerjakan bareng keputusan A/C.
+  **Keputusan owner 10 Okt 2026: alur C** (belum di-deploy): unggah bukti → langsung terkonfirmasi (layar sukses, email,
+  link grup); admin mencocokkan dengan mutasi GoPay Merchant lalu "Valid" / "Batalkan" (kuota kembali + link draf WA; keluarkan
+  dari grup manual). Badge "Bukti belum dicek" di baris, filter pembayaran "Bukti belum dicek", pengingat di Beranda admin.
+  **Nominal = harga kegiatan yang diisi admin** (tanpa angka acak; kalau mau kode unik, admin isi harganya mis. Rp75.018).
+  Grup WA kegiatan berbayar sebaiknya "Setujui anggota baru". Dicek lokal (SQL di Postgres, alur peserta + admin di
+  Playwright dengan data tiruan); belum dengan uang sungguhan. Opsi jangka panjang: PT Perorangan.
 
 Peran Ketua Tim (usul user 10 Okt 2026, **menunggu jawaban owner**; dikerjakan **setelah** kegiatan 18 Okt, sebelum 6 ketua
 tim diundang): peran baru `team_lead` + nomor tim 1–6 di `admin_users`, kolom `events.team`. Ketua Tim hanya melihat kegiatan

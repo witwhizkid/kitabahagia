@@ -323,7 +323,6 @@ const manualPayment = async (url: string, key: string, input: PaymentRequest) =>
     registration_code: result.registration_code,
     event_title: result.event_title,
     amount,
-    base_amount: Number(result.base_amount),
     payment_status: "pending",
     payment_method: "manual",
     qr_url: null,
@@ -331,7 +330,6 @@ const manualPayment = async (url: string, key: string, input: PaymentRequest) =>
     expires_at: deadline,
     payment_deadline: deadline,
     order_id: null,
-    proof_submitted: Boolean(result.proof_submitted_at),
   });
 };
 
