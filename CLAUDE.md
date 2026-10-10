@@ -99,8 +99,10 @@ Halaman pendaftaran (`pendaftaran.html`):
   "Selection extras" di `supabase/README.md`.
 - Kartu ringkasan: nama lokasi sendiri jadi link ↗ ke Google Maps
   (`events.location_url` dari admin, kalau kosong pencarian nama lokasi). Detail
-  kegiatan punya bagian "Lokasi" dengan peta Google tertanam (dicari dari teks
-  lokasi, dimuat hanya saat "Detail kegiatan" dibuka) + tombol "Buka di Google
+  kegiatan punya bagian "Lokasi" dengan peta Google tertanam (dimuat hanya saat "Detail kegiatan" dibuka; dicari dari
+  `/maps/place/<nama, alamat lengkap>/` atau koordinat di `location_url`, kalau tidak ada dari teks lokasi. Okt 2026: nama
+  saja kadang jatuh di laut (Google menganggapnya pencarian umum + zoom 15); `admin-events` mengembangkan link bagikan
+  `maps.app.goo.gl` jadi link /maps/place/ saat simpan, jadi admin cukup tempel link Bagikan dari Google Maps) + tombol "Buka di Google
   Maps". CSP `frame-src` mengizinkan www.google.com dan maps.google.com. "Ajak teman ikut: WhatsApp ·
   Salin link" ada di layar sukses (`renderShare` di `renderOnboarding`), bukan di
   kartu ringkasan, supaya tidak mengganggu alur form. Tombol Daftar yang

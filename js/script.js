@@ -1404,6 +1404,22 @@ const safeMapsUrl = (value) => {
   }
 };
 
+// What the embedded map searches for. A bare venue name sometimes lands in open sea, so a
+// place link (admin-events expands share links to /maps/place/<name, full address>/) or its
+// coordinates win; otherwise the venue name as typed.
+const mapQueryFor = (event) => {
+  try {
+    const url = new URL(event.locationUrl || '');
+    const place = url.pathname.match(/\/maps\/place\/([^/]+)/);
+    if (place) return decodeURIComponent(place[1].replace(/\+/g, ' '));
+    const point = url.pathname.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (point) return `${point[1]},${point[2]}`;
+  } catch {
+    // No usable link: use the venue name.
+  }
+  return event.location;
+};
+
 const safeWhatsAppGroupUrl = (value) => {
   if (typeof value !== 'string' || !value.trim()) return null;
   try {
@@ -2794,7 +2810,7 @@ if (registrationForm) {
         const loadMap = () => {
           if (map.querySelector('iframe')) return;
           const frame = document.createElement('iframe');
-          frame.src = `https://maps.google.com/maps?q=${encodeURIComponent(selectedEvent.location)}&z=15&output=embed`;
+          frame.src = `https://maps.google.com/maps?q=${encodeURIComponent(mapQueryFor(selectedEvent))}&z=15&output=embed`;
           frame.title = `Peta lokasi ${selectedEvent.location}`;
           frame.loading = 'lazy';
           frame.referrerPolicy = 'no-referrer-when-downgrade';
