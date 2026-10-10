@@ -65,8 +65,8 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
   baris), ikon lokasi/tanggal, harga + sisa slot, dan teks ajakan "Daftar →" / "Lihat detail →" di
   kanan bawah (tanda bisa diklik di HP). Seluruh kartu bisa diklik (stretched link di judul); ditekan
   mengecil .98; hover desktop naik 4px + border maroon + panah bergeser (mati saat reduced motion). Desktop/tablet
-  3 kolom; HP: beranda kartu geser, Jadwal kartu mendatar (poster 118px di kiri, setinggi kartu,
-  `cover` dari atas supaya tidak ada ruang kosong di bawah foto; poster 4:5 terpotong sisi kiri-kanan). Hover hanya di
+  3 kolom; HP: beranda kartu geser, Jadwal kartu tegak dengan poster 4:5 utuh selebar kartu di atas (Okt 2026, user: versi
+  mendatar poster 118px yang terpotong kiri-kanan jelek). Hover hanya di
   `@media (hover:hover)`.
 - Kartu membulat + palet KB (Okt 2026, ref. Gojek, mockup disetujui user): kartu kegiatan sudut 24px
   (`--radius-round`), latar putih, foto masuk 8px dengan sudut 18px (`--radius-round-photo`); kategori = pil berwarna
