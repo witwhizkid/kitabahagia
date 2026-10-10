@@ -1447,12 +1447,6 @@ const registrationOutcomeCopy = (data) => {
         copy: `Kali ini kamu belum terpilih sebagai peserta ${title} karena kuota terbatas. Sampai jumpa di kegiatan Kita Bahagia berikutnya.`
       };
     case 'pending_payment':
-      if (data?.payment_method === 'manual' && data?.proof_submitted) {
-        return {
-          heading: 'Bukti pembayaran sedang dicek.',
-          copy: 'Admin Kita Bahagia akan mengecek bukti pembayaranmu paling lambat 1×24 jam. Slotmu tetap ditahan selama pengecekan, dan email konfirmasi dikirim begitu pembayaran dikonfirmasi.'
-        };
-      }
       return {
         heading: 'Pembayaran belum selesai.',
         copy: 'Lanjutkan pembayaran dari halaman kegiatan di perangkat yang sama, atau hubungi admin dengan kode pendaftaranmu.'
@@ -1880,7 +1874,6 @@ if (registrationForm) {
     });
     activePayment = data;
     const manualPayment = data.payment_method === 'manual';
-    if (manualPayment && state === 'pending' && data.proof_submitted) state = 'processing';
     stage.classList.remove('is-loading');
     stage.removeAttribute('aria-busy');
     const stateChanged = stage.hidden || lastRenderedPaymentState !== state;
@@ -1976,7 +1969,7 @@ if (registrationForm) {
       if (eventSlug) registerAgain.href = `pendaftaran.html?event=${encodeURIComponent(eventSlug)}`;
     }
     if (state === 'deadline_passed') markRecoveryDeadlineShown();
-    stage.querySelector('.payment-guide').hidden = !['pending', 'processing'].includes(state) || (manualPayment && state === 'processing');
+    stage.querySelector('.payment-guide').hidden = !['pending', 'processing'].includes(state);
     stage.querySelector('.payment-recovery-error').hidden = true;
     stage.querySelector('.payment-amount').hidden = !['pending', 'processing', 'expired', 'failed'].includes(state);
     stage.querySelector('.payment-primary').hidden = false;
@@ -1986,16 +1979,8 @@ if (registrationForm) {
     const guideLast = stage.querySelector('.payment-guide li:last-child');
     if (guideLast) {
       guideLast.textContent = manualPayment
-        ? 'Screenshot halaman "Pembayaran berhasil", lalu unggah di bawah. Admin akan mengecek dan mengonfirmasi tempatmu.'
+        ? 'Screenshot halaman "Pembayaran berhasil", lalu unggah di bawah. Tempatmu langsung dikonfirmasi.'
         : 'Kembali ke halaman ini; status akan diperiksa otomatis.';
-    }
-    if (manualPayment && state === 'processing') {
-      stage.querySelector('#paymentHeading').textContent = 'Bukti pembayaran terkirim';
-      stage.querySelector('.payment-intro').textContent = 'Admin Kita Bahagia akan mengecek pembayaranmu paling lambat 1×24 jam. Slotmu tetap ditahan selama pengecekan. Halaman ini diperbarui otomatis dan email konfirmasi dikirim begitu pembayaran dikonfirmasi; kamu juga bisa memantaunya di halaman Cek status.';
-      const processing = stage.querySelector('[data-payment-state="payment_processing"]');
-      processing.querySelector('strong').textContent = 'Menunggu dicek admin';
-      processing.querySelector('p').textContent = 'Tidak perlu membayar ulang. Kalau ada yang kurang jelas, admin akan menghubungimu lewat WhatsApp.';
-      stage.querySelector('.payment-amount').hidden = false;
     }
     if (paymentDemo && state === 'pending') {
       stage.querySelector('#paymentHeading').textContent = 'Simulasi pembayaran';
@@ -2007,7 +1992,7 @@ if (registrationForm) {
     registrationContent?.classList.add('hidden');
     setRegistrationStep('payment');
     const orderRow = stage.querySelector('[data-result-order]');
-    if (orderRow) orderRow.textContent = manualPayment ? 'QRIS Kita Bahagia · dicek admin' : data.order_id || 'Menunggu dibuat';
+    if (orderRow) orderRow.textContent = manualPayment ? 'QRIS Kita Bahagia' : data.order_id || 'Menunggu dibuat';
     stage.hidden = false;
     // A new state can be much shorter than the last one (QR -> result), so bring the card's top into view.
     if (stateChanged) focusRegistrationStep(stage);
@@ -2356,11 +2341,6 @@ if (registrationForm) {
     if (result.registration_status === 'pending_payment' && paymentDeadlinePassed({ ...base, ...result })) {
       renderPaymentState('deadline_passed', { ...base, ...result });
       return true;
-    }
-    // Manual QRIS: keep polling while an admin checks the uploaded proof.
-    if (result.payment_method === 'manual' && result.proof_submitted && result.payment_status === 'pending') {
-      if (lastRenderedPaymentState !== 'processing') renderPaymentState('processing', { ...base, ...result });
-      return false;
     }
     if (result.payment_status === 'expired' && Number.isFinite(paymentDeadlineTime({ ...base, ...result }))) {
       // Back off after a refused renewal so polling does not call create-payment every 5 seconds.
@@ -3460,7 +3440,8 @@ if (registrationForm) {
   });
 
   // Manual QRIS: the payment screenshot is shrunk in the browser (phone screenshots are
-  // often several MB) and sent to submit-payment-proof; an admin confirms it later.
+  // often several MB) and sent to submit-payment-proof, which confirms the seat right away
+  // (an admin checks the proof afterwards and can cancel it).
   const shrinkProof = async (file) => {
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return null;
     try {
@@ -3502,8 +3483,11 @@ if (registrationForm) {
       const result = await response.json().catch(() => null);
       if (!response.ok || !result?.success) throw { message: result?.error?.message };
       form.reset();
-      renderPaymentState('processing', { ...activePayment, proof_submitted: true, payment_deadline: result.payment_deadline || activePayment.payment_deadline });
-      pollPaymentStatus(activePayment, contact.email);
+      const registration = activePayment;
+      const status = await fetchRegistrationStatus(registration, contact.email).catch(() => null);
+      if (!status || !applyPaymentStatusResult(status, registration)) {
+        showConfirmedRegistration({ ...registration, registration_status: 'confirmed', payment_status: 'paid' });
+      }
     } catch (failure) {
       showError(failure?.message || 'Bukti belum terkirim. Periksa koneksi lalu coba lagi.');
     } finally {

@@ -72,11 +72,12 @@ const attendanceErrors: Record<string, [number, string]> = {
 };
 const attendanceStates = new Set(["present", "absent", "clear"]);
 const manualPaymentErrors: Record<string, [number, string]> = {
-  PAYMENT_ALREADY_PAID: [409, "Pembayaran ini sudah dikonfirmasi."],
+  PAYMENT_ALREADY_REVIEWED: [409, "Bukti pembayaran ini sudah dicek."],
   PAYMENT_NOT_ELIGIBLE: [409, "Pendaftar ini tidak sedang menunggu pengecekan bukti bayar."],
   REGISTRATION_NOT_FOUND: [404, "Pendaftar tidak ditemukan."],
 };
-const paymentStatuses = new Set(["not_required", "unpaid", "pending", "paid", "failed", "expired", "refunded"]);
+// "unchecked" = manual QRIS proof uploaded (registration already confirmed) but not checked by an admin yet.
+const paymentStatuses = new Set(["not_required", "unpaid", "pending", "paid", "failed", "expired", "refunded", "unchecked"]);
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const serviceHeaders = (key: string) => ({
@@ -188,19 +189,16 @@ Deno.serve(async (request) => {
       const [status, message] = attendanceErrors[code] ?? [500, "Kehadiran belum dapat disimpan."];
       return fail(status, code in attendanceErrors ? code : "SERVER_ERROR", message);
     }
-    // Manual QRIS: { registration_codes: [code], payment: "paid" | "rejected" } for one proof.
+    // Manual QRIS: { registration_codes: [code], payment: "valid" | "cancelled" } for one unchecked proof.
     if (body && typeof body === "object" && !Array.isArray(body) && "payment" in body) {
       if (Object.keys(body).some((key) => !["registration_codes", "payment"].includes(key))
-        || !validCodes || (codes as string[]).length !== 1 || !["paid", "rejected"].includes(String(body.payment))) {
+        || !validCodes || (codes as string[]).length !== 1 || !["valid", "cancelled"].includes(String(body.payment))) {
         return fail(400, "INVALID_REQUEST", "Data pembayaran tidak valid.");
       }
       const code = (codes as string[])[0];
       const response = await rpc("review_manual_payment", { p_registration_code: code, p_decision: body.payment, p_actor: adminId });
       const result = await response.json().catch(() => null) as Record<string, unknown> | null;
-      if (response.ok && result) {
-        if (body.payment === "paid") await inBackground(sendConfirmationEmail(supabaseUrl, serviceKey, { code }));
-        return json(200, { registrations: [], total: 0, payment: result });
-      }
+      if (response.ok && result) return json(200, { registrations: [], total: 0, payment: result });
       const reason = typeof result?.message === "string" ? result.message : "";
       const [status, message] = manualPaymentErrors[reason] ?? [500, "Keputusan pembayaran belum dapat disimpan."];
       return fail(status, reason in manualPaymentErrors ? reason : "SERVER_ERROR", message);
@@ -308,7 +306,11 @@ Deno.serve(async (request) => {
   if (registrationStatus) {
     query.set("registration_status", `eq.${registrationStatus === "expired" ? "pending_payment" : registrationStatus}`);
   }
-  if (paymentStatus) {
+  if (paymentStatus === "unchecked") {
+    query.set("registration_status", "eq.confirmed");
+    query.set("payment_proof_submitted_at", "not.is.null");
+    query.set("payment_reviewed_at", "is.null");
+  } else if (paymentStatus) {
     query.set("payment_status", paymentStatus === "expired" ? "in.(expired,unpaid,pending,failed)" : `eq.${paymentStatus}`);
   }
   if (search) {
