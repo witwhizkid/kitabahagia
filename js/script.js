@@ -3457,6 +3457,34 @@ if (registrationForm) {
       return file.size <= 2 * 1024 * 1024 ? file : null;
     }
   };
+  // The file input is hidden inside a large tap area; after picking, show a thumbnail
+  // (drawn on a canvas: the CSP allows no blob:/data: images) and the file name.
+  const proofDrop = document.querySelector('[data-manual-proof-drop]');
+  const showProofChoice = async (file) => {
+    if (!proofDrop) return;
+    const preview = proofDrop.querySelector('[data-manual-proof-preview]');
+    proofDrop.classList.toggle('is-filled', Boolean(file));
+    proofDrop.querySelector('[data-manual-proof-label]').textContent = file ? 'Screenshot dipilih ✓' : 'Pilih screenshot bukti bayar';
+    proofDrop.querySelector('[data-manual-proof-hint]').textContent = file
+      ? `${file.name} · ketuk untuk ganti`
+      : 'Ketuk di sini untuk memilih dari galeri. Screenshot halaman "Pembayaran berhasil" (JPG, PNG, atau WebP).';
+    preview.hidden = true;
+    if (!file) return;
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, 360 / bitmap.height, 600 / bitmap.width);
+      preview.width = Math.round(bitmap.width * scale);
+      preview.height = Math.round(bitmap.height * scale);
+      preview.getContext('2d').drawImage(bitmap, 0, 0, preview.width, preview.height);
+      preview.hidden = false;
+    } catch {
+      // No preview for an unreadable image; the name is still shown.
+    }
+  };
+  proofDrop?.querySelector('[data-manual-proof-file]').addEventListener('change', (event) => {
+    document.querySelector('[data-manual-proof-error]').hidden = true;
+    void showProofChoice(event.target.files?.[0] || null);
+  });
   document.querySelector('[data-manual-proof]')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -3483,6 +3511,7 @@ if (registrationForm) {
       const result = await response.json().catch(() => null);
       if (!response.ok || !result?.success) throw { message: result?.error?.message };
       form.reset();
+      void showProofChoice(null);
       const registration = activePayment;
       const status = await fetchRegistrationStatus(registration, contact.email).catch(() => null);
       if (!status || !applyPaymentStatusResult(status, registration)) {
