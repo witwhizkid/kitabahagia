@@ -421,7 +421,8 @@ Lainnya:
 - Akun admin: 6 ketua tim program memakai peran **Admin** biasa (boleh lihat
   pendaftar/data pribadi dan menayangkan kegiatan); arsip/hapus hanya oleh
   admin inti lewat kesepakatan, bukan kode. Peran khusus (Editor Kegiatan,
-  Desain, Penulis Kisah) belum dibuat; buat hanya kalau dibutuhkan. Kartu
+  Desain, Penulis Kisah) belum dibuat; buat hanya kalau dibutuhkan (rencana peran Ketua Tim per tim: lihat
+  "Peran Ketua Tim" di Rencana fitur). Kartu
   kegiatan di admin menampilkan "Diubah <waktu> oleh <bagian email sebelum @>"
   (`events.last_edited_by/at`, hanya diisi `admin-events`; bukan riwayat lengkap).
   Kelola Admin punya tombol **Hapus** (Super Admin; `admin-users` PATCH `delete_admin`)
@@ -545,6 +546,20 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   draf WA) sambil mencocokkan nominal unik di mutasi GoPay Merchant; **grup WA pakai "Setujui anggota baru"** supaya bukti palsu
   tertahan di pintu grup (tanpa kode). Alternatif: link grup baru dikirim setelah Valid (butuh kode email tambahan). Kalau C
   disetujui: ubah `submit_payment_proof` (confirmed saat unggah) + tombol admin (±½ hari). Opsi jangka panjang: PT Perorangan.
+  Sisi admin QRIS manual (Tandai lunas/Tolak, foto bukti) belum dites di browser. Kurang: antrean cek bukti (filter/badge
+  "Bukti belum dicek" di Pendaftar, nominal unik terlihat di baris, pengingat di Beranda admin); kerjakan bareng keputusan A/C.
+
+Peran Ketua Tim (usul user 10 Okt 2026, **menunggu jawaban owner**; dikerjakan **setelah** kegiatan 18 Okt, sebelum 6 ketua
+tim diundang): peran baru `team_lead` + nomor tim 1–6 di `admin_users`, kolom `events.team`. Ketua Tim hanya melihat kegiatan
+timnya + pendaftarnya (data pribadi tidak terbuka ke semua ketua tim); admin/super admin tetap melihat semua. Penyaringan
+**di server** (tiap Edge Function admin: `admin-events`, `admin-registrations`, `admin-stories`, `admin-certificates`,
+`admin-certificate-issue`, `admin-users`; plus fungsi `is_admin` storage `event-images`), bukan cuma disembunyikan di UI;
+akses kegiatan tim lain lewat ID = ditolak. UI: pilihan peran + tim di Kelola Admin, isian "Tim" di form Kegiatan (otomatis
+untuk Ketua Tim), angka Beranda admin ikut tersaring. Perkiraan ±1–1,5 hari + tes per endpoint (risiko: satu endpoint lupa
+disaring = bocor). Pertanyaan untuk owner: (1) Kisah: semua kisah, atau hanya yang "Kegiatan terkait"-nya milik tim; kisah
+tanpa kegiatan ikut siapa? (2) kegiatan gratis akhir bulan milik tim tertentu atau admin umum? (3) Ketua Tim boleh
+menayangkan sendiri atau perlu persetujuan admin; sertifikat tetap admin umum? (4) ketua tim tetap orangnya walau tim
+bergantian 1–3/4–6 tiap bulan? Sementara itu ketua tim kegiatan 18 Okt boleh diundang sebagai Admin biasa.
 
 
 Web sengaja tidak ditambah fitur baru sampai pemicunya terjadi (roadmap:
