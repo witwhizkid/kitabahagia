@@ -1410,10 +1410,15 @@ const safeMapsUrl = (value) => {
 const mapQueryFor = (event) => {
   try {
     const url = new URL(event.locationUrl || '');
+    // Exact pin of a place link copied from the browser (…!3d<lat>!4d<lng>).
+    const pin = url.pathname.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+    if (pin) return `${pin[1]},${pin[2]}`;
     const place = url.pathname.match(/\/maps\/place\/([^/]+)/);
-    if (place) return decodeURIComponent(place[1].replace(/\+/g, ' '));
+    const placeName = place ? decodeURIComponent(place[1].replace(/\+/g, ' ')) : '';
+    if (placeName.includes(',')) return placeName;
     const point = url.pathname.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
     if (point) return `${point[1]},${point[2]}`;
+    if (placeName) return placeName;
   } catch {
     // No usable link: use the venue name.
   }
