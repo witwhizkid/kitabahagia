@@ -526,8 +526,14 @@ Migration `20261018010000_manual_qris_payment.sql` (rollback in `supabase/rollba
   Cancelled = `registration_status = cancelled`, `payment_status = failed` (seat released); the
   admin panel then offers a WA draft. Remove the person from the WA group by hand; the group
   should use "Approve new members" so a fake proof is caught at the door.
-- Set the event's payment window to at least 1 hour: the registrant must pay and upload
+- Set the event's payment window to at least 1 hour: the registrant should pay and upload
   within it.
+- Late proof (migration `20261019010000_manual_late_proof.sql`, opening night Oct 2026): after
+  `payment_deadline` the proof is still accepted when a seat is free (same count as
+  `create_registration`, event row locked first) and the same email/phone has no other active
+  registration for the event; otherwise `EVENT_FULL` / `ALREADY_REGISTERED`. The page keeps the upload
+  form on the "waktu habis" screen for manual payments, and Cek status links back to it on the same
+  device. A person who already registered again uploads on the new registration instead.
 
 Deploy order: migration → `create-payment`, `payment-status`, `admin-registrations`,
 `submit-payment-proof` → set `PAYMENT_PROVIDER=manual`. Switching back to `midtrans`/`ipaymu`
