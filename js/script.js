@@ -1471,7 +1471,7 @@ const registrationOutcomeCopy = (data) => {
     case 'pending_payment':
       return {
         heading: 'Pembayaran belum selesai.',
-        copy: 'Lanjutkan pembayaran dari halaman kegiatan di perangkat yang sama, atau hubungi admin dengan kode pendaftaranmu.'
+        copy: 'Slotmu masih ditahan sampai batas pembayaran. Lanjutkan pembayaran dan unggah bukti dari halaman kegiatan di HP yang sama, atau hubungi admin dengan kode pendaftaranmu.'
       };
     default:
       return {
@@ -4256,6 +4256,27 @@ if (statusForm) {
       link.hidden = !groupUrl;
       if (groupUrl) link.href = groupUrl;
       else link.removeAttribute('href');
+      // Unpaid: if this device made the registration (kb_my_registration knows its event), hand the code +
+      // email to that event page's payment recovery so the QRIS + proof upload opens again.
+      const resume = result.querySelector('[data-status-continue]');
+      let resumeSlug = '';
+      const enteredCode = String(formData.get('registration_code') || '').trim().toUpperCase();
+      if (data.registration_status === 'pending_payment') {
+        try {
+          const saved = JSON.parse(localStorage.getItem('kb_my_registration') || 'null');
+          if (saved?.slug && String(saved.code || '').toUpperCase() === enteredCode) {
+            resumeSlug = String(saved.slug);
+            localStorage.setItem(`kb:registration-recovery:v1:${resumeSlug}`, JSON.stringify({
+              event_slug: resumeSlug,
+              registration_code: enteredCode,
+              email: String(formData.get('email') || '').trim().toLowerCase()
+            }));
+          }
+        } catch { resumeSlug = ''; }
+      }
+      resume.hidden = !resumeSlug;
+      if (resumeSlug) resume.href = `pendaftaran.html?event=${encodeURIComponent(resumeSlug)}`;
+      else resume.removeAttribute('href');
       message.textContent = '';
       result.hidden = false;
       result.focus();
