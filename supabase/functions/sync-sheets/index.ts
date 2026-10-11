@@ -266,11 +266,24 @@ Deno.serve(async (request) => {
     // Rewrite the values of every managed tab.
     const now = new Date();
     const updatedAt = `Diperbarui ${wib.format(now)} WIB · otomatis tiap 5 menit, jangan diketik di tab ini`;
+    // Event tabs list only people who still count (Oct 2026: lapsed QRIS holds made the team think the list
+    // was wrong); "Semua" keeps everyone, lapsed and cancelled ones at the bottom.
+    const isLive = (row: Row) => {
+      const status = String(row.registration_status || "");
+      if (status === "cancelled") return false;
+      if (status !== "pending_payment" || row.payment_status === "paid") return true;
+      const deadline = typeof row.payment_deadline === "string" ? Date.parse(row.payment_deadline) : NaN;
+      return Number.isNaN(deadline) || deadline > now.getTime();
+    };
     const data = wanted.map((tab) => {
       const withEvent = tab.key === "all";
-      const rows = registrations.filter((row) => withEvent || row.events?.slug === tab.key).map((row) => toRow(row, withEvent, now));
+      const picked = withEvent
+        ? [...registrations.filter(isLive), ...registrations.filter((row) => !isLive(row))]
+        : registrations.filter((row) => row.events?.slug === tab.key && isLive(row));
+      const rows = picked.map((row) => toRow(row, withEvent, now));
       const head = header(withEvent);
-      return { range: `${quoted(tab.title)}!A1`, values: [[...head, updatedAt], ...rows] };
+      const note = withEvent ? updatedAt : `${updatedAt} · kedaluwarsa/dibatalkan hanya di tab Semua`;
+      return { range: `${quoted(tab.title)}!A1`, values: [[...head, note], ...rows] };
     });
     await sheetsApi("/values:batchClear", { method: "POST", body: JSON.stringify({ ranges: wanted.map((tab) => `${quoted(tab.title)}!A:Z`) }) });
     await sheetsApi("/values:batchUpdate", { method: "POST", body: JSON.stringify({ valueInputOption: "RAW", data }) });

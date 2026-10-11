@@ -2430,6 +2430,18 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-page .manual-proof-preview[hidden], .registration-page .manual-proof-drop.is-filled .manual-proof-icon { display:none; }
 .registration-page .manual-proof-drop.is-filled { border-style:solid; border-color:#7a1f2b; }
 .registration-page .manual-proof .btn { width:100%; justify-content:center; }
+/* Manual QRIS: the three steps above the QR, and the nudge shown when the payer comes back from their bank app. */
+.registration-page .manual-steps { display:flex; gap:6px; width:100%; margin:0 0 14px; padding:0; list-style:none; counter-reset:manual-step; }
+.registration-page .manual-steps[hidden] { display:none; }
+.registration-page .manual-steps li { flex:1; display:grid; justify-items:center; gap:6px; padding:10px 6px; border-radius:16px; background:#fbe4e1; color:#53141d; font-size:12px; font-weight:700; line-height:1.3; text-align:center; counter-increment:manual-step; }
+.registration-page .manual-steps li::before { content:counter(manual-step); display:grid; place-items:center; width:24px; height:24px; border-radius:50%; background:#7a1f2b; color:#fff; font-size:12px; }
+.registration-page .manual-steps li:last-child { background:#7a1f2b; color:#fff; }
+.registration-page .manual-steps li:last-child::before { background:#fff; color:#7a1f2b; }
+.registration-page .manual-proof-nudge { margin:0; padding:12px 14px; border-radius:14px; background:#7a1f2b; color:#fff; font-size:14px; font-weight:700; line-height:1.45; }
+.registration-page .manual-proof-nudge[hidden] { display:none; }
+.registration-page .manual-proof.is-nudged { box-shadow:0 0 0 3px #7a1f2b; animation:manual-proof-pulse 1.2s ease 2; }
+@keyframes manual-proof-pulse { 50% { box-shadow:0 0 0 7px rgba(122,31,43,.25); } }
+@media (prefers-reduced-motion: reduce) { .registration-page .manual-proof.is-nudged { animation:none; } }
 .registration-page .payment-guide { width:100%; margin-top:24px; padding-top:17px; border-top:1px solid var(--line); }
 .registration-page .payment-guide h3 { margin:0 0 8px; font-size:15px; }
 .registration-page .payment-guide ol { display:grid; gap:5px; margin:0; padding-left:20px; color:var(--muted); font-size:12px; line-height:1.5; }

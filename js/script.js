@@ -2023,8 +2023,14 @@ if (registrationForm) {
     stage.querySelector('.payment-details').hidden = false;
     const manualProof = stage.querySelector('[data-manual-proof]');
     const lateProof = manualPayment && state === 'deadline_passed';
+    const manualSteps = stage.querySelector('[data-manual-steps]');
+    if (manualSteps) manualSteps.hidden = !(manualPayment && state === 'pending');
     if (manualProof) {
       manualProof.hidden = !(manualPayment && (state === 'pending' || lateProof));
+      if (manualProof.hidden) {
+        manualProof.classList.remove('is-nudged');
+        manualProof.querySelector('[data-manual-proof-nudge]')?.setAttribute('hidden', '');
+      }
       // After the deadline the form stays for anyone who already paid: the server still accepts the proof
       // while seats remain (submit_payment_proof), so nobody has to pay twice.
       const note = manualProof.querySelector('.manual-proof-note');
@@ -3547,6 +3553,24 @@ if (registrationForm) {
     document.querySelector('[data-manual-proof-error]').hidden = true;
     void showProofChoice(event.target.files?.[0] || null);
   });
+  // Coming back from the bank/e-wallet app (tab hidden for a few seconds, proof form still waiting):
+  // bring the upload into view with a clear reminder, the moment people most often forget it.
+  let paymentPageHiddenAt = 0;
+  const nudgeManualProof = () => {
+    const form = document.querySelector('[data-manual-proof]');
+    if (!form || form.hidden || form.closest('[hidden]')) return;
+    form.querySelector('[data-manual-proof-nudge]')?.removeAttribute('hidden');
+    form.classList.remove('is-nudged');
+    void form.offsetWidth;
+    form.classList.add('is-nudged');
+    form.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+  };
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') paymentPageHiddenAt = Date.now();
+    else if (paymentPageHiddenAt && Date.now() - paymentPageHiddenAt > 4000) nudgeManualProof();
+  });
+  window.addEventListener('pageshow', (event) => { if (event.persisted) nudgeManualProof(); });
+
   document.querySelector('[data-manual-proof]')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
