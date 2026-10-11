@@ -6031,23 +6031,29 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .program-page .program-flow-details summary::after { content: "+"; font-size: 18px; font-weight: 500; line-height: 1; transition: rotate 200ms var(--ease); }
 .program-page .program-flow-details[open] summary::after { rotate: 45deg; }
 
-/* "Yang kamu bawa pulang" (Oct 2026, owner: small, on the Program page, after gamadharma.org's
-   "Area Berkelana" strip): a dark rounded band, title left, four small glassy cards; phones swipe. */
+/* "Yang kamu bawa pulang" (Oct 2026, owner: small, on the Program page; user chose "versi B" over a dark
+   gamadharma-style band): title left on the page's cream, four cards in the KB family colours, each with a
+   tilted white icon sticker; phones swipe. */
 .program-page .take-home-section { padding-block: 8px 28px; }
-.take-home { display: grid; grid-template-columns: minmax(300px, 1.25fr) 2.4fr; gap: 40px; align-items: center; padding: 44px 44px; border-radius: 28px; color: #fff8f0; background: radial-gradient(120% 140% at 0% 0%, #6b1e28 0%, #2a0e13 62%); }
-.take-home-copy h2 { margin: 0; color: inherit; font-size: clamp(26px, 2.6vw, 36px); line-height: 1.12; }
-.take-home-copy p { margin: 14px 0 0; color: rgba(255, 248, 240, .72); font-size: 15px; }
+.take-home { display: grid; grid-template-columns: minmax(300px, 1.2fr) 2.4fr; gap: 40px; align-items: center; }
+.take-home-copy h2 { margin: 0; font-size: clamp(26px, 2.6vw, 36px); line-height: 1.12; }
+.take-home-copy p { margin: 14px 0 0; color: var(--muted); font-size: 15px; }
 .take-home-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
-.take-home-list li { display: grid; justify-items: center; align-content: center; gap: 6px; min-height: 200px; padding: 26px 16px; border: 1px solid rgba(255, 248, 240, .12); border-radius: 18px; background: rgba(255, 248, 240, .08); text-align: center; }
-.take-home-list svg { width: 40px; height: 40px; margin-bottom: 8px; fill: none; stroke: #efb635; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.take-home-list li { display: grid; align-content: start; gap: 6px; min-height: 210px; padding: 22px 18px; border-radius: 28px; }
+.take-home-list li:nth-child(1) { color: #fff8f0; background: #c23a3f; }
+.take-home-list li:nth-child(2) { color: #fff8f0; background: #2a0e13; }
+.take-home-list li:nth-child(3) { color: #53141d; background: #f6e6d6; box-shadow: inset 0 0 0 1px rgba(83, 20, 29, .12); }
+.take-home-list li:nth-child(4) { color: #2a0e13; background: #efb635; }
+.take-home-icon { display: grid; place-items: center; width: 58px; height: 58px; margin-bottom: 14px; border-radius: 16px; background: #fffaf4; box-shadow: 0 6px 16px rgba(42, 14, 19, .18); rotate: -6deg; }
+.take-home-list li:nth-child(even) .take-home-icon { rotate: 5deg; }
+.take-home-list svg { width: 32px; height: 32px; fill: none; stroke: var(--maroon); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .take-home-list strong { font-size: 17px; line-height: 1.25; }
-.take-home-list span { color: rgba(255, 248, 240, .72); font-size: 14px; line-height: 1.45; }
+.take-home-list li > span:last-child { font-size: 14px; line-height: 1.45; opacity: .85; }
 @media (max-width: 960px) {
-  .take-home { grid-template-columns: 1fr; gap: 20px; padding: 30px 0 30px 24px; }
-  .take-home-copy { padding-right: 24px; }
-  .take-home-list { display: flex; overflow-x: auto; padding-right: 24px; scroll-snap-type: x mandatory; scroll-padding-inline: 0; scrollbar-width: none; }
+  .take-home { grid-template-columns: 1fr; gap: 20px; }
+  .take-home-list { display: flex; overflow-x: auto; margin-right: calc(var(--container-gutter, 24px) * -1); padding-right: var(--container-gutter, 24px); scroll-snap-type: x mandatory; scrollbar-width: none; }
   .take-home-list::-webkit-scrollbar { display: none; }
-  .take-home-list li { flex: 1 0 172px; min-height: 180px; scroll-snap-align: start; }
+  .take-home-list li { flex: 1 0 172px; min-height: 190px; scroll-snap-align: start; }
 }
 
 .program-page .program-detail-card .program-flow,
