@@ -192,11 +192,12 @@ Lainnya:
   tidak diisi otomatis; halaman publik belum memakainya.
 - Navigasi publik HP (≤960px, sama dengan breakpoint hamburger): **tab bar bawah + hamburger** (Okt 2026, keputusan user,
   membalik penolakan sebelumnya karena 7 menu tidak muat; mockup disetujui). Tab bar `.tab-bar` dibuat JS (`js/script.js`)
-  di semua halaman ber-header kecuali `.registration-page` dan `.link-page`: Beranda · Jadwal · Program · Kisah (href absolut,
-  `aria-current` dari path; kisah-detail = Kisah), ikon garis (rumah, kalender, kompas untuk Program, buku), pil krem melayang (radius 24px, `env(safe-area-inset-bottom)`), tab aktif =
+  di semua halaman ber-header kecuali `.registration-page` dan `.link-page`: Beranda · Jadwal · Kolaborasi · Kisah (href absolut,
+  `aria-current` dari path; kisah-detail = Kisah; Okt 2026 owner: Program diganti Kolaborasi karena Jadwal vs Program membingungkan,
+  Program pindah ke hamburger), ikon garis (rumah, kalender, dua cincin untuk Kolaborasi, buku), pil krem melayang (radius 24px, `env(safe-area-inset-bottom)`), tab aktif =
   pil maroon + ikon putih. **Selalu terlihat saat scroll** (keputusan user, dulu sembunyi saat scroll ke bawah); hanya
   sembunyi saat mengetik (`body.is-typing`) dan saat menu terbuka. Kalau tim tidak setuju: revert commit tab bar
-  (balik total) atau cabut tab tapi pertahankan `.nav-extra` Cek status/Relawan/FAQ di hamburger (jalan tengah). Hamburger di HP menyembunyikan 4 link itu dan mendapat `.nav-extra`
+  (balik total) atau cabut tab tapi pertahankan `.nav-extra` Cek status/Relawan/FAQ di hamburger (jalan tengah). Hamburger di HP menyembunyikan 4 link tab itu (Program tetap ada di hamburger) dan mendapat `.nav-extra`
   dari JS: "Cek status pendaftaran" (paling atas), Relawan, FAQ (disembunyikan ≥961px). Footer dapat ruang bawah lewat
   `.has-tab-bar .site-footer::after`. Hero Beranda HP/tablet (tombol, strip "Berikutnya", titik slider) dinaikkan setinggi tab bar lewat `--tab-bar-space` (dulu tombol hero tertutup tab bar). Tab "Kegiatanku" sengaja **belum** dibuat (pre-launch, isinya akan kosong; pengingat
   `renderMyRegistration` sudah menutup kebutuhan); buat bareng Kartu Relawan tahap 2. Belum dicek di iPhone asli (risiko

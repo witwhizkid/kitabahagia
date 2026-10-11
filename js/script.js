@@ -1102,21 +1102,22 @@ if (homeMotion) {
   }, { passive: true });
 }
 
-// Tab bar (Oct 2026, mobile ≤960px, where the menu is a hamburger): Beranda · Jadwal · Program · Kisah stay one
+// Tab bar (Oct 2026, mobile ≤960px, where the menu is a hamburger): Beranda · Jadwal · Kolaborasi · Kisah stay one
 // tap away; the hamburger keeps the rest plus Cek status, Relawan and FAQ. Not on the registration flow or /link.
 // It stays visible while scrolling (user decision); it only hides while typing and while the menu is open.
 if (document.querySelector('.site-header') && !document.body.matches('.registration-page, .link-page')) {
   const icons = {
     home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
     calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
-    program: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+    rings: '<circle cx="9" cy="12" r="5.5"/><circle cx="15" cy="12" r="5.5"/>',
     book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/>',
   };
   const page = window.location.pathname.replace(/^\/+|\.html$|\/+$/g, '') || 'index';
   const tabs = [
     ['Beranda', '/', 'home', ['index']],
     ['Jadwal', '/jadwal.html', 'calendar', ['jadwal']],
-    ['Program', '/program.html', 'program', ['program']],
+    // Kolaborasi, not Program (owner, Oct 2026): Jadwal and Program side by side confused visitors.
+    ['Kolaborasi', '/kolaborasi.html', 'rings', ['kolaborasi']],
     ['Kisah', '/kisah.html', 'book', ['kisah', 'kisah-detail']],
   ];
   const bar = document.createElement('nav');
