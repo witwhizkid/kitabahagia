@@ -145,6 +145,10 @@ Halaman pendaftaran (`pendaftaran.html`):
   server menerima selama kuota masih ada dan orang itu belum punya pendaftaran aktif lain, migrasi `20261019010000`), atau daftar
   ulang dengan email/WA sama (tidak diblokir). Banner Beranda/Jadwal untuk pendaftaran berbayar yang belum lunas = "Selesaikan
   pembayaran … · Lanjutkan pembayaran →" langsung ke halaman QRIS (`kb_my_registration.pending`, dibersihkan saat lunas/batal/lewat).
+  Pencegahan lupa unggah (Okt 2026): strip 3 langkah di atas QR manual ("Scan & bayar → Screenshot bukti → Kembali ke sini &
+  unggah", `[data-manual-steps]`), dan saat tab kembali terlihat setelah >4 detik disembunyikan (pindah ke m-banking) form unggah
+  di-scroll ke tengah + pesan maroon "Sudah bayar? Unggah screenshot buktimu sekarang…" (`[data-manual-proof-nudge]`, `.is-nudged`).
+  Sheet: tab per kegiatan hanya pendaftar yang masih berlaku (tanpa kedaluwarsa/dibatalkan); tab Semua lengkap, yang tidak berlaku di bawah.
 - Centang "Ingat data saya" (tanpa `name`, tidak ikut terkirim) menyimpan nama,
   WA, email, domisili, instansi, usia, akun sosmed di `localStorage` `kb_volunteer_profile` saat
   submit valid dan mengisi otomatis pendaftaran berikutnya; tidak dicentang =

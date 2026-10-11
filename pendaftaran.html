@@ -257,6 +257,7 @@
             </div>
             <div class="payment-amount"><span>Total pembayaran</span><strong data-payment-amount></strong></div>
             <div class="payment-qr-section">
+              <ol class="manual-steps" data-manual-steps hidden><li>Scan &amp; bayar</li><li>Screenshot bukti</li><li>Kembali ke sini &amp; unggah</li></ol>
               <div class="payment-qr-card">
                 <div class="payment-qr-heading"><span class="payment-qris-badge">QRIS</span><p>GoPay · ShopeePay · OVO · DANA · LinkAja · Mobile banking</p></div>
                 <div class="payment-qr-placeholder" aria-label="QRIS belum tersedia" hidden><div class="payment-qr-code" data-payment-qr-code role="img" hidden></div><img data-payment-qr alt="" decoding="async"></div>
@@ -266,6 +267,7 @@
             </div>
             <div class="payment-state payment_pending" data-payment-state="payment_pending" role="status" aria-live="polite"><strong>Menunggu pembayaran</strong><p>Menunggu status pembayaran.</p></div>
             <form class="manual-proof" data-manual-proof novalidate hidden>
+              <p class="manual-proof-nudge" data-manual-proof-nudge role="status" hidden>Sudah bayar? Unggah screenshot buktimu sekarang, tempatmu baru aman setelah bukti terkirim ↓</p>
               <p class="manual-proof-note">Nominal sudah terisi otomatis saat QR di-scan. <strong>Bayar tepat sesuai total di atas</strong>, lalu unggah buktinya. Admin tetap mencocokkan setiap bukti dengan pembayaran yang masuk; bukti yang tidak cocok membatalkan pendaftaran.</p>
               <label class="manual-proof-drop" data-manual-proof-drop>
                 <input type="file" name="proof" accept="image/jpeg,image/png,image/webp" data-manual-proof-file>
