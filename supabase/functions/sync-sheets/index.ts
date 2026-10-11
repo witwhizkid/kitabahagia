@@ -26,9 +26,10 @@ const referralLabels: Record<string, string> = {
 const wib = new Intl.DateTimeFormat("id-ID", {
   day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta",
 });
-const formatTime = (value: unknown) => {
+// Sheets date serial (days since 1899-12-30) in WIB, so "Terdaftar" sorts and filters as a real date.
+const sheetDate = (value: unknown) => {
   const date = typeof value === "string" ? new Date(value) : null;
-  return date && !Number.isNaN(date.getTime()) ? wib.format(date) : "";
+  return date && !Number.isNaN(date.getTime()) ? (date.getTime() + 7 * 3600_000) / 86400_000 + 25569 : "";
 };
 
 const header = (withEvent: boolean) => [
@@ -55,7 +56,7 @@ const toRow = (row: Row, withEvent: boolean, now: Date) => {
     text(row.email), text(row.phone), text(row.domicile), text(row.institution),
     typeof row.age === "number" ? row.age : text(row.age), text(row.social_account),
     referralLabels[text(row.referral_source)] || text(row.referral_source), text(row.reason),
-    text(row.selection_answer), text(row.portfolio_url), statusLabel, payment, attended, formatTime(row.created_at),
+    text(row.selection_answer), text(row.portfolio_url), statusLabel, payment, attended, sheetDate(row.created_at),
   ];
 };
 
@@ -80,6 +81,77 @@ const googleToken = async (account: { client_email: string; private_key: string 
   const result = await response.json().catch(() => null) as { access_token?: string } | null;
   if (!response.ok || !result?.access_token) throw new Error(`google token ${response.status}`);
   return result.access_token;
+};
+
+// ---- Look of a managed tab. Applied once per tab per FORMAT_VERSION (bump it to restyle), so column
+// widths people change afterwards are kept. Colors follow the admin Excel export. ----
+const FORMAT_VERSION = "2";
+const rgb = (hex: string) => ({
+  red: parseInt(hex.slice(1, 3), 16) / 255, green: parseInt(hex.slice(3, 5), 16) / 255, blue: parseInt(hex.slice(5, 7), 16) / 255,
+});
+const columnWidths: Record<string, number> = {
+  Kode: 150, Nama: 180, Kegiatan: 240, Email: 220, WhatsApp: 130, Domisili: 140, Instansi: 180, Usia: 56,
+  "Instagram/TikTok": 150, "Tahu dari": 130, "Definisi bahagia": 240, "Jawaban seleksi": 260, "Link portofolio": 180,
+  Status: 170, Pembayaran: 190, Hadir: 70, "Terdaftar (WIB)": 150,
+};
+const tones = [
+  { pattern: "Lunas · bukti belum dicek|Menunggu seleksi|Menunggu pembayaran|Belum dibayar|Diproses", text: "#8f5d00", fill: "#fff0c7" },
+  { pattern: "Terkonfirmasi|Diterima|Lunas|Ya", text: "#1e6b34", fill: "#e3f1e5" },
+  { pattern: "Cadangan", text: "#53141d", fill: "#f6e6d6" },
+  { pattern: "Dibatalkan|Kedaluwarsa|Tidak lolos|Gagal|Tidak|Dikembalikan", text: "#6f6667", fill: "#ece8e4" },
+];
+const columnLetter = (index: number) => String.fromCharCode(65 + index);
+type SheetMeta = {
+  properties: { sheetId: number; title: string };
+  developerMetadata?: Array<{ metadataId: number; metadataKey: string; metadataValue: string }>;
+  bandedRanges?: Array<{ bandedRangeId: number }>;
+  conditionalFormats?: unknown[];
+};
+const formatRequests = (sheetId: number, head: string[], isAll: boolean, existing?: SheetMeta) => {
+  const width = head.length;
+  const col = (name: string) => head.indexOf(name);
+  const range = (start: number, end: number, fromRow = 1) => ({ sheetId, startRowIndex: fromRow, startColumnIndex: start, endColumnIndex: end });
+  const status = col("Status");
+  const requests: unknown[] = [
+    ...(existing?.bandedRanges || []).map((band) => ({ deleteBanding: { bandedRangeId: band.bandedRangeId } })),
+    ...(existing?.conditionalFormats || []).map((_, index, all) => ({ deleteConditionalFormatRule: { sheetId, index: all.length - 1 - index } })),
+    ...(existing?.developerMetadata || []).filter((item) => item.metadataKey === "kb_format")
+      .map((item) => ({ deleteDeveloperMetadata: { dataFilter: { developerMetadataLookup: { metadataId: item.metadataId } } } })),
+    { updateSheetProperties: {
+      properties: { sheetId, gridProperties: { frozenRowCount: 1, frozenColumnCount: 2, hideGridlines: true }, tabColorStyle: { rgbColor: rgb(isAll ? "#7a1f2b" : "#efb635") } },
+      fields: "gridProperties.frozenRowCount,gridProperties.frozenColumnCount,gridProperties.hideGridlines,tabColorStyle",
+    } },
+    { repeatCell: { range: { sheetId, startColumnIndex: 0, endColumnIndex: width + 1 }, cell: { userEnteredFormat: {
+      textFormat: { fontFamily: "DM Sans", fontSize: 10, foregroundColor: rgb("#231f20") }, verticalAlignment: "MIDDLE", wrapStrategy: "CLIP",
+      padding: { left: 6, right: 6 },
+    } }, fields: "userEnteredFormat(textFormat,verticalAlignment,wrapStrategy,padding,backgroundColor,borders,horizontalAlignment,numberFormat)" } },
+    { repeatCell: { range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: width }, cell: { userEnteredFormat: {
+      backgroundColor: rgb("#f6e6d6"), textFormat: { fontFamily: "DM Sans", fontSize: 10, bold: true, foregroundColor: rgb("#7a1f2b") },
+      verticalAlignment: "MIDDLE", wrapStrategy: "WRAP", padding: { left: 6, right: 6 },
+      borders: { bottom: { style: "SOLID_MEDIUM", colorStyle: { rgbColor: rgb("#7a1f2b") } } },
+    } }, fields: "userEnteredFormat(backgroundColor,textFormat,verticalAlignment,wrapStrategy,padding,borders)" } },
+    { repeatCell: { range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: width, endColumnIndex: width + 1 }, cell: { userEnteredFormat: {
+      textFormat: { fontFamily: "DM Sans", fontSize: 9, italic: true, foregroundColor: rgb("#6f6667") }, verticalAlignment: "MIDDLE",
+    } }, fields: "userEnteredFormat(textFormat,verticalAlignment)" } },
+    ...["Usia", "Hadir"].map((name) => ({ repeatCell: { range: range(col(name), col(name) + 1), cell: { userEnteredFormat: { horizontalAlignment: "CENTER" } }, fields: "userEnteredFormat.horizontalAlignment" } })),
+    { repeatCell: { range: range(col("Terdaftar (WIB)"), col("Terdaftar (WIB)") + 1), cell: { userEnteredFormat: { numberFormat: { type: "DATE_TIME", pattern: "d mmm yyyy, hh:mm" } } }, fields: "userEnteredFormat.numberFormat" } },
+    ...head.map((name, index) => ({ updateDimensionProperties: { range: { sheetId, dimension: "COLUMNS", startIndex: index, endIndex: index + 1 }, properties: { pixelSize: columnWidths[name] || 140 }, fields: "pixelSize" } })),
+    { updateDimensionProperties: { range: { sheetId, dimension: "COLUMNS", startIndex: width, endIndex: width + 1 }, properties: { pixelSize: 420 }, fields: "pixelSize" } },
+    { updateDimensionProperties: { range: { sheetId, dimension: "ROWS", startIndex: 0, endIndex: 1 }, properties: { pixelSize: 40 }, fields: "pixelSize" } },
+    { updateDimensionProperties: { range: { sheetId, dimension: "ROWS", startIndex: 1 }, properties: { pixelSize: 28 }, fields: "pixelSize" } },
+    { addBanding: { bandedRange: { range: range(0, width), rowProperties: { firstBandColorStyle: { rgbColor: rgb("#ffffff") }, secondBandColorStyle: { rgbColor: rgb("#fbf8f4") } } } } },
+    // Status, Pembayaran and Hadir are adjacent; one relative formula colors all three.
+    ...tones.map((tone, index) => ({ addConditionalFormatRule: { index, rule: {
+      ranges: [range(status, col("Hadir") + 1)],
+      booleanRule: {
+        condition: { type: "CUSTOM_FORMULA", values: [{ userEnteredValue: `=REGEXMATCH(TO_TEXT(${columnLetter(status)}2),"^(${tone.pattern})$")` }] },
+        format: { backgroundColorStyle: { rgbColor: rgb(tone.fill) }, textFormat: { bold: true, foregroundColorStyle: { rgbColor: rgb(tone.text) } } },
+      },
+    } } })),
+    { setBasicFilter: { filter: { range: { sheetId, startRowIndex: 0, startColumnIndex: 0, endColumnIndex: width } } } },
+    { createDeveloperMetadata: { developerMetadata: { metadataKey: "kb_format", metadataValue: FORMAT_VERSION, location: { sheetId }, visibility: "DOCUMENT" } } },
+  ];
+  return requests;
 };
 
 // Sheet tab titles: no []:*?/\ and at most 100 characters.
@@ -131,12 +203,13 @@ Deno.serve(async (request) => {
       tab.title = title;
     }
 
-    const meta = await sheetsApi("?fields=sheets(properties(sheetId,title),developerMetadata(metadataKey,metadataValue))");
-    const sheets = (meta.sheets || []) as Array<{ properties: { sheetId: number; title: string }; developerMetadata?: Array<{ metadataKey: string; metadataValue: string }> }>;
+    const meta = await sheetsApi("?fields=sheets(properties(sheetId,title),developerMetadata(metadataId,metadataKey,metadataValue),bandedRanges(bandedRangeId),conditionalFormats)");
+    const sheets = (meta.sheets || []) as SheetMeta[];
     const byKey = new Map<string, { sheetId: number; title: string }>();
+    const metaByKey = new Map<string, SheetMeta>();
     for (const sheet of sheets) {
       const tag = sheet.developerMetadata?.find((item) => item.metadataKey === "kb_tab");
-      if (tag) byKey.set(tag.metadataValue, sheet.properties);
+      if (tag) { byKey.set(tag.metadataValue, sheet.properties); metaByKey.set(tag.metadataValue, sheet); }
     }
     // A wanted title may clash with an unmanaged tab (e.g. one a person made); give ours a suffix.
     const unmanaged = new Set(sheets.filter((sheet) => !sheet.developerMetadata?.some((item) => item.metadataKey === "kb_tab"))
@@ -160,8 +233,6 @@ Deno.serve(async (request) => {
       const sheetId = byKey.get(tab.key)!.sheetId;
       requests.push(
         { createDeveloperMetadata: { developerMetadata: { metadataKey: "kb_tab", metadataValue: tab.key, location: { sheetId }, visibility: "DOCUMENT" } } },
-        { repeatCell: { range: { sheetId, startRowIndex: 0, endRowIndex: 1 }, cell: { userEnteredFormat: { backgroundColor: { red: 0.965, green: 0.902, blue: 0.839 }, textFormat: { bold: true, foregroundColor: { red: 0.33, green: 0.08, blue: 0.11 } } } }, fields: "userEnteredFormat(backgroundColor,textFormat)" } },
-        { setBasicFilter: { filter: { range: { sheetId } } } },
       );
     }
     wanted.forEach((tab, index) => {
@@ -170,6 +241,17 @@ Deno.serve(async (request) => {
       current.title = tab.title;
     });
     if (requests.length) await sheetsApi(":batchUpdate", { method: "POST", body: JSON.stringify({ requests }) });
+    // Styling is cosmetic: its own batch, so a rejected format request never stops the data from syncing
+    // (the tab keeps its old version tag and is retried next run).
+    const styling = wanted.flatMap((tab) => {
+      const existing = metaByKey.get(tab.key);
+      const version = existing?.developerMetadata?.find((item) => item.metadataKey === "kb_format")?.metadataValue;
+      return version === FORMAT_VERSION ? [] : formatRequests(byKey.get(tab.key)!.sheetId, header(tab.key === "all"), tab.key === "all", existing);
+    });
+    if (styling.length) {
+      await sheetsApi(":batchUpdate", { method: "POST", body: JSON.stringify({ requests: styling }) })
+        .catch((error) => console.error("sync-sheets styling failed", error instanceof Error ? error.message : "unknown"));
+    }
 
     // Rewrite the values of every managed tab.
     const now = new Date();

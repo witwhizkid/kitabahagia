@@ -645,6 +645,10 @@ non-archived event (newest first; tabs are matched by developer metadata `kb_tab
 renaming an event renames its tab). Same columns as the admin Excel export plus "Pembayaran"
 ("Lunas · bukti belum dicek" for unchecked manual QRIS proofs). Cell R1/Q1 says when it last ran.
 Anything typed into these tabs is overwritten; tabs people add themselves are left alone.
+Look (applied once per tab per `FORMAT_VERSION` in the function, so widths people change later are kept):
+cream header with maroon text, frozen header + Kode/Nama, banded rows, no gridlines, Status/Pembayaran/Hadir
+colored like the admin Excel export, "Terdaftar" as a real date (sortable). Styling runs in its own batch;
+if Google rejects it the data still syncs and the styling is retried next run.
 
 Setup (once):
 1. Google Cloud console (account `kitabahagiaidn@gmail.com`): new project → enable **Google Sheets
