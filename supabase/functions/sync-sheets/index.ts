@@ -95,12 +95,11 @@ const columnWidths: Record<string, number> = {
   Status: 170, Pembayaran: 190, Hadir: 70, "Terdaftar (WIB)": 150,
 };
 const tones = [
-  { pattern: "Lunas · bukti belum dicek|Menunggu seleksi|Menunggu pembayaran|Belum dibayar|Diproses", text: "#8f5d00", fill: "#fff0c7" },
-  { pattern: "Terkonfirmasi|Diterima|Lunas|Ya", text: "#1e6b34", fill: "#e3f1e5" },
-  { pattern: "Cadangan", text: "#53141d", fill: "#f6e6d6" },
-  { pattern: "Dibatalkan|Kedaluwarsa|Tidak lolos|Gagal|Tidak|Dikembalikan", text: "#6f6667", fill: "#ece8e4" },
+  { values: ["Lunas · bukti belum dicek", "Menunggu seleksi", "Menunggu pembayaran", "Belum dibayar", "Diproses"], text: "#8f5d00", fill: "#fff0c7" },
+  { values: ["Terkonfirmasi", "Diterima", "Lunas", "Ya"], text: "#1e6b34", fill: "#e3f1e5" },
+  { values: ["Cadangan"], text: "#53141d", fill: "#f6e6d6" },
+  { values: ["Dibatalkan", "Kedaluwarsa", "Tidak lolos", "Gagal", "Tidak", "Dikembalikan"], text: "#6f6667", fill: "#ece8e4" },
 ];
-const columnLetter = (index: number) => String.fromCharCode(65 + index);
 type SheetMeta = {
   properties: { sheetId: number; title: string };
   developerMetadata?: Array<{ metadataId: number; metadataKey: string; metadataValue: string }>;
@@ -140,14 +139,18 @@ const formatRequests = (sheetId: number, head: string[], isAll: boolean, existin
     { updateDimensionProperties: { range: { sheetId, dimension: "ROWS", startIndex: 0, endIndex: 1 }, properties: { pixelSize: 40 }, fields: "pixelSize" } },
     { updateDimensionProperties: { range: { sheetId, dimension: "ROWS", startIndex: 1 }, properties: { pixelSize: 28 }, fields: "pixelSize" } },
     { addBanding: { bandedRange: { range: range(0, width), rowProperties: { firstBandColorStyle: { rgbColor: rgb("#ffffff") }, secondBandColorStyle: { rgbColor: rgb("#fbf8f4") } } } } },
-    // Status, Pembayaran and Hadir are adjacent; one relative formula colors all three.
-    ...tones.map((tone, index) => ({ addConditionalFormatRule: { index, rule: {
-      ranges: [range(status, col("Hadir") + 1)],
-      booleanRule: {
-        condition: { type: "CUSTOM_FORMULA", values: [{ userEnteredValue: `=REGEXMATCH(TO_TEXT(${columnLetter(status)}2),"^(${tone.pattern})$")` }] },
-        format: { backgroundColorStyle: { rgbColor: rgb(tone.fill) }, textFormat: { bold: true, foregroundColorStyle: { rgbColor: rgb(tone.text) } } },
-      },
-    } } })),
+    // Status, Pembayaran and Hadir are adjacent. Exact-text rules, not a formula: formula separators follow
+    // the sheet's locale (Indonesian uses ";"), which made a REGEXMATCH rule invalid.
+    ...tones.flatMap((tone) => tone.values).map((value, index) => {
+      const tone = tones.find((item) => item.values.includes(value))!;
+      return { addConditionalFormatRule: { index, rule: {
+        ranges: [range(status, col("Hadir") + 1)],
+        booleanRule: {
+          condition: { type: "TEXT_EQ", values: [{ userEnteredValue: value }] },
+          format: { backgroundColorStyle: { rgbColor: rgb(tone.fill) }, textFormat: { bold: true, foregroundColorStyle: { rgbColor: rgb(tone.text) } } },
+        },
+      } } };
+    }),
     { setBasicFilter: { filter: { range: { sheetId, startRowIndex: 0, startColumnIndex: 0, endColumnIndex: width } } } },
     { createDeveloperMetadata: { developerMetadata: { metadataKey: "kb_format", metadataValue: FORMAT_VERSION, location: { sheetId }, visibility: "DOCUMENT" } } },
   ];
