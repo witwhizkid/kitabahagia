@@ -194,9 +194,11 @@ Deno.serve(async (request) => {
     };
 
     // Wanted tabs: "Semua" first, then one per event (newest event first).
-    // Events nobody registered for (e.g. past events from before the website) get no tab.
+    // Upcoming events always get a tab (empty until the first registrant); past events only when someone
+    // registered, so events from before the website don't clutter the sheet.
     const withRegistrants = new Set(registrations.map((row) => String(row.events?.slug)));
-    const wanted = [{ key: "all", title: "Semua" }, ...events.filter((event) => withRegistrants.has(String(event.slug))).map((event) => ({ key: String(event.slug), title: tabTitle(String(event.title || event.slug)) }))];
+    const todayWib = new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
+    const wanted = [{ key: "all", title: "Semua" }, ...events.filter((event) => withRegistrants.has(String(event.slug)) || String(event.event_date || "") >= todayWib).map((event) => ({ key: String(event.slug), title: tabTitle(String(event.title || event.slug)) }))];
     const used = new Set<string>();
     for (const tab of wanted) {
       let title = tab.title;
