@@ -29,6 +29,9 @@ const messages: Record<string, string> = {
   PAYMENT_ALREADY_PAID: "Bukti pembayaran untuk pendaftaran ini sudah diterima.",
   PAYMENT_NOT_ELIGIBLE: "Pendaftaran ini belum dapat menerima bukti pembayaran.",
   PAYMENT_DEADLINE_PASSED: "Batas waktu pembayaran sudah lewat. Hubungi admin dengan kode pendaftaranmu.",
+  // Late proofs (after payment_deadline) are still accepted while seats remain; these two are the refusals.
+  EVENT_FULL: "Waktu pembayaranmu sudah habis dan kuotanya sekarang penuh. Hubungi admin dengan kode pendaftaranmu supaya pembayaranmu bisa diurus.",
+  ALREADY_REGISTERED: "Kamu sudah punya pendaftaran lain yang aktif untuk kegiatan ini. Unggah bukti di pendaftaran yang terbaru.",
   SERVER_ERROR: "Bukti belum dapat diunggah. Coba lagi sebentar.",
 };
 const jsonResponse = (status: number, body: Record<string, unknown>) => new Response(

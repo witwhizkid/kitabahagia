@@ -141,7 +141,10 @@ Halaman pendaftaran (`pendaftaran.html`):
   · Cek status →" sampai hari kegiatan lewat (`renderMyRegistration`, tidak dikirim ke server).
 - Cek status "Pembayaran belum selesai" (Okt 2026, keluhan volunteer malam pembukaan): kalau `kb_my_registration` di HP yang sama
   cocok dengan kode, muncul "Lanjutkan pembayaran →" ke `pendaftaran.html?event=<slug>` (kode + email ditulis ke kunci recovery,
-  jadi QRIS + unggah bukti terbuka lagi). Lewat batas bayar = daftar ulang dengan email/WA sama (tidak diblokir, QRIS manual tanpa jeda).
+  jadi QRIS + unggah bukti terbuka lagi). Lewat batas bayar: bukti **tetap bisa diunggah** (layar "waktu habis" QRIS manual tetap menampilkan form unggah;
+  server menerima selama kuota masih ada dan orang itu belum punya pendaftaran aktif lain, migrasi `20261019010000`), atau daftar
+  ulang dengan email/WA sama (tidak diblokir). Banner Beranda/Jadwal untuk pendaftaran berbayar yang belum lunas = "Selesaikan
+  pembayaran … · Lanjutkan pembayaran →" langsung ke halaman QRIS (`kb_my_registration.pending`, dibersihkan saat lunas/batal/lewat).
 - Centang "Ingat data saya" (tanpa `name`, tidak ikut terkirim) menyimpan nama,
   WA, email, domisili, instansi, usia, akun sosmed di `localStorage` `kb_volunteer_profile` saat
   submit valid dan mengisi otomatis pendaftaran berikutnya; tidak dicentang =

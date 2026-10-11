@@ -603,6 +603,17 @@ const renderScheduleEvents = async () => {
 void renderHomepageEvents();
 void renderScheduleEvents();
 
+// Keeps the Beranda/Jadwal reminder in step with the registration it describes: paid → no longer
+// "selesaikan pembayaran"; cancelled or lapsed → no reminder. Only touches the saved code.
+const updateMyRegistration = (code, paid) => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('kb_my_registration') || 'null');
+    if (!saved?.code || String(saved.code).toUpperCase() !== String(code || '').toUpperCase()) return;
+    if (paid) localStorage.setItem('kb_my_registration', JSON.stringify({ ...saved, pending: false }));
+    else localStorage.removeItem('kb_my_registration');
+  } catch { /* the reminder is a convenience only */ }
+};
+
 // "Kamu terdaftar di …" (after cinema tickets): the last registration made on this device, shown above
 // the event lists until the event day has passed. Nothing leaves the device.
 const renderMyRegistration = () => {
@@ -613,8 +624,16 @@ const renderMyRegistration = () => {
   const start = new Date(saved?.start || '');
   if (!saved?.name || Number.isNaN(start.getTime()) || jakartaDayNumber(start) < jakartaDayNumber(new Date())) return;
   const when = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' }).format(start);
-  slot.querySelector('[data-my-registration-text]').textContent = `${saved.applied ? 'Kamu ikut seleksi' : 'Kamu terdaftar di'} ${saved.name} · ${when}`;
-  slot.querySelector('a').href = `cek-status.html?kode=${encodeURIComponent(saved.code || '')}`;
+  const link = slot.querySelector('a');
+  if (saved.pending && saved.slug) {
+    // Paid event, QRIS not paid yet on this device: say so, and go straight back to the QRIS + proof upload.
+    slot.querySelector('[data-my-registration-text]').textContent = `Selesaikan pembayaran ${saved.name} · ${when}`;
+    link.textContent = 'Lanjutkan pembayaran →';
+    link.href = `pendaftaran.html?event=${encodeURIComponent(saved.slug)}`;
+  } else {
+    slot.querySelector('[data-my-registration-text]').textContent = `${saved.applied ? 'Kamu ikut seleksi' : 'Kamu terdaftar di'} ${saved.name} · ${when}`;
+    link.href = `cek-status.html?kode=${encodeURIComponent(saved.code || '')}`;
+  }
   slot.hidden = false;
 };
 renderMyRegistration();
@@ -1469,6 +1488,12 @@ const registrationOutcomeCopy = (data) => {
         copy: `Kali ini kamu belum terpilih sebagai peserta ${title} karena kuota terbatas. Sampai jumpa di kegiatan Kita Bahagia berikutnya.`
       };
     case 'pending_payment':
+      if (Date.parse(data?.payment_deadline || '') <= Date.now()) {
+        return {
+          heading: 'Waktu pembayaran habis.',
+          copy: 'Sudah terlanjur bayar? Unggah buktinya lewat tombol di bawah (di HP yang sama), selama kuota masih ada pendaftaranmu tetap diterima. Belum bayar? Daftar ulang saja dengan email yang sama.'
+        };
+      }
       return {
         heading: 'Pembayaran belum selesai.',
         copy: 'Slotmu masih ditahan sampai batas pembayaran. Lanjutkan pembayaran dan unggah bukti dari halaman kegiatan di HP yang sama, atau hubungi admin dengan kode pendaftaranmu.'
@@ -1504,7 +1529,7 @@ if (registrationForm) {
     expired: ['QRIS kedaluwarsa', 'Kode QRIS ini sudah tidak berlaku, tapi pendaftaranmu masih tersimpan. Selama batas waktu pembayaran belum lewat, slotmu tetap ditahan. Buat QRIS baru untuk melanjutkan pembayaran, tidak perlu daftar ulang.'],
     failed: ['Pembayaran belum berhasil', 'Pembayaran tidak berhasil diselesaikan, tapi pendaftaranmu tetap tercatat. Selama batas waktu pembayaran belum lewat, buat QRIS baru untuk mencoba lagi, tidak perlu daftar ulang.'],
     refunded: ['Pembayaran dikembalikan', 'Pembayaran ini sudah dikembalikan. Hubungi tim Kita Bahagia bila perlu bantuan.'],
-    deadline_passed: ['Waktu pembayaran habis, pendaftaran dibatalkan', 'Batas waktu pembayaran sudah lewat, jadi kuota untuk pendaftaran ini sudah dilepas. Kamu bisa mendaftar lagi jika kuota masih tersedia.']
+    deadline_passed: ['Waktu pembayaran habis', 'Batas waktu pembayaran sudah lewat, jadi kuota untuk pendaftaran ini sudah dilepas. Kamu bisa mendaftar lagi jika kuota masih tersedia.']
   };
   const paymentStatusCopy = {
     pending: ['Menunggu pembayaran', 'Slotmu ditahan sementara sampai batas waktu pembayaran. Jika pembayaran belum berhasil saat waktu habis, slot akan kembali tersedia untuk peserta lain.'],
@@ -1997,7 +2022,18 @@ if (registrationForm) {
     stage.querySelector('.payment-primary').hidden = false;
     stage.querySelector('.payment-details').hidden = false;
     const manualProof = stage.querySelector('[data-manual-proof]');
-    if (manualProof) manualProof.hidden = !(manualPayment && state === 'pending');
+    const lateProof = manualPayment && state === 'deadline_passed';
+    if (manualProof) {
+      manualProof.hidden = !(manualPayment && (state === 'pending' || lateProof));
+      // After the deadline the form stays for anyone who already paid: the server still accepts the proof
+      // while seats remain (submit_payment_proof), so nobody has to pay twice.
+      const note = manualProof.querySelector('.manual-proof-note');
+      if (note) {
+        note.dataset.pendingCopy ??= note.innerHTML;
+        if (lateProof) note.textContent = 'Sudah terlanjur bayar sebelum waktunya habis? Unggah screenshot buktinya di sini, tidak perlu bayar lagi. Selama kuota masih ada, pendaftaranmu tetap kami terima.';
+        else note.innerHTML = note.dataset.pendingCopy;
+      }
+    }
     const guideLast = stage.querySelector('.payment-guide li:last-child');
     if (guideLast) {
       guideLast.textContent = manualPayment
@@ -2311,6 +2347,7 @@ if (registrationForm) {
   };
 
   const showConfirmedRegistration = (data) => {
+    updateMyRegistration(data?.registration_code, true);
     stopPaymentMonitoring();
     renderPaymentState('paid', data);
     renderEmailNote(document.getElementById('paymentStage'), { registration_status: 'confirmed', ...data });
@@ -3202,6 +3239,7 @@ if (registrationForm) {
     }
 
     const restored = recoveryPaymentData(recovery, status);
+    if (status.registration_status === 'confirmed') updateMyRegistration(recovery.registration_code, true);
     if (status.registration_status === 'confirmed' && status.payment_status === 'paid') {
       if (!resumeFromDetail && !canRestoreTerminalRecovery(recovery)) {
         clearRegistrationRecovery();
@@ -3230,6 +3268,7 @@ if (registrationForm) {
       return true;
     }
     if (status.registration_status !== 'pending_payment') {
+      updateMyRegistration(recovery.registration_code, false);
       clearRegistrationRecovery();
       renderSelectedEvent();
       showRegistrationMessage('Pendaftaran sebelumnya sudah tidak aktif. Kamu dapat mendaftar kembali.', 'error');
@@ -3237,6 +3276,7 @@ if (registrationForm) {
     }
     if (paymentDeadlinePassed(status)) {
       if (recovery.deadline_shown && !resumeFromDetail && !canRestoreTerminalRecovery(recovery)) {
+        updateMyRegistration(recovery.registration_code, false);
         clearRegistrationRecovery();
         renderSelectedEvent();
         return false;
@@ -3910,7 +3950,7 @@ if (registrationForm) {
       // 6. Remember this registration on the device so Beranda/Jadwal can remind "Kamu terdaftar di …".
       try {
         localStorage.setItem('kb_my_registration', JSON.stringify({
-          slug: selectedEvent.slug, name: title, start: selectedEvent.start, code, applied: isApplied
+          slug: selectedEvent.slug, name: title, start: selectedEvent.start, code, applied: isApplied, pending: isPaidPending
         }));
       } catch { /* the reminder is a convenience only */ }
       const resultStage = isFreeConfirmed || isApplied ? document.getElementById('freeRegistrationConfirmation') : null;
@@ -4275,6 +4315,7 @@ if (statusForm) {
         } catch { resumeSlug = ''; }
       }
       resume.hidden = !resumeSlug;
+      resume.textContent = Date.parse(data.payment_deadline || '') <= Date.now() ? 'Unggah bukti pembayaran →' : 'Lanjutkan pembayaran →';
       if (resumeSlug) resume.href = `pendaftaran.html?event=${encodeURIComponent(resumeSlug)}`;
       else resume.removeAttribute('href');
       message.textContent = '';
