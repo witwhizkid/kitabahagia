@@ -492,7 +492,9 @@ Lainnya:
   dipanggil pg_cron tiap 5 menit (header `x-sync-secret`, rahasia di Vault), menulis ulang satu Sheet milik `kitabahagiaidn@gmail.com`:
   tab "Semua" + satu tab per kegiatan (bukan draf/arsip; dicocokkan lewat developer metadata = slug). Kolom = Excel + "Pembayaran".
   Akun robot Google (service account) di secret `GOOGLE_SERVICE_ACCOUNT_JSON`. Sheet hanya dibagikan ke email tim (Viewer), jangan
-  "siapa saja yang punya link"; disebut di Privasi. Setup: "Live spreadsheet" di `supabase/README.md`. Peran "Tim Program" ditunda.
+  "siapa saja yang punya link"; disebut di Privasi. Keputusan owner: semua tim boleh lihat semua kegiatan (tanpa peran admin
+  khusus); Sheet ditaruh di folder Drive khusus "KB – Data Pendaftar (internal)" (akses Dibatasi, dibagikan ke Gmail tim sebagai
+  Pelihat; anggota baru ditambahkan ke folder, tanpa "minta akses"), terpisah dari folder dokumentasi publik. Setup: "Live spreadsheet" di `supabase/README.md`. Peran "Tim Program" ditunda.
 - Admin → Pendaftar punya tab "Pendaftar aktif" / "Riwayat" (`lifecycle` di
   `admin-registrations`). Aktif = kegiatan belum selesai (`end_at`, atau akhir
   hari kegiatan WIB) **dan** pembayaran belum kedaluwarsa; selain itu Riwayat

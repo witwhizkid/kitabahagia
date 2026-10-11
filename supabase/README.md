@@ -651,6 +651,8 @@ Setup (once):
    API** → IAM → Service accounts → create → Keys → Add key → JSON (download).
 2. Create a Google Sheet, share it with the service account `client_email` as **Editor**, and with
    team members' Google accounts as **Viewer** (never "anyone with the link": it holds personal data).
+   Simplest: keep it in a dedicated Drive folder (general access "Restricted") shared with the team as
+   Viewer, so access follows the folder; never put it in a public documentation folder.
 3. Supabase secrets: `GOOGLE_SERVICE_ACCOUNT_JSON` (whole JSON file), `SHEETS_SPREADSHEET_ID` (the id
    in the sheet URL), `SHEETS_SYNC_SECRET` (any long random string).
 4. `npx supabase functions deploy sync-sheets --no-verify-jwt --project-ref cmrdapfuqtjlmpepfwfq`
