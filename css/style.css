@@ -495,7 +495,7 @@ button { font: inherit; }
   .is-typing .tab-bar, .mobile-menu-open .tab-bar { opacity: 0; transform: translateY(calc(100% + 24px)); pointer-events: none; }
   .has-tab-bar { --tab-bar-space: calc(76px + max(12px, env(safe-area-inset-bottom))); }
   .has-tab-bar .site-footer::after { content: ""; display: block; height: calc(88px + env(safe-area-inset-bottom)); }
-  .has-tab-bar .site-header .nav > a:is([href$="index.html"], [href$="jadwal.html"], [href$="program.html"], [href$="kisah.html"]) { display: none; }
+  .has-tab-bar .site-header .nav > a:is([href$="index.html"], [href$="jadwal.html"], [href$="kolaborasi.html"], [href$="kisah.html"]) { display: none; }
 }
 @media (max-width: 960px) and (prefers-reduced-motion: reduce) { .tab-bar { transition: none; } }
 
