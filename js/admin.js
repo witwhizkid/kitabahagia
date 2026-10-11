@@ -1534,8 +1534,8 @@
     $("#event-documentation-url").value = event?.documentation_url || "";
     docPhotos = Array.isArray(event?.documentation_photos) ? event.documentation_photos.map((photo) => ({ url: photo.url, alt: photo.alt || "" })) : [];
     renderDocPhotos();
-    $("#event-description").value = event?.description || "";
-    $("#event-registration-description").value = event?.registration_description || "";
+    // One "Deskripsi kegiatan" field (Oct 2026); older events may only have the plain description.
+    $("#event-description").value = event?.registration_description || event?.description || "";
     $("#event-date").value = event?.event_date || "";
     $("#event-start-time").value = event?.start_time?.slice(0, 5) || "";
     const [endDate = "", endTime = ""] = toLocalDateTime(event?.end_at).split("T");
@@ -2318,8 +2318,9 @@
   const formPayload = () => ({
     title: $("#event-title").value.trim(),
     slug: $("#event-slug").value.trim().toLowerCase(),
+    // Both columns get the same text so nothing reads a stale copy.
     description: $("#event-description").value.trim() || null,
-    registration_description: $("#event-registration-description").value.trim() || null,
+    registration_description: $("#event-description").value.trim() || null,
     activities: splitLines($("#event-activities").value),
     benefits: splitLines($("#event-benefits").value),
     category: $("#event-category").value.trim() || null,

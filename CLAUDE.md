@@ -91,6 +91,9 @@ Halaman pendaftaran (`pendaftaran.html`):
   Esc, atau klik di luar.
 - Langkah 1–2 mengikuti gaya halaman pembayaran; watermark header memakai
   logo Kita Bahagia.
+- Admin form Kegiatan punya **satu** kolom "Deskripsi kegiatan" (Okt 2026, dulu Deskripsi + Deskripsi pendaftaran, tim
+  bingung): dimuat dari `registration_description || description`, disimpan ke dua kolom itu sekaligus; tampil sebagai
+  "Tentang kegiatan" di halaman pendaftaran (teks polos, baris baru dipertahankan).
 - Event gratis + Seleksi punya tab/bagian "Persyaratan jika lolos" di detail
   kegiatan, diisi admin per kegiatan (satu poin per baris, `**teks**` = tebal).
   Form seleksi gratis juga punya CV/portofolio PDF (opsional, bucket privat
