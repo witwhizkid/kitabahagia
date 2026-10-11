@@ -636,3 +636,36 @@ Detail panel and CSV export.
 
 Deploy order: run the migration **before** deploying `admin-registrations`, which selects
 the new columns.
+
+## Live spreadsheet (Google Sheets, Oct 2026)
+
+`sync-sheets` rewrites one Google Sheet every 5 minutes so teams can see registrants without
+downloading Excel: tab "Semua" (all events, with a Kegiatan column) plus one tab per non-draft,
+non-archived event (newest first; tabs are matched by developer metadata `kb_tab` = event slug, so
+renaming an event renames its tab). Same columns as the admin Excel export plus "Pembayaran"
+("Lunas · bukti belum dicek" for unchecked manual QRIS proofs). Cell R1/Q1 says when it last ran.
+Anything typed into these tabs is overwritten; tabs people add themselves are left alone.
+
+Setup (once):
+1. Google Cloud console (account `kitabahagiaidn@gmail.com`): new project → enable **Google Sheets
+   API** → IAM → Service accounts → create → Keys → Add key → JSON (download).
+2. Create a Google Sheet, share it with the service account `client_email` as **Editor**, and with
+   team members' Google accounts as **Viewer** (never "anyone with the link": it holds personal data).
+3. Supabase secrets: `GOOGLE_SERVICE_ACCOUNT_JSON` (whole JSON file), `SHEETS_SPREADSHEET_ID` (the id
+   in the sheet URL), `SHEETS_SYNC_SECRET` (any long random string).
+4. `npx supabase functions deploy sync-sheets --no-verify-jwt --project-ref cmrdapfuqtjlmpepfwfq`
+5. SQL editor (pg_cron + pg_net + Vault; replace the secret with the same value as step 3):
+   ```sql
+   create extension if not exists pg_cron;
+   create extension if not exists pg_net;
+   select vault.create_secret('<SHEETS_SYNC_SECRET>', 'sheets_sync_secret');
+   select cron.schedule('sync-sheets', '*/5 * * * *', $$
+     select net.http_post(
+       url := 'https://cmrdapfuqtjlmpepfwfq.supabase.co/functions/v1/sync-sheets',
+       headers := jsonb_build_object('Content-Type', 'application/json',
+         'x-sync-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'sheets_sync_secret')),
+       body := '{}'::jsonb, timeout_milliseconds := 30000);
+   $$);
+   ```
+   Stop: `select cron.unschedule('sync-sheets');`. Runs: `select * from cron.job_run_details order by start_time desc limit 5;`
+   and `select * from net._http_response order by created desc limit 5;`.
