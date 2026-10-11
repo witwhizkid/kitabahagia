@@ -560,12 +560,12 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   (`submit-payment-proof`, bucket privat `payment-proofs`), slot ditahan 24 jam sejak unggah; admin Detail pendaftar = foto bukti +
   "Tandai lunas" (terkonfirmasi + email) / "Tolak" (slot dilepas). Sertifikat/hadir/grup WA jalan seperti pendaftar lunas lainnya.
   Jendela bayar kegiatan minimal 1 jam. Detail: "Manual QRIS" di `supabase/README.md`.
-  **Keputusan owner 10 Okt 2026: alur C** (belum di-deploy): unggah bukti → langsung terkonfirmasi (layar sukses, email,
+  **Keputusan owner 10 Okt 2026: alur C** (live 11 Okt 2026; dites ujung ke ujung dengan uang sungguhan Rp1.000 lewat kegiatan demo): unggah bukti → langsung terkonfirmasi (layar sukses, email,
   link grup); admin mencocokkan dengan mutasi GoPay Merchant lalu "Valid" / "Batalkan" (kuota kembali + link draf WA; keluarkan
   dari grup manual). Badge "Bukti belum dicek" di baris, filter pembayaran "Bukti belum dicek", pengingat di Beranda admin.
   **Nominal = harga kegiatan yang diisi admin** (tanpa angka acak; kalau mau kode unik, admin isi harganya mis. Rp75.018).
-  Grup WA kegiatan berbayar sebaiknya "Setujui anggota baru". Dicek lokal (SQL di Postgres, alur peserta + admin di
-  Playwright dengan data tiruan); belum dengan uang sungguhan. Opsi jangka panjang: PT Perorangan.
+  Grup WA kegiatan berbayar sebaiknya "Setujui anggota baru". Cara tes di live tanpa tampil publik: buat kegiatan biasa, `update events set is_demo = true where slug = ...`, buka
+  `pendaftaran.html?event=<slug>&demo=1` (backend tidak membedakan demo); hapus setelahnya dengan filter `and is_demo`. Opsi jangka panjang: PT Perorangan.
 
 Peran Ketua Tim (usul user 10 Okt 2026, **menunggu jawaban owner**; dikerjakan **setelah** kegiatan 18 Okt, sebelum 6 ketua
 tim diundang): peran baru `team_lead` + nomor tim 1–6 di `admin_users`, kolom `events.team`. Ketua Tim hanya melihat kegiatan
