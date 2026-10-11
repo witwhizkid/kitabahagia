@@ -488,6 +488,11 @@ Lainnya:
   Middleware) hanya untuk bot preview di `pendaftaran.html?event=...`: bot
   mendapat HTML kecil dengan judul/tanggal/lokasi/harga/poster kegiatan dari
   `public-events`; pengunjung biasa tetap dapat halaman statis.
+- **Google Sheets live** (Okt 2026, permintaan owner: tim lihat pendaftar tanpa unduh Excel, ala GForm): Edge Function `sync-sheets`
+  dipanggil pg_cron tiap 5 menit (header `x-sync-secret`, rahasia di Vault), menulis ulang satu Sheet milik `kitabahagiaidn@gmail.com`:
+  tab "Semua" + satu tab per kegiatan (bukan draf/arsip; dicocokkan lewat developer metadata = slug). Kolom = Excel + "Pembayaran".
+  Akun robot Google (service account) di secret `GOOGLE_SERVICE_ACCOUNT_JSON`. Sheet hanya dibagikan ke email tim (Viewer), jangan
+  "siapa saja yang punya link"; disebut di Privasi. Setup: "Live spreadsheet" di `supabase/README.md`. Peran "Tim Program" ditunda.
 - Admin → Pendaftar punya tab "Pendaftar aktif" / "Riwayat" (`lifecycle` di
   `admin-registrations`). Aktif = kegiatan belum selesai (`end_at`, atau akhir
   hari kegiatan WIB) **dan** pembayaran belum kedaluwarsa; selain itu Riwayat
