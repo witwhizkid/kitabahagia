@@ -495,7 +495,7 @@ Lainnya:
   "siapa saja yang punya link"; disebut di Privasi. Keputusan owner: semua tim boleh lihat semua kegiatan (tanpa peran admin
   khusus); Sheet ditaruh di folder Drive khusus "KB – Data Pendaftar (internal)" (akses Dibatasi, dibagikan ke Gmail tim sebagai
   Pelihat; anggota baru ditambahkan ke folder, tanpa "minta akses"), terpisah dari folder dokumentasi publik. **Aktif live 11 Okt 2026** (job pg_cron no. 1; Sheet "Pendaftar Program (otomatis)",
-  robot `kb-sheets-bot@kb-sheets.iam.gserviceaccount.com` = Editor). Tab hanya untuk kegiatan yang punya pendaftar; tab kegiatan yang diarsipkan/draf/tanpa pendaftar dihapus otomatis
+  robot `kb-sheets-bot@kb-sheets.iam.gserviceaccount.com` = Editor). Tab untuk kegiatan mendatang (walau belum ada pendaftar) dan kegiatan lewat yang punya pendaftar; tab kegiatan yang diarsipkan/draf/tanpa pendaftar dihapus otomatis
   (kegiatan lama sebelum web tetap tampil di Jadwal "Sudah selesai" tanpa mengotori Sheet; jangan diarsipkan untuk itu). Gaya (v2): header krem, Kode/Nama menempel, baris selang-seling, status berwarna seperti Excel admin,
   tanggal asli (bisa diurutkan); diterapkan sekali per tab (naikkan `FORMAT_VERSION` untuk menata ulang), lebar kolom ubahan tim tetap. Setup: "Live spreadsheet" di `supabase/README.md`. Peran "Tim Program" ditunda.
 - Admin → Pendaftar punya tab "Pendaftar aktif" / "Riwayat" (`lifecycle` di
