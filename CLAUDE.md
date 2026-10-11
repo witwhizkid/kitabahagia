@@ -572,8 +572,9 @@ bergantian 1–3/4–6 tiap bulan? Sementara itu ketua tim kegiatan 18 Okt boleh
 
 "Yang kamu bawa pulang" (Okt 2026, **keputusan owner**: bukan di Beranda, tapi strip kecil di **halaman Program**, ala
 "Area Berkelana" gamadharma.org; mockup A/B Beranda batal): `.take-home` antara bab Program dan "Jangan cuma lihat. Ikut.";
-panel maroon gelap bersudut 28px, judul kiri "Ikut sekali, yang kamu bawa pulang lebih dari sekadar cerita." (user: lebih persuasif,
-lebih besar/tinggi) + "Kegiatan gratis juga dapat semuanya.", 4 kartu kaca berikon garis emas (min. 200px tinggi)
+**versi B** (dipilih user dari perbandingan dengan pita gelap ala Gama): di latar krem halaman, judul kiri "Ikut sekali, yang kamu
+bawa pulang lebih dari sekadar cerita." + "Kegiatan gratis juga dapat semuanya.", 4 kartu warna keluarga KB (merah bata, maroon
+gelap, krem, emas; sudut 28px, min. 210px) dengan stiker ikon putih miring (-6°/5°)
 (Sertifikat ber-QR, Kartu Relawan, Foto dokumentasi, Teman baru); ≤960px judul di atas, kartu geser (172px). Tanpa nomor/label kapital.
 Logo mitra (keputusan user Okt 2026, menunggu file logo dari owner): grid `.collaboration-partners` di kolaborasi.html
 (placeholder Mitra A/B/C, `hidden`) diisi dulu = versi lengkap (logo, nama, bentuk kerja sama) untuk calon mitra.
