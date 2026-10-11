@@ -6034,19 +6034,20 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 /* "Yang kamu bawa pulang" (Oct 2026, owner: small, on the Program page, after gamadharma.org's
    "Area Berkelana" strip): a dark rounded band, title left, four small glassy cards; phones swipe. */
 .program-page .take-home-section { padding-block: 8px 28px; }
-.take-home { display: grid; grid-template-columns: minmax(180px, .7fr) 2.6fr; gap: 28px; align-items: center; padding: 28px 32px; border-radius: 28px; color: #fff8f0; background: radial-gradient(120% 140% at 0% 0%, #6b1e28 0%, #2a0e13 62%); }
-.take-home-copy h2 { margin: 0; color: inherit; font-size: clamp(24px, 2.4vw, 32px); line-height: 1.1; }
-.take-home-copy p { margin: 8px 0 0; color: rgba(255, 248, 240, .72); font-size: 14px; }
-.take-home-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
-.take-home-list li { display: grid; justify-items: center; align-content: start; gap: 4px; padding: 16px 12px; border: 1px solid rgba(255, 248, 240, .12); border-radius: 18px; background: rgba(255, 248, 240, .08); text-align: center; }
-.take-home-list svg { width: 30px; height: 30px; margin-bottom: 4px; fill: none; stroke: #efb635; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.take-home-list strong { font-size: 15px; line-height: 1.25; }
-.take-home-list span { color: rgba(255, 248, 240, .7); font-size: 12.5px; line-height: 1.4; }
+.take-home { display: grid; grid-template-columns: minmax(300px, 1.25fr) 2.4fr; gap: 40px; align-items: center; padding: 44px 44px; border-radius: 28px; color: #fff8f0; background: radial-gradient(120% 140% at 0% 0%, #6b1e28 0%, #2a0e13 62%); }
+.take-home-copy h2 { margin: 0; color: inherit; font-size: clamp(26px, 2.6vw, 36px); line-height: 1.12; }
+.take-home-copy p { margin: 14px 0 0; color: rgba(255, 248, 240, .72); font-size: 15px; }
+.take-home-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
+.take-home-list li { display: grid; justify-items: center; align-content: center; gap: 6px; min-height: 200px; padding: 26px 16px; border: 1px solid rgba(255, 248, 240, .12); border-radius: 18px; background: rgba(255, 248, 240, .08); text-align: center; }
+.take-home-list svg { width: 40px; height: 40px; margin-bottom: 8px; fill: none; stroke: #efb635; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.take-home-list strong { font-size: 17px; line-height: 1.25; }
+.take-home-list span { color: rgba(255, 248, 240, .72); font-size: 14px; line-height: 1.45; }
 @media (max-width: 960px) {
-  .take-home { grid-template-columns: 1fr; gap: 16px; padding: 22px 0 22px 22px; }
-  .take-home-list { display: flex; overflow-x: auto; padding-right: 22px; scroll-snap-type: x mandatory; scroll-padding-inline: 0; scrollbar-width: none; }
+  .take-home { grid-template-columns: 1fr; gap: 20px; padding: 30px 0 30px 24px; }
+  .take-home-copy { padding-right: 24px; }
+  .take-home-list { display: flex; overflow-x: auto; padding-right: 24px; scroll-snap-type: x mandatory; scroll-padding-inline: 0; scrollbar-width: none; }
   .take-home-list::-webkit-scrollbar { display: none; }
-  .take-home-list li { flex: 1 0 156px; scroll-snap-align: start; }
+  .take-home-list li { flex: 1 0 172px; min-height: 180px; scroll-snap-align: start; }
 }
 
 .program-page .program-detail-card .program-flow,
