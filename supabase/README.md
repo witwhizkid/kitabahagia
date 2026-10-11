@@ -641,7 +641,7 @@ the new columns.
 
 `sync-sheets` rewrites one Google Sheet every 5 minutes so teams can see registrants without
 downloading Excel: tab "Semua" (all events, with a Kegiatan column) plus one tab per non-draft,
-non-archived event (newest first; tabs are matched by developer metadata `kb_tab` = event slug, so
+non-archived event that has registrants (tabs of events that drop out are deleted) (newest first; tabs are matched by developer metadata `kb_tab` = event slug, so
 renaming an event renames its tab). Same columns as the admin Excel export plus "Pembayaran"
 ("Lunas · bukti belum dicek" for unchecked manual QRIS proofs). Cell R1/Q1 says when it last ran.
 Anything typed into these tabs is overwritten; tabs people add themselves are left alone.

@@ -194,7 +194,9 @@ Deno.serve(async (request) => {
     };
 
     // Wanted tabs: "Semua" first, then one per event (newest event first).
-    const wanted = [{ key: "all", title: "Semua" }, ...events.map((event) => ({ key: String(event.slug), title: tabTitle(String(event.title || event.slug)) }))];
+    // Events nobody registered for (e.g. past events from before the website) get no tab.
+    const withRegistrants = new Set(registrations.map((row) => String(row.events?.slug)));
+    const wanted = [{ key: "all", title: "Semua" }, ...events.filter((event) => withRegistrants.has(String(event.slug))).map((event) => ({ key: String(event.slug), title: tabTitle(String(event.title || event.slug)) }))];
     const used = new Set<string>();
     for (const tab of wanted) {
       let title = tab.title;
@@ -228,7 +230,10 @@ Deno.serve(async (request) => {
         byKey.set(tab.key, { sheetId: properties.sheetId, title: properties.title });
       });
     }
-    const requests: unknown[] = [];
+    // Tabs of events that left the list (archived, draft, or registrants removed) are deleted.
+    const wantedKeys = new Set(wanted.map((tab) => tab.key));
+    const requests: unknown[] = [...byKey].filter(([key]) => !wantedKeys.has(key))
+      .map(([, sheet]) => ({ deleteSheet: { sheetId: sheet.sheetId } }));
     for (const tab of missing) {
       const sheetId = byKey.get(tab.key)!.sheetId;
       requests.push(
