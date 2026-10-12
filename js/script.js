@@ -888,6 +888,98 @@ if (heroSlider && heroTrack && heroSlides.length) {
   reduceHeroMotion.addEventListener?.('change', startHeroAutoplay);
 }
 
+const testimonialSlides = Array.from(document.querySelectorAll('.testimonial-slide'));
+const testimonialTrack = document.querySelector('.testimonial-track');
+const testimonialSection = document.querySelector('.testimonial-section');
+const prevTestimonialBtn = document.querySelector('.testimonial-arrow.prev');
+const nextTestimonialBtn = document.querySelector('.testimonial-arrow.next');
+const testimonialStatus = document.querySelector('[data-testimonial-status]');
+
+if (testimonialSlides.length && testimonialTrack) {
+  let activeIndex = 0;
+  let testimonialTimer;
+  let testimonialPointerHover = false;
+  const testimonialMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  const updateTestimonials = ({ announce = false } = {}) => {
+    const total = testimonialSlides.length;
+    testimonialSlides.forEach((slide, index) => {
+      const isActive = index === activeIndex;
+      const stack = (index - activeIndex + total) % total;
+      slide.classList.toggle('active', isActive);
+      slide.setAttribute('aria-hidden', String(!isActive));
+      // Card stack: 0 in front, 1–2 peek behind, the last one is the card just thrown off.
+      slide.dataset.stack = String(stack);
+      slide.classList.toggle('is-thrown', total > 3 && stack === total - 1);
+    });
+    const count = document.querySelector('[data-testimonial-count]');
+    if (count) count.textContent = `${activeIndex + 1} / ${total}`;
+
+    if (announce && testimonialStatus) {
+      const activeSlide = testimonialSlides[activeIndex];
+      const name = activeSlide.querySelector('.person strong')?.textContent?.trim() || '';
+      const role = activeSlide.querySelector('.person span')?.textContent?.trim() || '';
+      testimonialStatus.textContent = `Testimoni ${activeIndex + 1} dari ${testimonialSlides.length}: ${name}, ${role}.`;
+    }
+  };
+
+  const stopTestimonialAutoplay = () => {
+    clearInterval(testimonialTimer);
+    testimonialTimer = undefined;
+  };
+
+  const startTestimonialAutoplay = ({ ignoreFocus = false } = {}) => {
+    stopTestimonialAutoplay();
+    if (
+      testimonialMotion.matches
+      || document.hidden
+      || testimonialPointerHover
+      || (!ignoreFocus && testimonialSection?.contains(document.activeElement))
+    ) return;
+    testimonialTimer = window.setInterval(() => {
+      activeIndex = (activeIndex + 1) % testimonialSlides.length;
+      updateTestimonials();
+    }, 5000);
+  };
+
+  const navigateTestimonials = (direction, { ignoreFocus = false } = {}) => {
+    activeIndex = (activeIndex + direction + testimonialSlides.length) % testimonialSlides.length;
+    updateTestimonials({ announce: true });
+    startTestimonialAutoplay({ ignoreFocus });
+  };
+
+  prevTestimonialBtn?.addEventListener('click', event => {
+    navigateTestimonials(-1, { ignoreFocus: event.detail > 0 });
+  });
+
+  nextTestimonialBtn?.addEventListener('click', event => {
+    navigateTestimonials(1, { ignoreFocus: event.detail > 0 });
+  });
+
+  testimonialSection?.addEventListener('pointerenter', event => {
+    if (event.pointerType !== 'mouse') return;
+    testimonialPointerHover = true;
+    stopTestimonialAutoplay();
+  });
+  testimonialSection?.addEventListener('pointerleave', event => {
+    if (event.pointerType !== 'mouse') return;
+    testimonialPointerHover = false;
+    startTestimonialAutoplay();
+  });
+  testimonialSection?.addEventListener('focusin', stopTestimonialAutoplay);
+  testimonialSection?.addEventListener('focusout', event => {
+    if (!testimonialSection.contains(event.relatedTarget)) startTestimonialAutoplay();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopTestimonialAutoplay();
+    else startTestimonialAutoplay();
+  });
+  testimonialMotion.addEventListener?.('change', startTestimonialAutoplay);
+
+  updateTestimonials();
+  startTestimonialAutoplay();
+}
+
 document.getElementById('year')?.replaceChildren(document.createTextNode(new Date().getFullYear()));
 
 // Photos fade in as they finish loading (CSS .img-fade). Images already loaded now, and the hero
