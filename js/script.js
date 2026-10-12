@@ -888,98 +888,6 @@ if (heroSlider && heroTrack && heroSlides.length) {
   reduceHeroMotion.addEventListener?.('change', startHeroAutoplay);
 }
 
-const testimonialSlides = Array.from(document.querySelectorAll('.testimonial-slide'));
-const testimonialTrack = document.querySelector('.testimonial-track');
-const testimonialSection = document.querySelector('.testimonial-section');
-const prevTestimonialBtn = document.querySelector('.testimonial-arrow.prev');
-const nextTestimonialBtn = document.querySelector('.testimonial-arrow.next');
-const testimonialStatus = document.querySelector('[data-testimonial-status]');
-
-if (testimonialSlides.length && testimonialTrack) {
-  let activeIndex = 0;
-  let testimonialTimer;
-  let testimonialPointerHover = false;
-  const testimonialMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-  const updateTestimonials = ({ announce = false } = {}) => {
-    const total = testimonialSlides.length;
-    testimonialSlides.forEach((slide, index) => {
-      const isActive = index === activeIndex;
-      const stack = (index - activeIndex + total) % total;
-      slide.classList.toggle('active', isActive);
-      slide.setAttribute('aria-hidden', String(!isActive));
-      // Card stack: 0 in front, 1–2 peek behind, the last one is the card just thrown off.
-      slide.dataset.stack = String(stack);
-      slide.classList.toggle('is-thrown', total > 3 && stack === total - 1);
-    });
-    const count = document.querySelector('[data-testimonial-count]');
-    if (count) count.textContent = `${activeIndex + 1} / ${total}`;
-
-    if (announce && testimonialStatus) {
-      const activeSlide = testimonialSlides[activeIndex];
-      const name = activeSlide.querySelector('.person strong')?.textContent?.trim() || '';
-      const role = activeSlide.querySelector('.person span')?.textContent?.trim() || '';
-      testimonialStatus.textContent = `Testimoni ${activeIndex + 1} dari ${testimonialSlides.length}: ${name}, ${role}.`;
-    }
-  };
-
-  const stopTestimonialAutoplay = () => {
-    clearInterval(testimonialTimer);
-    testimonialTimer = undefined;
-  };
-
-  const startTestimonialAutoplay = ({ ignoreFocus = false } = {}) => {
-    stopTestimonialAutoplay();
-    if (
-      testimonialMotion.matches
-      || document.hidden
-      || testimonialPointerHover
-      || (!ignoreFocus && testimonialSection?.contains(document.activeElement))
-    ) return;
-    testimonialTimer = window.setInterval(() => {
-      activeIndex = (activeIndex + 1) % testimonialSlides.length;
-      updateTestimonials();
-    }, 5000);
-  };
-
-  const navigateTestimonials = (direction, { ignoreFocus = false } = {}) => {
-    activeIndex = (activeIndex + direction + testimonialSlides.length) % testimonialSlides.length;
-    updateTestimonials({ announce: true });
-    startTestimonialAutoplay({ ignoreFocus });
-  };
-
-  prevTestimonialBtn?.addEventListener('click', event => {
-    navigateTestimonials(-1, { ignoreFocus: event.detail > 0 });
-  });
-
-  nextTestimonialBtn?.addEventListener('click', event => {
-    navigateTestimonials(1, { ignoreFocus: event.detail > 0 });
-  });
-
-  testimonialSection?.addEventListener('pointerenter', event => {
-    if (event.pointerType !== 'mouse') return;
-    testimonialPointerHover = true;
-    stopTestimonialAutoplay();
-  });
-  testimonialSection?.addEventListener('pointerleave', event => {
-    if (event.pointerType !== 'mouse') return;
-    testimonialPointerHover = false;
-    startTestimonialAutoplay();
-  });
-  testimonialSection?.addEventListener('focusin', stopTestimonialAutoplay);
-  testimonialSection?.addEventListener('focusout', event => {
-    if (!testimonialSection.contains(event.relatedTarget)) startTestimonialAutoplay();
-  });
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) stopTestimonialAutoplay();
-    else startTestimonialAutoplay();
-  });
-  testimonialMotion.addEventListener?.('change', startTestimonialAutoplay);
-
-  updateTestimonials();
-  startTestimonialAutoplay();
-}
-
 document.getElementById('year')?.replaceChildren(document.createTextNode(new Date().getFullYear()));
 
 // Photos fade in as they finish loading (CSS .img-fade). Images already loaded now, and the hero
@@ -1019,34 +927,14 @@ if (stabiloMarks.length && window.matchMedia('(prefers-reduced-motion: no-prefer
   }), { threshold: 1 });
   stabiloMarks.forEach((mark) => stabiloObserver.observe(mark));
 }
-// Homepage motion inspired by dashdigital.studio: section titles rise word by word from behind a
-// mask, heading rules draw left to right, buttons roll their label on hover, and the header slides
-// away while scrolling down on phones/tablets. Beranda only, never with reduced motion. Titles
-// already on screen at load stay static (no layout shift for the first paint).
+// Homepage motion inspired by dashdigital.studio: heading rules draw left to right, journal prints
+// settle, and the header slides away while scrolling down on phones/tablets. Word-by-word titles,
+// the lit manifesto and rolling button labels were dropped (Oct 2026, "versi A": calmer Beranda).
+// Beranda only, never with reduced motion.
 const homeMotion = document.body.classList.contains('home-page')
   && window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window;
 if (homeMotion) {
   document.documentElement.classList.add('home-motion');
-  const splitWords = (node, counter) => {
-    [...node.childNodes].forEach((child) => {
-      if (child.nodeType === Node.ELEMENT_NODE) { splitWords(child, counter); return; }
-      if (child.nodeType !== Node.TEXT_NODE || !child.textContent.trim()) return;
-      const fragment = document.createDocumentFragment();
-      child.textContent.split(/(\s+)/).forEach((part) => {
-        if (!part) return;
-        if (/^\s+$/.test(part)) { fragment.append(document.createTextNode(' ')); return; }
-        const outer = document.createElement('span');
-        const inner = document.createElement('span');
-        outer.className = 'split-word';
-        outer.setAttribute('aria-hidden', 'true');
-        inner.style.setProperty('--word', String(counter.index++));
-        inner.textContent = part;
-        outer.append(inner);
-        fragment.append(outer);
-      });
-      child.replaceWith(fragment);
-    });
-  };
   const inView = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
@@ -1054,37 +942,6 @@ if (homeMotion) {
       inView.unobserve(entry.target);
     });
   }, { threshold: 0.25 });
-  // Jejak's title is left whole: it settles from a large size on scroll instead (style.css).
-  document.querySelectorAll('.home-page main > section:not(.hero-campaign, .impact-editorial, .home-about-teaser) h2').forEach((heading) => {
-    if (heading.getBoundingClientRect().top < window.innerHeight) return;
-    heading.setAttribute('aria-label', heading.textContent.replace(/\s+/g, ' ').trim());
-    splitWords(heading, { index: 0 });
-    heading.classList.add('split-heading');
-    inView.observe(heading);
-  });
-  // The manifesto lights up word by word as it crosses the screen, so it is read, not skimmed.
-  const manifesto = document.querySelector('.home-about-teaser h2');
-  if (manifesto) {
-    manifesto.setAttribute('aria-label', manifesto.textContent.replace(/\s+/g, ' ').trim());
-    splitWords(manifesto, { index: 0 });
-    manifesto.classList.add('ink-heading');
-    const words = [...manifesto.querySelectorAll('.split-word')];
-    let lit = -1;
-    let queued = false;
-    const paint = () => {
-      queued = false;
-      const box = manifesto.getBoundingClientRect();
-      const start = window.innerHeight * .85;
-      const end = window.innerHeight * .4;
-      const progress = Math.min(Math.max((start - box.top) / (start - end + box.height), 0), 1);
-      const count = Math.round(progress * words.length);
-      if (count === lit) return;
-      words.forEach((word, index) => word.classList.toggle('is-lit', index < count));
-      lit = count;
-    };
-    window.addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(paint); } }, { passive: true });
-    paint();
-  }
   // Footer reveal: the page lifts like a sheet off a footer parked underneath. Only when the footer
   // fits the screen (a taller one would pin its bottom first), so phones keep the normal footer.
   const footer = document.querySelector('.home-page .site-footer');
@@ -1098,17 +955,6 @@ if (homeMotion) {
   });
   document.querySelectorAll('.home-page .kisah-section-heading')
     .forEach((rule) => { rule.classList.add('draw-rule'); inView.observe(rule); });
-  document.querySelectorAll('.home-page main .btn').forEach((button) => {
-    const label = button.textContent.replace(/\s+/g, ' ').trim();
-    if (!label || button.children.length) return;
-    const roll = document.createElement('span');
-    const text = document.createElement('span');
-    roll.className = 'btn-roll';
-    roll.dataset.label = label;
-    text.textContent = label;
-    roll.append(text);
-    button.replaceChildren(roll);
-  });
   const header = document.querySelector('.home-page .site-header');
   const compactHeader = window.matchMedia('(max-width: 1023px)');
   let lastY = window.scrollY;

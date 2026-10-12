@@ -79,8 +79,11 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
 - Kegiatan sedikit (Okt 2026, audit UI): kalau yang tampil 1–2 kegiatan, grid dapat `.is-few` (+ `.is-one`) dari JS
   (`renderHomepageEvents`, `applyFilters` Jadwal) → ≥768px kartu mendatar besar (poster 40% kiri, `cover` dari atas):
   tablet satu kolom maks. 640px, ≥1100px dua kolom (satu kartu maks. 760px). HP tidak berubah.
-- Urutan Beranda: hero → Jejak → **Kegiatan Terdekat** → Program → Tentang → Kisah (Okt 2026, dulu Terdekat setelah
-  Program). Judul bab Program tidak lagi sticky berlatar krem (kotak sisa Stage 8 dihapus).
+- Urutan Beranda: hero → Jejak → **Kegiatan Terdekat** → Program → Kisah → penutup (Okt 2026, dulu Terdekat setelah
+  Program). **Versi A** (12 Okt 2026, user: Beranda HP keramean, ref. MyXL simpel): teaser Tentang (manifesto) digabung ke
+  Jejak (paragraf "Kita Bahagia lahir untuk jadi rumah…" + link "Kenal lebih jauh →"), Testimoni dicabut dari Beranda (markup/CSS/JS
+  dihapus, ada di riwayat git; belum dipindah ke Relawan), judul per kata, manifesto menyala, dan label tombol berguling dihapus
+  (judul pakai `.reveal` biasa). HP ±5.670 → ±4.770px. Judul bab Program tidak lagi sticky berlatar krem (kotak sisa Stage 8 dihapus).
 - Badge poster (`eventPhotoBadge`): label gelap "Kuota penuh" / "Ditutup" / "Selesai"; poster
   hitam-putih **hanya** untuk kuota penuh (keputusan user Okt 2026: kegiatan selesai/ditutup tetap berwarna); buka dan tutup ≤7 hari = label maroon "N hari lagi"/"Besok"/
   "Hari ini". Kegiatan ditutup/selesai tidak menampilkan sisa slot.
