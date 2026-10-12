@@ -865,15 +865,12 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .home-page .impact-editorial,
 .home-page .home-program-section,
 .home-page .home-upcoming-section,
-.home-page .home-about-teaser,
 .home-page .kisah-preview,
 .home-page .home-closing-section {
   position: relative;
 }
 .home-page .impact-editorial + .home-upcoming-section,
-.home-page .home-upcoming-section + .home-program-section,
-.home-page .home-program-section + .home-about-teaser,
-.home-page .testimonial-section + .home-closing-section {
+.home-page .home-upcoming-section + .home-program-section {
   border-top: 1px solid var(--line);
 }
 .home-page .impact-editorial-image img,
@@ -958,31 +955,6 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   opacity: .95;
 }
 
-.person { display:inline-flex; align-items:center; gap:10px; text-align:left; }
-.person-avatar {
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  background:linear-gradient(135deg, #f8e4e9, #f1c9cf);
-  color:var(--maroon);
-  display:grid;
-  place-items:center;
-  font-size:12px;
-  font-weight:800;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-.person div { display:grid; }
-.person strong { font-size:13px; }
-.person span { color:#e8c6ca; font-size:12px; }
-
-.home-page .person-avatar {
-  width: auto;
-  height: auto;
-  border-radius: 0;
-  background: transparent;
-  color: #f1c9cf;
-  box-shadow: none;
-}
 
 .gallery-grid { display:grid; grid-template-columns:1.05fr .8fr .8fr; grid-auto-rows: 180px; gap:14px; }.gallery-item { border-radius:18px; overflow:hidden; margin:0; }.gallery-item.tall { grid-row: span 2; }.gallery-item.wide { grid-column: span 2; }.gallery-item img { height:100%; transition:transform .5s var(--ease); }.gallery-item:hover img { transform:scale(1.04); }
 
@@ -3669,6 +3641,7 @@ h2 em {
   margin-top: 48px;
   border-top: 1px solid var(--line);
 }
+.impact-editorial-link { display: inline-block; margin-top: 22px; }
 
 .impact-editorial-stat {
   min-width: 0;
@@ -4093,25 +4066,6 @@ h2 em {
     font-size: 29px;
   }
 
-  .home-page .home-about-section .split-section { gap: 28px; }
-  .home-page .home-about-section .section-heading h2 { line-height: 1.06; }
-  .home-page .home-about-section .feature-grid {
-    gap: 0;
-    margin-top: 28px;
-  }
-  .home-page .home-about-section .feature-item {
-    padding: 18px 0 17px;
-  }
-  .home-page .home-about-section .feature-item h3 {
-    margin: 7px 0 7px;
-    font-size: 19px;
-  }
-  .home-page .home-about-section .feature-item p {
-    max-width: 40ch;
-    font-size: 14px;
-    line-height: 1.55;
-  }
-
   .home-page .editorial-slab { padding-top: 54px; }
   .home-page .editorial-wrap { gap: 24px; }
   .home-page .editorial-copy { padding: 0; }
@@ -4156,20 +4110,6 @@ h2 em {
 }
 .hero-collaboration-link:hover { text-decoration-color: currentColor; }
 .hero-collaboration-link:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
-.home-page .home-about-teaser { padding-block: 58px 64px; }
-.home-page .home-about-teaser .split-section {
-  grid-template-columns: minmax(0,1.25fr) minmax(0,.75fr);
-  align-items: center;
-  gap: 64px;
-}
-.home-page .home-about-teaser .section-heading h2 {
-  max-width: 24ch;
-  margin-bottom: 0;
-  font-size: clamp(26px,2.8vw,38px);
-  line-height: 1.2;
-  text-wrap: pretty;
-}
-.home-page .home-about-teaser .section-copy > p { max-width: 44ch; margin: 0 0 20px; }
 /* clip (not hidden) keeps the page from becoming its own scroll box, so position: sticky still works. */
 html.home-document { overflow-x: hidden; overflow-x: clip; }
 .home-page { overflow-x: hidden; overflow-x: clip; }
@@ -4421,9 +4361,6 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .home-closing-compact .home-closing { padding-block: 20px; }
   .home-closing-compact .join-copy { display: block; }
   .home-closing-compact .join-actions { margin-top: 20px; }
-  .home-page .home-about-teaser { padding-block: 40px 44px; }
-  .home-page .home-about-teaser .split-section { grid-template-columns: 1fr; gap: 20px; }
-  .home-page .home-about-teaser .section-heading h2 { max-width: 27ch; font-size: 27px; line-height: 1.2; }
   .kisah-preview { padding-block: 44px 52px; }
   .kisah-section-heading { gap: 14px; }
   .kisah-section-heading h2 { font-size: 30px; line-height: 1.06; }
@@ -4486,31 +4423,6 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   }
 }
 
-.home-page .quote-mark {
-  width: fit-content;
-  color: var(--maroon);
-  font-family: Georgia, serif;
-  font-size: 96px;
-  line-height: .56;
-  opacity: 1;
-}
-
-.home-page .person {
-  gap: 14px;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-}
-.home-page .person-avatar {
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(122,31,43,.22);
-  border-radius: 6px;
-  background: var(--maroon-soft);
-  color: var(--maroon);
-}
-.home-page .person strong { color: var(--ink); font-size: 14px; }
-.home-page .person span { color: var(--muted); font-size: 12px; }
-
 @media (max-width: 767px) {
   
   
@@ -4520,107 +4432,6 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   
   
   
-  .home-page .quote-mark { font-size: 76px; }
-  
-  
-}
-
-/* Beranda testimonials (Oct 2026): a stack of tilted cards in KB colours. JS sets data-stack (0 = front,
-   1–2 peek behind, last = the card just thrown off to the left); autoplay/arrows stay as they were. */
-.home-page .testimonial-section { padding-block: 96px; background: var(--cream); color: var(--ink); }
-.testimonial-shell { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); grid-template-rows: auto 1fr; column-gap: 72px; }
-.testimonial-section .center-heading { grid-column: 1; grid-row: 1; margin: 0; text-align: left; }
-.testimonial-section .center-heading h2 { margin: 0; font-size: clamp(36px, 4vw, 56px); }
-.testimonial-note { max-width: 34ch; margin: 18px 0 0; color: var(--muted); font-size: 16px; line-height: 1.6; }
-.testimonial-nav { grid-column: 1; grid-row: 2; align-self: end; display: flex; align-items: center; gap: 10px; margin-top: 28px; }
-.testimonial-arrow { display: grid; place-items: center; width: 52px; height: 52px; padding: 0; border: 0; border-radius: 50%; background: var(--maroon); color: var(--white); font-size: 18px; cursor: pointer; transition: background-color .18s var(--ease), transform .18s var(--ease); }
-.testimonial-arrow:hover { background: var(--maroon-deep); }
-.testimonial-arrow:active { transform: scale(.95); }
-.testimonial-arrow:focus-visible { outline: 3px solid var(--maroon); outline-offset: 3px; }
-.testimonial-count { margin-left: 8px; color: var(--muted); font-size: 14px; font-weight: 700; }
-.testimonial-carousel { grid-column: 2; grid-row: 1 / span 2; }
-.testimonial-track { position: relative; height: 420px; }
-.testimonial-slide { position: absolute; inset: 0 40px 30px 0; transition: transform .6s cubic-bezier(.2, .7, .2, 1), opacity .5s var(--ease); }
-.testimonial-slide-inner { display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding: 40px 44px 34px; border-radius: 28px; background: var(--card-bg); color: var(--card-fg); box-shadow: 0 18px 40px rgba(60, 20, 25, .16); }
-.testimonial-slide-inner::before { content: "\201C"; display: block; height: 40px; font: 700 96px/1 "Instrument Sans", "DM Sans", sans-serif; opacity: .35; }
-.testimonial-slide blockquote { margin: 0; color: inherit; font: 600 clamp(20px, 1.9vw, 26px)/1.35 "Instrument Sans", "DM Sans", sans-serif; letter-spacing: -.02em; }
-.testimonial-slide .person { padding-top: 18px; border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent); font-size: 14px; }
-.testimonial-slide .person strong { margin-right: 8px; color: inherit; }
-.testimonial-slide .person span { color: inherit; opacity: .9; }
-.testimonial-slide:nth-child(5n + 1) { --card-bg: #c23a3f; --card-fg: var(--white); }
-.testimonial-slide:nth-child(5n + 2) { --card-bg: #efb635; --card-fg: var(--ink); }
-.testimonial-slide:nth-child(5n + 3) { --card-bg: #53141d; --card-fg: var(--white); }
-.testimonial-slide:nth-child(5n + 4) { --card-bg: #fffdf8; --card-fg: var(--ink); }
-.testimonial-slide:nth-child(5n + 5) { --card-bg: #f2b8c0; --card-fg: #53141d; }
-.testimonial-slide { z-index: 1; opacity: 0; transform: translate(40px, 30px) rotate(-3.5deg); }
-.testimonial-slide[data-stack="0"] { z-index: 5; opacity: 1; transform: rotate(-1.5deg); }
-.testimonial-slide[data-stack="1"] { z-index: 4; opacity: 1; transform: translate(22px, 16px) rotate(3deg); }
-.testimonial-slide[data-stack="2"] { z-index: 3; opacity: 1; transform: translate(40px, 30px) rotate(-3.5deg); }
-.testimonial-slide.is-thrown { z-index: 6; opacity: 0; transform: translate(-110%, 40px) rotate(-14deg); }
-.testimonial-slide:not([data-stack="0"]) .testimonial-slide-inner > * { visibility: hidden; }
-.testimonial-slide:not([data-stack="0"]) { pointer-events: none; }
-@media (max-width: 767px) {
-  /* Phones: one flat card at a time (colours still rotate), no tilted stack; the track takes the tallest quote. */
-  .home-page .testimonial-section { padding-block: 48px 52px; }
-  .testimonial-shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; }
-  .testimonial-section .center-heading h2 { font-size: 30px; }
-  .testimonial-note { display: none; }
-  .testimonial-carousel { grid-column: 1; grid-row: 2; margin-top: 20px; }
-  .testimonial-nav { grid-row: 3; margin-top: 16px; }
-  .testimonial-track { display: grid; height: auto; }
-  .testimonial-slide { position: relative; inset: auto; grid-area: 1 / 1; }
-  .testimonial-slide, .testimonial-slide[data-stack], .testimonial-slide.is-thrown { transform: none; }
-  .testimonial-slide:not([data-stack="0"]) { opacity: 0; }
-  .testimonial-slide-inner { gap: 16px; padding: 22px 22px 18px; border-radius: 22px; }
-  .testimonial-slide-inner::before { height: 28px; font-size: 64px; }
-  .testimonial-slide blockquote { font-size: 17px; font-weight: 500; line-height: 1.45; }
-  .testimonial-slide .person { padding-top: 12px; }
-  .testimonial-arrow { width: 44px; height: 44px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .testimonial-slide, .testimonial-arrow { transition: none; }
-}
-.home-page .testimonial-section .sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0,0,0,0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.home-page .person {
-  display: block;
-  margin-top: auto;
-  padding: 18px 112px 0 0;
-  border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent);
-  text-align: left;
-}
-.home-page .person div { display: flex; align-items: baseline; gap: 10px; }
-.home-page .person strong,
-.home-page .person span { font-family: "DM Sans", sans-serif; }
-/* Names follow the card colour (grey role text was unreadable on the red/maroon cards). */
-.home-page .person strong { color: inherit; font-size: 14px; font-weight: 700; }
-.home-page .person span { color: inherit; opacity: .85; font-size: 13px; }
-.home-page .person span::before {
-  content: "—";
-  margin-right: 10px;
-  color: inherit;
-}
-
-@media (max-width: 700px) {
-  
-  
-  
-  
-  
-  
-  
-  
-  .home-page .person { padding: 16px 0 0; }
   
   
 }
@@ -6387,11 +6198,6 @@ h3 {
   object-position: center center;
 }
 
-.home-page .home-about-teaser .editorial-photo img {
-  object-fit: cover;
-  object-position: center 44%;
-}
-
 .about-page .about-story-section .story-image { aspect-ratio: 3 / 2; }
 .about-page .about-story-documentary img {
   object-fit: cover;
@@ -6576,25 +6382,11 @@ h3 {
 
 /* Homepage motion (Oct 2026, after dashdigital.studio). Classes come from JS, only on Beranda and
    never with reduced motion, so without JS every title, rule and button looks as before. */
-/* clip-path, not overflow:hidden: an overflow box aligns by its bottom edge, which lifted serif (Newsreader) words off the baseline. */
-.home-motion .split-word { display: inline-block; clip-path: inset(-.35em -.25em -.22em -.25em); }
-.home-motion .split-word > span { display: inline-block; transform: translateY(135%); transition: transform .9s cubic-bezier(.16, 1, .3, 1); transition-delay: calc(min(var(--word, 0), 12) * 55ms); }
-.home-motion .split-heading.is-in .split-word > span { transform: none; }
-.home-motion .ink-heading .split-word > span { transform: none; opacity: .16; transition: opacity .35s var(--ease); }
-.home-motion .ink-heading .split-word.is-lit > span { opacity: 1; }
 /* Footer reveal (Beranda): main is a sheet with rounded bottom corners over a sticky footer. */
 html.home-motion.footer-reveal .home-page main { position: relative; z-index: 1; overflow: clip; background: var(--cream); border-radius: 0 0 28px 28px; box-shadow: 0 30px 60px rgba(33, 12, 16, .3); }
 html.home-motion.footer-reveal .home-page .site-footer { position: sticky; bottom: 0; z-index: 0; }
 .home-motion .draw-rule { border-top-color: transparent; background: linear-gradient(var(--line), var(--line)) 0 0 / 0 1px no-repeat; transition: background-size 1.1s cubic-bezier(.65, 0, .35, 1); }
 .home-motion .draw-rule.is-in { background-size: 100% 1px; }
-.home-motion .btn-roll { position: relative; display: inline-block; overflow: hidden; vertical-align: top; }
-.home-motion .btn-roll > span,
-.home-motion .btn-roll::after { display: block; transition: transform .45s cubic-bezier(.65, 0, .35, 1); }
-.home-motion .btn-roll::after { content: attr(data-label); position: absolute; top: 100%; left: 0; right: 0; }
-@media (hover: hover) {
-  .home-motion .btn:hover .btn-roll > span,
-  .home-motion .btn:hover .btn-roll::after { transform: translateY(-100%); }
-}
 @media (max-width: 1023px) {
   .home-motion .site-header { transition: transform .45s cubic-bezier(.65, 0, .35, 1); }
   .home-motion .site-header.is-tucked { transform: translateY(-100%); }
@@ -6618,7 +6410,7 @@ html.home-motion .home-page .impact-editorial { position: relative; z-index: 1; 
 @media (max-width: 767px) { html.home-motion .home-page .impact-editorial { border-radius: 20px 20px 0 0; } }
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .home-page :is(.impact-editorial-image, .home-about-teaser .editorial-photo) img { scale: 1.12; animation: photo-drift linear both; animation-timeline: view(); animation-range: cover; }
+    .home-page .impact-editorial-image img { scale: 1.12; animation: photo-drift linear both; animation-timeline: view(); animation-range: cover; }
   }
 }
 @keyframes photo-drift { from { translate: 0 -5%; } to { translate: 0 5%; } }
