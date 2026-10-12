@@ -74,11 +74,15 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
   `eventCardMarkup`; kosong = pil maroon muda), dikirim `public-events`. Palet sekunder dari ornamen sertifikat:
   Reguler maroon `#8a150e`/`#fbe4e1`, Unique krem (teks maroon gelap `#53141d`/`#f6e6d6`; dulu hijau, ditolak user: KB tidak punya hijau), Gratis emas `#8f5d00`/`#fff0c7`
   (token `--fam-*`). Kartu Program berlatar warna bab (sudut 28px, foto inset 20px, label pil, judul + titik warna
-  bab). Semua `.btn` pil. Foto non-cetakan (Program/Kisah Beranda, arsip Kisah, foto pembuka) 18px; **cetakan
-  jurnal Beranda tetap bersudut 2px** (kesan foto cetak). Garis tebal di atas daftar Kegiatan Terdekat dihapus.
+  bab). Semua `.btn` pil. Foto non-cetakan (Program/Kisah Beranda, arsip Kisah, foto pembuka) 18px. **Kartu seragam ala Monzo** (12 Okt 2026,
+  user: dasar tetap ala Gojek, ambil kartunya saja): foto Jejak Beranda kartu 24px tanpa bingkai cetakan/miring (masih fade + naik),
+  kartu Program Beranda 24px + foto 18px lurus, Testimoni satu kartu datar 24px di semua lebar (tumpukan miring dihapus). Garis tebal di atas daftar Kegiatan Terdekat dihapus.
 - Kegiatan sedikit (Okt 2026, audit UI): kalau yang tampil 1–2 kegiatan, grid dapat `.is-few` (+ `.is-one`) dari JS
   (`renderHomepageEvents`, `applyFilters` Jadwal) → ≥768px kartu mendatar besar (poster 40% kiri, `cover` dari atas):
   tablet satu kolom maks. 640px, ≥1100px dua kolom (satu kartu maks. 760px). HP tidak berubah.
+- HP Beranda ala aplikasi MyXL (12 Okt 2026): strip "Berikutnya" hero disembunyikan ≤767px (titik slider tampil lagi); lembaran Jejak
+  dibuka `.home-quick` = kartu putih "Berikutnya" (poster, judul 2 baris, panah bulat; diisi `renderHeroNext`) + 4 pintasan
+  (Jadwal, Cek status, Jadi relawan, Kisah; ikon garis di kotak warna keluarga KB). ≥768px tidak tampil.
 - Urutan Beranda: hero → Jejak → **Kegiatan Terdekat** → Program → Kisah → Testimoni → penutup (Okt 2026, dulu Terdekat setelah
   Program). **Versi A** (12 Okt 2026, user: Beranda HP keramean, ref. MyXL simpel): teaser Tentang (manifesto) digabung ke
   Jejak (paragraf "Kita Bahagia lahir untuk jadi rumah…" + link "Kenal lebih jauh →"); Testimoni **tetap** (sempat dicabut, user minta

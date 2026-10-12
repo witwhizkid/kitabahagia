@@ -441,6 +441,15 @@ const renderHeroNext = (events) => {
   link.href = eventHref(next);
   link.setAttribute('aria-label', `Kegiatan berikutnya: ${parts.join(', ')}`);
   link.hidden = false;
+  // Phones show the same event as a card with its poster below the hero (the strip is hidden there).
+  const card = document.querySelector('[data-home-next]');
+  if (!card) return;
+  card.querySelector('[data-home-next-text]').textContent = parts.join(' · ');
+  card.href = link.href;
+  card.setAttribute('aria-label', link.getAttribute('aria-label'));
+  const poster = card.querySelector('[data-home-next-poster]');
+  if (next.image) { poster.src = next.image; poster.hidden = false; }
+  card.hidden = false;
 };
 
 let homepageEventsLoading = false;
@@ -908,9 +917,7 @@ if (testimonialSlides.length && testimonialTrack) {
       const stack = (index - activeIndex + total) % total;
       slide.classList.toggle('active', isActive);
       slide.setAttribute('aria-hidden', String(!isActive));
-      // Card stack: 0 in front, 1–2 peek behind, the last one is the card just thrown off.
       slide.dataset.stack = String(stack);
-      slide.classList.toggle('is-thrown', total > 3 && stack === total - 1);
     });
     const count = document.querySelector('[data-testimonial-count]');
     if (count) count.textContent = `${activeIndex + 1} / ${total}`;
