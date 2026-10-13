@@ -112,7 +112,7 @@ Halaman pendaftaran (`pendaftaran.html`):
   kartu kegiatan + poster dulu, satu kartu "Data peserta" + "Ubah", kartu "Bayar pakai QRIS" (berbayar), bar Total + tombol bayar.
   Centang ulang "Data sudah benar" dari mockup sengaja tidak dibuat (persetujuan sudah di form). Layar sukses (lunas / gratis /
   lolos seleksi) punya pelacak ala lacak pesanan Grab di atas "Langkah berikutnya": Daftar ✓ → Bayar ✓ → **Terkonfirmasi** → Hari H
-  (`.status-track`, markup statis di dua `[data-registration-onboarding]`; "Bayar" disembunyikan `renderOnboarding` di luar `#paymentStage`).
+  (`.status-track`, markup statis di dua `[data-registration-onboarding]`; "Bayar" disembunyikan `renderOnboarding` di luar `#paymentStage`). Layar "Pembayaran berhasil" (13 Okt 2026, user: tombol grup WA harus discroll di desktop): stepper 1-2-3 + judul/teks pembuka disembunyikan (`:has(#paymentStage.payment_paid)`), catatan email + link IG pindah ke bawah kartu Langkah berikutnya (CSS `order`), jadi tombol WA terlihat tanpa scroll di laptop 1366×680 dan HP.
 - **Dua layar di satu URL** (13 Okt 2026, user: form masih kepanjangan): `?event=slug` = layar Detail (tanpa form; bar bawah menempel "Biaya ·
   Daftar sekarang" di **semua lebar**; tombol "Daftar kegiatan" di kartu maroon disembunyikan, 13 Okt user: tidak kelihatan di desktop), `&step=daftar` = layar Form (`body.step-detail`/`.step-form`, `applyStepView`;
   pushState, tombol ‹ `[data-form-step-back]` dan Back HP kembali ke Detail; Back dari Konfirmasi juga ke Detail, isian tetap). HP layar
