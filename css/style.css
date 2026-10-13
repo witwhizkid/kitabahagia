@@ -5614,7 +5614,20 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 @media (prefers-reduced-motion: reduce) { .registration-page .registration-event-disclosure > summary::after { transition:none; } }
 /* Phone event page (Oct 2026, mockup approved): white card with poster cover, details always open,
    chip nav, activities as a timeline, benefits as chips, sticky price bar ([data-registration-bar]). */
-.registration-bar { display:none; }
+.registration-bar,
+.registration-page .form-group-title,
+.registration-page .form-event-mini,
+.registration-page .form-actions-status,
+.registration-page .form-choice-pills,
+.registration-page .profile-avatar,
+.registration-page .profile-prompt small,
+.registration-page .review-edit-link,
+.registration-page .review-event-poster,
+.registration-page .review-pay-method,
+.registration-page .review-total { display:none; }
+.registration-page .form-actions-note { margin:18px 0 0; color:var(--muted); font-size:12px; line-height:1.5; }
+.registration-page .check-row:has(#rememberProfile) > span { display:grid; gap:2px; }
+.registration-page .check-row:has(#rememberProfile) small { color:var(--muted); font-size:inherit; font-weight:400; }
 @media (max-width:767px) {
   .registration-page .registration-summary-sticky { display:flex; flex-direction:column; padding:0 0 18px; border:1px solid var(--line); border-radius:24px; background:var(--white); color:var(--ink); box-shadow:none; }
   .registration-page .registration-summary-sticky::before,
@@ -5662,6 +5675,103 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .registration-bar strong { color:var(--maroon); font-family:"Instrument Sans","DM Sans",sans-serif; font-size:20px; line-height:1.15; }
   .registration-bar .btn { min-height:48px; margin-left:auto; padding:0 26px; border-radius:999px; }
   .registration-page.has-registration-bar .site-footer { padding-bottom:84px; }
+
+  /* Progress = three thin bars + "Langkah N dari 3". */
+  .registration-page .registration-progress ol { position:relative; display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; padding:0 0 26px; }
+  .registration-page .registration-progress li { display:block; height:5px; border-radius:99px; background:var(--line); }
+  .registration-page .registration-progress li.is-active,
+  .registration-page .registration-progress li.is-complete { background:var(--maroon); }
+  .registration-page .registration-progress li::after { content:none; }
+  .registration-page .registration-progress li > * { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .registration-page .registration-progress ol::after { content:"Langkah 1 dari 3 · Isi data → Konfirmasi → Bayar"; position:absolute; bottom:0; left:0; color:var(--muted); font-size:12.5px; }
+  .registration-page .registration-progress ol:has([data-registration-step="confirmation"].is-active)::after { content:"Langkah 2 dari 3 · Konfirmasi → Bayar"; }
+  .registration-page .registration-progress ol:has([data-registration-step="payment"].is-active)::after { content:"Langkah 3 dari 3 · Bayar"; }
+
+  /* Form (mockup 4a/4b). */
+  .registration-page .registration-shell .form-event-mini { display:flex; align-items:center; gap:12px; margin:0 0 18px; padding:12px; border-radius:18px; background:#f6f2ef; }
+  .registration-page .registration-shell .form-event-mini img { flex:none; width:48px; height:60px; border-radius:10px; object-fit:cover; object-position:top; }
+  .registration-page .registration-shell .form-event-mini p { display:grid; flex:1; min-width:0; gap:2px; margin:0; }
+  .registration-page .registration-shell .form-event-mini strong { overflow:hidden; color:var(--ink); font-size:14px; line-height:1.3; text-overflow:ellipsis; white-space:nowrap; }
+  .registration-page .registration-shell .form-event-mini span { color:var(--muted); font-size:12.5px; }
+  .registration-page .registration-shell .form-event-mini b { flex:none; color:var(--ink); font-size:14px; }
+  .registration-page .registration-shell .profile-prompt { display:grid; grid-template-columns:44px minmax(0, 1fr); gap:12px; align-items:start; padding:16px 14px; }
+  .registration-page .registration-shell .profile-avatar { display:grid; width:44px; height:44px; place-items:center; border-radius:16px; background:var(--white); color:var(--maroon); font-weight:800; }
+  .registration-page .registration-shell .profile-prompt p { font-weight:700; }
+  .registration-page .registration-shell .profile-prompt small { display:block; margin-top:2px; color:#6d4a4d; font-size:12.5px; font-weight:400; }
+  .registration-page .registration-shell .profile-prompt > div { grid-column:2; flex-wrap:nowrap; gap:8px; }
+  .registration-page .registration-shell .profile-prompt .btn,
+  .registration-page .registration-shell .profile-prompt .profile-forget { min-height:40px; padding:0 14px; font-size:13.5px; white-space:nowrap; }
+  .registration-page .registration-shell .profile-prompt .profile-forget { border:0; border-radius:999px; background:var(--white); color:var(--maroon); font-weight:700; text-decoration:none; }
+  .registration-page .registration-shell .form-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px 12px; }
+  .registration-page .registration-shell .form-grid > .field { grid-column:1 / -1; }
+  .registration-page .registration-shell .form-grid > .field:has(#domicile),
+  .registration-page .registration-shell .form-grid > .field:has(#age) { grid-column:auto; }
+  .registration-page .registration-shell .form-group-title,
+  .registration-page .registration-shell .field label[for="referralSource"] { display:flex; grid-column:1 / -1; align-items:center; gap:10px; margin:10px 0 0; color:var(--ink); font-size:17px; font-weight:700; letter-spacing:-.01em; }
+  .registration-page .registration-shell .form-group-title::before,
+  .registration-page .registration-shell .field label[for="referralSource"]::before { content:""; flex:none; width:32px; height:32px; border-radius:10px; background:var(--maroon-soft) url("../img/icon-group-user.svg") center / 17px no-repeat; }
+  .registration-page .registration-shell .form-group-about::before { background-image:url("../img/icon-group-pin.svg"); }
+  .registration-page .registration-shell .field label[for="referralSource"]::before { background-image:url("../img/icon-search.svg"); }
+  .registration-page .registration-shell .form-group-contact { margin-top:0; }
+  .registration-page .registration-shell .registration-card .field :is(#nama, #telepon, #email) { padding-left:46px; background-position:16px center; background-repeat:no-repeat; background-size:19px; }
+  .registration-page .registration-shell .registration-card .field #nama { background-image:url("../img/icon-field-user.svg"); }
+  .registration-page .registration-shell .registration-card .field #telepon { background-image:url("../img/icon-field-phone.svg"); }
+  .registration-page .registration-shell .registration-card .field #email { background-image:url("../img/icon-field-mail.svg"); }
+  .registration-page .registration-shell .kb-select:has(#referralSource) { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+  .registration-page .registration-shell .form-choice-pills { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+  .registration-page .registration-shell .form-choice-pills button { min-height:44px; padding:0 18px; border:1px solid transparent; border-radius:999px; background:#f6f2ef; color:var(--ink); font:inherit; font-size:14.5px; font-weight:600; cursor:pointer; }
+  .registration-page .registration-shell .form-choice-pills button[aria-checked="true"] { background:var(--maroon); color:var(--white); }
+  .registration-page .registration-shell .form-choice-pills.is-invalid button { border-color:var(--maroon-deep); }
+  .registration-page .registration-shell .form-choice-pills button:focus-visible { outline:3px solid var(--maroon); outline-offset:2px; }
+  .registration-page .registration-shell .registration-card .check-row:has(#rememberProfile) { justify-content:space-between; border:1px solid var(--line); background:var(--white); }
+  .registration-page .registration-shell .check-row:has(#rememberProfile) span { display:grid; gap:2px; }
+  .registration-page .registration-shell .check-row:has(#rememberProfile) strong { color:var(--ink); font-size:15px; }
+  .registration-page .registration-shell .check-row:has(#rememberProfile) small { color:var(--muted); font-size:12.5px; font-weight:400; line-height:1.45; }
+  .registration-page .registration-shell .check-row #rememberProfile { position:relative; order:2; flex:none; width:48px; height:28px; min-height:28px; margin:0; padding:0; border:0; border-radius:99px; background:#e4dcd8; appearance:none; cursor:pointer; transition:background-color .2s var(--ease); }
+  .registration-page .registration-shell .check-row #rememberProfile::before { content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:var(--white); box-shadow:0 1px 3px rgba(0,0,0,.2); transition:transform .2s var(--ease); }
+  .registration-page .registration-shell .check-row #rememberProfile:checked { background:var(--maroon); }
+  .registration-page .registration-shell .check-row #rememberProfile:checked::before { transform:translateX(20px); }
+  .registration-page .registration-shell .form-actions-note { margin:16px 0 0; padding:12px 14px; border-radius:16px; background:var(--maroon-soft); color:#6d4a4d; font-size:13px; }
+  .registration-page .registration-shell .registration-card .form-actions { position:sticky; z-index:5; bottom:0; display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:14px; margin:16px -20px -8px; padding:12px 20px calc(12px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); background:var(--white); }
+  .registration-page .registration-shell .form-actions-status { display:grid; gap:1px; margin:0; }
+  .registration-page .registration-shell .form-actions-status span { color:var(--muted); font-size:12px; }
+  .registration-page .registration-shell .form-actions-status strong { color:var(--ink); font-size:16px; }
+  .registration-page .registration-shell .registration-card .form-actions .btn { width:auto; min-width:150px; margin-left:auto; box-shadow:none; }
+  .registration-page .registration-shell form:not(.is-ready) .form-actions .btn:not(:disabled) { background:#ece5e1; color:#8b7f80; }
+
+  /* Confirmation (mockup 2): event card first, one data card with "Ubah", QRIS method, sticky total. */
+  .registration-page .registration-shell .registration-review-grid { display:flex; flex-direction:column; gap:18px; }
+  .registration-page .registration-shell .registration-review-event { order:-1; display:grid; grid-template-columns:64px minmax(0, 1fr); gap:2px 14px; padding:14px; border:1px solid var(--line); border-radius:20px; background:var(--white); }
+  .registration-page .registration-shell .review-event-poster:not([hidden]) { display:block; grid-row:span 3; width:64px; height:80px; border-radius:12px; object-fit:cover; object-position:top; }
+  .registration-page .registration-shell .registration-review-event > span { display:none; }
+  .registration-page .registration-shell .registration-review-event h3 { margin:0; color:var(--ink); font-size:16px; line-height:1.3; }
+  .registration-page .registration-shell .registration-review-event dl div { display:block; padding:0; border:0; }
+  .registration-page .registration-shell .registration-review-event dt { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+  .registration-page .registration-shell .registration-review-event dd { color:var(--muted); font-size:13px; font-weight:500; }
+  .registration-page .registration-shell .registration-review-event dl div:has([data-review-event-price]) dd { margin-top:4px; color:var(--ink); font-size:15px; font-weight:800; }
+  .registration-page .registration-shell .registration-review-participant { padding:0; background:transparent; }
+  .registration-page .registration-shell .review-participant-title { display:flex; align-items:center; justify-content:space-between; margin:0 0 10px; }
+  .registration-page .registration-shell .review-participant-title h3,
+  .registration-page .registration-shell .review-pay-method h3 { margin:0; color:var(--muted); font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
+  .registration-page .registration-shell .review-edit-link { display:inline-flex; min-height:36px; align-items:center; padding:0 4px; border:0; background:none; color:var(--maroon); font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+  .registration-page .registration-shell .registration-review-participant dl { display:block; padding:4px 16px; border:1px solid var(--line); border-radius:20px; background:var(--white); }
+  .registration-page .registration-shell .registration-review-participant dl div { display:grid; gap:2px; margin:0; padding:12px 0; border:0; border-top:1px solid var(--line); border-radius:0; background:transparent; box-shadow:none; }
+  .registration-page .registration-shell .registration-review-participant dl div:first-child { border-top:0; }
+  .registration-page .registration-shell .registration-review-participant dt { color:var(--muted); font-size:12px; font-weight:500; letter-spacing:0; text-transform:none; }
+  .registration-page .registration-shell .registration-review-participant dd { color:var(--ink); font-size:15px; font-weight:700; }
+  .registration-page .registration-shell .review-pay-method:not([hidden]) { display:block; margin-top:18px; }
+  .registration-page .registration-shell .review-pay-method p { display:flex; align-items:center; gap:14px; margin:10px 0 0; padding:16px; border:1px solid var(--line); border-radius:20px; background:var(--white); }
+  .registration-page .registration-shell .review-pay-logo { flex:none; padding:8px 10px; border-radius:8px; background:var(--ink); color:var(--white); font-size:12px; letter-spacing:.02em; }
+  .registration-page .registration-shell .review-pay-method span { display:grid; gap:2px; }
+  .registration-page .registration-shell .review-pay-method strong { font-size:15px; }
+  .registration-page .registration-shell .review-pay-method small { color:var(--muted); font-size:12.5px; }
+  .registration-page .registration-shell .registration-review-consequence { padding:12px 14px; border:0; border-radius:16px; background:var(--maroon-soft); color:#6d4a4d; font-size:13px; }
+  .registration-page .registration-shell .registration-review-actions { position:sticky; z-index:5; bottom:0; display:flex; flex-direction:row; align-items:center; gap:12px; margin:18px -18px -18px; padding:12px 18px calc(12px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); background:var(--white); }
+  .registration-page .registration-shell .review-total:not([hidden]) { display:grid; gap:1px; margin:0; }
+  .registration-page .registration-shell .review-total span { color:var(--muted); font-size:12px; }
+  .registration-page .registration-shell .review-total strong { color:var(--maroon); font-size:19px; white-space:nowrap; }
+  .registration-page .registration-shell .registration-review-actions #editRegistrationButton { display:none; }
+  .registration-page .registration-shell .registration-review-actions .btn-primary { flex:1; width:auto; min-width:0; margin-left:auto; padding-inline:18px; }
 }
 
 /* Brand watermark: the Kita Bahagia mark replaces the generic decorative circles. */
