@@ -2471,6 +2471,9 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-page .payment-stage.payment_deadline_passed .payment-qr-section { display:none; }
 .registration-page .payment-stage.payment_paid .payment-primary { padding-top:26px; }
 .registration-page .payment-stage.payment_paid .payment-state p { font-size:15px; }
+.registration-page .payment-stage.payment_paid [data-email-note] { order:4; margin-top:14px; }
+.registration-page .payment-stage.payment_paid [data-payment-instagram-cta] { order:5; margin-top:14px; }
+.registration-page:has(#paymentStage.payment_paid:not([hidden])) :is(.registration-progress, .registration-intro h1, .registration-intro p, .registration-intro span) { display:none; }
 .registration-page .payment-stage.payment_processing .payment-intro,
 .registration-page .payment-stage.payment_paid .payment-intro,
 .registration-page .payment-stage.payment_expired .payment-intro,
