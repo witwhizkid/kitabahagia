@@ -499,7 +499,9 @@ Lainnya:
   4 tombol cepat (Kegiatan baru maroon, Cek bukti = filter "Bukti belum dicek", Tandai hadir = kegiatan terdekat yang
   sudah mulai, Sertifikat), "Kegiatan terdekat" jadi kartu maroon geser (poster, watermark logo, kapasitas, tahap
   Tayang → Pendaftaran → Hari H → Sertifikat, angka Terkonfirmasi/Nunggu bayar/Bukti belum dicek), daftar tindak lanjut
-  dalam kartu pink pucat. 4 angka statistik disembunyikan di HP; desktop tidak berubah.
+  dalam kartu pink pucat, lalu "Baru daftar" (5 pendaftar terbaru + status; ketuk = Pendaftar dicari kodenya; juga tampil di
+  desktop). 4 angka statistik disembunyikan di HP. Tab bar HP 4 item: Beranda · Kegiatan · Pendaftar · Lainnya (popover Kisah/
+  Sertifikat/Admin, `[data-nav-more]`; tablet tetap semua tab).
 - Admin di HP (≤768px): tab bar bawah dengan ikon (Okt 2026: bar putih melayang, tab aktif pil maroon) (disembunyikan saat form
   kegiatan/kisah terbuka), logo di header, judul + tombol Tambah satu baris,
   kartu kegiatan ringkas tanpa label. Tablet (769–900px) tetap tab atas. Form
