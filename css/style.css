@@ -5612,7 +5612,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .registration-event-disclosure[open] > summary::after { transform:translateY(2px) rotate(-135deg); }
 .registration-page .registration-event-disclosure > summary:focus-visible { outline:3px solid var(--maroon); outline-offset:2px; }
 @media (prefers-reduced-motion: reduce) { .registration-page .registration-event-disclosure > summary::after { transition:none; } }
-/* Phone event page (Oct 2026, mockup approved): white card with poster cover, details always open,
+/* Phone event page (Oct 2026, mockup approved): maroon summary card kept (owner), details always open,
    chip nav, activities as a timeline, benefits as chips, sticky price bar ([data-registration-bar]). */
 /* Two screens (Oct 2026): body.step-detail = event details only, body.step-form = form only. */
 .registration-page.step-detail #registrationFormPanel,
@@ -5652,26 +5652,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .check-row:has(#rememberProfile) > span { display:grid; gap:2px; }
 .registration-page .check-row:has(#rememberProfile) small { color:var(--muted); font-size:inherit; font-weight:400; }
 @media (max-width:767px) {
-  .registration-page .registration-summary-sticky { display:flex; flex-direction:column; padding:0 0 18px; border:1px solid var(--line); border-radius:24px; background:var(--white); color:var(--ink); box-shadow:none; }
-  .registration-page .registration-summary-sticky::before,
-  .registration-page .registration-summary-sticky::after { display:none; }
-  .registration-page .registration-summary-sticky > * { margin-left:18px; margin-right:18px; }
-  .registration-page .registration-summary-title-row { display:contents; }
-  .registration-page .summary-card .registration-summary-image { order:-1; flex:none; width:auto; height:auto; aspect-ratio:4 / 3; margin:0 0 16px; border-radius:0; background:var(--sand); }
-  .registration-page .summary-card .registration-poster-button img { object-fit:cover; object-position:top; }
-  .registration-page .summary-card .registration-poster-button span { right:auto; left:12px; bottom:12px; padding:5px 12px; }
-  .registration-page .registration-summary-topline { margin-top:0; }
-  .registration-page .registration-summary-topline > span { background:#f6f2ef; color:var(--ink); letter-spacing:0; }
-  .registration-page .registration-summary-topline > .registration-event-category { background:var(--maroon-soft); color:var(--maroon); }
-  .registration-page .registration-summary-topline > span.is-countdown { background:var(--maroon); color:var(--white); }
-  .registration-page .summary-card .registration-summary-title-row h2 { margin:4px 18px 0; color:var(--ink); font-size:24px; line-height:1.15; }
-  .registration-page .registration-summary-sticky .event-summary div { border-color:var(--line); }
-  .registration-page .registration-summary-sticky .event-summary dt { color:var(--muted); }
-  .registration-page .registration-summary-sticky .event-summary dd { color:var(--ink); }
-  .registration-page .registration-summary-sticky .event-summary dd a { color:var(--maroon); }
-  .registration-page .registration-payment-window { background:#f6f2ef; color:var(--ink); border-radius:16px; }
   .registration-page .registration-summary-cta { display:none; }
-
   .registration-page .registration-event-disclosure > summary { display:none; }
   .registration-page .registration-event-disclosure[open] .registration-event-content { display:flex; flex-direction:column; margin-top:6px; padding:0; background:transparent; }
   .registration-page .registration-content-nav { order:0; gap:8px; margin:0 calc(-1 * var(--container-gutter, 20px)) 6px; padding:4px var(--container-gutter, 20px) 12px; border:0; }
