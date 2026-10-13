@@ -3897,7 +3897,9 @@ if (registrationForm) {
   };
   registrationForm.addEventListener('input', () => updateFormReady());
   registrationForm.addEventListener('change', () => updateFormReady());
-  registrationReview?.querySelector('[data-review-edit]')?.addEventListener('click', () => editRegistrationButton?.click());
+  registrationReview?.querySelectorAll('[data-review-edit], [data-review-back]').forEach((button) => {
+    button.addEventListener('click', () => editRegistrationButton?.click());
+  });
 
   const telephoneInput = document.getElementById('telepon');
   // Optional "ingat data saya": prefills the next registration on this device only; never sent to the server.
