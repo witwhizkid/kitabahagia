@@ -66,7 +66,11 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
   kanan bawah (tanda bisa diklik di HP). Seluruh kartu bisa diklik (stretched link di judul); ditekan
   mengecil .98; hover desktop naik 4px + border maroon + panah bergeser (mati saat reduced motion). Desktop/tablet
   3 kolom; HP: beranda kartu geser, Jadwal kartu tegak dengan poster 4:5 utuh selebar kartu di atas (Okt 2026, user: versi
-  mendatar poster 118px yang terpotong kiri-kanan jelek). Hover hanya di
+  mendatar poster 118px yang terpotong kiri-kanan jelek). **Jadwal HP ≤640px (13 Okt 2026, mockup disetujui user):** tab Mendatang =
+  kartu geser ke samping (`.is-carousel`, kartu 84% + kartu berikutnya mengintip, judul maks. 2 baris, penanda `[data-schedule-pager]`
+  "1 / N" + titik + "Geser untuk lihat lainnya →", sekali goyang `.is-nudge` saat pertama tampil, mati saat reduced motion; 1 kegiatan =
+  kartu biasa tanpa penanda); tab Sudah selesai = daftar ringkas (`.is-list`, poster 72px kiri, tanpa harga/badge) dikelompokkan per bulan
+  (`.schedule-month`, hanya tampil di HP). Versi bingkai mendatar + poster blur ditolak user (poster jadi jelek). Hover hanya di
   `@media (hover:hover)`.
 - Kartu membulat + palet KB (Okt 2026, ref. Gojek, mockup disetujui user): kartu kegiatan sudut 24px
   (`--radius-round`), latar putih, foto masuk 8px dengan sudut 18px (`--radius-round-photo`); kategori = pil berwarna

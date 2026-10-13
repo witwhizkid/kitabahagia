@@ -603,8 +603,16 @@ const renderScheduleEvents = async () => {
 
   // KB publishes a handful of events a month about a week ahead, so the schedule is one card grid
   // with two tabs (Mendatang / Sudah selesai); poster badges carry "N hari lagi" and "Kuota penuh".
-  grid.innerHTML = [...scheduleEvents, ...pastEvents]
-    .map((event) => eventCardMarkup(event, eventIsPast(event) ? ' data-past' : '')).join('');
+  // Finished events get a month heading each; phones show them as a compact list (CSS shows the headings there only).
+  const monthLabel = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
+  let lastMonth = '';
+  const pastMarkup = pastEvents.map((event) => {
+    const month = monthLabel.format(new Date(event.start));
+    const heading = month !== lastMonth ? `<p class="schedule-month" data-past>${escapeHTML(month)}</p>` : '';
+    lastMonth = month;
+    return heading + eventCardMarkup(event, ' data-past');
+  }).join('');
+  grid.innerHTML = scheduleEvents.map((event) => eventCardMarkup(event)).join('') + pastMarkup;
   fitEventPhotos(grid);
   grid.removeAttribute('aria-busy');
   count?.classList.remove('visually-hidden');
@@ -1292,6 +1300,22 @@ function initializeScheduleFilters() {
   if (!tabs.length) return;
 
   let activeFilter = tabs.find((tab) => tab.classList.contains('active'))?.dataset.scheduleFilter || 'upcoming';
+  const pager = document.querySelector('[data-schedule-pager]');
+  let nudged = false;
+  const updatePager = () => {
+    const grid = document.getElementById('scheduleGrid');
+    if (!pager || pager.hidden || !grid) return;
+    const shown = cards.filter((card) => !card.classList.contains('hidden'));
+    const step = (shown[1]?.offsetLeft ?? 0) - (shown[0]?.offsetLeft ?? 0);
+    const index = step > 0 ? Math.min(shown.length - 1, Math.round(grid.scrollLeft / step)) : 0;
+    pager.querySelector('[data-schedule-pager-current]').textContent = String(index + 1);
+    pager.querySelectorAll('[data-schedule-dots] i').forEach((dot, i) => dot.classList.toggle('is-on', i === index));
+  };
+  const scheduleGrid = document.getElementById('scheduleGrid');
+  if (scheduleGrid && !scheduleGrid.dataset.pagerBound) {
+    scheduleGrid.dataset.pagerBound = 'true';
+    scheduleGrid.addEventListener('scroll', () => window.requestAnimationFrame(updatePager), { passive: true });
+  }
   const applyFilters = () => {
     let visible = 0;
     cards.forEach((card) => {
@@ -1304,6 +1328,26 @@ function initializeScheduleFilters() {
     grid?.classList.toggle('is-few', visible > 0 && visible <= 2);
     grid?.classList.toggle('is-one', visible === 1);
     scheduleEmpty?.classList.toggle('hidden', visible !== 0);
+    // Phones (CSS ≤640px): Mendatang swipes sideways with the next card peeking, Sudah selesai is a compact list.
+    const carousel = activeFilter === 'upcoming' && visible > 1;
+    grid?.classList.toggle('is-carousel', carousel);
+    grid?.classList.toggle('is-list', activeFilter === 'past');
+    if (grid) grid.scrollLeft = 0;
+    if (pager) {
+      pager.hidden = !carousel;
+      if (carousel) {
+        pager.querySelector('[data-schedule-pager-total]').textContent = String(visible);
+        pager.querySelector('[data-schedule-dots]').replaceChildren(...Array.from({ length: visible }, () => document.createElement('i')));
+        updatePager();
+      }
+    }
+    // One small nudge the first time the carousel shows, so visitors notice it scrolls sideways.
+    if (carousel && !nudged && window.matchMedia('(max-width: 640px)').matches
+      && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      nudged = true;
+      grid.classList.add('is-nudge');
+      window.setTimeout(() => grid.classList.remove('is-nudge'), 1800);
+    }
   };
 
   tabs.forEach((button) => {
