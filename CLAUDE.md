@@ -113,8 +113,8 @@ Halaman pendaftaran (`pendaftaran.html`):
   Centang ulang "Data sudah benar" dari mockup sengaja tidak dibuat (persetujuan sudah di form). Layar sukses (lunas / gratis /
   lolos seleksi) punya pelacak ala lacak pesanan Grab di atas "Langkah berikutnya": Daftar ✓ → Bayar ✓ → **Terkonfirmasi** → Hari H
   (`.status-track`, markup statis di dua `[data-registration-onboarding]`; "Bayar" disembunyikan `renderOnboarding` di luar `#paymentStage`).
-- **Dua layar di satu URL** (13 Okt 2026, user: form masih kepanjangan): `?event=slug` = layar Detail (tanpa form; bar "Daftar sekarang" di
-  HP, tombol "Daftar kegiatan" di kartu ringkasan desktop), `&step=daftar` = layar Form (`body.step-detail`/`.step-form`, `applyStepView`;
+- **Dua layar di satu URL** (13 Okt 2026, user: form masih kepanjangan): `?event=slug` = layar Detail (tanpa form; bar bawah menempel "Biaya ·
+  Daftar sekarang" di **semua lebar**; tombol "Daftar kegiatan" di kartu maroon disembunyikan, 13 Okt user: tidak kelihatan di desktop), `&step=daftar` = layar Form (`body.step-detail`/`.step-form`, `applyStepView`;
   pushState, tombol ‹ `[data-form-step-back]` dan Back HP kembali ke Detail; Back dari Konfirmasi juga ke Detail, isian tetap). HP layar
   Form menyembunyikan intro, detail, dan footer. Sengaja **bukan** file HTML baru: link `pendaftaran.html?event=` sudah tersebar, dipakai
   preview bot, poster terbang, Cek status, dan recovery bayar. Kegiatan Seleksi: layar Form punya link "Baca dulu persyaratan jika lolos".
