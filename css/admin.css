@@ -534,6 +534,19 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
 .home-tasks { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 /* Phone-only Beranda pieces (search, quick actions, event stage + counts); desktop keeps the stat grid. */
 .home-search, .home-actions, .home-event-stage, .home-event-mini { display: none; }
+.home-recent { display: grid; margin: 0; padding: 0; list-style: none; }
+.home-recent-row { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 11px 0; color: var(--ink); text-align: left; background: none; border: 0; border-top: 1px solid var(--line); cursor: pointer; }
+.home-recent li:first-child .home-recent-row { border-top: 0; }
+.home-recent-avatar { display: grid; place-items: center; width: 40px; height: 40px; color: var(--maroon); font: 700 .9rem "Instrument Sans", sans-serif; background: #f6f2ef; border-radius: 14px; }
+.home-recent-text { display: grid; min-width: 0; }
+.home-recent-text strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-recent-text small { overflow: hidden; color: var(--muted); font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+.home-recent-status { padding: 4px 10px; font-size: .72rem; font-weight: 700; white-space: nowrap; border-radius: 999px; }
+.home-recent-status.is-ok { color: #1f6b3f; background: #e9f4ec; }
+.home-recent-status.is-wait { color: var(--muted); background: #f6f2ef; }
+.home-recent-status.is-check { color: var(--maroon); background: #fbeeec; }
+.mobile-nav-more-button { display: none; }
+.mobile-nav-more { display: contents; }
 .home-task { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 14px 16px; color: var(--ink); text-align: left; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; font-size: .9rem; line-height: 1.4; cursor: pointer; transition: border-color 160ms ease, transform 160ms var(--ease); }
 .home-task:hover { border-color: var(--maroon); transform: translateX(2px); }
 .home-task-text { overflow-wrap: anywhere; }
@@ -635,6 +648,12 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
     line-height: 1.1;
   }
   .mobile-nav svg { display: block; width: 23px; height: 23px; }
+  .mobile-nav-more-button { display: grid; place-items: center; gap: 3px; min-height: 54px; padding: 8px 4px 7px; color: #8a7c7d; font: 600 .72rem/1.1 "DM Sans", sans-serif; background: none; border: 0; border-radius: 18px; cursor: pointer; }
+  .mobile-nav-more-button.is-active, .mobile-nav-more-button[aria-expanded="true"] { color: #fff; background: var(--maroon); }
+  .mobile-nav-more { position: absolute; right: 6px; bottom: calc(100% + 8px); display: none; min-width: 190px; padding: 6px; background: #fff; border: 1px solid #efe6df; border-radius: 20px; box-shadow: 0 12px 30px rgba(42, 14, 19, .18); }
+  .mobile-nav-more.is-open { display: grid; }
+  .mobile-nav .mobile-nav-more a { grid-auto-flow: column; justify-content: start; gap: 12px; min-height: 48px; padding: 0 14px; font-size: .9rem; color: var(--ink); }
+  .mobile-nav .mobile-nav-more a.is-active { color: #fff; }
   .form-jump { top: 60px; }
   .event-form .section-heading h2 { scroll-margin-top: 130px; }
   .mobile-nav a.is-active { color: #fff; background: var(--maroon); }
@@ -813,8 +832,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
   .home-event-poster { border: 2px solid rgba(255, 255, 255, .85); }
   .home-event h3, .home-event .text-button { color: #fff; }
   .home-event-when, .home-event-meta { color: rgba(255, 255, 255, .8); }
-  .home-event-meta .state-label { color: var(--maroon); background: #fff; }
-  .home-event .capacity { grid-column: 1 / -1; }
+  .home-event-meta .state-label { display: none; }
+  .home-event h3 { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .home-event .capacity { grid-column: 1 / -1; max-width: none; }
+  .home-event .capacity-bar { background: rgba(255, 255, 255, .22); }
   .home-event .capacity, .home-event .capacity * { color: #fff; }
   .home-event-stage { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 10px 0 0; padding: 0; list-style: none; position: relative; z-index: 1; }
   .home-event-stage::before { content: ""; position: absolute; left: 12.5%; right: 12.5%; top: 10px; height: 2px; background: rgba(255, 255, 255, .3); }

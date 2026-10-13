@@ -2117,6 +2117,27 @@
     }).join("") : `<div class="home-empty"><p>Belum ada kegiatan mendatang.</p><button class="button button-primary" type="button" data-home-add-event>Bikin kegiatan baru</button></div>`;
     applyCapacityBars(upcomingList);
 
+    // Newest sign-ups first (MyXL-style list); a tap opens Pendaftar searched on that code.
+    const ago = (iso) => {
+      const minutes = Math.max(1, Math.round((now - new Date(iso).getTime()) / 6e4));
+      return minutes < 60 ? `${minutes} menit lalu` : minutes < 1440 ? `${Math.round(minutes / 60)} jam lalu` : `${Math.round(minutes / 1440)} hari lalu`;
+    };
+    const recentStatus = (registration) => proofUnchecked(registration) ? ["Cek bukti", "is-check"]
+      : registration.registration_status === "confirmed" ? ["Terkonfirmasi", "is-ok"]
+      : registration.registration_status === "pending_payment" ? ["Nunggu bayar", "is-wait"]
+      : registration.registration_status === "applied" ? ["Menunggu seleksi", "is-wait"]
+      : [registrationStatusLabels[registration.registration_status] || "Lainnya", "is-wait"];
+    const recent = [...registrations].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, 5);
+    $("#home-recent").innerHTML = recent.length ? recent.map((registration) => {
+      const [label, tone] = recentStatus(registration);
+      const initials = String(registration.name || "?").trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join("");
+      return `<li><button class="home-recent-row" type="button" data-home-code="${escapeHtml(registration.registration_code)}">
+        <span class="home-recent-avatar" aria-hidden="true">${escapeHtml(initials)}</span>
+        <span class="home-recent-text"><strong>${escapeHtml(registration.name || "-")}</strong><small>${escapeHtml(registration.events?.title || "")} · ${ago(registration.created_at)}</small></span>
+        <span class="home-recent-status ${tone}">${label}</span>
+      </button></li>`;
+    }).join("") : `<li class="home-all-done">Belum ada pendaftar baru.</li>`;
+
     const tasks = homeTasks();
     $("#home-tasks").innerHTML = tasks.length ? tasks.map((task) => `
       <li><button class="home-task is-${task.tone}" type="button" data-home-go="${task.go}" data-home-event="${escapeHtml(task.event)}"${task.lifecycle ? ` data-home-lifecycle="${task.lifecycle}"` : ""}${task.payment ? ` data-home-payment="${task.payment}"` : ""}>
@@ -2150,7 +2171,7 @@
       // Never show zeros and "all good" on top of missing data.
       setFeedback($("#home-feedback"), `${problem} Coba muat ulang halaman.`, "error");
       $("#home-summary").textContent = "Ringkasan belum lengkap.";
-      ["#home-stats", "#home-upcoming", "#home-tasks"].forEach((selector) => { $(selector).innerHTML = ""; });
+      ["#home-stats", "#home-upcoming", "#home-tasks", "#home-recent"].forEach((selector) => { $(selector).innerHTML = ""; });
       return;
     }
     renderHome();
@@ -2182,6 +2203,8 @@
 
   homeView.addEventListener("click", (event) => {
     if (event.target.closest("[data-home-add-event]")) return showForm();
+    const code = event.target.closest("[data-home-code]")?.dataset.homeCode;
+    if (code) return void openRegistrations({ search: code });
     const action = event.target.closest("[data-home-action]")?.dataset.homeAction;
     if (action === "proof") return void openRegistrations({ payment: "unchecked" });
     if (action === "certificates") return void openCertificates("");
@@ -2233,6 +2256,12 @@
     void loadHomeRegistrations().then(() => { if (!eventsView.hidden) renderEvents(); }).catch(() => undefined);
   };
 
+  const toggleNavMore = (open) => {
+    const button = $("[data-nav-more]");
+    if (!button) return;
+    button.setAttribute("aria-expanded", String(open));
+    $("#mobile-nav-more").classList.toggle("is-open", open);
+  };
   const setActiveNavigation = (view) => {
     document.querySelectorAll("[data-admin-view]").forEach((link) => {
       const active = link.dataset.adminView === view;
@@ -2240,7 +2269,16 @@
       if (active) link.setAttribute("aria-current", "page");
       else link.removeAttribute("aria-current");
     });
+    // Phone tab bar: Kisah/Sertifikat/Admin live under "Lainnya", which lights up for them.
+    $("[data-nav-more]")?.classList.toggle("is-active", ["stories", "certificates", "admins"].includes(view));
+    toggleNavMore(false);
   };
+  $("[data-nav-more]")?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleNavMore(event.currentTarget.getAttribute("aria-expanded") !== "true");
+  });
+  document.addEventListener("click", (event) => { if (!event.target.closest("#mobile-nav-more")) toggleNavMore(false); });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") toggleNavMore(false); });
 
   const showRegistrations = async () => {
     formView.hidden = true;
