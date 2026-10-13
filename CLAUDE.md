@@ -494,7 +494,13 @@ Lainnya:
   asli disembunyikan tapi tetap sumber data (nilai, event `change`, `.value` dari kode tetap
   jalan; select yang dibuat belakangan ikut otomatis). Label Program Family di admin:
   Program Reguler / Program Unique / Program Gratis (kunci database tetap).
-- Admin di HP (≤768px): tab bar bawah dengan ikon (disembunyikan saat form
+- Beranda admin di HP (≤580px, Okt 2026, mockup v3 disetujui, ala aplikasi MyXL; warna simpel putih + satu aksen maroon):
+  sapaan dengan nama di pil maroon Newsreader, kolom cari pendaftar (`[data-home-search]` → Pendaftar dengan kata kunci),
+  4 tombol cepat (Kegiatan baru maroon, Cek bukti = filter "Bukti belum dicek", Tandai hadir = kegiatan terdekat yang
+  sudah mulai, Sertifikat), "Kegiatan terdekat" jadi kartu maroon geser (poster, watermark logo, kapasitas, tahap
+  Tayang → Pendaftaran → Hari H → Sertifikat, angka Terkonfirmasi/Nunggu bayar/Bukti belum dicek), daftar tindak lanjut
+  dalam kartu pink pucat. 4 angka statistik disembunyikan di HP; desktop tidak berubah.
+- Admin di HP (≤768px): tab bar bawah dengan ikon (Okt 2026: bar putih melayang, tab aktif pil maroon) (disembunyikan saat form
   kegiatan/kisah terbuka), logo di header, judul + tombol Tambah satu baris,
   kartu kegiatan ringkas tanpa label. Tablet (769–900px) tetap tab atas. Form
   kegiatan punya tombol lompat per bagian yang menempel saat di-scroll.

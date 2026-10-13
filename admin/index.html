@@ -98,6 +98,16 @@
             <button class="button button-primary" type="button" data-home-add-event>Tambah Kegiatan</button>
           </div>
           <p id="home-feedback" class="feedback" role="status" aria-live="polite"></p>
+          <form class="home-search" role="search" data-home-search>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" name="q" placeholder="Cari nama, kode, atau email pendaftar" aria-label="Cari pendaftar" enterkeyhint="search" />
+          </form>
+          <div class="home-actions">
+            <button type="button" data-home-add-event><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>Kegiatan baru</button>
+            <button type="button" data-home-action="proof"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v7h-4"/></svg></span>Cek bukti</button>
+            <button type="button" data-home-action="attendance"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="8" r="4"/><path d="M3 20a7 7 0 0 1 12-4.9"/><path d="m15 18 2 2 4-4"/></svg></span>Tandai hadir</button>
+            <button type="button" data-home-action="certificates"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v16l-5-3-5 3Z"/></svg></span>Sertifikat</button>
+          </div>
           <div id="home-stats" class="home-stats">
             <span class="skeleton skeleton-stat"></span><span class="skeleton skeleton-stat"></span><span class="skeleton skeleton-stat"></span><span class="skeleton skeleton-stat"></span>
           </div>

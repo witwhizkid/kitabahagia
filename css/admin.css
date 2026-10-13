@@ -532,6 +532,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
 .home-event-actions { display: flex; flex-wrap: wrap; gap: 0 18px; margin-top: 2px; }
 .home-event-actions .text-button { min-height: 36px; font-size: .88rem; }
 .home-tasks { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+/* Phone-only Beranda pieces (search, quick actions, event stage + counts); desktop keeps the stat grid. */
+.home-search, .home-actions, .home-event-stage, .home-event-mini { display: none; }
 .home-task { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 14px 16px; color: var(--ink); text-align: left; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; font-size: .9rem; line-height: 1.4; cursor: pointer; transition: border-color 160ms ease, transform 160ms var(--ease); }
 .home-task:hover { border-color: var(--maroon); transform: translateX(2px); }
 .home-task-text { overflow-wrap: anywhere; }
@@ -604,25 +606,30 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
     min-width: 52px;
     padding-inline: 10px 0;
   }
-  /* Phone: tab bar at the bottom (thumb reach); hidden while a form fills the screen. */
+  /* Phone: floating white tab bar at the bottom (thumb reach), maroon pill = active tab (Oct 2026, like
+     the public site); hidden while a form fills the screen. */
   .mobile-nav {
     position: fixed;
-    inset: auto 0 0;
+    inset: auto 12px calc(12px + env(safe-area-inset-bottom));
     z-index: 20;
     grid-auto-flow: column;
     grid-auto-columns: minmax(0, 1fr);
-    padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -8px 20px rgba(44, 18, 22, .16);
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #efe6df;
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(42, 14, 19, .14);
   }
   .mobile-nav:not([hidden]) { display: grid; }
   .workspace:has(#form-view:not([hidden])) .mobile-nav,
   .workspace:has(#story-form-view:not([hidden])) .mobile-nav { display: none; }
   .mobile-nav a {
     gap: 3px;
-    min-height: 60px;
+    min-height: 54px;
     padding: 8px 4px 7px;
     border: 0;
-    color: rgba(255, 250, 242, .78);
+    border-radius: 18px;
+    color: #8a7c7d;
     font-size: .72rem;
     font-weight: 600;
     line-height: 1.1;
@@ -630,11 +637,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
   .mobile-nav svg { display: block; width: 23px; height: 23px; }
   .form-jump { top: 60px; }
   .event-form .section-heading h2 { scroll-margin-top: 130px; }
-  .mobile-nav a.is-active {
-    color: #fffaf2;
-    background: rgba(255,255,255,.1);
-    box-shadow: inset 0 3px 0 #fff3df;
-  }
+  .mobile-nav a.is-active { color: #fff; background: var(--maroon); }
 
   .content-view {
     padding: 28px 24px calc(100px + env(safe-area-inset-bottom));
@@ -783,11 +786,56 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
   .login-logo { margin-bottom: 62px; }
   .content-view { padding: 24px 20px calc(96px + env(safe-area-inset-bottom)); }
   .event-row { gap: 11px 14px; padding: 14px; }
+  /* Phone Beranda (Oct 2026, mockup v3 approved: MyXL-app layout, white + one maroon accent). */
+  #home-view { background: #fff; }
   .home-hero { flex-direction: column; align-items: stretch; }
-  .home-hero .button { width: 100%; }
-  .home-stats { gap: 10px; margin-bottom: 28px; }
-  .home-stat { padding: 16px 14px 14px; }
-  .home-event { grid-template-columns: 72px minmax(0, 1fr); gap: 14px; padding: 12px; }
+  .home-hero .button, .home-hero .eyebrow, .home-wave, .home-stats { display: none; }
+  .home-hero h1 { font-size: 2rem; line-height: 1.12; }
+  .home-hero h1 em { display: inline-block; margin-top: 4px; padding: 0 .38em .08em; color: #fbf1e6; background: var(--maroon); border-radius: 999px; }
+  .home-name-button { border: 0; }
+  .home-hero #home-summary { margin-top: 10px; font-size: .92rem; }
+  .home-search { display: flex; align-items: center; gap: 10px; height: 52px; margin: 18px 0 0; padding: 0 16px; color: var(--muted); background: #f6f2ef; border-radius: 16px; }
+  .home-search svg { flex: none; width: 21px; height: 21px; }
+  .home-search input { flex: 1; min-width: 0; min-height: 0; padding: 0; font-size: .95rem; background: transparent; border: 0; box-shadow: none; }
+  .home-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 20px 0 28px; }
+  .home-actions button { display: grid; justify-items: center; gap: 7px; padding: 0; color: var(--ink); font: 700 .78rem/1.2 "DM Sans", sans-serif; text-align: center; background: none; border: 0; cursor: pointer; }
+  .home-actions button > span { display: grid; place-items: center; width: 60px; height: 60px; background: #f6f2ef; border-radius: 20px; transition: transform 160ms var(--ease); }
+  .home-actions button:first-child > span { color: #fff; background: var(--maroon); }
+  .home-actions button:active > span { transform: scale(.94); }
+  .home-actions svg { width: 23px; height: 23px; }
+  .home-grid { gap: 26px; }
+  .home-panel-head h2 { font-size: 1.15rem; }
+  .home-upcoming { display: flex; gap: 12px; margin: 0 -20px; padding: 0 20px 4px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 20px; scrollbar-width: none; }
+  .home-upcoming::-webkit-scrollbar { display: none; }
+  .home-event { position: relative; flex: 0 0 88%; overflow: hidden; grid-template-columns: 58px minmax(0, 1fr); gap: 12px; padding: 16px; color: #fff; background: linear-gradient(160deg, #8a2230, #6c1823); border: 0; border-radius: 24px; box-shadow: none; scroll-snap-align: start; }
+  .home-event:only-child { flex-basis: 100%; }
+  .home-event::after { content: ""; position: absolute; right: -26px; bottom: -30px; width: 150px; height: 150px; background: url("../assets/logo/pictorial-white.webp") center / contain no-repeat; opacity: .1; rotate: -12deg; pointer-events: none; }
+  .home-event-poster { border: 2px solid rgba(255, 255, 255, .85); }
+  .home-event h3, .home-event .text-button { color: #fff; }
+  .home-event-when, .home-event-meta { color: rgba(255, 255, 255, .8); }
+  .home-event-meta .state-label { color: var(--maroon); background: #fff; }
+  .home-event .capacity { grid-column: 1 / -1; }
+  .home-event .capacity, .home-event .capacity * { color: #fff; }
+  .home-event-stage { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 10px 0 0; padding: 0; list-style: none; position: relative; z-index: 1; }
+  .home-event-stage::before { content: ""; position: absolute; left: 12.5%; right: 12.5%; top: 10px; height: 2px; background: rgba(255, 255, 255, .3); }
+  .home-event-stage li { position: relative; display: grid; justify-items: center; gap: 5px; font-size: .68rem; opacity: .8; }
+  .home-event-stage li::before { content: ""; width: 18px; height: 18px; background: #6c1823; border: 2px solid rgba(255, 255, 255, .6); border-radius: 50%; }
+  .home-event-stage li.is-done::before { background: #fff; border-color: #fff; }
+  .home-event-stage li.is-now { opacity: 1; font-weight: 800; }
+  .home-event-stage li.is-now::before { background: #fff; border-color: #fff; box-shadow: inset 0 0 0 4px #6c1823; }
+  .home-event-mini { grid-column: 1 / -1; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 7px; position: relative; z-index: 1; }
+  .home-event-mini span { padding: 9px 10px; font-size: .7rem; line-height: 1.2; background: rgba(255, 255, 255, .12); border-radius: 14px; }
+  .home-event-mini b { display: block; font: 700 1.15rem "Instrument Sans", sans-serif; }
+  .home-event-mini .is-hot { color: var(--maroon); background: #fff; }
+  .home-event-body, .home-event-actions { position: relative; z-index: 1; }
+  .home-event-body { display: contents; }
+  .home-event-body > :not(.capacity, .home-event-stage, .home-event-mini, .home-event-actions) { grid-column: 2; }
+  .home-event-poster { grid-row: 1 / span 3; align-self: start; }
+  .home-event-actions { grid-column: 1 / -1; }
+  .home-tasks { gap: 0; padding: 6px 16px; background: #fbeeec; border-radius: 24px; }
+  .home-task { padding: 14px 2px; background: none; border: 0; border-top: 1px solid rgba(122, 31, 43, .1); border-radius: 0; }
+  .home-tasks li:first-child .home-task { border-top: 0; }
+  .home-task:hover { transform: none; }
   .toast-region { right: 16px; left: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); justify-items: stretch; }
   .toast { max-width: none; }
   .confirm-actions { display: grid; grid-template-columns: 1fr 1fr; }
