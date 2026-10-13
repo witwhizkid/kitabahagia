@@ -5985,7 +5985,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .schedule-pager-hint { margin-left:auto; color:var(--muted); font-size:12px; }
   .schedule-grid.is-list { gap:10px; }
   .schedule-grid.is-list > .event-card { flex-direction:row; border-radius:20px; }
-  .schedule-grid.is-list .event-card-photo { flex:0 0 72px; align-self:flex-start; margin:8px 0 8px 8px; border-radius:12px; }
+  .schedule-grid.is-list .event-card-photo { flex:0 0 84px; align-self:stretch; aspect-ratio:auto; min-height:96px; margin:8px 0 8px 8px; border-radius:14px; }
   .schedule-grid.is-list .event-card-photo img { object-fit:cover; }
   .schedule-grid.is-list .event-photo-badge { display:none; }
   .schedule-grid.is-list .event-card-body { min-width:0; padding:10px 14px 12px; }

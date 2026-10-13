@@ -412,7 +412,7 @@ const eventCardMarkup = (event, attributes = '') => `<article class="event-card$
       <li>${eventCardIcon.place}<span>${escapeHTML(event.location)}</span></li>
       <li>${eventCardIcon.date}<span>${escapeHTML(event.date)}</span></li>
     </ul>
-    <div class="event-card-foot"><div><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}</div><span class="event-card-cta" aria-hidden="true">${eventRegistrationAvailability(event).available ? 'Daftar' : 'Lihat detail'} <span>&rarr;</span></span></div>
+    <div class="event-card-foot"><div><strong class="event-price">${formatEventPrice(event.price)}</strong>${eventSlotNote(event)}</div><span class="event-card-cta" aria-hidden="true">${eventIsPast(event) ? 'Lihat dokumentasi' : eventRegistrationAvailability(event).available ? 'Daftar' : 'Lihat detail'} <span>&rarr;</span></span></div>
   </div>
 </article>`;
 
