@@ -431,9 +431,15 @@ const renderHeroNext = (events) => {
   const link = document.querySelector('[data-hero-next]');
   const text = link?.querySelector('[data-hero-next-text]');
   if (!link || !text) return;
-  const next = events.find((event) => eventRegistrationAvailability(event).available) || events[0];
-  if (!next) return;
-  const days = eventRegistrationAvailability(next).available ? eventDaysLeft(next) : null;
+  // Only an event that still takes sign-ups: a full or closed one would send visitors to a dead end.
+  const next = events.find((event) => eventRegistrationAvailability(event).available);
+  const card = document.querySelector('[data-home-next]');
+  if (!next) {
+    link.hidden = true;
+    if (card) card.hidden = true;
+    return;
+  }
+  const days = eventDaysLeft(next);
   const parts = [next.name, eventShortDateFormatter.format(new Date(next.start))];
   if (next.location && next.location !== 'Lokasi menyusul') parts.push(next.location);
   if (days !== null && days >= 0 && days <= 7) parts.push(`tutup ${eventDaysLeftLabel(days).toLowerCase()}`);
@@ -442,7 +448,6 @@ const renderHeroNext = (events) => {
   link.setAttribute('aria-label', `Kegiatan berikutnya: ${parts.join(', ')}`);
   link.hidden = false;
   // Phones show the same event as a card with its poster below the hero (the strip is hidden there).
-  const card = document.querySelector('[data-home-next]');
   if (!card) return;
   card.querySelector('[data-home-next-text]').textContent = parts.join(' · ');
   card.href = link.href;
