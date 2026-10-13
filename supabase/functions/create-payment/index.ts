@@ -411,7 +411,9 @@ const resolveIpaymuCharge = async (
     phone: String(registration.phone ?? "").slice(0, 20),
     email: input.email,
     amount: attempt.amount,
-    notifyUrl: `${url}/functions/v1/ipaymu-webhook`,
+    // Production rejects a notifyUrl outside the registered domain ("Invalid domain"), so the
+    // callback goes through the site (functions/api/ipaymu-webhook.js) to the Edge Function.
+    notifyUrl: Deno.env.get("IPAYMU_NOTIFY_URL")?.trim() || "https://kitabahagia.id/api/ipaymu-webhook",
     expired: minutes,
     expiredType: "minutes",
     comments: attempt.event_title.slice(0, 100),

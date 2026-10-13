@@ -556,7 +556,9 @@ Function secrets:
 
 `create-payment` calls `POST /api/v2/payment/direct` (`paymentMethod`/`paymentChannel` `qris`,
 `referenceId` = our `order_id`, `expired` in whole minutes, never past `payment_deadline`,
-`notifyUrl` = `ipaymu-webhook`) and stores the QRIS payload (`QrString`/`PaymentNo`).
+`notifyUrl` = `https://kitabahagia.id/api/ipaymu-webhook`, a Cloudflare Pages Function
+(`functions/api/ipaymu-webhook.js`) that forwards to `ipaymu-webhook`: production answers 406 "Invalid domain" when
+the notifyUrl is not on the domain registered in the iPaymu account; override with secret `IPAYMU_NOTIFY_URL`) and stores the QRIS payload (`QrString`/`PaymentNo`).
 `ipaymu-webhook` (deploy with `--no-verify-jwt`) does **not** trust the callback body: it re-reads
 the transaction with `POST /api/v2/transaction` (signed with the merchant key), checks the
 reference, then applies `settlement`/`expire`/`cancel` through the RPC with `p_provider = 'ipaymu'`.
