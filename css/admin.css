@@ -832,7 +832,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
   .home-event-poster { border: 2px solid rgba(255, 255, 255, .85); }
   .home-event h3, .home-event .text-button { color: #fff; }
   .home-event-when, .home-event-meta { color: rgba(255, 255, 255, .8); }
-  .home-event-meta .state-label { display: none; }
+  .home-event-meta .state-label, .home-event-sep { display: none; }
   .home-event h3 { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .home-event .capacity { grid-column: 1 / -1; max-width: none; }
   .home-event .capacity-bar { background: rgba(255, 255, 255, .22); }
@@ -857,6 +857,22 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
   .home-task { padding: 14px 2px; background: none; border: 0; border-top: 1px solid rgba(122, 31, 43, .1); border-radius: 0; }
   .home-tasks li:first-child .home-task { border-top: 0; }
   .home-task:hover { transform: none; }
+  /* Other tabs on phones follow the Beranda look (Oct 2026): white page, grey filled fields, 24px cards,
+     segmented tabs, no all-caps kickers. */
+  .workspace { background: #fff; }
+  .view-heading .eyebrow, .registrations-heading .eyebrow { display: none; }
+  .view-heading h1, .registrations-heading h1 { font-size: 2rem; }
+  .content-view input:not([type="checkbox"], [type="radio"], [type="file"], [type="color"]), .content-view textarea, .content-view .kb-select-button { background: #f6f2ef; border-color: transparent; border-radius: 16px; }
+  .content-view input:focus, .content-view textarea:focus { background: #fff; border-color: var(--maroon); }
+  .registration-lifecycle-tabs { gap: 4px; padding: 4px; background: #f6f2ef; border: 0; border-radius: 16px; }
+  .registration-lifecycle-tabs button { min-height: 40px; padding-inline: 8px; white-space: nowrap; border: 0; border-radius: 12px; }
+  .registration-lifecycle-tabs button.is-active { color: var(--maroon); background: #fff; box-shadow: 0 1px 3px rgba(42, 14, 19, .1); }
+  .registration-lifecycle-note { margin-top: 10px; font-size: .78rem; }
+  .registration-toolbar { border-top: 0; }
+  .registration-row { padding: 14px 0; }
+  .registration-name { font-size: 1rem; }
+  .event-row, .story-row, .certificate-settings, .certificate-issue, .admin-invite-section, .admin-directory { background: #fff; border-color: #efe6df; border-radius: 24px; box-shadow: none; }
+  .event-row .button, .story-row .button { border-radius: 999px; }
   .toast-region { right: 16px; left: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); justify-items: stretch; }
   .toast { max-width: none; }
   .confirm-actions { display: grid; grid-template-columns: 1fr 1fr; }

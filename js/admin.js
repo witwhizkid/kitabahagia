@@ -2104,7 +2104,7 @@
         <div class="home-event-body">
           <p class="home-event-when"><span class="home-countdown${days <= 3 ? " is-soon" : ""}">${days < 0 ? "Berlangsung" : countdownLabel(days)}</span>${escapeHtml(shortDate(event))}${time}</p>
           <h3>${escapeHtml(event.title)}</h3>
-          <p class="home-event-meta">${escapeHtml(event.location || "Lokasi belum diatur")} · <span class="state-label${event.is_public ? " is-public" : ""}">${event.is_public ? "Tayang" : "Belum tayang"}</span></p>
+          <p class="home-event-meta">${escapeHtml(event.location || "Lokasi belum diatur")}<span class="home-event-sep"> · </span><span class="state-label${event.is_public ? " is-public" : ""}">${event.is_public ? "Tayang" : "Belum tayang"}</span></p>
           ${capacityMarkup(event, counts[event.slug])}
           ${eventStageMarkup(event, days)}
           ${eventMiniMarkup(event, counts[event.slug])}
