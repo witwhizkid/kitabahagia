@@ -5621,6 +5621,8 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page.step-form #eventGallery,
 .registration-page.step-form #registrationUnavailable { display:none; }
 .registration-page .form-step-back { flex:none; display:grid; width:40px; height:40px; place-items:center; padding:0 0 3px; border:1px solid var(--line); border-radius:50%; background:var(--white); color:var(--ink); font:inherit; font-size:26px; line-height:1; cursor:pointer; }
+.registration-page .registration-review-heading { display:flex; flex-wrap:wrap; align-items:center; column-gap:14px; }
+.registration-page .registration-review-heading p { flex-basis:100%; }
 .registration-page .form-step-back:hover { border-color:var(--maroon); color:var(--maroon); }
 .registration-page .form-requirements-link { margin:-14px 0 20px; }
 .registration-page .form-requirements-link[hidden] { display:none; }
@@ -5691,6 +5693,9 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .registration-page.step-form .site-footer { display:none; }
   .registration-page.step-form .registration-shell .registration-form-heading { margin-bottom:16px; padding-bottom:0; border:0; }
   .registration-page.step-form .registration-shell .registration-form-heading h2 { font-size:22px; }
+  .registration-page .registration-shell .registration-review-heading { display:flex; align-items:center; gap:14px; margin-bottom:16px; padding-bottom:0; border:0; }
+  .registration-page .registration-shell .registration-review-heading h2 { margin:0; font-size:22px; }
+  .registration-page .registration-shell .registration-review-heading p { display:none; }
 
   /* Progress = three thin bars + "Langkah N dari 3". */
   .registration-page .registration-progress ol { position:relative; display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; padding:0 0 26px; }
@@ -5756,7 +5761,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .registration-page .registration-shell form:not(.is-ready) .form-actions .btn:not(:disabled) { background:#ece5e1; color:#8b7f80; }
 
   /* Confirmation (mockup 2): event card first, one data card with "Ubah", QRIS method, sticky total. */
-  .registration-page .registration-shell .registration-review-grid { display:flex; flex-direction:column; gap:18px; }
+  .registration-page .registration-shell .registration-review-grid { display:flex; flex-direction:column; align-items:stretch; gap:18px; }
   .registration-page .registration-shell .registration-review-event { order:-1; display:grid; grid-template-columns:64px minmax(0, 1fr); gap:2px 14px; padding:14px; border:1px solid var(--line); border-radius:20px; background:var(--white); }
   .registration-page .registration-shell .review-event-poster:not([hidden]) { display:block; grid-row:span 3; width:64px; height:80px; border-radius:12px; object-fit:cover; object-position:top; }
   .registration-page .registration-shell .registration-review-event > span { display:none; }
@@ -5765,7 +5770,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .registration-page .registration-shell .registration-review-event dt { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
   .registration-page .registration-shell .registration-review-event dd { color:var(--muted); font-size:13px; font-weight:500; }
   .registration-page .registration-shell .registration-review-event dl div:has([data-review-event-price]) dd { margin-top:4px; color:var(--ink); font-size:15px; font-weight:800; }
-  .registration-page .registration-shell .registration-review-participant { padding:0; background:transparent; }
+  .registration-page .registration-shell .registration-review-participant { padding:0; border:0; border-radius:0; background:transparent; }
   .registration-page .registration-shell .review-participant-title { display:flex; align-items:center; justify-content:space-between; margin:0 0 10px; }
   .registration-page .registration-shell .review-participant-title h3,
   .registration-page .registration-shell .review-pay-method h3 { margin:0; color:var(--muted); font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
@@ -5773,6 +5778,9 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .registration-page .registration-shell .registration-review-participant dl { display:block; padding:4px 16px; border:1px solid var(--line); border-radius:20px; background:var(--white); }
   .registration-page .registration-shell .registration-review-participant dl div { display:grid; gap:2px; margin:0; padding:12px 0; border:0; border-top:1px solid var(--line); border-radius:0; background:transparent; box-shadow:none; }
   .registration-page .registration-shell .registration-review-participant dl div:first-child { border-top:0; }
+.registration-page .registration-shell .registration-review-participant dl div:not(:has([data-review-happiness]), [data-review-selection], [data-review-portfolio]) { display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:11px 0; }
+.registration-page .registration-shell .registration-review-participant dl div:not(:has([data-review-happiness]), [data-review-selection], [data-review-portfolio]) dd { min-width:0; text-align:right; overflow-wrap:anywhere; }
+.registration-page .registration-shell .registration-review-participant dl div:not(:has([data-review-happiness]), [data-review-selection], [data-review-portfolio]) dt { flex:none; }
   .registration-page .registration-shell .registration-review-participant dt { color:var(--muted); font-size:12px; font-weight:500; letter-spacing:0; text-transform:none; }
   .registration-page .registration-shell .registration-review-participant dd { color:var(--ink); font-size:15px; font-weight:700; }
   .registration-page .registration-shell .review-pay-method:not([hidden]) { display:block; margin-top:18px; }
