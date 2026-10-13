@@ -2047,6 +2047,20 @@
     });
   };
 
+  // Phone Beranda (Oct 2026, after the MyXL-style mockup): where the event is and what waits on it.
+  const eventStageMarkup = (event, days) => {
+    const current = !event.is_public ? 0 : days > 0 ? 1 : 2;
+    return `<ol class="home-event-stage" aria-label="Tahap kegiatan">${["Tayang", "Pendaftaran", "Hari H", "Sertifikat"].map((label, index) =>
+      `<li class="${index < current ? "is-done" : index === current ? "is-now" : ""}">${label}</li>`).join("")}</ol>`;
+  };
+  const eventMiniMarkup = (event, count = {}) => {
+    const unchecked = home.registrations.filter((registration) => registration.events?.slug === event.slug && proofUnchecked(registration)).length;
+    const cells = event.registration_mode === "selection"
+      ? [[count.applied || 0, "Menunggu seleksi", count.applied > 0]]
+      : [[count.confirmed || 0, "Terkonfirmasi"], [count.held || 0, "Nunggu bayar"], [unchecked, "Bukti belum dicek", unchecked > 0]];
+    return `<div class="home-event-mini">${cells.map(([value, label, hot]) => `<span${hot ? ' class="is-hot"' : ""}><b>${value}</b>${label}</span>`).join("")}</div>`;
+  };
+
   const renderHome = () => {
     const now = Date.now();
     const registrations = home.registrations;
@@ -2092,6 +2106,8 @@
           <h3>${escapeHtml(event.title)}</h3>
           <p class="home-event-meta">${escapeHtml(event.location || "Lokasi belum diatur")} · <span class="state-label${event.is_public ? " is-public" : ""}">${event.is_public ? "Tayang" : "Belum tayang"}</span></p>
           ${capacityMarkup(event, counts[event.slug])}
+          ${eventStageMarkup(event, days)}
+          ${eventMiniMarkup(event, counts[event.slug])}
           <div class="home-event-actions">
             <button class="text-button" type="button" data-home-go="registrations" data-home-event="${escapeHtml(event.slug)}">Lihat pendaftar →</button>
             <button class="text-button" type="button" data-home-go="edit" data-home-event="${escapeHtml(event.slug)}">Edit</button>
@@ -2109,7 +2125,8 @@
       : `<li class="home-all-done"><span aria-hidden="true">☕</span> Aman semua. Ngopi dulu ges.</li>`;
     $("#home-summary").textContent = tasks.length
       ? `Ada ${tasks.length} hal yang perlu diurus. Gas, satu-satu.`
-      : "Semua aman terkendali. Mantap, bangga gua"; 
+      : "Semua aman terkendali. Mantap, bangga gua";
+    if (fresh) $("#home-summary").textContent = `Hari ini ${fresh} orang baru ikut bahagia bareng kita. ${$("#home-summary").textContent}`;
   };
 
   const showHome = async () => {
@@ -2140,8 +2157,8 @@
   };
 
   // Shortcuts from Beranda into a filtered tab.
-  const openRegistrations = async ({ event = "", status = "", lifecycle = "active", payment = "" } = {}) => {
-    $("#registration-search").value = "";
+  const openRegistrations = async ({ event = "", status = "", lifecycle = "active", payment = "", search = "" } = {}) => {
+    $("#registration-search").value = search;
     $("#payment-status-filter").value = payment;
     $("#registration-status-filter").value = status;
     registrationLifecycle = lifecycle;
@@ -2165,6 +2182,15 @@
 
   homeView.addEventListener("click", (event) => {
     if (event.target.closest("[data-home-add-event]")) return showForm();
+    const action = event.target.closest("[data-home-action]")?.dataset.homeAction;
+    if (action === "proof") return void openRegistrations({ payment: "unchecked" });
+    if (action === "certificates") return void openCertificates("");
+    if (action === "attendance") {
+      // Attendance is marked per event: open the nearest one that has started (or the next one).
+      const today = events.filter((item) => !item.archived_at && item.event_date && daysFromToday(item.event_date) <= 0 && daysFromToday(eventLastDay(item)) >= -30)
+        .sort((a, b) => String(b.event_date).localeCompare(String(a.event_date)))[0];
+      return void openRegistrations({ event: today?.slug || "", lifecycle: today && daysFromToday(eventLastDay(today)) < 0 ? "history" : "active" });
+    }
     const stat = event.target.closest("[data-home-stat]");
     if (stat) {
       const key = stat.dataset.homeStat;
@@ -2182,6 +2208,12 @@
       return target ? showForm(target) : showEvents();
     }
     return void openRegistrations({ event: slug, lifecycle: go.dataset.homeLifecycle || "active", payment: go.dataset.homePayment || "" });
+  });
+
+  homeView.querySelector("[data-home-search]").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const search = new FormData(event.currentTarget).get("q").trim();
+    if (search) void openRegistrations({ search });
   });
 
   const showEvents = () => {
