@@ -5968,8 +5968,32 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .home-upcoming-list { --bleed:18px; display:flex; gap:16px; margin-inline:calc(var(--bleed) * -1); padding:24px var(--bleed) 6px; overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x mandatory; scroll-padding-inline:var(--bleed); scrollbar-width:none; }
   .home-upcoming-list::-webkit-scrollbar { display:none; }
   .home-upcoming-list .event-card { flex:0 0 min(300px, 82%); scroll-snap-align:start; }
-  /* Schedule on phones: upright cards, the whole 4:5 poster on top (Oct 2026, user: cropped posters looked bad). */
+  /* Schedule on phones: upright cards, the whole 4:5 poster on top (Oct 2026, user: cropped posters looked bad).
+     13 Okt 2026: Mendatang = swipe row (card 84%, next one peeks, pager "1 / N" + one nudge); Sudah selesai = compact rows per month. */
   .schedule-grid.event-card-grid { grid-template-columns:1fr; gap:18px; padding-top:20px; }
+  .schedule-grid.is-carousel { --bleed:var(--container-gutter); display:flex; gap:12px; margin-inline:calc(var(--bleed) * -1); padding:6px var(--bleed) 8px; overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x mandatory; scroll-padding-inline:var(--bleed); scrollbar-width:none; }
+  .schedule-grid.is-carousel::-webkit-scrollbar { display:none; }
+  .schedule-grid.is-carousel > .event-card { flex:0 0 84%; scroll-snap-align:start; }
+  .schedule-grid.is-carousel .event-card .event-title { font-size:18px; -webkit-line-clamp:2; line-clamp:2; }
+  .schedule-grid.is-nudge > .event-card { animation:schedule-nudge .9s .5s var(--ease) both; }
+  .schedule-pager:not([hidden]) { display:flex; align-items:center; gap:12px; margin:4px 0 0; }
+  .schedule-pager b { font-size:13px; font-variant-numeric:tabular-nums; }
+  .schedule-pager-total { color:var(--muted); font-weight:500; }
+  .schedule-dots { display:flex; gap:6px; }
+  .schedule-dots i { width:7px; height:7px; border-radius:9px; background:#dcd2cc; transition:width .2s var(--ease), background-color .2s var(--ease); }
+  .schedule-dots i.is-on { width:22px; background:var(--maroon); }
+  .schedule-pager-hint { margin-left:auto; color:var(--muted); font-size:12px; }
+  .schedule-grid.is-list { gap:10px; }
+  .schedule-grid.is-list > .event-card { flex-direction:row; border-radius:20px; }
+  .schedule-grid.is-list .event-card-photo { flex:0 0 72px; align-self:flex-start; margin:8px 0 8px 8px; border-radius:12px; }
+  .schedule-grid.is-list .event-card-photo img { object-fit:cover; }
+  .schedule-grid.is-list .event-photo-badge { display:none; }
+  .schedule-grid.is-list .event-card-body { min-width:0; padding:10px 14px 12px; }
+  .schedule-grid.is-list .event-card .event-title { margin:4px 0; font-size:15.5px; -webkit-line-clamp:2; line-clamp:2; }
+  .schedule-grid.is-list .event-card-meta { font-size:12.5px; }
+  .schedule-grid.is-list .event-card-foot { margin-top:4px; padding-top:0; border:0; }
+  .schedule-grid.is-list .event-card-foot > div { display:none; }
+  .schedule-grid.is-list .schedule-month { display:block; margin:12px 0 0; color:var(--muted); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
   .event-card-grid .event-card-body { padding:14px 18px 18px; }
   .event-card-grid .event-card .event-title { margin:6px 0 10px; font-size:20px; line-height:1.25; }
   .event-card .event-title { -webkit-line-clamp:4; line-clamp:4; }
@@ -5979,6 +6003,8 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .poster-dialog-close { top:8px; right:8px; }
 }
 
+.schedule-pager, .schedule-month { display:none; }
+@keyframes schedule-nudge { 0%, 100% { transform:none; } 45% { transform:translateX(-28px); } }
 /* Canonical KB visual grammar: shared proportions, type hierarchy and restraint. */
 .container,
 .site-header .container,
