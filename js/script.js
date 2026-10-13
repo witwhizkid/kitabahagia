@@ -1541,7 +1541,6 @@ if (registrationForm) {
   // Same page, so shared links, link previews and payment recovery keep working.
   const registrationBar = document.querySelector('[data-registration-bar]');
   const registrationBarCta = registrationBar?.querySelector('[data-registration-bar-cta]');
-  const phoneQuery = window.matchMedia('(max-width: 767px)');
   let registrationStepView = 'detail';
   let pendingDetailTarget = '';
   let registrationBarFrame = 0;
@@ -1551,7 +1550,7 @@ if (registrationForm) {
     const summaryCta = document.querySelector('.registration-summary-cta');
     const layoutShown = Boolean(document.querySelector('.registration-event-layout')?.offsetParent);
     const resumeShown = detailViewRequested && summaryCta && !summaryCta.hidden;
-    const show = phoneQuery.matches && registrationStepView === 'detail' && layoutShown
+    const show = registrationStepView === 'detail' && layoutShown
       && Boolean(resumeShown || registrationAvailable);
     registrationBar.hidden = !show;
     document.body.classList.toggle('has-registration-bar', show);
