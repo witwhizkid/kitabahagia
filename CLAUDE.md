@@ -94,6 +94,12 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
 - Status default "Pendaftaran dibuka" tidak ditampilkan.
 
 Halaman pendaftaran (`pendaftaran.html`):
+- HP ≤767px (13 Okt 2026, ref. Grab/MyXL, mockup disetujui user; desktop tidak berubah): ringkasan jadi kartu putih sudut 24px
+  dengan poster sebagai sampul 4:3 di atas (`cover`, dari atas); "Detail kegiatan" selalu terbuka (JS, tombol lipat
+  disembunyikan) dengan urutan Yang akan kamu lakukan (timeline titik maroon) → Yang akan kamu dapatkan (pil ✓) → Persyaratan →
+  Lokasi → Tentang, nav jadi pil geser. Bar bawah menempel "Biaya · Daftar sekarang" (`[data-registration-bar]`,
+  `updateRegistrationBar`) tampil selama form masih di bawah layar; hilang di Konfirmasi/pembayaran; mode lanjut bayar = "Lanjutkan
+  pembayaran". Kolom form HP terisi abu `#f6f2ef` tanpa garis (putih + garis maroon saat fokus). Layar status setelah bayar belum diubah.
 - Thumbnail poster ("Lihat poster") membuka `<dialog>` native; tutup via ×,
   Esc, atau klik di luar.
 - Langkah 1–2 mengikuti gaya halaman pembayaran; watermark header memakai

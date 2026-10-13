@@ -1488,6 +1488,42 @@ if (registrationForm) {
   // Set by the pending-payment "Kembali ke detail kegiatan" link: show the event
   // without auto-resuming payment, while keeping the stored recovery intact.
   let detailViewRequested = params.get('view') === 'detail';
+  // Phone: a sticky price + CTA bar while the event details are on screen and the form is still below.
+  const registrationBar = document.querySelector('[data-registration-bar]');
+  const registrationBarCta = registrationBar?.querySelector('[data-registration-bar-cta]');
+  const phoneQuery = window.matchMedia('(max-width: 767px)');
+  let registrationBarFrame = 0;
+  const updateRegistrationBar = () => {
+    registrationBarFrame = 0;
+    if (!registrationBar) return;
+    const summaryCta = document.querySelector('.registration-summary-cta');
+    const layoutShown = Boolean(document.querySelector('.registration-event-layout')?.offsetParent);
+    const resumeShown = detailViewRequested && summaryCta && !summaryCta.hidden;
+    const formShown = registrationAvailable && registrationFormPanel && !registrationFormPanel.classList.contains('hidden')
+      && registrationFormPanel.getBoundingClientRect().top > window.innerHeight - 40;
+    const show = phoneQuery.matches && layoutShown && Boolean(resumeShown || formShown);
+    registrationBar.hidden = !show;
+    document.body.classList.toggle('has-registration-bar', show);
+    if (show && registrationBarCta) registrationBarCta.textContent = resumeShown ? 'Lanjutkan pembayaran' : 'Daftar sekarang';
+  };
+  const queueRegistrationBar = () => {
+    if (!registrationBarFrame) registrationBarFrame = window.requestAnimationFrame(updateRegistrationBar);
+  };
+  if (registrationBar) {
+    window.addEventListener('scroll', queueRegistrationBar, { passive: true });
+    window.addEventListener('resize', queueRegistrationBar);
+    const barObserver = new MutationObserver(queueRegistrationBar);
+    [registrationContent, registrationFormPanel, registrationReview].forEach((element) => {
+      if (element) barObserver.observe(element, { attributes: true, attributeFilter: ['class', 'hidden'] });
+    });
+    registrationBarCta?.addEventListener('click', () => {
+      const summaryCta = document.querySelector('.registration-summary-cta');
+      if (detailViewRequested && summaryCta) { summaryCta.click(); return; }
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      registrationFormPanel?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      registrationFormPanel?.querySelector('.registration-form-heading')?.focus({ preventScroll: true });
+    });
+  }
   const recoveryStorageKey = `kb:registration-recovery:v1:${eventSlug}`;
   const terminalRecoveryRefreshKey = `kb:registration-terminal-refresh:v1:${eventSlug}`;
 
@@ -2882,8 +2918,9 @@ if (registrationForm) {
     renderEventList('eventRequirementsSection', 'eventRequirements', 'eventRequirementsNav',
       isFreeSelectionEvent() ? selectedEvent.selectionRequirements : [], true);
     // Selection applicants should read the requirements before the form, so start with details open.
+    // Phones get the details open too: they replace the old collapsed "Detail kegiatan" button.
     const eventDisclosure = document.querySelector('.registration-event-disclosure');
-    if (eventDisclosure && isFreeSelectionEvent()) eventDisclosure.open = true;
+    if (eventDisclosure && (isFreeSelectionEvent() || phoneQuery.matches)) eventDisclosure.open = true;
 
     const eventNameInput = document.getElementById('kegiatan');
     const eventSlugInput = document.getElementById('eventSlug');
@@ -2893,6 +2930,11 @@ if (registrationForm) {
     if (selectedEvent.price !== null && selectedEvent.price !== undefined) {
       setText('eventPrice', formatEventPrice(selectedEvent.price));
       document.getElementById('eventPriceRow')?.classList.remove('hidden');
+    }
+    const barPrice = registrationBar?.querySelector('[data-registration-bar-price]');
+    if (barPrice) {
+      barPrice.textContent = selectedEvent.price === null || selectedEvent.price === undefined ? '' : formatEventPrice(selectedEvent.price);
+      barPrice.parentElement.hidden = !barPrice.textContent;
     }
 
     const eventPrice = selectedEvent.price === null || selectedEvent.price === undefined
@@ -2932,6 +2974,7 @@ if (registrationForm) {
     registrationAvailable = Boolean(REGISTRATION_CONFIG.registrationEndpoint)
       && availability.available;
     document.querySelector('.registration-summary-cta')?.toggleAttribute('hidden', !registrationAvailable);
+    queueRegistrationBar();
     registrationFormPanel?.classList.toggle('hidden', !registrationAvailable);
     registrationUnavailable?.classList.toggle('hidden', registrationAvailable);
     const eventGallery = document.getElementById('eventGallery');
@@ -3015,6 +3058,7 @@ if (registrationForm) {
       summaryCta.hidden = false;
       summaryCta.textContent = 'Lanjutkan pembayaran';
     }
+    queueRegistrationBar();
   };
 
   document.querySelector('.registration-summary-cta')?.addEventListener('click', (event) => {
