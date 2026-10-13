@@ -5627,6 +5627,16 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .form-requirements-link { margin:-14px 0 20px; }
 .registration-page .form-requirements-link[hidden] { display:none; }
 .registration-page .form-requirements-link button { padding:0; border:0; background:none; color:var(--maroon); font:inherit; font-size:14px; font-weight:700; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+/* Success screens: order-tracker style status (Oct 2026, mockup "lacak pesanan" Grab). */
+.status-track { display:flex; margin:0 0 12px; padding:0; list-style:none; }
+.status-track li { position:relative; flex:1; display:grid; justify-items:center; gap:6px; color:var(--muted); font-size:12px; text-align:center; }
+.status-track li[hidden] { display:none; }
+.status-track li::before { content:""; position:relative; z-index:1; display:grid; width:30px; height:30px; place-items:center; border-radius:50%; background:#f1ebe7; color:var(--white); font-size:14px; font-weight:800; }
+.status-track li.is-done::before { content:"\2713"; background:var(--maroon); }
+.status-track li.is-current { color:var(--ink); font-weight:700; }
+.status-track li:not(:last-child)::after { content:""; position:absolute; top:13px; right:calc(-50% + 19px); left:calc(50% + 19px); height:4px; border-radius:9px; background:#f1ebe7; }
+.status-track li.is-done:not(.is-current)::after { background:var(--maroon); }
+.status-track-hint { margin:0 0 14px; color:var(--muted); font-size:13px; line-height:1.5; }
 .registration-bar,
 .registration-page .form-group-title,
 .registration-page .form-event-mini,
@@ -5666,12 +5676,11 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .registration-page .registration-event-disclosure[open] .registration-event-content { display:flex; flex-direction:column; margin-top:6px; padding:0; background:transparent; }
   .registration-page .registration-content-nav { order:0; gap:8px; margin:0 calc(-1 * var(--container-gutter, 20px)) 6px; padding:4px var(--container-gutter, 20px) 12px; border:0; }
   .registration-page .registration-content-nav a { min-height:38px; padding:0 15px; border:1px solid var(--line); border-radius:999px; background:var(--white); color:var(--ink); font-size:13px; font-weight:600; }
-  .registration-page .registration-content-nav a:first-of-type { order:5; }
-  .registration-page #eventActivitiesSection { order:1; }
-  .registration-page #eventBenefitsSection { order:2; }
-  .registration-page #eventRequirementsSection { order:3; }
-  .registration-page #eventLocationSection { order:4; }
-  .registration-page #eventDescriptionSection { order:5; }
+  .registration-page #eventDescriptionSection { order:1; }
+  .registration-page #eventActivitiesSection { order:2; }
+  .registration-page #eventBenefitsSection { order:3; }
+  .registration-page #eventRequirementsSection { order:4; }
+  .registration-page #eventLocationSection { order:5; }
   .registration-page .registration-detail-note { order:6; }
   .registration-page #eventActivities { padding:0; list-style:none; }
   .registration-page #eventActivities li { position:relative; margin:0; padding:0 0 16px 32px; line-height:1.45; }

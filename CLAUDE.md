@@ -96,8 +96,8 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
 Halaman pendaftaran (`pendaftaran.html`):
 - HP ≤767px (13 Okt 2026, ref. Grab/MyXL, mockup disetujui user; desktop tidak berubah): ringkasan jadi kartu putih sudut 24px
   dengan poster sebagai sampul 4:3 di atas (`cover`, dari atas); "Detail kegiatan" selalu terbuka (JS, tombol lipat
-  disembunyikan) dengan urutan Yang akan kamu lakukan (timeline titik maroon) → Yang akan kamu dapatkan (pil ✓) → Persyaratan →
-  Lokasi → Tentang, nav jadi pil geser. Bar bawah menempel "Biaya · Daftar sekarang" (`[data-registration-bar]`,
+  disembunyikan) dengan urutan Tentang (paling atas, keputusan user) → Yang akan kamu lakukan (timeline titik maroon) → Yang akan kamu
+  dapatkan (pil ✓) → Persyaratan → Lokasi, nav jadi pil geser. Bar bawah menempel "Biaya · Daftar sekarang" (`[data-registration-bar]`,
   `updateRegistrationBar`) tampil selama form masih di bawah layar; hilang di Konfirmasi/pembayaran; mode lanjut bayar = "Lanjutkan
   pembayaran". Kolom form HP terisi abu `#f6f2ef` tanpa garis (putih + garis maroon saat fokus). Lanjutan (mockup 4a/4b + 2): progres
   HP = 3 bar tipis + "Langkah N dari 3" (CSS `:has`); form diawali kartu mini kegiatan (`.form-event-mini`), kartu "Daftar sebagai"
@@ -106,7 +106,9 @@ Halaman pendaftaran (`pendaftaran.html`):
   "Dari mana kamu tahu" = pil (`.form-choice-pills`, select tetap sumber nilai), "Ingat data saya" = saklar, bar bawah menempel
   "Langkah 1 dari 3 · Data peserta → Data lengkap ✓" (`form.is-ready`; tombol tetap bisa diklik supaya error muncul). Konfirmasi HP:
   kartu kegiatan + poster dulu, satu kartu "Data peserta" + "Ubah", kartu "Bayar pakai QRIS" (berbayar), bar Total + tombol bayar.
-  Centang ulang "Data sudah benar" dari mockup sengaja tidak dibuat (persetujuan sudah di form). Layar status setelah bayar belum diubah.
+  Centang ulang "Data sudah benar" dari mockup sengaja tidak dibuat (persetujuan sudah di form). Layar sukses (lunas / gratis /
+  lolos seleksi) punya pelacak ala lacak pesanan Grab di atas "Langkah berikutnya": Daftar ✓ → Bayar ✓ → **Terkonfirmasi** → Hari H
+  (`.status-track`, markup statis di dua `[data-registration-onboarding]`; "Bayar" disembunyikan `renderOnboarding` di luar `#paymentStage`).
 - **Dua layar di satu URL** (13 Okt 2026, user: form masih kepanjangan): `?event=slug` = layar Detail (tanpa form; bar "Daftar sekarang" di
   HP, tombol "Daftar kegiatan" di kartu ringkasan desktop), `&step=daftar` = layar Form (`body.step-detail`/`.step-form`, `applyStepView`;
   pushState, tombol ‹ `[data-form-step-back]` dan Back HP kembali ke Detail; Back dari Konfirmasi juga ke Detail, isian tetap). HP layar
