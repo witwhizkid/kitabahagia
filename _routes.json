@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "include": ["/pendaftaran", "/pendaftaran.html"],
+  "include": ["/pendaftaran", "/pendaftaran.html", "/api/ipaymu-webhook"],
   "exclude": []
 }
