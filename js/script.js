@@ -3664,6 +3664,47 @@ if (registrationForm) {
     document.querySelector('[data-manual-proof-error]').hidden = true;
     void showProofChoice(event.target.files?.[0] || null);
   });
+  // Phone payment screen (Oct 2026, after a volunteer paid but never found the upload): a bar pinned to the bottom
+  // ("Sudah bayar? Unggah bukti") opens the gallery straight away while the proof form is still below the fold.
+  const proofForm = document.querySelector('[data-manual-proof]');
+  const proofBar = document.querySelector('[data-proof-bar]');
+  const openProofPicker = (pick) => {
+    if (!proofForm || proofForm.hidden) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    proofForm.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+    if (pick) proofForm.querySelector('[data-manual-proof-file]')?.click();
+  };
+  let proofBarFrame = 0;
+  const updateProofBar = () => {
+    proofBarFrame = 0;
+    if (!proofBar || !proofForm) return;
+    const show = Boolean(proofForm.offsetParent) && !proofForm.hidden
+      && proofForm.getBoundingClientRect().top > window.innerHeight - 90;
+    proofBar.hidden = !show;
+    document.body.classList.toggle('has-proof-bar', show);
+  };
+  const queueProofBar = () => { if (!proofBarFrame) proofBarFrame = window.requestAnimationFrame(updateProofBar); };
+  if (proofBar && proofForm) {
+    window.addEventListener('scroll', queueProofBar, { passive: true });
+    window.addEventListener('resize', queueProofBar);
+    const proofObserver = new MutationObserver(queueProofBar);
+    [proofForm, document.getElementById('paymentStage')].forEach((element) => {
+      if (element) proofObserver.observe(element, { attributes: true, attributeFilter: ['hidden', 'class'] });
+    });
+    proofBar.querySelector('[data-proof-bar-cta]')?.addEventListener('click', () => openProofPicker(true));
+  }
+  document.querySelector('[data-manual-steps] li:last-child')?.addEventListener('click', () => openProofPicker(false));
+  // "Perbesar": the same QR, full screen, for scanning from another phone.
+  const qrDialog = document.querySelector('[data-qr-dialog]');
+  document.querySelector('[data-payment-zoom]')?.addEventListener('click', () => {
+    const source = document.querySelector('[data-payment-qr-code]:not([hidden]) svg')
+      || document.querySelector('[data-payment-qr]:not([hidden])');
+    if (!qrDialog || !source) return;
+    qrDialog.querySelector('[data-qr-dialog-code]').replaceChildren(source.cloneNode(true));
+    qrDialog.showModal();
+  });
+  qrDialog?.querySelector('[data-qr-dialog-close]')?.addEventListener('click', () => qrDialog.close());
+  qrDialog?.addEventListener('click', (event) => { if (event.target === qrDialog) qrDialog.close(); });
   // Coming back from the bank/e-wallet app (tab hidden for a few seconds, proof form still waiting):
   // bring the upload into view with a clear reminder, the moment people most often forget it.
   let paymentPageHiddenAt = 0;
