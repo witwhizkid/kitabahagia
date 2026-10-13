@@ -2943,6 +2943,14 @@ if (registrationForm) {
     setDataText('[data-checkout-event-date]', `${selectedEvent.date} · ${selectedEvent.time}`);
     setDataText('[data-checkout-event-location]', selectedEvent.location);
     setDataText('[data-checkout-event-price]', eventPrice);
+    // Phone form + review: small event card with the poster (the summary card is far above by then).
+    setDataText('[data-form-event-title]', selectedEvent.name);
+    setDataText('[data-form-event-date]', `${selectedEvent.date} · ${selectedEvent.time}`);
+    setDataText('[data-form-event-price]', eventPrice);
+    document.querySelectorAll('[data-form-event-poster], [data-review-event-poster]').forEach((poster) => {
+      poster.hidden = !selectedEvent.image;
+      if (selectedEvent.image) poster.src = selectedEvent.image;
+    });
 
     const paymentWindowNote = document.getElementById('eventPaymentWindow');
     if (paymentWindowNote) {
@@ -3672,6 +3680,12 @@ if (registrationForm) {
     setDataText('[data-review-event-date]', `${selectedEvent.date} · ${selectedEvent.time}`, registrationReview);
     setDataText('[data-review-event-location]', selectedEvent.location, registrationReview);
     setDataText('[data-review-event-price]', price, registrationReview);
+    const paid = selectedEvent.price > 0;
+    const payMethod = registrationReview?.querySelector('[data-review-pay]');
+    if (payMethod) payMethod.hidden = !paid;
+    const totalRow = registrationReview?.querySelector('[data-review-total-row]');
+    if (totalRow) totalRow.hidden = !paid;
+    setDataText('[data-review-total]', price, registrationReview);
     // Say what happens right after the click, per registration mode.
     const announcementAt = Date.parse(selectedEvent.announcementAt || '');
     setDataText('[data-review-consequence]', selectedEvent.price > 0
@@ -3784,6 +3798,47 @@ if (registrationForm) {
   };
   registrationForm.querySelectorAll('select').forEach(enhanceFormSelect);
 
+  // Phone: the referral question as tap pills (the KB dropdown stays for wider screens).
+  const referralSelect = document.getElementById('referralSource');
+  if (referralSelect) {
+    const pills = document.createElement('div');
+    pills.className = 'form-choice-pills';
+    pills.setAttribute('role', 'radiogroup');
+    pills.setAttribute('aria-label', document.querySelector('label[for="referralSource"]')?.textContent.trim() || '');
+    const syncPills = () => pills.querySelectorAll('button').forEach((pill) => {
+      pill.setAttribute('aria-checked', String(pill.dataset.value === referralSelect.value));
+    });
+    [...referralSelect.options].filter((option) => option.value && !option.disabled).forEach((option) => {
+      const pill = document.createElement('button');
+      pill.type = 'button';
+      pill.setAttribute('role', 'radio');
+      pill.dataset.value = option.value;
+      pill.textContent = option.textContent;
+      pill.addEventListener('click', () => {
+        referralSelect.value = option.value;
+        referralSelect.dispatchEvent(new Event('input', { bubbles: true }));
+        referralSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      pills.append(pill);
+    });
+    referralSelect.closest('.kb-select')?.after(pills);
+    referralSelect.addEventListener('change', syncPills);
+    referralSelect.addEventListener('invalid', () => pills.classList.add('is-invalid'));
+    referralSelect.addEventListener('change', () => pills.classList.remove('is-invalid'));
+    syncPills();
+  }
+
+  // Phone sticky form bar: "Data peserta" turns into "Data lengkap ✓" once every required field passes.
+  const formReadyLabel = registrationForm.querySelector('[data-form-ready-label]');
+  const updateFormReady = () => {
+    const ready = registrationForm.checkValidity() && !getPhoneError(telephoneInput?.value);
+    registrationForm.classList.toggle('is-ready', ready);
+    if (formReadyLabel) formReadyLabel.textContent = ready ? 'Data lengkap ✓' : 'Data peserta';
+  };
+  registrationForm.addEventListener('input', () => updateFormReady());
+  registrationForm.addEventListener('change', () => updateFormReady());
+  registrationReview?.querySelector('[data-review-edit]')?.addEventListener('click', () => editRegistrationButton?.click());
+
   const telephoneInput = document.getElementById('telepon');
   // Optional "ingat data saya": prefills the next registration on this device only; never sent to the server.
   const profileStorageKey = 'kb_volunteer_profile';
@@ -3797,6 +3852,8 @@ if (registrationForm) {
     const prompt = document.querySelector('[data-profile-prompt]');
     if (savedName && prompt) {
       prompt.querySelector('[data-profile-name]').textContent = savedName;
+      const initials = prompt.querySelector('[data-profile-initials]');
+      if (initials) initials.textContent = savedName.split(/\s+/).slice(0, 2).map((word) => word[0] || '').join('').toUpperCase();
       prompt.hidden = false;
       prompt.querySelector('[data-profile-use]').addEventListener('click', () => {
         profileFields.forEach((id) => {

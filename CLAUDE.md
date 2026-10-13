@@ -99,7 +99,14 @@ Halaman pendaftaran (`pendaftaran.html`):
   disembunyikan) dengan urutan Yang akan kamu lakukan (timeline titik maroon) → Yang akan kamu dapatkan (pil ✓) → Persyaratan →
   Lokasi → Tentang, nav jadi pil geser. Bar bawah menempel "Biaya · Daftar sekarang" (`[data-registration-bar]`,
   `updateRegistrationBar`) tampil selama form masih di bawah layar; hilang di Konfirmasi/pembayaran; mode lanjut bayar = "Lanjutkan
-  pembayaran". Kolom form HP terisi abu `#f6f2ef` tanpa garis (putih + garis maroon saat fokus). Layar status setelah bayar belum diubah.
+  pembayaran". Kolom form HP terisi abu `#f6f2ef` tanpa garis (putih + garis maroon saat fokus). Lanjutan (mockup 4a/4b + 2): progres
+  HP = 3 bar tipis + "Langkah N dari 3" (CSS `:has`); form diawali kartu mini kegiatan (`.form-event-mini`), kartu "Daftar sebagai"
+  dengan inisial, judul grup "Kontak"/"Tentang kamu" (`.form-group-title`, disembunyikan di desktop), ikon di kolom nama/WA/email
+  (`img/icon-field-*.svg`, bukan data URI karena CSP), Domisili + Usia sebaris (Usia dipindah setelah Domisili di markup),
+  "Dari mana kamu tahu" = pil (`.form-choice-pills`, select tetap sumber nilai), "Ingat data saya" = saklar, bar bawah menempel
+  "Langkah 1 dari 3 · Data peserta → Data lengkap ✓" (`form.is-ready`; tombol tetap bisa diklik supaya error muncul). Konfirmasi HP:
+  kartu kegiatan + poster dulu, satu kartu "Data peserta" + "Ubah", kartu "Bayar pakai QRIS" (berbayar), bar Total + tombol bayar.
+  Centang ulang "Data sudah benar" dari mockup sengaja tidak dibuat (persetujuan sudah di form). Layar status setelah bayar belum diubah.
 - Thumbnail poster ("Lihat poster") membuka `<dialog>` native; tutup via ×,
   Esc, atau klik di luar.
 - Langkah 1–2 mengikuti gaya halaman pembayaran; watermark header memakai
