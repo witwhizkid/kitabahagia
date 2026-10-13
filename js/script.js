@@ -3029,8 +3029,11 @@ if (registrationForm) {
       isFreeSelectionEvent() ? selectedEvent.selectionRequirements : [], true);
     // Selection applicants should read the requirements before the form, so start with details open.
     // The form has its own screen now, so the details are always open on the detail screen.
+    // Finished events lead with their documentation: details stay folded until tapped.
+    const eventFinished = eventRegistrationAvailability(selectedEvent).reason === 'past';
+    document.body.classList.toggle('event-past', eventFinished);
     const eventDisclosure = document.querySelector('.registration-event-disclosure');
-    if (eventDisclosure) eventDisclosure.open = true;
+    if (eventDisclosure) eventDisclosure.open = !eventFinished;
     const requirementsLink = document.querySelector('[data-form-requirements-link]');
     if (requirementsLink) requirementsLink.hidden = document.getElementById('eventRequirementsSection')?.hidden !== false;
 

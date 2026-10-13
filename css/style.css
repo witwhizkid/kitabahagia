@@ -5653,7 +5653,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .check-row:has(#rememberProfile) small { color:var(--muted); font-size:inherit; font-weight:400; }
 @media (max-width:767px) {
   .registration-page .registration-summary-cta { display:none; }
-  .registration-page .registration-event-disclosure > summary { display:none; }
+  .registration-page:not(.event-past) .registration-event-disclosure > summary { display:none; }
   .registration-page .registration-event-disclosure[open] .registration-event-content { display:flex; flex-direction:column; margin-top:6px; padding:0; background:transparent; }
   .registration-page .registration-content-nav { order:0; gap:8px; margin:0 calc(-1 * var(--container-gutter, 20px)) 6px; padding:4px var(--container-gutter, 20px) 12px; border:0; }
   .registration-page .registration-content-nav a { min-height:38px; padding:0 15px; border:1px solid var(--line); border-radius:999px; background:var(--white); color:var(--ink); font-size:13px; font-weight:600; }

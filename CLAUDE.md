@@ -118,7 +118,8 @@ Halaman pendaftaran (`pendaftaran.html`):
   pushState, tombol ‹ `[data-form-step-back]` dan Back HP kembali ke Detail; Back dari Konfirmasi juga ke Detail, isian tetap). HP layar
   Form menyembunyikan intro, detail, dan footer. Sengaja **bukan** file HTML baru: link `pendaftaran.html?event=` sudah tersebar, dipakai
   preview bot, poster terbang, Cek status, dan recovery bayar. Kegiatan Seleksi: layar Form punya link "Baca dulu persyaratan jika lolos".
-  Detail kegiatan selalu terbuka. Tanda * di label dihapus (semua wajib kecuali yang ditulis opsional/poin plus).
+  Detail kegiatan selalu terbuka, kecuali kegiatan yang sudah selesai (`body.event-past`): terlipat di tombol "Detail kegiatan" supaya
+  dokumentasi langsung terlihat (user 13 Okt 2026). Tanda * di label dihapus (semua wajib kecuali yang ditulis opsional/poin plus).
   Konfirmasi HP juga punya tombol ‹ (`[data-review-back]` = Ubah data), judul ringkas, baris data "label kiri – isi kanan"
   (kecuali definisi bahagia/esai/portofolio). Grid Konfirmasi wajib `align-items:stretch` (aturan lama `start` membuat kartu data
   selebar isinya di HP, terlihat di live 13 Okt).
