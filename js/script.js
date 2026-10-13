@@ -1488,10 +1488,13 @@ if (registrationForm) {
   // Set by the pending-payment "Kembali ke detail kegiatan" link: show the event
   // without auto-resuming payment, while keeping the stored recovery intact.
   let detailViewRequested = params.get('view') === 'detail';
-  // Phone: a sticky price + CTA bar while the event details are on screen and the form is still below.
+  // Two screens on one URL (Oct 2026): event details (?event=slug) and the form (&step=daftar).
+  // Same page, so shared links, link previews and payment recovery keep working.
   const registrationBar = document.querySelector('[data-registration-bar]');
   const registrationBarCta = registrationBar?.querySelector('[data-registration-bar-cta]');
   const phoneQuery = window.matchMedia('(max-width: 767px)');
+  let registrationStepView = 'detail';
+  let pendingDetailTarget = '';
   let registrationBarFrame = 0;
   const updateRegistrationBar = () => {
     registrationBarFrame = 0;
@@ -1499,9 +1502,8 @@ if (registrationForm) {
     const summaryCta = document.querySelector('.registration-summary-cta');
     const layoutShown = Boolean(document.querySelector('.registration-event-layout')?.offsetParent);
     const resumeShown = detailViewRequested && summaryCta && !summaryCta.hidden;
-    const formShown = registrationAvailable && registrationFormPanel && !registrationFormPanel.classList.contains('hidden')
-      && registrationFormPanel.getBoundingClientRect().top > window.innerHeight - 40;
-    const show = phoneQuery.matches && layoutShown && Boolean(resumeShown || formShown);
+    const show = phoneQuery.matches && registrationStepView === 'detail' && layoutShown
+      && Boolean(resumeShown || registrationAvailable);
     registrationBar.hidden = !show;
     document.body.classList.toggle('has-registration-bar', show);
     if (show && registrationBarCta) registrationBarCta.textContent = resumeShown ? 'Lanjutkan pembayaran' : 'Daftar sekarang';
@@ -1509,21 +1511,77 @@ if (registrationForm) {
   const queueRegistrationBar = () => {
     if (!registrationBarFrame) registrationBarFrame = window.requestAnimationFrame(updateRegistrationBar);
   };
-  if (registrationBar) {
-    window.addEventListener('scroll', queueRegistrationBar, { passive: true });
-    window.addEventListener('resize', queueRegistrationBar);
-    const barObserver = new MutationObserver(queueRegistrationBar);
-    [registrationContent, registrationFormPanel, registrationReview].forEach((element) => {
-      if (element) barObserver.observe(element, { attributes: true, attributeFilter: ['class', 'hidden'] });
-    });
-    registrationBarCta?.addEventListener('click', () => {
-      const summaryCta = document.querySelector('.registration-summary-cta');
-      if (detailViewRequested && summaryCta) { summaryCta.click(); return; }
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      registrationFormPanel?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
-      registrationFormPanel?.querySelector('.registration-form-heading')?.focus({ preventScroll: true });
-    });
-  }
+  const stepUrl = (view) => {
+    const url = new URL(window.location.href);
+    if (view === 'form') url.searchParams.set('step', 'daftar');
+    else url.searchParams.delete('step');
+    url.hash = '';
+    return url;
+  };
+  const applyStepView = (view) => {
+    registrationStepView = view === 'form' && registrationAvailable && !detailViewRequested ? 'form' : 'detail';
+    document.body.classList.toggle('step-form', registrationStepView === 'form');
+    document.body.classList.toggle('step-detail', registrationStepView === 'detail');
+    queueRegistrationBar();
+  };
+  const openFormStep = () => {
+    if (!registrationAvailable) return;
+    try {
+      window.history.pushState({ kbStep: 'form' }, '', stepUrl('form'));
+    } catch {
+      // Without history support the screen still switches; Back then leaves the page.
+    }
+    applyStepView('form');
+    window.scrollTo(0, 0);
+    registrationFormPanel?.querySelector('.registration-form-heading')?.focus({ preventScroll: true });
+  };
+  const showDetailTarget = () => {
+    const target = pendingDetailTarget ? document.getElementById(pendingDetailTarget) : null;
+    pendingDetailTarget = '';
+    if (target) target.scrollIntoView({ block: 'start' });
+    else window.scrollTo(0, 0);
+  };
+  const openDetailStep = (targetId = '') => {
+    pendingDetailTarget = targetId;
+    if (window.history.state?.kbStep === 'form') {
+      window.history.back();
+      return;
+    }
+    try {
+      window.history.replaceState(null, '', stepUrl('detail'));
+    } catch {
+      // Ignore: the screen still switches.
+    }
+    applyStepView('detail');
+    showDetailTarget();
+  };
+  window.addEventListener('popstate', () => {
+    const view = new URLSearchParams(window.location.search).get('step') === 'daftar' ? 'form' : 'detail';
+    // Back from the review screen returns to the details; the typed data stays in the form.
+    if (view === 'detail' && registrationReview && !registrationReview.classList.contains('hidden')
+      && !isSubmitting && !registrationCompleted) {
+      registrationReview.classList.add('hidden');
+      registrationFormPanel?.classList.remove('hidden');
+      setRegistrationStep('data');
+    }
+    applyStepView(view);
+    if (view === 'detail') showDetailTarget();
+    else window.scrollTo(0, 0);
+  });
+  window.addEventListener('resize', queueRegistrationBar);
+  // Review, payment and recovery screens show and hide panels directly; recheck the bar when they do.
+  const barObserver = new MutationObserver(queueRegistrationBar);
+  [registrationContent, registrationFormPanel, registrationReview, document.getElementById('paymentStage')].forEach((element) => {
+    if (element) barObserver.observe(element, { attributes: true, attributeFilter: ['class', 'hidden'] });
+  });
+  registrationBarCta?.addEventListener('click', () => {
+    const summaryCta = document.querySelector('.registration-summary-cta');
+    if (detailViewRequested && summaryCta) { summaryCta.click(); return; }
+    openFormStep();
+  });
+  document.querySelectorAll('[data-form-step-back]').forEach((button) => {
+    button.addEventListener('click', () => openDetailStep(button.dataset.target || ''));
+  });
   const recoveryStorageKey = `kb:registration-recovery:v1:${eventSlug}`;
   const terminalRecoveryRefreshKey = `kb:registration-terminal-refresh:v1:${eventSlug}`;
 
@@ -2782,7 +2840,7 @@ if (registrationForm) {
     if (answerField && selectionAnswerInput) {
       answerField.hidden = !showQuestion;
       selectionAnswerInput.required = showQuestion;
-      document.getElementById('selectionAnswerLabel').textContent = `${selectedEvent?.selectionQuestion || ''} *`;
+      document.getElementById('selectionAnswerLabel').textContent = selectedEvent?.selectionQuestion || '';
       if (showQuestion) updateSelectionCounter();
       else selectionAnswerInput.setCustomValidity('');
     }
@@ -2918,9 +2976,11 @@ if (registrationForm) {
     renderEventList('eventRequirementsSection', 'eventRequirements', 'eventRequirementsNav',
       isFreeSelectionEvent() ? selectedEvent.selectionRequirements : [], true);
     // Selection applicants should read the requirements before the form, so start with details open.
-    // Phones get the details open too: they replace the old collapsed "Detail kegiatan" button.
+    // The form has its own screen now, so the details are always open on the detail screen.
     const eventDisclosure = document.querySelector('.registration-event-disclosure');
-    if (eventDisclosure && (isFreeSelectionEvent() || phoneQuery.matches)) eventDisclosure.open = true;
+    if (eventDisclosure) eventDisclosure.open = true;
+    const requirementsLink = document.querySelector('[data-form-requirements-link]');
+    if (requirementsLink) requirementsLink.hidden = document.getElementById('eventRequirementsSection')?.hidden !== false;
 
     const eventNameInput = document.getElementById('kegiatan');
     const eventSlugInput = document.getElementById('eventSlug');
@@ -2982,8 +3042,8 @@ if (registrationForm) {
     registrationAvailable = Boolean(REGISTRATION_CONFIG.registrationEndpoint)
       && availability.available;
     document.querySelector('.registration-summary-cta')?.toggleAttribute('hidden', !registrationAvailable);
-    queueRegistrationBar();
     registrationFormPanel?.classList.toggle('hidden', !registrationAvailable);
+    applyStepView(params.get('step') === 'daftar' ? 'form' : 'detail');
     registrationUnavailable?.classList.toggle('hidden', registrationAvailable);
     const eventGallery = document.getElementById('eventGallery');
     if (eventGallery) {
@@ -3033,7 +3093,7 @@ if (registrationForm) {
     }
     if (availabilityNote) {
       availabilityNote.textContent = registrationAvailable
-        ? 'Kamu dapat memeriksa kembali data sebelum pendaftaran dikirim.'
+        ? (selectedEvent.price > 0 ? 'Setelah ini kamu cek ulang datanya dulu, belum langsung bayar.' : 'Setelah ini kamu cek ulang datanya dulu sebelum dikirim.')
         : 'Pendaftaran belum tersedia. Hubungi admin untuk informasi kegiatan berikutnya.';
     }
   };
@@ -3066,12 +3126,12 @@ if (registrationForm) {
       summaryCta.hidden = false;
       summaryCta.textContent = 'Lanjutkan pembayaran';
     }
-    queueRegistrationBar();
+    applyStepView('detail');
   };
 
   document.querySelector('.registration-summary-cta')?.addEventListener('click', (event) => {
-    if (!detailViewRequested) return;
     event.preventDefault();
+    if (!detailViewRequested) { openFormStep(); return; }
     void resumePendingRegistration();
   });
 

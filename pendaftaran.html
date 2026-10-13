@@ -29,7 +29,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#7a1f2b">
 </head>
-<body class="registration-page">
+<body class="registration-page step-detail">
   <header class="site-header">
     <div class="container nav-wrap">
       <a aria-label="Kita Bahagia home" class="brand brand-logo-wrap" href="index.html"><img alt="Logo Kita Bahagia" class="brand-logo" src="assets/logo/logo-kita-bahagia-320.webp"></a>
@@ -146,7 +146,8 @@
           <div class="registration-card reveal" id="registrationFormPanel">
             <div class="registration-checkout-layout">
               <div class="registration-data-panel">
-                <div class="registration-form-heading" tabindex="-1"><h2>Data peserta</h2><p>Kolom bertanda * wajib diisi.</p></div>
+                <div class="registration-form-heading" tabindex="-1"><button class="form-step-back" type="button" data-form-step-back aria-label="Kembali ke detail kegiatan"><span aria-hidden="true">&lsaquo;</span></button><h2>Data peserta</h2></div>
+                <p class="form-requirements-link" data-form-requirements-link hidden><button type="button" data-form-step-back data-target="eventRequirementsSection">Baca dulu persyaratan jika lolos &rarr;</button></p>
                 <div class="form-event-mini" aria-hidden="true"><img data-form-event-poster alt="" loading="lazy" decoding="async" hidden><p><strong data-form-event-title></strong><span data-form-event-date></span></p><b data-form-event-price></b></div>
                 <form data-registration-form novalidate>
                   <input id="kegiatan" name="kegiatan" type="hidden" value="">
@@ -158,16 +159,16 @@
                   </div>
                   <div class="form-grid">
                     <h3 class="form-group-title form-group-contact">Kontak</h3>
-                    <div class="field"><label for="nama">Nama lengkap *</label><input id="nama" name="nama" type="text" autocomplete="name" placeholder="Masukkan nama lengkap" required></div>
-                    <div class="field"><label for="telepon">Nomor WhatsApp *</label><input id="telepon" name="telepon" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" required aria-describedby="teleponError"><span id="teleponError" class="field-error" role="alert" hidden></span></div>
-                    <div class="field full"><label for="email">Email *</label><input id="email" name="email" type="email" autocomplete="email" placeholder="nama@email.com" required></div>
+                    <div class="field"><label for="nama">Nama lengkap</label><input id="nama" name="nama" type="text" autocomplete="name" placeholder="Masukkan nama lengkap" required></div>
+                    <div class="field"><label for="telepon">Nomor WhatsApp</label><input id="telepon" name="telepon" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" required aria-describedby="teleponError"><span id="teleponError" class="field-error" role="alert" hidden></span></div>
+                    <div class="field full"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" placeholder="nama@email.com" required></div>
                     <h3 class="form-group-title form-group-about">Tentang kamu</h3>
-                    <div class="field"><label for="domicile">Domisili *</label><input id="domicile" name="domicile" type="text" autocomplete="address" placeholder="Tempat Tinggal kamu sekarang" maxlength="200" required></div>
-                    <div class="field"><label for="age">Usia *</label><input id="age" name="age" type="number" inputmode="numeric" min="10" max="100" step="1" placeholder="Contoh: 21" required></div>
-                    <div class="field"><label for="institution">Asal Instansi *</label><input id="institution" name="institution" type="text" autocomplete="organization" placeholder="Nama instansi tempat kamu bekerja atau kuliah" maxlength="200" required></div>
-                    <div class="field"><label for="socialAccount">Akun Instagram/TikTok *</label><input id="socialAccount" name="social_account" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" minlength="2" maxlength="100" placeholder="@username" required></div>
-                    <div class="field full"><label for="referralSource">Dari mana kamu tahu kegiatan ini? *</label><select id="referralSource" name="referral_source" required><option value="" selected disabled>Pilih salah satu</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="teman">Informasi teman</option></select></div>
-                    <div class="field full"><label for="bahagia">Apa definisi bahagia menurut kamu? *</label><textarea id="bahagia" name="bahagia" placeholder="Tulis definisi bahagia menurutmu..." required></textarea></div>
+                    <div class="field"><label for="domicile">Domisili</label><input id="domicile" name="domicile" type="text" autocomplete="address" placeholder="Tempat Tinggal kamu sekarang" maxlength="200" required></div>
+                    <div class="field"><label for="age">Usia</label><input id="age" name="age" type="number" inputmode="numeric" min="10" max="100" step="1" placeholder="Contoh: 21" required></div>
+                    <div class="field"><label for="institution">Asal Instansi</label><input id="institution" name="institution" type="text" autocomplete="organization" placeholder="Nama instansi tempat kamu bekerja atau kuliah" maxlength="200" required></div>
+                    <div class="field"><label for="socialAccount">Akun Instagram/TikTok</label><input id="socialAccount" name="social_account" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" minlength="2" maxlength="100" placeholder="@username" required></div>
+                    <div class="field full"><label for="referralSource">Dari mana kamu tahu kegiatan ini?</label><select id="referralSource" name="referral_source" required><option value="" selected disabled>Pilih salah satu</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="teman">Informasi teman</option></select></div>
+                    <div class="field full"><label for="bahagia">Apa definisi bahagia menurut kamu?</label><textarea id="bahagia" name="bahagia" placeholder="Tulis definisi bahagia menurutmu..." required></textarea></div>
                     <div class="field full" id="selectionAnswerField" hidden><label for="selectionAnswer" id="selectionAnswerLabel"></label><textarea id="selectionAnswer" name="selection_answer" maxlength="2000" aria-describedby="selectionAnswerCount"></textarea><span id="selectionAnswerCount" class="field-counter" aria-live="polite"></span></div>
                     <div class="field full" id="selectionCommitmentField" hidden><label class="check-row" for="selectionCommitment"><input id="selectionCommitment" name="selection_commitment" type="checkbox" value="ya"><span id="selectionCommitmentText"></span></label></div>
                     <div class="field full" id="selectionCvField" hidden>
@@ -189,7 +190,7 @@
                       <p class="selection-instagram-title">Ikuti Kita Bahagia di Instagram</p>
                       <p>Sebelum mengirim pendaftaran, ikuti @kitabahagiaa_, lalu unggah screenshot sebagai bukti.</p>
                       <a class="text-link" data-instagram target="_blank" rel="noopener noreferrer">Buka Instagram <span aria-hidden="true">&rarr;</span></a>
-                      <label for="instagramProof">Bukti follow Instagram *</label>
+                      <label for="instagramProof">Bukti follow Instagram</label>
                       <div class="file-picker">
                         <input class="file-picker-input" title="Pilih file" id="instagramProof" name="instagram_proof" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" aria-describedby="instagramProofHint instagramProofError">
                         <span class="file-picker-button" aria-hidden="true">Pilih file</span>
@@ -198,7 +199,7 @@
                       <span id="instagramProofHint" class="field-counter">JPG, PNG, atau WebP. Maksimal 2 MB setelah diperkecil.</span>
                       <span id="instagramProofError" class="field-error" role="alert" hidden></span>
                     </div>
-                    <div class="field full"><label class="check-row" for="rememberProfile"><input id="rememberProfile" type="checkbox"><span><strong>Ingat data saya</strong> <small>Nama, nomor WhatsApp, email, domisili, instansi, usia, dan akun sosmed disimpan di perangkat ini saja, biar daftar berikutnya tinggal ketuk.</small></span></label></div>
+                    <div class="field full"><label class="check-row" for="rememberProfile"><input id="rememberProfile" type="checkbox"><span><strong>Ingat data saya</strong> <small>Disimpan di HP ini saja, biar daftar berikutnya tinggal ketuk.</small></span></label></div>
                     <div class="field full"><label class="check-row" for="consent"><input id="consent" name="consent" type="checkbox" value="setuju" required><span>Saya setuju untuk dihubungi oleh tim Kita Bahagia terkait pendaftaran ini.</span></label></div>
                   </div>
                   <p class="form-actions-note" id="registrationAvailabilityNote">Memeriksa kesiapan layanan pendaftaran.</p>

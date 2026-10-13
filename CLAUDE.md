@@ -107,6 +107,12 @@ Halaman pendaftaran (`pendaftaran.html`):
   "Langkah 1 dari 3 · Data peserta → Data lengkap ✓" (`form.is-ready`; tombol tetap bisa diklik supaya error muncul). Konfirmasi HP:
   kartu kegiatan + poster dulu, satu kartu "Data peserta" + "Ubah", kartu "Bayar pakai QRIS" (berbayar), bar Total + tombol bayar.
   Centang ulang "Data sudah benar" dari mockup sengaja tidak dibuat (persetujuan sudah di form). Layar status setelah bayar belum diubah.
+- **Dua layar di satu URL** (13 Okt 2026, user: form masih kepanjangan): `?event=slug` = layar Detail (tanpa form; bar "Daftar sekarang" di
+  HP, tombol "Daftar kegiatan" di kartu ringkasan desktop), `&step=daftar` = layar Form (`body.step-detail`/`.step-form`, `applyStepView`;
+  pushState, tombol ‹ `[data-form-step-back]` dan Back HP kembali ke Detail; Back dari Konfirmasi juga ke Detail, isian tetap). HP layar
+  Form menyembunyikan intro, detail, dan footer. Sengaja **bukan** file HTML baru: link `pendaftaran.html?event=` sudah tersebar, dipakai
+  preview bot, poster terbang, Cek status, dan recovery bayar. Kegiatan Seleksi: layar Form punya link "Baca dulu persyaratan jika lolos".
+  Detail kegiatan selalu terbuka. Tanda * di label dihapus (semua wajib kecuali yang ditulis opsional/poin plus).
 - Thumbnail poster ("Lihat poster") membuka `<dialog>` native; tutup via ×,
   Esc, atau klik di luar.
 - Langkah 1–2 mengikuti gaya halaman pembayaran; watermark header memakai
