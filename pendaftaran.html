@@ -273,7 +273,11 @@
               <div class="payment-qr-card">
                 <div class="payment-qr-heading"><span class="payment-qris-badge">QRIS</span><p>GoPay · ShopeePay · OVO · DANA · LinkAja · Mobile banking</p></div>
                 <div class="payment-qr-placeholder" aria-label="QRIS belum tersedia" hidden><div class="payment-qr-code" data-payment-qr-code role="img" hidden></div><img data-payment-qr alt="" decoding="async"></div>
-                <button class="payment-download" type="button" data-payment-download hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Unduh QRIS</button>
+                <div class="payment-qr-actions">
+                  <button class="payment-download" type="button" data-payment-download hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Unduh QRIS</button>
+                  <button class="payment-download payment-zoom" type="button" data-payment-zoom><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Perbesar</button>
+                </div>
+                <p class="payment-qr-tip">Bayar dari HP ini? Unduh QRIS, lalu pilih dari galeri di aplikasi e-wallet.</p>
                 <p class="payment-download-note" data-payment-download-note aria-live="polite" hidden></p>
               </div>
             </div>
@@ -305,7 +309,7 @@
             <p class="payment-retry-error" data-payment-retry-error role="alert" hidden></p>
             <button class="btn btn-primary payment-check" type="button" data-payment-check>Cek status pembayaran</button>
             <p class="payment-download-note" data-payment-check-note aria-live="polite" hidden></p>
-            <section class="payment-guide" aria-labelledby="paymentGuideHeading"><h3 id="paymentGuideHeading">Panduan cara pembayaran</h3><ol><li>Simpan QRIS atau screenshot QR di atas.</li><li>Buka aplikasi pembayaran atau mobile banking yang mendukung QRIS.</li><li>Pilih scan atau unggah QRIS dari galeri jika tersedia.</li><li>Periksa nominal lalu konfirmasi pembayaran.</li><li>Kembali ke halaman ini; status akan diperiksa otomatis.</li></ol></section>
+            <details class="payment-guide"><summary>Panduan cara pembayaran</summary><ol><li>Simpan QRIS atau screenshot QR di atas.</li><li>Buka aplikasi pembayaran atau mobile banking yang mendukung QRIS.</li><li>Pilih scan atau unggah QRIS dari galeri jika tersedia.</li><li>Periksa nominal lalu konfirmasi pembayaran.</li><li>Kembali ke halaman ini; status akan diperiksa otomatis.</li></ol></details>
             <p class="registration-email-note" data-email-note hidden></p>
             <section class="registration-onboarding" data-registration-onboarding aria-labelledby="paymentOnboardingHeading" hidden>
               <ol class="status-track" aria-label="Status pendaftaran">
@@ -360,6 +364,15 @@
       <p><span>Biaya</span><strong data-registration-bar-price></strong></p>
       <button class="btn btn-primary" type="button" data-registration-bar-cta>Daftar sekarang</button>
     </div>
+    <div class="proof-bar" data-proof-bar hidden>
+      <p><b>Sudah bayar?</b> Unggah screenshot buktinya</p>
+      <button class="btn btn-primary" type="button" data-proof-bar-cta>Unggah bukti &rarr;</button>
+    </div>
+    <dialog class="qr-dialog" data-qr-dialog aria-label="QRIS diperbesar">
+      <div class="qr-dialog-code" data-qr-dialog-code></div>
+      <p>Scan dari HP lain. Nominal sudah terisi otomatis.</p>
+      <button class="btn btn-primary" type="button" data-qr-dialog-close>Tutup</button>
+    </dialog>
     <dialog class="poster-dialog" id="eventPosterDialog" aria-label="Poster kegiatan">
       <img data-poster-image alt="">
       <button class="poster-dialog-close" type="button" data-poster-close aria-label="Tutup poster">&times;</button>

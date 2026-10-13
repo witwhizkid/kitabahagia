@@ -181,6 +181,10 @@ Halaman pendaftaran (`pendaftaran.html`):
   server menerima selama kuota masih ada dan orang itu belum punya pendaftaran aktif lain, migrasi `20261019010000`), atau daftar
   ulang dengan email/WA sama (tidak diblokir). Banner Beranda/Jadwal untuk pendaftaran berbayar yang belum lunas = "Selesaikan
   pembayaran … · Lanjutkan pembayaran →" langsung ke halaman QRIS (`kb_my_registration.pending`, dibersihkan saat lunas/batal/lewat).
+  Halaman bayar HP ≤640px (13 Okt 2026, mockup A disetujui user, kasus volunteer bayar tapi tidak menemukan form unggah): total bayar di
+  atas QR, QR 200px, tombol "Unduh QRIS" + "Perbesar" (`[data-payment-zoom]` → `<dialog data-qr-dialog>` QR layar penuh), kalimat "Bayar dari
+  HP ini? Unduh QRIS…" (`.payment-qr-tip`), panduan bayar jadi `<details>` terlipat, bar bawah menempel "Sudah bayar? · Unggah bukti →"
+  (`[data-proof-bar]`, langsung membuka galeri; hilang setelah form unggah terlihat), langkah 3 strip bisa diketuk (scroll ke form).
   Pencegahan lupa unggah (Okt 2026): strip 3 langkah di atas QR manual ("Scan & bayar → Screenshot bukti → Kembali ke sini &
   unggah", `[data-manual-steps]`), dan saat tab kembali terlihat setelah >4 detik disembunyikan (pindah ke m-banking) form unggah
   di-scroll ke tengah + pesan maroon "Sudah bayar? Unggah screenshot buktimu sekarang…" (`[data-manual-proof-nudge]`, `.is-nudged`).
