@@ -2324,6 +2324,9 @@ if (registrationForm) {
     const link = container.querySelector('[data-whatsapp-group]');
     const groupUrl = safeWhatsAppGroupUrl(data?.whatsapp_group_url);
     container.hidden = false;
+    // Free events have no payment step in the tracker.
+    const payStep = container.querySelector('[data-track-pay]');
+    if (payStep) payStep.hidden = !container.closest('#paymentStage');
     renderCalendar(container, data);
     renderShare(container);
     if (!groupUrl) {
