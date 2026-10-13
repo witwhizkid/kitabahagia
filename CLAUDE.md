@@ -81,8 +81,8 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
   (`renderHomepageEvents`, `applyFilters` Jadwal) → ≥768px kartu mendatar besar (poster 40% kiri, `cover` dari atas):
   tablet satu kolom maks. 640px, ≥1100px dua kolom (satu kartu maks. 760px). HP tidak berubah.
 - HP Beranda ala aplikasi MyXL (12 Okt 2026): strip "Berikutnya" hero disembunyikan ≤767px (titik slider tampil lagi); lembaran Jejak
-  dibuka `.home-quick` = kartu putih "Berikutnya" (poster, judul 2 baris, panah bulat; diisi `renderHeroNext`) + 4 pintasan
-  (Jadwal, Cek status, Jadi relawan, Kisah; ikon garis di kotak warna keluarga KB). ≥768px tidak tampil.
+  dibuka `.home-quick` = kartu putih "Berikutnya" (poster, judul 2 baris, panah bulat; diisi `renderHeroNext`). 4 pintasan (Jadwal,
+  Cek status, Jadi relawan, Kisah) sempat ada lalu **dihapus** 13 Okt 2026 (user). ≥768px tidak tampil.
 - Urutan Beranda: hero → Jejak → **Kegiatan Terdekat** → Program → Kisah → Testimoni → penutup (Okt 2026, dulu Terdekat setelah
   Program). **Versi A** (12 Okt 2026, user: Beranda HP keramean, ref. MyXL simpel): teaser Tentang (manifesto) digabung ke
   Jejak (paragraf "Kita Bahagia lahir untuk jadi rumah…" + link "Kenal lebih jauh →"); Testimoni **tetap** (sempat dicabut, user minta
