@@ -272,7 +272,8 @@ Lainnya:
 - Hero beranda (Okt 2026, referensi Awwwards: Rebelliously Optimistic + 1000 Whales): kata "Makna" di judul
   = pil maroon, Newsreader italic krem (`.hero-pill`), terisi dari kiri .8s setelah judul muncul. Strip
   "Berikutnya · <kegiatan> · <tgl> · <lokasi>[ · tutup N hari lagi] →" (`[data-hero-next]`, `renderHeroNext`,
-  data dari fetch Kegiatan Terdekat; kegiatan pertama yang masih dibuka, kalau tidak ada yang pertama)
+  data dari fetch Kegiatan Terdekat; hanya kegiatan pertama yang pendaftarannya masih dibuka, kalau semua penuh/ditutup strip + kartu
+  "Berikutnya" HP disembunyikan (user 13 Okt 2026: jangan PHP pengunjung))
   melayang di baris bawah hero (absolute, jadi tidak menggeser judul): desktop kanan bawah, ≤1023px kiri
   bawah (titik slider di kanan; HP ≤767px: titik disembunyikan selama strip tampil, strip selebar baris). Tanpa kegiatan/gagal fetch = tersembunyi. Layar loading/intro sengaja
   tidak dibuat (pengunjung HP dari IG/WA, PageSpeed).
