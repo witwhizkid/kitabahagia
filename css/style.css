@@ -5612,6 +5612,57 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .registration-event-disclosure[open] > summary::after { transform:translateY(2px) rotate(-135deg); }
 .registration-page .registration-event-disclosure > summary:focus-visible { outline:3px solid var(--maroon); outline-offset:2px; }
 @media (prefers-reduced-motion: reduce) { .registration-page .registration-event-disclosure > summary::after { transition:none; } }
+/* Phone event page (Oct 2026, mockup approved): white card with poster cover, details always open,
+   chip nav, activities as a timeline, benefits as chips, sticky price bar ([data-registration-bar]). */
+.registration-bar { display:none; }
+@media (max-width:767px) {
+  .registration-page .registration-summary-sticky { display:flex; flex-direction:column; padding:0 0 18px; border:1px solid var(--line); border-radius:24px; background:var(--white); color:var(--ink); box-shadow:none; }
+  .registration-page .registration-summary-sticky::before,
+  .registration-page .registration-summary-sticky::after { display:none; }
+  .registration-page .registration-summary-sticky > * { margin-left:18px; margin-right:18px; }
+  .registration-page .registration-summary-title-row { display:contents; }
+  .registration-page .summary-card .registration-summary-image { order:-1; flex:none; width:auto; height:auto; aspect-ratio:4 / 3; margin:0 0 16px; border-radius:0; background:var(--sand); }
+  .registration-page .summary-card .registration-poster-button img { object-fit:cover; object-position:top; }
+  .registration-page .summary-card .registration-poster-button span { right:auto; left:12px; bottom:12px; padding:5px 12px; }
+  .registration-page .registration-summary-topline { margin-top:0; }
+  .registration-page .registration-summary-topline > span { background:#f6f2ef; color:var(--ink); letter-spacing:0; }
+  .registration-page .registration-summary-topline > .registration-event-category { background:var(--maroon-soft); color:var(--maroon); }
+  .registration-page .registration-summary-topline > span.is-countdown { background:var(--maroon); color:var(--white); }
+  .registration-page .summary-card .registration-summary-title-row h2 { margin:4px 18px 0; color:var(--ink); font-size:24px; line-height:1.15; }
+  .registration-page .registration-summary-sticky .event-summary div { border-color:var(--line); }
+  .registration-page .registration-summary-sticky .event-summary dt { color:var(--muted); }
+  .registration-page .registration-summary-sticky .event-summary dd { color:var(--ink); }
+  .registration-page .registration-summary-sticky .event-summary dd a { color:var(--maroon); }
+  .registration-page .registration-payment-window { background:#f6f2ef; color:var(--ink); border-radius:16px; }
+  .registration-page .registration-summary-cta { display:none; }
+
+  .registration-page .registration-event-disclosure > summary { display:none; }
+  .registration-page .registration-event-disclosure[open] .registration-event-content { display:flex; flex-direction:column; margin-top:6px; padding:0; background:transparent; }
+  .registration-page .registration-content-nav { order:0; gap:8px; margin:0 calc(-1 * var(--container-gutter, 20px)) 6px; padding:4px var(--container-gutter, 20px) 12px; border:0; }
+  .registration-page .registration-content-nav a { min-height:38px; padding:0 15px; border:1px solid var(--line); border-radius:999px; background:var(--white); color:var(--ink); font-size:13px; font-weight:600; }
+  .registration-page .registration-content-nav a:first-of-type { order:5; }
+  .registration-page #eventActivitiesSection { order:1; }
+  .registration-page #eventBenefitsSection { order:2; }
+  .registration-page #eventRequirementsSection { order:3; }
+  .registration-page #eventLocationSection { order:4; }
+  .registration-page #eventDescriptionSection { order:5; }
+  .registration-page .registration-detail-note { order:6; }
+  .registration-page #eventActivities { padding:0; list-style:none; }
+  .registration-page #eventActivities li { position:relative; margin:0; padding:0 0 16px 32px; line-height:1.45; }
+  .registration-page #eventActivities li::before { content:""; position:absolute; top:2px; left:0; width:12px; height:12px; border:3px solid var(--maroon); border-radius:50%; background:var(--white); }
+  .registration-page #eventActivities li:not(:last-child)::after { content:""; position:absolute; top:22px; bottom:2px; left:8px; border-left:2px dashed rgba(122,31,43,.25); }
+  .registration-page #eventBenefits { display:flex; flex-wrap:wrap; gap:8px; padding:0; list-style:none; }
+  .registration-page #eventBenefits li { display:inline-flex; align-items:center; gap:7px; margin:0; padding:8px 14px; border:1px solid var(--line); border-radius:999px; background:var(--white); font-size:13.5px; font-weight:600; line-height:1.3; }
+  .registration-page #eventBenefits li::before { content:"\2713"; color:var(--maroon); font-weight:800; }
+
+  .registration-page .registration-bar:not([hidden]) { position:fixed; z-index:40; right:0; bottom:0; left:0; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 20px calc(12px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); background:var(--white); box-shadow:0 -10px 28px -18px rgba(83,20,29,.35); }
+  .registration-bar p { display:grid; margin:0; }
+  .registration-bar p[hidden] { display:none; }
+  .registration-bar span { color:var(--muted); font-size:12px; }
+  .registration-bar strong { color:var(--maroon); font-family:"Instrument Sans","DM Sans",sans-serif; font-size:20px; line-height:1.15; }
+  .registration-bar .btn { min-height:48px; margin-left:auto; padding:0 26px; border-radius:999px; }
+  .registration-page.has-registration-bar .site-footer { padding-bottom:84px; }
+}
 
 /* Brand watermark: the Kita Bahagia mark replaces the generic decorative circles. */
 .registration-page .payment-header::before,
@@ -6867,9 +6918,14 @@ html.stabilo-motion .stabilo:not(.is-in)::before { clip-path: inset(0 100% 0 0);
   .registration-page .registration-form-heading { padding-bottom: 18px; }
   .registration-page .registration-form-heading p { display: inline-flex; margin-top: 10px; }
 
+  /* Phone: filled fields, no outline until focus (Oct 2026 registration redesign). */
   .registration-page .registration-card .field input:not([type="checkbox"]),
   .registration-page .registration-card .field textarea,
-  .registration-page .registration-card .file-picker { border-radius: 12px; }
+  .registration-page .registration-card .kb-select-button,
+  .registration-page .registration-card .file-picker { border-color: transparent; border-radius: 16px; background: #f6f2ef; box-shadow: none; }
+  .registration-page .registration-card .field input:not([type="checkbox"]):focus,
+  .registration-page .registration-card .field textarea:focus { border-color: var(--maroon); background: var(--white); }
+  .registration-page .registration-card .field input[aria-invalid="true"] { border-color: var(--maroon-deep); background: var(--rose); }
 
   .registration-page .registration-card .check-row,
   .registration-page .registration-card .selection-instagram-proof { border-radius: 14px; }
