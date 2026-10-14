@@ -505,6 +505,7 @@ const renderHomepageEvents = async () => {
       .filter(Boolean)
       .sort(byOpenThenDate)
       .slice(0, 3);
+    rememberResumeEvents(events);
   } catch (error) {
     console.error('Kegiatan terdekat gagal dimuat', error);
     list.removeAttribute('aria-busy');
@@ -583,6 +584,7 @@ const renderScheduleEvents = async () => {
       .filter((event, index, list) => list.findIndex((other) => other.slug === event.slug) === index);
     scheduleEvents = all.filter((event) => !eventIsPast(event))
       .sort(byOpenThenDate);
+    rememberResumeEvents(scheduleEvents);
     pastEvents = all.filter(eventIsPast).sort((a, b) => new Date(b.start) - new Date(a.start));
   } catch (error) {
     console.error('Jadwal kegiatan gagal dimuat', error);
@@ -642,29 +644,101 @@ const updateMyRegistration = (code, paid) => {
   } catch { /* the reminder is a convenience only */ }
 };
 
-// "Kamu terdaftar di …" (after cinema tickets): the last registration made on this device, shown above
-// the event lists until the event day has passed. Nothing leaves the device.
-const renderMyRegistration = () => {
-  const slot = document.querySelector('[data-my-registration]');
-  if (!slot) return;
-  let saved = null;
-  try { saved = JSON.parse(localStorage.getItem('kb_my_registration') || 'null'); } catch { return; }
-  const start = new Date(saved?.start || '');
-  if (!saved?.name || Number.isNaN(start.getTime()) || jakartaDayNumber(start) < jakartaDayNumber(new Date())) return;
-  const when = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' }).format(start);
-  const link = slot.querySelector('a');
-  if (saved.pending && saved.slug) {
-    // Paid event, QRIS not paid yet on this device: say so, and go straight back to the QRIS + proof upload.
-    slot.querySelector('[data-my-registration-text]').textContent = `Selesaikan pembayaran ${saved.name} · ${when}`;
-    link.textContent = 'Lanjutkan pembayaran →';
-    link.href = `pendaftaran.html?event=${encodeURIComponent(saved.slug)}`;
-  } else {
-    slot.querySelector('[data-my-registration-text]').textContent = `${saved.applied ? 'Kamu ikut seleksi' : 'Kamu terdaftar di'} ${saved.name} · ${when}`;
-    link.href = `cek-status.html?kode=${encodeURIComponent(saved.code || '')}`;
-  }
-  slot.hidden = false;
+// Resume capsule (Oct 2026, replaces the "Kamu terdaftar di …" banner): one floating reminder on
+// Beranda/Jadwal, picked in this order: unpaid QRIS > a form left half-way > the event is 0–2 days away.
+// Everything comes from this device (kb_my_registration, kb_registration_draft); nothing is sent anywhere.
+const REGISTRATION_DRAFT_KEY = 'kb_registration_draft';
+const REGISTRATION_DRAFT_TTL = 24 * 3600e3;
+const readStoredJson = (storage, key) => {
+  try { return JSON.parse(storage.getItem(key) || 'null'); } catch { return null; }
 };
-renderMyRegistration();
+const readRegistrationDraft = () => {
+  const draft = readStoredJson(localStorage, REGISTRATION_DRAFT_KEY);
+  if (!draft?.slug || !(Date.now() - Number(draft.savedAt) < REGISTRATION_DRAFT_TTL)) return null;
+  return draft;
+};
+const clearRegistrationDraft = () => {
+  try { localStorage.removeItem(REGISTRATION_DRAFT_KEY); } catch { /* convenience only */ }
+};
+const resumeKnownEvents = new Map();
+const rememberResumeEvents = (events) => {
+  events.forEach((event) => resumeKnownEvents.set(event.slug, event));
+  renderResumeCapsule();
+};
+const resumeTimeFormatter = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
+const pickResumeState = () => {
+  const saved = readStoredJson(localStorage, 'kb_my_registration');
+  const start = new Date(saved?.start || '');
+  const today = jakartaDayNumber(new Date());
+  const savedLive = saved?.name && saved.slug && !Number.isNaN(start.getTime()) && jakartaDayNumber(start) >= today;
+  const dismissed = (key) => readStoredJson(localStorage, 'kb_capsule_dismissed') === key
+    || readStoredJson(sessionStorage, 'kb_capsule_dismissed') === key;
+  const person = (value) => String(value || '').trim().split(/\s+/)[0] || '';
+  if (savedLive && saved.pending && !dismissed(`pay:${saved.code}`)) {
+    const deadline = new Date(saved.deadline || '');
+    const name = person(saved.person);
+    return {
+      key: `pay:${saved.code}`, session: true, poster: saved.poster, href: `pendaftaran.html?event=${encodeURIComponent(saved.slug)}`,
+      kicker: deadline.getTime() > Date.now() ? `Bayar sebelum ${resumeTimeFormatter.format(deadline)}` : 'Pembayaran belum selesai',
+      title: `Biar slotmu ga lepas${name ? `, ${name}` : ''}`, cta: 'Bayar', ctaLong: ' sekarang'
+    };
+  }
+  const draft = readRegistrationDraft();
+  const draftEvent = draft && resumeKnownEvents.get(draft.slug);
+  const draftOpen = draft && (!draftEvent || eventRegistrationAvailability(draftEvent).available)
+    && !(savedLive && saved.slug === draft.slug);
+  if (draftOpen) {
+    const name = person(draft.fields?.nama);
+    return {
+      key: `draft:${draft.slug}`, draft: true, poster: draft.poster, step: draft.step === 2 ? 2 : 1,
+      href: `pendaftaran.html?event=${encodeURIComponent(draft.slug)}&step=daftar`,
+      kicker: `Dikit lagi${name ? `, ${name}` : ''}!`, title: `Tempatmu di ${draft.name || 'kegiatan ini'} belum aman`,
+      cta: 'Lanjut', ctaLong: ' daftar'
+    };
+  }
+  const daysLeft = savedLive ? jakartaDayNumber(start) - today : -1;
+  if (savedLive && !saved.pending && !saved.applied && daysLeft <= 2 && !dismissed(`soon:${saved.code}`)) {
+    const name = person(saved.person);
+    const place = saved.location && saved.location !== 'Lokasi menyusul' ? saved.location : saved.name;
+    return {
+      key: `soon:${saved.code}`, poster: saved.poster, href: `cek-status.html?kode=${encodeURIComponent(saved.code || '')}`,
+      kicker: `${['Hari ini', 'Besok', 'Lusa'][daysLeft]}, ${resumeTimeFormatter.format(start)} WIB`,
+      title: `Ketemu di ${place}${name ? `, ${name}` : ''} 👋`, cta: 'Lihat', ctaLong: ' info'
+    };
+  }
+  return null;
+};
+const renderResumeCapsule = () => {
+  if (!document.body.matches('.home-page, .schedule-page')) return;
+  let capsule = document.querySelector('[data-resume-capsule]');
+  let state = null;
+  try { state = pickResumeState(); } catch { /* storage blocked: no reminder */ }
+  if (!state) {
+    if (capsule) capsule.hidden = true;
+    return;
+  }
+  if (!capsule) {
+    capsule = document.createElement('aside');
+    capsule.className = 'resume-capsule';
+    capsule.dataset.resumeCapsule = '';
+    capsule.setAttribute('aria-label', 'Pengingat pendaftaran');
+    document.body.append(capsule);
+  }
+  const steps = state.draft ? `<span class="resume-capsule-steps" aria-label="Langkah ${state.step} dari 3">${[1, 2, 3].map((step) => `<i class="${step <= state.step ? 'is-on' : ''}"></i>`).join('')}</span>` : '';
+  capsule.innerHTML = `${state.poster ? `<img class="resume-capsule-poster" src="${escapeHTML(state.poster)}" alt="" decoding="async">` : ''}
+    <span class="resume-capsule-text"><span class="resume-capsule-kicker">${escapeHTML(state.kicker)}</span><span class="resume-capsule-title">${escapeHTML(state.title)}</span>${steps}</span>
+    <a class="resume-capsule-cta" href="${escapeHTML(state.href)}">${escapeHTML(state.cta)}<span class="resume-capsule-long">${escapeHTML(state.ctaLong)}</span></a>
+    <button class="resume-capsule-close" type="button" aria-label="Tutup pengingat">&times;</button>`;
+  capsule.querySelector('.resume-capsule-close').addEventListener('click', () => {
+    try {
+      if (state.draft) clearRegistrationDraft();
+      else (state.session ? sessionStorage : localStorage).setItem('kb_capsule_dismissed', JSON.stringify(state.key));
+    } catch { /* convenience only */ }
+    capsule.hidden = true;
+  });
+  capsule.hidden = false;
+};
+renderResumeCapsule();
 
 // /link (Instagram/TikTok bio page) and the 404 page: up to three upcoming events as big tappable rows.
 // Root-relative hrefs, because 404 can be served at any depth.
@@ -1572,12 +1646,55 @@ if (registrationForm) {
     url.hash = '';
     return url;
   };
+  // Draft (Oct 2026): once the form screen is open, the typed fields are kept on this device for 24 hours
+  // so the Beranda/Jadwal capsule can bring the volunteer back to where they stopped. Files are never kept.
+  const draftFieldNames = () => [...registrationForm.elements]
+    .filter((field) => field.name && !['file', 'hidden', 'submit', 'button'].includes(field.type))
+    .map((field) => field.name);
+  let draftRestored = false;
+  const saveRegistrationDraft = () => {
+    if (registrationStepView !== 'form' || !selectedEvent || registrationCompleted || isSubmitting) return;
+    const fields = {};
+    draftFieldNames().forEach((name) => {
+      const field = registrationForm.elements[name];
+      if (field?.type === 'checkbox') fields[name] = field.checked;
+      else if (field && 'value' in field) fields[name] = field.value;
+    });
+    try {
+      localStorage.setItem(REGISTRATION_DRAFT_KEY, JSON.stringify({
+        slug: selectedEvent.slug, name: selectedEvent.name, poster: selectedEvent.image || '', savedAt: Date.now(),
+        step: registrationReview && !registrationReview.classList.contains('hidden') ? 2 : 1, fields
+      }));
+    } catch { /* convenience only */ }
+  };
+  const restoreRegistrationDraft = () => {
+    if (draftRestored || !selectedEvent) return;
+    draftRestored = true;
+    const draft = readRegistrationDraft();
+    if (draft?.slug !== selectedEvent.slug || !draft.fields) return;
+    Object.entries(draft.fields).forEach(([name, value]) => {
+      const field = registrationForm.elements[name];
+      if (!field || field.type === 'file') return;
+      if (field.type === 'checkbox') field.checked = Boolean(value);
+      else if (!field.value && typeof value === 'string' && value) field.value = value;
+      else return;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    if (draft.fields.nama) document.querySelector('[data-profile-prompt]')?.setAttribute('hidden', '');
+  };
   const applyStepView = (view) => {
     registrationStepView = view === 'form' && registrationAvailable && !detailViewRequested ? 'form' : 'detail';
     document.body.classList.toggle('step-form', registrationStepView === 'form');
     document.body.classList.toggle('step-detail', registrationStepView === 'detail');
     queueRegistrationBar();
+    if (registrationStepView === 'form') {
+      restoreRegistrationDraft();
+      saveRegistrationDraft();
+    }
   };
+  registrationForm.addEventListener('input', saveRegistrationDraft);
+  registrationForm.addEventListener('change', saveRegistrationDraft);
   const openFormStep = () => {
     if (!registrationAvailable) return;
     try {
@@ -4165,11 +4282,13 @@ if (registrationForm) {
       const isPaidPending = registration.registration_status === 'pending_payment'
         && registration.payment_status === 'unpaid' && registration.amount > 0;
       persistRegistrationRecovery(registration, registrationEmail);
+      let paymentDeadline = '';
 
       if (isFreeConfirmed || isApplied) {
         showRegistrationMessage(`Pendaftaran ${title} sudah tercatat. Kode pendaftaran kamu: ${code}.`, 'success');
       } else if (isPaidPending) {
         const payment = await createPayment(registration, registrationEmail);
+        paymentDeadline = payment?.payment_deadline || '';
         showRegistrationMessage(`Pendaftaran ${title} sudah tercatat dengan kode ${code}.`, 'success');
         renderPaymentState('pending', payment);
         document.getElementById('registrationStatus')?.classList.add('hidden');
@@ -4183,8 +4302,11 @@ if (registrationForm) {
       // 6. Remember this registration on the device so Beranda/Jadwal can remind "Kamu terdaftar di …".
       try {
         localStorage.setItem('kb_my_registration', JSON.stringify({
-          slug: selectedEvent.slug, name: title, start: selectedEvent.start, code, applied: isApplied, pending: isPaidPending
+          slug: selectedEvent.slug, name: title, start: selectedEvent.start, code, applied: isApplied, pending: isPaidPending,
+          poster: selectedEvent.image || '', location: selectedEvent.location || '', deadline: paymentDeadline,
+          person: String(new FormData(registrationForm).get('nama') || '').trim()
         }));
+        clearRegistrationDraft();
       } catch { /* the reminder is a convenience only */ }
       const resultStage = isFreeConfirmed || isApplied ? document.getElementById('freeRegistrationConfirmation') : null;
       if (resultStage && isApplied) {

@@ -174,14 +174,20 @@ Halaman pendaftaran (`pendaftaran.html`):
   prompt]) dengan "Pakai data ini" / "Bukan saya" (hapus simpanan). Error nomor WA ramah + contoh 081234567890 dan kolom
   bergoyang (`.is-shaking`; aturan validasi tidak berubah). Tombol Konfirmasi: spinner (`.is-loading`) lalu hijau ✓ (`.is-done`).
   Tutup ≤24 jam lagi: badge poster + status ringkasan jadi "Tutup dalam HH:MM:SS" (`data-countdown`, satu timer global).
-  Daftar sukses disimpan di `localStorage kb_my_registration`; Beranda + Jadwal menampilkan "Kamu terdaftar di <kegiatan> · <hari>
-  · Cek status →" sampai hari kegiatan lewat (`renderMyRegistration`, tidak dikirim ke server).
+  Daftar sukses disimpan di `localStorage kb_my_registration` (+ poster, lokasi, nama, batas bayar). **Kapsul pengingat** (14 Okt 2026,
+  mockup disetujui user; menggantikan banner pink "Kamu terdaftar di …" yang dinilai mengganggu): satu kapsul maroon `#7a1f2b` melayang
+  di Beranda + Jadwal (`renderResumeCapsule`, `.resume-capsule`; HP di atas tab bar, desktop kanan bawah): poster cetakan krem miring,
+  kicker emas, tombol emas. Prioritas: (1) belum bayar "Bayar sebelum HH.MM · Biar slotmu ga lepas, <nama>" → QRIS; (2) form ditinggal
+  "Dikit lagi, <nama>! · Tempatmu di <kegiatan> belum aman" + 3 bar langkah → `&step=daftar`, isian dibalikkan (`kb_registration_draft`,
+  24 jam, tanpa file; dihapus saat × atau daftar sukses; tidak tampil kalau kegiatan sudah penuh/ditutup); (3) terdaftar H-2..H
+  "Besok, 13.00 WIB · Ketemu di <lokasi>, <nama> 👋" → Cek status. × = sembunyi (bayar: per sesi). Desain sengaja bukan kartu putih
+  ala Kitabisa. Semua hanya di perangkat, tidak dikirim ke server.
 - Cek status "Pembayaran belum selesai" (Okt 2026, keluhan volunteer malam pembukaan): kalau `kb_my_registration` di HP yang sama
   cocok dengan kode, muncul "Lanjutkan pembayaran →" ke `pendaftaran.html?event=<slug>` (kode + email ditulis ke kunci recovery,
   jadi QRIS + unggah bukti terbuka lagi). Lewat batas bayar: bukti **tetap bisa diunggah** (layar "waktu habis" QRIS manual tetap menampilkan form unggah;
   server menerima selama kuota masih ada dan orang itu belum punya pendaftaran aktif lain, migrasi `20261019010000`), atau daftar
-  ulang dengan email/WA sama (tidak diblokir). Banner Beranda/Jadwal untuk pendaftaran berbayar yang belum lunas = "Selesaikan
-  pembayaran … · Lanjutkan pembayaran →" langsung ke halaman QRIS (`kb_my_registration.pending`, dibersihkan saat lunas/batal/lewat).
+  ulang dengan email/WA sama (tidak diblokir). Kapsul Beranda/Jadwal untuk pendaftaran berbayar yang belum lunas
+  langsung ke halaman QRIS (`kb_my_registration.pending`, dibersihkan saat lunas/batal/lewat).
   Halaman bayar HP ≤640px (13 Okt 2026, mockup A disetujui user, kasus volunteer bayar tapi tidak menemukan form unggah): total bayar di
   atas QR, QR 200px, tombol "Unduh QRIS" + "Perbesar" (`[data-payment-zoom]` → `<dialog data-qr-dialog>` QR layar penuh), kalimat "Bayar dari
   HP ini? Unduh QRIS…" (`.payment-qr-tip`), panduan bayar jadi `<details>` terlipat, bar bawah menempel "Sudah bayar? · Unggah bukti →"
@@ -251,7 +257,7 @@ Lainnya:
   (balik total) atau cabut tab tapi pertahankan `.nav-extra` Cek status/Relawan/FAQ di hamburger (jalan tengah). Hamburger di HP menyembunyikan 4 link tab itu (Program tetap ada di hamburger) dan mendapat `.nav-extra`
   dari JS: "Cek status pendaftaran" (paling atas), Relawan, FAQ (disembunyikan ≥961px). Footer dapat ruang bawah lewat
   `.has-tab-bar .site-footer::after`. Hero Beranda HP/tablet (tombol, strip "Berikutnya", titik slider) dinaikkan setinggi tab bar lewat `--tab-bar-space` (dulu tombol hero tertutup tab bar). Tab "Kegiatanku" sengaja **belum** dibuat (pre-launch, isinya akan kosong; pengingat
-  `renderMyRegistration` sudah menutup kebutuhan); buat bareng Kartu Relawan tahap 2. Belum dicek di iPhone asli (risiko
+  kapsul `renderResumeCapsule` sudah menutup kebutuhan); buat bareng Kartu Relawan tahap 2. Belum dicek di iPhone asli (risiko
   bertumpuk dengan bar Safari).
 - Motion Beranda ala dashdigital.studio (Okt 2026, keputusan user, **Beranda dulu**; lebarkan ke halaman
   lain hanya kalau user setuju): JS menambah `html.home-motion` (hanya `.home-page`, bukan saat reduced
