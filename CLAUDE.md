@@ -96,6 +96,7 @@ hanya ±4–5 kegiatan/bulan dan poster terbit ±H-7 (keputusan user, ala card K
   hitam-putih **hanya** untuk kuota penuh (keputusan user Okt 2026: kegiatan selesai/ditutup tetap berwarna); buka dan tutup ≤7 hari = label maroon "N hari lagi"/"Besok"/
   "Hari ini". Kegiatan ditutup/selesai tidak menampilkan sisa slot.
 - Status default "Pendaftaran dibuka" tidak ditampilkan.
+- Urutan kegiatan mendatang (Jadwal, Kegiatan Terdekat Beranda, /link; 14 Okt 2026, user): pendaftaran buka → "Dibuka …" (belum buka) → kuota penuh/ditutup, tiap kelompok tanggal terdekat dulu (`byOpenThenDate`). Sudah selesai tetap terbaru dulu.
 
 Halaman pendaftaran (`pendaftaran.html`):
 - HP ≤767px (13 Okt 2026, ref. Grab/MyXL, mockup disetujui user; desktop tidak berubah): kartu ringkasan **tetap kartu maroon lama**
