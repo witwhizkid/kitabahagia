@@ -344,6 +344,12 @@ setInterval(() => {
     element.textContent = countdownText(new Date(element.dataset.countdown));
   });
 }, 1000);
+// Upcoming lists: open first, then "Dibuka …" (not yet open), then full/closed; nearest date inside each group.
+const eventOpenRank = (event) => {
+  const { available, reason } = eventRegistrationAvailability(event);
+  return available ? 0 : reason === 'not_yet' ? 1 : 2;
+};
+const byOpenThenDate = (a, b) => eventOpenRank(a) - eventOpenRank(b) || new Date(a.start) - new Date(b.start);
 // Few seats left is the "siapa cepat" signal, so it gets the accent.
 const eventOpensFormatter = new Intl.DateTimeFormat('id-ID', {
   day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
@@ -497,7 +503,7 @@ const renderHomepageEvents = async () => {
     events = (await fetchPublicEvents({ limit: 3 }))
       .map(normalizeScheduleEvent)
       .filter(Boolean)
-      .sort((a, b) => new Date(a.start) - new Date(b.start))
+      .sort(byOpenThenDate)
       .slice(0, 3);
   } catch (error) {
     console.error('Kegiatan terdekat gagal dimuat', error);
@@ -576,7 +582,7 @@ const renderScheduleEvents = async () => {
     const all = [...upcoming, ...finished].map(normalizeScheduleEvent).filter(Boolean)
       .filter((event, index, list) => list.findIndex((other) => other.slug === event.slug) === index);
     scheduleEvents = all.filter((event) => !eventIsPast(event))
-      .sort((a, b) => new Date(a.start) - new Date(b.start));
+      .sort(byOpenThenDate);
     pastEvents = all.filter(eventIsPast).sort((a, b) => new Date(b.start) - new Date(a.start));
   } catch (error) {
     console.error('Jadwal kegiatan gagal dimuat', error);
@@ -669,7 +675,7 @@ const renderLinkEvents = async () => {
     const events = (await fetchPublicEvents({ limit: 3 }))
       .map(normalizeScheduleEvent)
       .filter((event) => event && !eventIsPast(event))
-      .sort((a, b) => new Date(a.start) - new Date(b.start))
+      .sort(byOpenThenDate)
       .slice(0, 3);
     if (!events.length) return;
     list.innerHTML = events.map((event) => `<a class="link-event" href="/${eventHref(event)}"><strong>${escapeHTML(event.name)}</strong><span>${escapeHTML(eventShortDateFormatter.format(new Date(event.start)))} · ${escapeHTML(event.location)}</span></a>`).join('');
