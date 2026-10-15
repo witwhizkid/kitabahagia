@@ -665,6 +665,11 @@ dashboard dampak; Kartu Relawan tahap 2 (jumlah kegiatan + jam, stempel per kegi
 lintas sertifikat per relawan, jaga privasi). Domain: jaga perpanjangan `kitabahagia.id` (domain lama Sabang Merauke
 diambil situs judi).
 
+Footer berseni (15 Okt 2026, ide user dari footer "sequel" di inspora.design, **ditunda**): pita ilustrasi garis krem di atas
+maroon footer (`#55131d`) di bawah footer. Mockup filter gravir dari foto `kegiatan-lapangan` kurang bagus (kerumunan + wajah jadi
+aneh). Lanjut hanya dengan ilustrasi tim Desain (lanskap kampung → Tidung → Baduy + relawan kecil, satu warna) atau foto lanskap
+tanpa wajah close-up. Hindari stok/AI.
+
 Web sengaja tidak ditambah fitur baru sampai pemicunya terjadi (roadmap:
 4 kegiatan/bulan, tim ± 70 orang; 24 perancang program = 6 tim × 4 orang,
 tim 1–3 dan 4–6 bergantian tiap bulan, + 1 kegiatan gratis akhir bulan).
