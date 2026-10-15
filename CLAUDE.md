@@ -122,7 +122,7 @@ Halaman pendaftaran (`pendaftaran.html`):
   Detail kegiatan selalu terbuka, kecuali kegiatan yang sudah selesai (`body.event-past`): terlipat di tombol "Detail kegiatan" supaya
   dokumentasi langsung terlihat (user 13 Okt 2026). Tanda * di label dihapus (semua wajib kecuali yang ditulis opsional/poin plus).
   Layar Detail HP (15 Okt 2026, opsi B, user: kartu ketinggian, relawan mengira tidak ada detail): judul "Pendaftaran kegiatan" disembunyikan,
-  kartu maroon diringkas (judul 21px, poster 72px, tanggal · jam dan lokasi jadi 2 baris berikon `img/icon-summary-*.svg`, biaya hanya di bar
+  kartu maroon diringkas (judul 21px, poster 92px dengan ikon kaca pembesar bulat, bukan tulisan "Lihat poster" (semua lebar), tanggal · jam dan lokasi jadi 2 baris berikon `img/icon-summary-*.svg`, biaya hanya di bar
   bawah, catatan tahan slot 30 menit disembunyikan karena Konfirmasi sudah menjelaskan), jadi pil navigasi detail + "Tentang" terlihat di
   layar pertama. Status "Pendaftaran dibuka · N slot" jadi "N slot tersisa" saja (semua lebar).
   Konfirmasi HP juga punya tombol ‹ (`[data-review-back]` = Ubah data), judul ringkas, baris data "label kiri – isi kanan"
