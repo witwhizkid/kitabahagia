@@ -3251,12 +3251,12 @@ if (registrationForm) {
     } else {
       registrationProgress?.classList.add('hidden');
       const unavailableCopy = {
-        full: ['Kuota kegiatan telah terpenuhi', 'Seluruh tempat untuk kegiatan ini sudah terisi. Kamu masih dapat melihat detail kegiatan atau memilih agenda lainnya.'],
-        closed: ['Pendaftaran telah ditutup', 'Waktu pendaftaran untuk kegiatan ini sudah berakhir. Kamu masih dapat melihat detail kegiatan atau memilih agenda lainnya.'],
+        full: ['Yah, slotnya udah habis duluan!', 'Semua tempat sudah diambil relawan lain. Tenang, masih ada kegiatan seru lainnya.'],
+        closed: ['Yah, pendaftarannya udah ditutup', 'Waktu daftar kegiatan ini sudah lewat. Masih ada kegiatan seru lainnya, kok.'],
         past: ['Kegiatan ini telah selesai', 'Kegiatan ini sudah berlangsung. Lihat detailnya atau temukan kegiatan lain yang masih tersedia.'],
         unavailable: ['Pendaftaran belum tersedia', 'Pendaftaran untuk kegiatan ini belum dapat dilakukan. Lihat detailnya atau pilih kegiatan lainnya.'],
         not_yet: ['Pendaftaran belum dibuka', ''],
-        applicants_full: ['Pendaftaran sudah ditutup', 'Pendaftaran untuk kegiatan ini sudah ditutup. Pantau halaman jadwal untuk kegiatan berikutnya.']
+        applicants_full: ['Yah, pendaftarannya udah ditutup', 'Pendaftar kegiatan ini sudah cukup. Pantau jadwal untuk kegiatan berikutnya, ya.']
       }[availability.reason || 'unavailable'];
       setText('registrationUnavailableTitle', unavailableCopy[0]);
       setText('registrationUnavailableMessage', unavailableCopy[1]);
