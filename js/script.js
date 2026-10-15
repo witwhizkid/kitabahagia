@@ -2360,83 +2360,163 @@ if (registrationForm) {
     block.querySelector('[data-calendar-ics]').onclick = () => downloadCalendarFile(item);
   };
 
-  // "Bagikan ke Story" (after Spotify Wrapped): a 1080×1920 KB-coloured image drawn in the browser
-  // (logo + event; no poster, a cross-origin image would taint the canvas). Phones get the native share
+  // "Bagikan ke Story": a 1080×1920 image drawn in the browser, a torn cream ticket (poster, title,
+  // date/time/place) with a round KB badge "AKU IKUT" on a dark maroon glow. Storage sends CORS headers, so
+  // the poster keeps the canvas exportable; without it the ticket is shorter. Phones get the native share
   // sheet (Instagram is in it); elsewhere it downloads.
   const makeStoryImage = async (event) => {
-    await Promise.all(['700 96px "Instrument Sans"', '500 40px "DM Sans"'].map((font) => document.fonts?.load(font).catch(() => null)));
-    const [logo, poster] = await Promise.all([
+    const display = '"Instrument Sans", "DM Sans", sans-serif';
+    await Promise.all([`700 76px ${display}`, '500 30px "DM Sans"'].map((font) => document.fonts?.load(font).catch(() => null)));
+    const [logo, mark, poster] = await Promise.all([
       loadCanvasImage('assets/logo/logo-kita-bahagia-white.webp'),
+      loadCanvasImage('assets/logo/pictorial-white.webp'),
       loadCanvasImage(event.image)
     ]);
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
     canvas.height = 1920;
     const context = canvas.getContext('2d');
+    const glow = (x, y, r, color) => {
+      const gradient = context.createRadialGradient(x, y, 0, x, y, r);
+      gradient.addColorStop(0, color);
+      gradient.addColorStop(1, 'rgba(42, 14, 19, 0)');
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 1080, 1920);
+    };
     context.fillStyle = '#2a0e13';
     context.fillRect(0, 0, 1080, 1920);
-    const dots = ['#c23a3f', '#efb635', '#f6e6d6', '#f2b8c0'];
-    for (let i = 0; i < 26; i += 1) {
-      context.fillStyle = dots[i % dots.length];
-      context.globalAlpha = .5;
-      context.beginPath();
-      context.arc(Math.random() * 1080, Math.random() * 1920, 6 + Math.random() * 10, 0, Math.PI * 2);
-      context.fill();
-    }
-    context.globalAlpha = 1;
-    drawImageAtWidth(context, logo, 96, 110, 230);
-    // Measure the text first so the card is as tall as its content (+ the poster when it loaded).
-    context.font = '700 96px "Instrument Sans", "DM Sans", sans-serif';
-    const title = wrapCanvasText(context, event.name, 760).slice(0, 3);
-    context.font = '500 40px "DM Sans", sans-serif';
-    const meta = wrapCanvasText(context, `${eventShortDateFormatter.format(new Date(event.start))} · ${event.location}`, 760).slice(0, 2);
-    const textHeight = 100 + title.length * 104 + 30 + meta.length * 52;
-    // A portrait poster may use up to 640px of height inside the card; a landscape photo takes what it needs.
-    const posterScale = poster ? Math.min(780 / poster.naturalWidth, 640 / poster.naturalHeight) : 0;
+    glow(160, 220, 900, 'rgba(194, 58, 63, .55)');
+    glow(960, 1720, 760, 'rgba(239, 182, 53, .32)');
+    drawImageAtWidth(context, logo, 96, 110, 200);
+
+    const inner = 812;
+    context.font = `700 76px ${display}`;
+    const title = wrapCanvasText(context, event.name, inner).slice(0, 3);
+    const posterScale = poster ? Math.min(inner / poster.naturalWidth, 640 / poster.naturalHeight) : 0;
     const posterHeight = poster ? poster.naturalHeight * posterScale : 0;
-    const cardHeight = poster ? textHeight + posterHeight + 150 : textHeight + 90;
-    const cardTop = Math.max(400, 940 - cardHeight / 2);
+    const photoBlock = poster ? posterHeight + 50 : 190;
+    const topHeight = 44 + photoBlock + 40 + title.length * 84 + 50;
+    const stubHeight = 190;
+    const height = topHeight + stubHeight;
+    const cardTop = Math.max(330, 900 - height / 2);
     context.save();
-    context.translate(540, cardTop + cardHeight / 2);
+    context.translate(540, cardTop + height / 2);
     context.rotate(-.035);
-    const top = -cardHeight / 2;
-    context.fillStyle = '#c23a3f';
+    const left = -450;
+    const top = -height / 2;
+    context.shadowColor = 'rgba(0, 0, 0, .45)';
+    context.shadowBlur = 60;
+    context.shadowOffsetY = 24;
+    context.fillStyle = '#fbf4ec';
     context.beginPath();
-    context.roundRect(-450, top, 900, cardHeight, 64);
+    context.roundRect(left, top, 900, height, 48);
     context.fill();
-    context.fillStyle = '#ffe6e1';
-    context.font = '500 44px "DM Sans", sans-serif';
-    context.fillText('Aku ikut', -380, top + 100);
-    context.fillStyle = '#ffffff';
-    context.font = '700 96px "Instrument Sans", "DM Sans", sans-serif';
-    title.forEach((line, i) => context.fillText(line, -380, top + 200 + i * 104));
-    context.font = '500 40px "DM Sans", sans-serif';
-    context.fillStyle = '#ffe6e1';
-    meta.forEach((line, i) => context.fillText(line, -380, top + 200 + title.length * 104 + 10 + i * 52));
+    context.shadowColor = 'transparent';
+    context.fillStyle = '#f6e6d6';
+    context.beginPath();
+    context.roundRect(left, top + topHeight, 900, stubHeight, [0, 0, 48, 48]);
+    context.fill();
+    let y = top + 44;
     if (poster) {
-      // The poster sits whole (contain) on a lighter panel inside the card, like a print on a page.
-      const boxTop = top + textHeight + 70;
-      const boxHeight = posterHeight + 40;
-      context.fillStyle = 'rgba(255, 255, 255, .14)';
-      context.beginPath();
-      context.roundRect(-410, boxTop, 820, boxHeight, 40);
-      context.fill();
       const width = poster.naturalWidth * posterScale;
-      const height = posterHeight;
+      context.fillStyle = '#efe0d2';
+      context.beginPath();
+      context.roundRect(left + 44, y, inner, posterHeight, 32);
+      context.fill();
       context.save();
       context.beginPath();
-      context.roundRect(-width / 2, boxTop + (boxHeight - height) / 2, width, height, 24);
+      context.roundRect(-width / 2, y, width, posterHeight, 32);
       context.clip();
-      context.drawImage(poster, -width / 2, boxTop + (boxHeight - height) / 2, width, height);
+      context.drawImage(poster, -width / 2, y, width, posterHeight);
       context.restore();
     }
-    context.restore();
+    // The badge: maroon disc with cream + gold rings, the white KB mark and a gold "AKU IKUT" ribbon.
+    context.save();
+    context.translate(left + 900 - 120, y + (poster ? 110 : 30));
+    context.rotate(.14);
+    context.shadowColor = 'rgba(0, 0, 0, .35)';
+    context.shadowBlur = 30;
+    context.shadowOffsetY = 14;
+    [[122, '#efb635'], [112, '#fbf4ec'], [102, '#7a1f2b']].forEach(([radius, color], i) => {
+      if (i) context.shadowColor = 'transparent';
+      context.fillStyle = color;
+      context.beginPath();
+      context.arc(0, 0, radius, 0, Math.PI * 2);
+      context.fill();
+    });
+    if (mark) {
+      const markWidth = 118;
+      const markHeight = markWidth * mark.naturalHeight / mark.naturalWidth;
+      context.drawImage(mark, -markWidth / 2, -markHeight / 2 - 18, markWidth, markHeight);
+    }
+    context.font = `800 30px ${display}`;
+    if ('letterSpacing' in context) context.letterSpacing = '4px';
+    const ribbon = 'AKU IKUT';
+    const ribbonWidth = context.measureText(ribbon).width + 56;
     context.fillStyle = '#efb635';
-    context.font = '700 64px "Instrument Sans", "DM Sans", sans-serif';
-    context.fillText('Yuk, ikut juga!', 96, 1560);
-    context.fillStyle = '#f6e6d6';
-    context.font = '500 44px "DM Sans", sans-serif';
-    context.fillText('kitabahagia.id/link', 96, 1640);
+    context.shadowColor = 'rgba(0, 0, 0, .25)';
+    context.shadowBlur = 12;
+    context.beginPath();
+    context.roundRect(-ribbonWidth / 2, 66, ribbonWidth, 54, 27);
+    context.fill();
+    context.shadowColor = 'transparent';
+    context.fillStyle = '#2a0e13';
+    context.textAlign = 'center';
+    context.fillText(ribbon, 2, 104);
+    context.restore();
+
+    y += photoBlock;
+    context.font = `700 28px ${display}`;
+    if ('letterSpacing' in context) context.letterSpacing = '5px';
+    context.fillStyle = '#7a1f2b';
+    const kicker = (event.categoryKey === 'uncategorized' ? 'KITA BAHAGIA' : `KITA BAHAGIA · ${event.category}`).toUpperCase();
+    context.fillText(wrapCanvasText(context, kicker, inner)[0] || '', left + 44, y);
+    if ('letterSpacing' in context) context.letterSpacing = '0px';
+    context.fillStyle = '#2a0e13';
+    context.font = `700 76px ${display}`;
+    title.forEach((line, i) => context.fillText(line, left + 44, y + 90 + i * 84));
+
+    // Perforation: notches cut into both edges and a dashed tear line.
+    const tear = top + topHeight;
+    context.fillStyle = '#2a0e13';
+    [left, left + 900].forEach((x) => { context.beginPath(); context.arc(x, tear, 26, 0, Math.PI * 2); context.fill(); });
+    context.strokeStyle = 'rgba(122, 31, 43, .35)';
+    context.lineWidth = 4;
+    context.setLineDash([16, 14]);
+    context.beginPath();
+    context.moveTo(left + 44, tear);
+    context.lineTo(left + 856, tear);
+    context.stroke();
+    context.setLineDash([]);
+    const start = new Date(event.start);
+    const columns = [['Tanggal', eventShortDateFormatter.format(start)], ['Jam', `${eventTimeFormatter.format(start)}`]];
+    if (event.location && event.location !== 'Lokasi menyusul') columns.push(['Lokasi', event.location]);
+    const xs = [left + 44, left + 300, left + 500];
+    columns.forEach(([label, value], i) => {
+      context.fillStyle = '#8a5a52';
+      context.font = '500 30px "DM Sans", sans-serif';
+      context.fillText(label, xs[i], tear + 72);
+      context.fillStyle = '#2a0e13';
+      context.font = `700 42px ${display}`;
+      const max = i === 2 ? 356 : 230;
+      let text = value;
+      while (text.length > 3 && context.measureText(text).width > max) text = text.slice(0, -2);
+      context.fillText(text === value ? value : `${text.trimEnd()}…`, xs[i], tear + 128);
+    });
+    context.restore();
+
+    context.fillStyle = '#efb635';
+    context.font = `700 72px ${display}`;
+    context.fillText('Yuk, ikut', 96, 1640);
+    context.fillText('juga!', 96, 1722);
+    context.font = `700 40px ${display}`;
+    const link = 'kitabahagia.id/link';
+    const linkWidth = context.measureText(link).width + 80;
+    context.beginPath();
+    context.roundRect(984 - linkWidth, 1630, linkWidth, 96, 48);
+    context.fill();
+    context.fillStyle = '#2a0e13';
+    context.fillText(link, 1024 - linkWidth, 1692);
     return canvasToPng(canvas);
   };
   const shareStory = async (button) => {
