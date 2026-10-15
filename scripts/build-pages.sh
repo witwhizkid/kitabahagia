@@ -19,6 +19,14 @@ if command -v node >/dev/null 2>&1; then node scripts/split-css.mjs dist; else e
 cat dist/js/curtain-gate.js dist/js/loader-gate.js > dist/js/home-gate.js
 sed -i -E 's#<script src="js/curtain-gate\.js"></script>#<script src="js/home-gate.js"></script>#; /<script src="js\/loader-gate\.js"><\/script>/d' dist/index.html
 grep -q 'js/home-gate.js' dist/index.html || { echo "home-gate swap failed"; exit 1; }
+# Minify JS/CSS (Oct 2026, speed): script.js 62 KB -> 40 KB gzipped. esbuild keeps top-level names, so
+# stories.js/admin.js still see script.js globals. Without npm/network the files simply stay readable.
+if [ -z "${KB_NO_MINIFY:-}" ] && command -v npx >/dev/null 2>&1 && npx --yes esbuild@0.24.0 --version >/dev/null 2>&1; then
+  npx --yes esbuild@0.24.0 dist/js/*.js --minify --log-level=error --outdir=dist/js --allow-overwrite
+  npx --yes esbuild@0.24.0 dist/css/*.css --minify --log-level=error --outdir=dist/css --allow-overwrite
+else
+  echo "esbuild unavailable: JS/CSS kept unminified"
+fi
 # Cloudflare lets browsers keep JS/CSS for hours while HTML is always fresh, so a deploy
 # could pair new HTML with old admin.js. Stamp local JS/CSS links with the commit so every
 # deploy loads matching files.

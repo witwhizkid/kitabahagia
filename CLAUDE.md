@@ -434,6 +434,14 @@ Lainnya:
   `data-src`/`data-srcset` dan baru dimuat JS setelah `load` (PageSpeed HP: LCP). Okt 2026: crop HP punya versi
   540/720/900w (`srcset` + `sizes="100vw"`, preload `imagesrcset`). Build menggabungkan `curtain-gate.js` + `loader-gate.js`
   jadi `js/home-gate.js` khusus index.html (satu request render-blocking; sumber tetap terpisah).
+  **Paket kecepatan 15 Okt 2026** (diukur Playwright: HP 390px, Slow 4G 150 ms/1,6 Mbps, CPU 4×, API dibekukan; median 7×):
+  build meminify JS/CSS lewat `npx esbuild@0.24.0` (script.js 62→40 KB gzip; nama top-level tetap, jadi stories/admin tetap
+  jalan; tanpa npm = tidak diminify; dicek computed style identik 15 halaman × 3 lebar, tanpa error JS). Jadwal punya skeleton
+  statis di HTML + baris "Memuat kegiatan…" + ruang pager di HP, dan halaman pendaftaran `min-height:100svh` (footer tidak
+  meloncat): CLS Jadwal 0,03→0 (desktop 0,42→0), Pendaftaran 0,27→0. Hero slide 3 baru dimuat saat slide 2 tampil (−130 KB).
+  Formatter `Intl` dibuat saat pertama dipakai (`lazyDateFormat`; yang pertama memakan ±80 ms di HP lemah), `jakartaDayNumber`
+  pakai aritmetika UTC+7. Hasil Beranda: DCL 2,31→1,98 s, konten 2,48→2,10 s, 983→829 KB, TBT 543→419 ms. Dicoba tapi **tidak**
+  dipakai karena tidak terukur: cache 1 tahun untuk JS/CSS/font (kunjungan ulang sama cepat). Belum: hero HP 720w (−30 KB) di DPR 2.
   Investigasi PageSpeed 96→74 (6 Okt 2026): Lighthouse lokal versi 1, 3, dan 6 Okt sama-sama 80 (tanpa animasi/loader pun 80),
   jadi bukan regresi kode; penurunan live = variasi PSI (Lighthouse 13.5, TTFB/cache Cloudflare). LCP live = logo loader;
   hambatan terbesar CSS Beranda ±169 KB render-blocking. Ukur ulang 3× dan ambil median sebelum menyimpulkan. Berkas sumber mentahnya tidak
