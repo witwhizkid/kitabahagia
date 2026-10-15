@@ -3213,12 +3213,17 @@ if (registrationForm) {
           }).format(new Date(registrationClose));
           const strong = document.createElement('b');
           strong.textContent = `sampai pendaftaran ditutup (${closeLabel} WIB)`;
-          paymentWindowNote.replaceChildren('Slot ditahan ', strong, '. Belum bayar sampai batas itu, slot dilepas untuk peserta lain.');
+          const copy = document.createElement('span');
+          copy.append('Slot ditahan ', strong, '. Belum bayar sampai batas itu, slot dilepas untuk peserta lain.');
+          paymentWindowNote.replaceChildren(copy);
         } else {
           const duration = minutes % 60 === 0 ? `${minutes / 60} jam` : `${minutes} menit`;
           const strong = document.createElement('b');
           strong.textContent = duration;
-          paymentWindowNote.replaceChildren('Slot ditahan ', strong, ' setelah daftar. Belum bayar sampai batas itu, slot dilepas untuk peserta lain.');
+          // One span: the note is a flex row (icon + text), so loose text and <b> would become separate columns.
+          const copy = document.createElement('span');
+          copy.append('Slot ditahan ', strong, ' setelah daftar. Belum bayar sampai batas itu, slot dilepas untuk peserta lain.');
+          paymentWindowNote.replaceChildren(copy);
         }
       }
     }
