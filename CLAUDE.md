@@ -349,9 +349,9 @@ Lainnya:
   `#2a0e13` + **ambient** = salinan kecil (64px, transform Supabase) foto sampul kisah yang aktif, diburamkan, berganti pelan
   saat digeser (desktop: juga saat hover/fokus). Judul "Cerita yang dibawa pulang relawan." + tombol pil krem "Semua kisah →"
   (hover emas). Garis progres ala Story IG (tombol per kisah, emas; tersembunyi kalau semua kartu muat). Kartu editorial tanpa
-  bingkai: lebar 260–320px, foto 4:3 (HP 1:1.08) sudut 18px (desktop sempat 380px 4:5, user: kegedean; ref. ukuran blog Gama Dharma), titik warna program + "Program X · tempat" (dari `stories.event_id` →
+  bingkai: lebar 260–320px, foto 4:3 (HP juga 4:3 + kutipan 2 baris sejak 15 Okt 2026, user: blok Kisah HP ketinggian; dulu 1:1.08 + 4 baris) sudut 18px (desktop sempat 380px 4:5, user: kegedean; ref. ukuran blog Gama Dharma), titik warna program + "Program X · tempat" (dari `stories.event_id` →
   `public-stories` list mengirim `event.program_key/location`; kosong = tanggal terbit), ringkasan sebagai kutipan Newsreader
-  miring (maks. 4 baris), garis tipis, judul kecil + "N menit →". Penutup teks: "Kisah berikutnya bisa dari kamu." + "Cari
+  miring (maks. 3 baris desktop, 2 HP), garis tipis, judul kecil + "N menit →". Penutup teks: "Kisah berikutnya bisa dari kamu." + "Cari
   kegiatan →". HP/tablet: kartu tidak aktif pudar .42. Snap per kartu (`scroll-snap-stop: always`); `scroll-padding` pakai
   `--container-gutter` (persen di scroll-padding dihitung dari lebar track, dulu kartu nempel ke tepi layar HP). Sengaja **tidak** playful (kisah = artikel, nada lebih dalam).
 - Testimoni Beranda (Okt 2026, ref. gojek.io "open source"): tumpukan kartu miring di latar krem; judul + kalimat

@@ -4406,8 +4406,11 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .story-reel-progress { margin-top: 22px; }
   .story-reel { gap: 14px; margin-top: 14px; }
   .story-reel-card { flex-basis: min(78vw, 310px); }
-  .story-reel-photo img { aspect-ratio: 1 / 1.08; }
-  .story-reel-quote { font-size: 20px; -webkit-line-clamp: 4; }
+  /* 15 Okt 2026 (user: Kisah block too tall on phones): 4:3 photo + two-line quote, so the title shows with the card. */
+  .story-reel-photo img { aspect-ratio: 4 / 3; }
+  .story-reel-meta { margin-top: 12px; }
+  .story-reel-quote { margin-top: 6px; font-size: 17px; -webkit-line-clamp: 2; }
+  .story-reel-foot { margin-top: 12px; padding-top: 10px; }
   .story-reel-end { flex-basis: min(66vw, 260px); padding-bottom: 60px; }
   .kisah-data-state.is-loading[data-skeleton="preview"]::before { min-height: 500px; background-size: min(78vw,310px) 335px,min(60vw,240px) 20px,min(78vw,310px) 335px; background-position: 0 0,0 360px,calc(min(78vw,310px) + 14px) 0; }
   .kisah-archive-grid, .kisah-archive-grid.has-two-stories { grid-template-columns: 1fr; gap: 34px; }
