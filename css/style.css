@@ -2249,7 +2249,11 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
 .registration-page .site-header { position:fixed; }
 .registration-page main [id] { scroll-margin-top:calc(var(--site-header-height) + 16px); }
 .registration-intro { padding:48px 0 42px; background:var(--cream); border-bottom:1px solid var(--line); }
-.registration-back { display:inline-block; padding-block:12px; margin:-12px 0 12px; color:var(--maroon); font-size:13px; font-weight:700; }
+/* Back link as a soft pink pill with a round arrow (15 Okt 2026, user: plain text looked stiff). */
+.registration-back { display:inline-flex; align-items:center; gap:8px; margin:0 0 12px; padding:5px 14px 5px 5px; border-radius:999px; background:#fbe4e1; color:var(--maroon); font-size:13px; font-weight:700; text-decoration:none; transition:transform .15s var(--ease), background-color .15s var(--ease); }
+.registration-back span { display:inline-grid; place-items:center; width:28px; height:28px; border-radius:50%; background:var(--white); font-size:15px; line-height:1; transition:transform .15s var(--ease); }
+.registration-back:active { transform:scale(.97); }
+@media (hover:hover) { .registration-back:hover { background:#f7d3ce; } .registration-back:hover span { transform:translateX(-3px); } }
 .registration-intro h1 { max-width:680px; margin:0; font-size:clamp(38px, 5vw, 58px); line-height:1.02; }
 .registration-intro p { margin:22px 0 4px; font-size:18px; }
 .registration-intro p strong { color:var(--maroon); }
