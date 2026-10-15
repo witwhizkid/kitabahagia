@@ -3096,9 +3096,11 @@ if (registrationForm) {
       : statusReason === 'not_yet' ? 'Pendaftaran belum dibuka'
       : statusReason === 'applicants_full' ? 'Pendaftaran ditutup' : selectedEvent.status;
     // A finished event shows no seat count.
+    // The default "Pendaftaran dibuka" is left out (it is implied); only the seat count shows then.
     setText('eventStatus', statusReason === 'past' || statusText === selectedEvent.capacity
       ? statusText
-      : `${statusText} · ${selectedEvent.capacity}`);
+      : statusText === 'Pendaftaran dibuka' && selectedEvent.capacity ? selectedEvent.capacity
+        : `${statusText} · ${selectedEvent.capacity}`);
     // registrationAvailable is set further down; the reason from the availability check is already known here.
     const closingSoon = !statusReason || statusReason === 'open' ? eventCountdownDeadline(selectedEvent) : null;
     const statusElement = document.getElementById('eventStatus');
