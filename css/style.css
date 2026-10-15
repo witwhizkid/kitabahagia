@@ -5275,7 +5275,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .registration-page .registration-intro h1 { font-size: clamp(28px, 3vw, 36px); line-height: 1.1; }
 .registration-page .registration-intro p,
 .registration-page .registration-intro .container > span { display: none; }
-.registration-page .registration-section { padding: 12px 0 72px; }
+.registration-page .registration-section { min-height: 100svh; padding: 12px 0 72px; } /* footer stays below the fold while the event loads (CLS) */
 .registration-page .registration-progress,
 .registration-page .registration-event-layout,
 .registration-page .registration-card,
@@ -5997,6 +5997,10 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   /* Schedule on phones: upright cards, the whole 4:5 poster on top (Oct 2026, user: cropped posters looked bad).
      13 Okt 2026: Mendatang = swipe row (card 84%, next one peeks, pager "1 / N" + one nudge); Sudah selesai = compact rows per month. */
   .schedule-grid.event-card-grid { grid-template-columns:1fr; gap:18px; padding-top:20px; }
+  /* While loading, one skeleton sized like a carousel card, so the swipe row that replaces it does not move the page (CLS). */
+  .schedule-grid[aria-busy="true"] { margin-top:37px; padding-top:6px; } /* room for the "1 / N" pager that appears above the row */
+  .schedule-grid[aria-busy="true"] > .loading-card { width:84%; }
+  .schedule-grid[aria-busy="true"] > .loading-card:nth-child(n+2) { display:none; }
   .schedule-grid.is-carousel { --bleed:var(--container-gutter); display:flex; gap:12px; margin-inline:calc(var(--bleed) * -1); padding:6px var(--bleed) 8px; overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x mandatory; scroll-padding-inline:var(--bleed); scrollbar-width:none; }
   .schedule-grid.is-carousel::-webkit-scrollbar { display:none; }
   .schedule-grid.is-carousel > .event-card { flex:0 0 84%; scroll-snap-align:start; }

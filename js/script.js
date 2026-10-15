@@ -23,9 +23,16 @@ const escapeHTML = (value) => String(value ?? '').replace(/[&<>'"]/g, (character
   '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
 }[character]));
 
-const formatEventPrice = (price) => price === 0 ? 'Gratis' : new Intl.NumberFormat('id-ID', {
+// Building the first Intl formatter loads locale data (~80 ms on a slow phone, Oct 2026 profile), so
+// formatters are created on first use instead of while the page starts up.
+const lazyDateFormat = (options, locale = 'id-ID') => {
+  let formatter = null;
+  return { format: (date) => (formatter || (formatter = new Intl.DateTimeFormat(locale, options))).format(date) };
+};
+let priceFormatter = null;
+const formatEventPrice = (price) => price === 0 ? 'Gratis' : (priceFormatter || (priceFormatter = new Intl.NumberFormat('id-ID', {
   style: 'currency', currency: 'IDR', maximumFractionDigits: 0
-}).format(price);
+}))).format(price);
 
 // Share an image the visitor made (Story, volunteer card): the native share sheet on phones (Instagram
 // is in it), a PNG download elsewhere.
@@ -90,17 +97,17 @@ const fetchPublicEvents = async ({ slug = null, limit = null, past = false } = {
   return payload.events;
 };
 
-const eventDateFormatter = new Intl.DateTimeFormat('id-ID', {
+const eventDateFormatter = lazyDateFormat({
   day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta'
 });
-const eventTimeFormatter = new Intl.DateTimeFormat('id-ID', {
+const eventTimeFormatter = lazyDateFormat({
   hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Jakarta'
 });
 const eventDateParts = (date) => Object.fromEntries(new Intl.DateTimeFormat('id-ID', {
   day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta'
 }).formatToParts(date).map((part) => [part.type, part.value]));
 
-const eventShortDateFormatter = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' });
+const eventShortDateFormatter = lazyDateFormat({ day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' });
 const isSameEventDay = (a, b) => eventDateFormatter.format(a) === eventDateFormatter.format(b);
 // Multi-day events name both days: "24 Okt, 09.00 – 25 Okt, 17.00 WIB".
 const formatEventTime = (start, end) => {
@@ -313,12 +320,9 @@ const eventRegistrationAvailability = (event) => {
 
 
 // Event cards shared by the schedule page and the homepage.
-const jakartaIsoDay = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Jakarta' });
-// Calendar-day number in Jakarta, so "N hari lagi" counts dates, not 24-hour blocks.
-const jakartaDayNumber = (date) => {
-  const [year, month, day] = jakartaIsoDay.format(date).split('-').map(Number);
-  return Date.UTC(year, month - 1, day) / 864e5;
-};
+// Calendar-day number in Jakarta, so "N hari lagi" counts dates, not 24-hour blocks. WIB is a fixed
+// UTC+7 (no daylight saving), so plain arithmetic does it without building an Intl formatter at load.
+const jakartaDayNumber = (date) => Math.floor((new Date(date).getTime() + 7 * 3600e3) / 864e5);
 const eventHref = (event) => `pendaftaran.html?event=${encodeURIComponent(event.slug)}`;
 // Calendar days until registration closes, or null without a deadline.
 const eventDaysLeft = (event) => {
@@ -351,7 +355,7 @@ const eventOpenRank = (event) => {
 };
 const byOpenThenDate = (a, b) => eventOpenRank(a) - eventOpenRank(b) || new Date(a.start) - new Date(b.start);
 // Few seats left is the "siapa cepat" signal, so it gets the accent.
-const eventOpensFormatter = new Intl.DateTimeFormat('id-ID', {
+const eventOpensFormatter = lazyDateFormat({
   day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
 });
 const eventSlotNote = (event) => {
@@ -561,10 +565,8 @@ const renderScheduleEvents = async () => {
   };
 
   scheduleEventsLoading = true;
-  if (count) {
-    count.textContent = 'Jadwal kegiatan sedang dimuat';
-    count.classList.add('visually-hidden');
-  }
+  // The count line stays visible while loading so the cards that follow do not push it in (CLS).
+  if (count) count.textContent = 'Memuat kegiatan…';
   empty?.classList.add('hidden');
   grid.innerHTML = `${eventCardSkeleton('event-card')}${eventCardSkeleton('event-card')}${eventCardSkeleton('event-card')}`;
   grid.setAttribute('aria-busy', 'true');
@@ -665,7 +667,7 @@ const rememberResumeEvents = (events) => {
   events.forEach((event) => resumeKnownEvents.set(event.slug, event));
   renderResumeCapsule();
 };
-const resumeTimeFormatter = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
+const resumeTimeFormatter = lazyDateFormat({ hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
 const pickResumeState = () => {
   const saved = readStoredJson(localStorage, 'kb_my_registration');
   const start = new Date(saved?.start || '');
@@ -911,19 +913,24 @@ if (heroSlider && heroTrack && heroSlides.length) {
   const reduceHeroMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   // Slides 2-3 photos wait until the page has loaded so they don't slow the first photo.
-  const loadHeroPhotos = () => {
-    heroSlider.querySelectorAll('[data-srcset], [data-src]').forEach(el => {
-      if (el.dataset.srcset) el.srcset = el.dataset.srcset;
-      if (el.dataset.src) el.src = el.dataset.src;
-      delete el.dataset.srcset;
-      delete el.dataset.src;
+  // Only the slide on screen and the next one are fetched (Oct 2026, speed): slide 3 waits until
+  // slide 2 shows, so a quick visit on a slow phone network skips ~130 KB.
+  const loadHeroPhotos = (upTo = 1) => {
+    heroSlides.forEach((slide, index) => {
+      if (index > upTo) return;
+      slide.querySelectorAll('[data-srcset], [data-src]').forEach(el => {
+        if (el.dataset.srcset) el.srcset = el.dataset.srcset;
+        if (el.dataset.src) el.src = el.dataset.src;
+        delete el.dataset.srcset;
+        delete el.dataset.src;
+      });
     });
   };
   if (document.readyState === 'complete') loadHeroPhotos();
-  else window.addEventListener('load', loadHeroPhotos, { once: true });
+  else window.addEventListener('load', () => loadHeroPhotos(), { once: true });
 
   const updateHeroSlider = () => {
-    if (heroIndex) loadHeroPhotos();
+    if (heroIndex) loadHeroPhotos(heroIndex + 1);
     heroSlides.forEach((slide, index) => {
       slide.classList.toggle('active', index === heroIndex);
     });
@@ -1529,7 +1536,7 @@ const safeWhatsAppGroupUrl = (value) => {
   }
 };
 
-const announcementDateFormatter = new Intl.DateTimeFormat('id-ID', {
+const announcementDateFormatter = lazyDateFormat({
   weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta'
 });
 // Heading and message for a registration's current state, shared by the
