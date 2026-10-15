@@ -640,7 +640,10 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   + alamat API iPaymu dari secret. Sementara `PAYMENT_PROVIDER=midtrans` (sandbox) selama review Midtrans. Teks FAQ/Ketentuan/Privasi
   menyebut "iPaymu atau Midtrans". 13 Okt 2026: tes production pertama ditolak 406 "Invalid domain" karena notifyUrl = URL Supabase;
   sekarang `https://kitabahagia.id/api/ipaymu-webhook` (Pages Function `functions/api/ipaymu-webhook.js` meneruskan ke Edge Function,
-  path ditambahkan ke `_routes.json`). Detail: "iPaymu" di `supabase/README.md`. Cadangan: **QRIS manual dibangun 9 Okt 2026** (`PAYMENT_PROVIDER=manual`,
+  path ditambahkan ke `_routes.json`). 15 Okt 2026: reviewer iPaymu ternyata mendaftar di kegiatan asli (13 Okt, kode KB-20261013-22F327) saat web memakai QRIS manual, jadi
+  dinilai "belum terintegrasi"; owner mengirim email ke support@ipaymu.com (minta pengecekan IP dimatikan + janji link tes khusus).
+  Rencana setelah dibalas: kegiatan `is_demo` selalu memakai iPaymu di `create-payment` (kegiatan asli tetap manual), lalu kirim link demo.
+  Detail: "iPaymu" di `supabase/README.md`. Cadangan: **QRIS manual dibangun 9 Okt 2026** (`PAYMENT_PROVIDER=manual`,
   untuk oprec kegiatan 18 Okt sebelum gateway approve): QRIS statis GoPay Merchant owner ("Kita Bahagia Indonesia") diubah jadi
   QRIS bernominal (nominal unik = harga + 1..499, tertanam di QR, digambar bulat seperti biasa); peserta unggah screenshot bukti
   (`submit-payment-proof`, bucket privat `payment-proofs`), slot ditahan 24 jam sejak unggah; admin Detail pendaftar = foto bukti +
