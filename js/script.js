@@ -3211,10 +3211,14 @@ if (registrationForm) {
           const closeLabel = new Intl.DateTimeFormat('id-ID', {
             day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
           }).format(new Date(registrationClose));
-          paymentWindowNote.textContent = `Slotmu ditahan sementara sampai pendaftaran ditutup (${closeLabel} WIB). Jika pembayaran belum berhasil saat waktu habis, slot akan kembali tersedia untuk peserta lain.`;
+          const strong = document.createElement('b');
+          strong.textContent = `sampai pendaftaran ditutup (${closeLabel} WIB)`;
+          paymentWindowNote.replaceChildren('Slot ditahan ', strong, '. Belum bayar sampai batas itu, slot dilepas untuk peserta lain.');
         } else {
           const duration = minutes % 60 === 0 ? `${minutes / 60} jam` : `${minutes} menit`;
-          paymentWindowNote.textContent = `Slotmu ditahan sementara sampai batas pembayaran, yaitu ${duration} setelah mendaftar. Jika pembayaran belum berhasil saat waktu habis, slot akan kembali tersedia untuk peserta lain.`;
+          const strong = document.createElement('b');
+          strong.textContent = duration;
+          paymentWindowNote.replaceChildren('Slot ditahan ', strong, ' setelah daftar. Belum bayar sampai batas itu, slot dilepas untuk peserta lain.');
         }
       }
     }

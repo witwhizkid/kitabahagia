@@ -5704,23 +5704,16 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .registration-page #eventBenefits li { display:inline-flex; align-items:center; gap:7px; margin:0; padding:8px 14px; border:1px solid var(--line); border-radius:999px; background:var(--white); font-size:13.5px; font-weight:600; line-height:1.3; }
   .registration-page #eventBenefits li::before { content:"\2713"; color:var(--maroon); font-weight:800; }
 
-  /* Detail screen (15 Okt 2026, option B): the maroon card is shorter so "Tentang" and the detail pills show on the first
-     screen. Page title hidden (the card is the title), date + time and place become two icon lines, price lives in the
-     bottom bar, and the 30-minute hold note waits for the Konfirmasi screen, which already says it. */
+  /* Detail screen (15 Okt 2026, mockup B): page title hidden (the card is the title); the card keeps its four facts
+     and the payment-window note (crucial), with small caps labels and the note set off by a dashed gold rule. */
   .registration-page.step-detail .registration-intro h1 { display:none; }
   .registration-page .registration-summary-sticky .registration-summary-title-row h2 { font-size:21px; line-height:1.15; }
-  .registration-page .registration-summary-sticky .registration-summary-image { flex-basis:92px; width:92px; height:115px; }
-  .registration-page .registration-summary-sticky .event-summary { display:flex; flex-wrap:wrap; gap:6px 0; margin:12px 0 0; }
-  .registration-page .registration-summary-sticky .event-summary div { display:flex; align-items:center; padding:0; border:0; }
-  .registration-page .registration-summary-sticky .event-summary dt { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .registration-page .registration-summary-sticky .registration-summary-image { flex-basis:92px; width:92px; height:115px; box-shadow:0 8px 18px rgba(0,0,0,.25); }
+  .registration-page .registration-summary-sticky .event-summary dt { font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; }
   .registration-page .registration-summary-sticky .event-summary dd { font-size:14px; }
-  .registration-page .registration-summary-sticky .event-summary div:first-child::before,
-  .registration-page .registration-summary-sticky .event-summary div:nth-child(3)::before { content:""; flex:none; width:17px; height:17px; margin-right:8px; background:url(../img/icon-summary-date.svg) center / contain no-repeat; }
-  .registration-page .registration-summary-sticky .event-summary div:nth-child(3)::before { background-image:url(../img/icon-summary-pin.svg); }
-  .registration-page .registration-summary-sticky .event-summary div:nth-child(2)::before { content:"\00b7"; margin:0 6px; color:rgba(255,255,255,.72); }
-  .registration-page .registration-summary-sticky .event-summary div:nth-child(3) { flex-basis:100%; }
-  .registration-page .registration-summary-sticky .event-summary div:nth-child(4),
-  .registration-page .registration-summary-sticky .registration-payment-window { display:none; }
+  .registration-page .registration-summary-sticky .registration-payment-window { align-items:flex-start; gap:10px; margin:4px 0 0; padding:11px 0 0; border-top:1px dashed rgba(239,182,53,.55); border-radius:0; background:none; color:#f6e6d6; font-size:12.5px; line-height:1.45; }
+  .registration-page .registration-summary-sticky .registration-payment-window::before { width:16px; height:16px; margin-top:1px; color:#efb635; }
+  .registration-page .registration-summary-sticky .registration-payment-window b { color:#efb635; }
 
   .registration-page.step-form .registration-intro,
   .registration-page.step-form .registration-event-layout,
