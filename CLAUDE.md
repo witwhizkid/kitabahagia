@@ -380,8 +380,10 @@ Lainnya:
   Beranda **dihapus** Okt 2026 (user: Beranda HP keramean; judul Program sudah menyampaikan hal yang sama). Foto ikut kursor + galeri geser mendatar (tahap 2 Awwwards)
   sengaja tidak dibuat: daftar Kisah sudah berfoto dan carousel mendatar sudah ada di Program/testimoni/dokumentasi.
 - Paket ref. Okt 2026 #2: (1) "Bagikan ke Story" di kartu "Ajak teman ikut" layar sukses: gambar 1080×1920 digambar
-  di canvas (`makeStoryImage`: latar maroon gelap, kartu merah bata "Aku ikut <kegiatan>", tgl · lokasi, "Yuk, ikut juga!
-  kitabahagia.id/link"; Okt 2026: poster kegiatan ikut di dalam kartu, dimuat `crossOrigin=anonymous` (Storage Supabase mengirim `Access-Control-Allow-Origin: *`; gagal/lambat 5 s = tanpa poster, kartu menyesuaikan tinggi isi); logo digambar proporsional (`drawImageAtWidth`, dulu gepeng 170×170)), HP = share sheet native
+  di canvas (`makeStoryImage`, 15 Okt 2026 mockup B "tiket sobek" disetujui user: latar maroon gelap + cahaya merah/emas, tiket krem miring
+  (poster utuh, kicker "KITA BAHAGIA · kategori", judul maks. 3 baris, sobekan putus-putus + Tanggal/Jam/Lokasi; "Lokasi menyusul" disembunyikan),
+  lencana bulat maroon bercincin krem+emas dengan logo KB putih + pita emas "AKU IKUT", bawah "Yuk, ikut juga!" + pil emas kitabahagia.id/link;
+  poster dimuat `crossOrigin=anonymous`, gagal/lambat 5 s = tiket lebih pendek), HP = share sheet native
   (`navigator.share` files), lainnya unduh PNG; (2) menu aktif desktop (≥1024px) = pil krem teks maroon (masukan tim),
   HP tetap daftar hamburger; (3) 404 ramah: "Waduh, nyasar." + cetakan foto + kegiatan terdekat (`renderLinkEvents`,
   href absolut `/pendaftaran.html…`); (4) footer HP (≤640px): peta disembunyikan, tinggal link "Lihat di peta", jarak dirapatkan.
