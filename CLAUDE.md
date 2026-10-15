@@ -129,6 +129,10 @@ Halaman pendaftaran (`pendaftaran.html`):
   Konfirmasi HP juga punya tombol ‹ (`[data-review-back]` = Ubah data), judul ringkas, baris data "label kiri – isi kanan"
   (kecuali definisi bahagia/esai/portofolio). Grid Konfirmasi wajib `align-items:stretch` (aturan lama `start` membuat kartu data
   selebar isinya di HP, terlihat di live 13 Okt).
+- Kotak "kuota penuh / ditutup" (`#registrationUnavailable`, 15 Okt 2026, mockup B disetujui, user: terlalu polos): kartu pink KB
+  `#fbe4e1` sudut 28px, watermark logo KB maroon (mask `pictorial-white.webp`, sama dengan kartu ringkasan; stempel ditolak user),
+  judul santai "Yah, slotnya udah habis duluan!" / "Yah, pendaftarannya udah ditutup" (hindari kata "kursi"), tombol pil "Cari
+  kegiatan lain →" + "Lihat detail", ajakan follow IG `.unavailable-follow`.
 - Thumbnail poster ("Lihat poster") membuka `<dialog>` native; tutup via ×,
   Esc, atau klik di luar.
 - Langkah 1–2 mengikuti gaya halaman pembayaran; watermark header memakai
