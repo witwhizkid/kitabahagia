@@ -121,10 +121,11 @@ Halaman pendaftaran (`pendaftaran.html`):
   preview bot, poster terbang, Cek status, dan recovery bayar. Kegiatan Seleksi: layar Form punya link "Baca dulu persyaratan jika lolos".
   Detail kegiatan selalu terbuka, kecuali kegiatan yang sudah selesai (`body.event-past`): terlipat di tombol "Detail kegiatan" supaya
   dokumentasi langsung terlihat (user 13 Okt 2026). Tanda * di label dihapus (semua wajib kecuali yang ditulis opsional/poin plus).
-  Layar Detail HP (15 Okt 2026, opsi B, user: kartu ketinggian, relawan mengira tidak ada detail): judul "Pendaftaran kegiatan" disembunyikan,
-  kartu maroon diringkas (judul 21px, poster 92px dengan ikon kaca pembesar bulat, bukan tulisan "Lihat poster" (semua lebar), tanggal · jam dan lokasi jadi 2 baris berikon `img/icon-summary-*.svg`, biaya hanya di bar
-  bawah, catatan tahan slot 30 menit disembunyikan karena Konfirmasi sudah menjelaskan), jadi pil navigasi detail + "Tentang" terlihat di
-  layar pertama. Status "Pendaftaran dibuka · N slot" jadi "N slot tersisa" saja (semua lebar).
+  Layar Detail HP (15 Okt 2026, mockup B; versi ringkas tanpa batas bayar sempat live lalu dicabut, user: batas bayar krusial): judul
+  "Pendaftaran kegiatan" disembunyikan, kartu maroon tetap lengkap (4 info + catatan batas bayar, watermark logo tidak diubah), label
+  kapital kecil, poster 92px berbayang dengan ikon kaca pembesar bulat (bukan tulisan "Lihat poster", semua lebar), catatan batas bayar
+  dipisah garis putus-putus emas + ikon jam emas, teks krem, durasi tebal emas ("Slot ditahan 30 menit setelah daftar. Belum bayar
+  sampai batas itu, slot dilepas…", semua lebar). Status "Pendaftaran dibuka · N slot" jadi "N slot tersisa" saja (semua lebar).
   Konfirmasi HP juga punya tombol ‹ (`[data-review-back]` = Ubah data), judul ringkas, baris data "label kiri – isi kanan"
   (kecuali definisi bahagia/esai/portofolio). Grid Konfirmasi wajib `align-items:stretch` (aturan lama `start` membuat kartu data
   selebar isinya di HP, terlihat di live 13 Okt).
