@@ -1392,18 +1392,30 @@
     try {
       return await createImageBitmap(file, { imageOrientation: "from-image" });
     } catch {}
-    const copy = new Blob([await file.arrayBuffer()], { type: file.type });
+    // The thrown message is a short diagnosis (type, size, failing step) shown after the
+    // friendly error, so a failure reported from a phone screenshot says what went wrong.
+    const detail = (step, error) => new Error(`${file.type || "tanpa tipe"}, ${(file.size / 1048576).toFixed(1)} MB, ${step}: ${error?.name || "Error"}`);
+    let copy;
+    try {
+      copy = new Blob([await file.arrayBuffer()], { type: file.type });
+    } catch (error) {
+      throw detail("baca file", error);
+    }
     try {
       return await createImageBitmap(copy, { imageOrientation: "from-image" });
     } catch {}
-    return createImageBitmap(copy, { imageOrientation: "from-image", resizeWidth: 2000, resizeQuality: "high" });
+    try {
+      return await createImageBitmap(copy, { imageOrientation: "from-image", resizeWidth: 2000, resizeQuality: "high" });
+    } catch (error) {
+      throw detail("decode", error);
+    }
   };
   const compressImage = async (file, maxWidth, maxHeight) => {
     let bitmap;
     try {
       bitmap = await decodeImage(file);
-    } catch {
-      throw new Error("Foto tidak dapat dibaca. Coba simpan ulang sebagai JPG atau PNG.");
+    } catch (error) {
+      throw new Error(`Foto tidak dapat dibaca. Coba simpan ulang sebagai JPG atau PNG. (${error.message})`);
     }
     const scale = Math.min(1, maxWidth / bitmap.width, maxHeight / bitmap.height);
     const canvas = document.createElement("canvas");
@@ -2701,8 +2713,8 @@
     let bitmap;
     try {
       bitmap = await decodeImage(file);
-    } catch {
-      throw new Error("Foto tidak dapat dibaca. Coba simpan ulang sebagai JPG atau PNG.");
+    } catch (error) {
+      throw new Error(`Foto tidak dapat dibaca. Coba simpan ulang sebagai JPG atau PNG. (${error.message})`);
     }
     const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
     const width = Math.max(1, Math.round(bitmap.width * scale));
@@ -3355,8 +3367,8 @@
     let bitmap;
     try {
       bitmap = await decodeImage(file);
-    } catch {
-      throw new Error("Gambar tidak dapat dibaca.");
+    } catch (error) {
+      throw new Error(`Gambar tidak dapat dibaca. (${error.message})`);
     }
     let scale = Math.min(1, maxWidth / bitmap.width, maxHeight / bitmap.height);
     try {
@@ -3382,8 +3394,8 @@
     let bitmap;
     try {
       bitmap = await decodeImage(file);
-    } catch {
-      throw new Error("Desain tidak dapat dibaca.");
+    } catch (error) {
+      throw new Error(`Desain tidak dapat dibaca. (${error.message})`);
     }
     const ratio = bitmap.width / bitmap.height;
     const canvas = document.createElement("canvas");
