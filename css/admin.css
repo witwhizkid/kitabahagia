@@ -457,6 +457,13 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
 .certificate-issue-toolbar > span { margin-right: auto; color: var(--muted); font-size: .88rem; }
 .certificate-recipients { border-top: 1px solid var(--line); }
 /* Post-event feedback summary (public-feedback answers, read through admin-certificate-issue). */
+.certificate-feedback-link { margin: 18px 0 0; }
+.feedback-events { display: grid; gap: 10px; margin-bottom: 18px; }
+.feedback-event-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; width: 100%; padding: 14px 18px; border: 0; border-radius: 18px; background: #fff; box-shadow: 0 0 0 1px var(--line); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.feedback-event-row strong { font-size: .98rem; }
+.feedback-event-row span { grid-column: 1; color: var(--muted); font-size: .84rem; }
+.feedback-event-row b { grid-column: 2; grid-row: 1 / span 2; padding: 4px 10px; border-radius: 999px; background: #fbe4e1; color: var(--maroon); font-size: .78rem; }
+.feedback-event-row.is-active { box-shadow: 0 0 0 2px var(--maroon); }
 .certificate-feedback { margin-top: 26px; padding: 20px; border-radius: 24px; background: #fff; box-shadow: 0 0 0 1px var(--line); }
 .certificate-feedback h3 { margin: 0 0 4px; font-size: 1.1rem; }
 .certificate-feedback-sub { margin: 0 0 14px; color: var(--muted); font-size: .86rem; }
