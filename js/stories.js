@@ -155,11 +155,7 @@
     link.className = "kisah-text-link";
     link.href = detailHref(story.slug);
     link.setAttribute("aria-label", `Baca kisah ${story.title}`);
-    link.append(document.createTextNode("Baca kisah "));
-    const arrow = document.createElement("span");
-    arrow.setAttribute("aria-hidden", "true");
-    arrow.textContent = "→";
-    link.append(arrow);
+    link.append(document.createTextNode("Baca kisah"));
     return link;
   };
 
@@ -338,7 +334,7 @@
       line.textContent = "Kisah berikutnya bisa dari kamu.";
       const cta = document.createElement("a");
       cta.href = "jadwal.html";
-      cta.textContent = "Cari kegiatan →";
+      cta.textContent = "Cari kegiatan";
       closing.append(line, cta);
       container.replaceChildren(...stories.map(makeReelCard), closing);
       state.hidden = true;
