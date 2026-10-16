@@ -13,7 +13,7 @@ const json = (status: number, body: Record<string, unknown>) => new Response(JSO
 const fail = (status: number, code: string, message: string) => json(status, { error: { code, message } });
 
 const tokenPattern = /^[a-f0-9]{32}$/;
-const HIGHLIGHTS = new Set(["warga", "teman", "panitia", "aktivitas", "lokasi"]);
+const HIGHLIGHTS = new Set(["warga", "aktivitas", "teman", "pengalaman", "panitia", "manfaat", "lokasi", "suasana"]);
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: responseHeaders });
