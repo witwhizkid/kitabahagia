@@ -4325,7 +4325,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .story-detail-cta { margin: 56px 0 0; font-size: clamp(17px,1.5vw,19px); padding-top: 30px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; }
 .story-detail-cta p { margin: 0; font-size: 1em; font-weight: 600; }
 /* Floating heart capsule on a Kisah (story-likes in js/stories.js); sits above the tab bar on phones. */
-.story-like-bar { position: fixed; left: 50%; bottom: calc(24px + var(--tab-bar-space, 0px)); z-index: 45; display: flex; align-items: center; gap: 18px; padding: 6px 22px 6px 12px; border-radius: 999px; background: #2a0e13; color: #fbf2ea; box-shadow: 0 12px 28px rgba(42, 14, 19, .3); transform: translateX(-50%); transition: opacity .3s var(--ease), transform .3s var(--ease); }
+.story-like-bar { position: fixed; left: 50%; bottom: calc(var(--tab-bar-space, 28px) - 4px); z-index: 45; display: flex; align-items: center; gap: 18px; padding: 6px 22px 6px 12px; border-radius: 999px; background: #2a0e13; color: #fbf2ea; box-shadow: 0 12px 28px rgba(42, 14, 19, .3); transform: translateX(-50%); transition: opacity .3s var(--ease), transform .3s var(--ease); }
 .story-like-bar[hidden] { display: none; }
 .story-like-bar button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 8px; border: 0; background: none; color: inherit; font: 600 15px "Instrument Sans", "DM Sans", sans-serif; cursor: pointer; }
 .story-like-button svg { fill: none; stroke: currentColor; stroke-width: 2; transition: fill .2s var(--ease), stroke .2s var(--ease); }
