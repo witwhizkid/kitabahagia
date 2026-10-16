@@ -230,7 +230,10 @@ Halaman detail Kisah (`kisah-detail.html`, `js/stories.js`), gaya editorial ala 
 - Halaman Kisah (`kisah.html`) "Kisah terbaru" = **kartu gelap ala Substack** (16 Okt 2026, user pilih A): kartu `#2a0e13` sudut 28px (HP
   24px), foto memudar ke kartu (desktop foto kiri gradien ke kanan, HP foto 4:3 di atas gradien ke bawah), titik warna program +
   "PROGRAM X · tempat" (kosong = tanggal), judul putih, ringkasan = kutipan Newsreader miring, cuplikan paragraf pertama 2 baris,
-  "♡ n · N menit baca" + pil emas "Baca kisah" (`like_count` dari `public-stories`). Kartu "Kisah lainnya" tetap krem.
+  "♡ n · N menit baca" + pil emas "Baca kisah" (`like_count` dari `public-stories`). 16 Okt 2026 (user): "Kisah lainnya" (arsip
+  Kisah + bawah detail Kisah) ikut kartu gelap versi kecil (`makeFeatureCard(story, true)`, `.is-compact`, grid 3/2/1 kolom, foto 4:3
+  memudar, tanpa cuplikan isi); tanggal di kanan judul "Kisah terbaru" dihapus (dobel). Isi "Kegiatan terkait" supaya baris atas jadi
+  program · tempat, bukan tanggal.
 - Penutup: ajakan "Lihat jadwal kegiatan" lalu "Kisah lainnya" (3 kartu,
   memakai kartu arsip). Belum: foto di tengah cerita, keterangan foto, penulis
   (butuh perubahan database).

@@ -4325,16 +4325,23 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .kisah-latest-cta { margin-left: auto; padding: 11px 20px; border-radius: 999px; background: #efb635; color: #2a0e13; text-decoration: none; }
 .kisah-latest-cta:focus-visible, .kisah-latest-copy h2 a:focus-visible { outline: 3px solid #efb635; outline-offset: 3px; }
 @media (hover: hover) { .kisah-latest-cta:hover { background: #f6c75a; } }
+.kisah-latest-copy h3 { margin: 0 0 10px; font-family: "Instrument Sans","DM Sans",sans-serif; font-weight: 600; line-height: 1.15; letter-spacing: -.03em; text-wrap: pretty; }
+.kisah-latest-copy h3 a { color: inherit; text-decoration: none; }
+/* Compact dark card for "Kisah lainnya" (archive + under a story): photo on top fading into the card. */
+.kisah-archive-grid .kisah-latest-story.is-compact { grid-template-columns: 1fr; margin-top: 0; border-radius: 24px; }
+.kisah-archive-grid .kisah-latest-story.is-compact > .kisah-image-link > img { aspect-ratio: 4 / 3; }
+.kisah-archive-grid .kisah-latest-story.is-compact > .kisah-image-link::after { background: linear-gradient(180deg, rgba(42, 14, 19, 0) 50%, #2a0e13 99%); }
+.kisah-archive-grid .kisah-latest-story.is-compact .kisah-latest-copy { position: relative; justify-content: flex-start; max-width: none; margin-top: -40px; padding: 0 20px 20px; }
+.kisah-archive-grid .kisah-latest-story.is-compact.has-no-cover .kisah-latest-copy { margin-top: 0; padding-top: 22px; }
+.kisah-archive-grid .is-compact .kisah-latest-copy h2, .kisah-archive-grid .is-compact .kisah-latest-copy h3 { font-size: 21px; }
+.kisah-archive-grid .is-compact .kisah-latest-excerpt { display: -webkit-box; overflow: hidden; margin-bottom: 0; font-size: 16px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.kisah-archive-grid .is-compact .kisah-latest-foot { margin-top: 14px; font-size: 13px; }
+.kisah-archive-grid .is-compact .kisah-latest-cta { padding: 9px 16px; }
 .kisah-archive { padding: 0 0 88px; }
 .kisah-archive-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; padding-top: 26px; border-top: 1px solid var(--line); }
 .kisah-archive-heading h2 { margin: 0; font-size: 21px; font-weight: 600; }
 .kisah-archive-heading > span { color: var(--muted); font-size: 13px; }
-.kisah-archive-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 48px 28px; margin-top: 28px; }
-.kisah-archive-grid.has-two-stories { grid-template-columns: repeat(2,minmax(0,1fr)); }
-.kisah-archive-grid.has-one-story { grid-template-columns: minmax(0,1fr); max-width: 980px; }
-.kisah-archive-grid.has-one-story .kisah-entry { display: grid; grid-template-columns: minmax(280px,1.1fr) minmax(0,.9fr); column-gap: 36px; align-items: start; }
-.kisah-archive-grid.has-one-story .kisah-image-link { grid-row: 1 / span 3; }
-.kisah-archive-grid.has-one-story .kisah-meta { margin-top: 0; }
+.kisah-archive-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; align-items: start; margin-top: 28px; }
 .story-detail-main { min-height: 60vh; padding: 58px 0 96px; }
 .story-detail-shell { max-width: 1120px; }
 .story-detail-back { margin-bottom: 38px; }
@@ -4458,7 +4465,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .story-reel-foot { margin-top: 12px; padding-top: 10px; }
   .story-reel-end { flex-basis: min(66vw, 260px); padding-bottom: 60px; }
   .kisah-data-state.is-loading[data-skeleton="preview"]::before { min-height: 500px; background-size: min(78vw,310px) 335px,min(60vw,240px) 20px,min(78vw,310px) 335px; background-position: 0 0,0 360px,calc(min(78vw,310px) + 14px) 0; }
-  .kisah-archive-grid, .kisah-archive-grid.has-two-stories { grid-template-columns: 1fr; gap: 34px; }
+  .kisah-archive-grid { grid-template-columns: 1fr; gap: 18px; }
   .kisah-entry h2, .kisah-entry h3 { max-width: 27ch; font-size: 26px; }
   .kisah-entry > p { margin-bottom: 4px; }
   .kisah-meta { margin-top: 14px; }
@@ -4472,8 +4479,6 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .kisah-latest-story > .kisah-image-link > img { aspect-ratio: 4 / 3; }
   .kisah-latest-story > .kisah-image-link::after { background: linear-gradient(180deg, rgba(42, 14, 19, 0) 50%, #2a0e13 99%); }
   .kisah-latest-copy { position: relative; margin-top: -44px; padding: 0 20px 20px; }
-  .kisah-archive-grid.has-one-story .kisah-entry { display: block; }
-  .kisah-archive-grid.has-one-story .kisah-meta { margin-top: 14px; }
   .kisah-latest-copy h2 { font-size: 26px; }
   .kisah-latest-excerpt { font-size: 17px; }
   .kisah-latest-snippet { font-size: 14px; }
@@ -6397,25 +6402,6 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 .kisah-page .kisah-latest-story > .kisah-image-link > img { aspect-ratio: 16 / 10; }
 .kisah-page .kisah-archive { padding-bottom: 104px; }
 
-.kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) {
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 56px 28px;
-}
-
-.kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry { grid-column: span 4; }
-.kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry:nth-child(6n + 1),
-.kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry:nth-child(6n + 4) { grid-column: span 7; }
-.kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry:nth-child(6n + 2),
-.kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry:nth-child(6n + 5) { grid-column: span 5; }
-
-.kisah-page .kisah-archive-grid .kisah-entry .kisah-meta {
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--line);
-}
-
-.kisah-page .kisah-archive-grid .kisah-entry:nth-child(6n + 1) .kisah-image-link > img,
-.kisah-page .kisah-archive-grid .kisah-entry:nth-child(6n + 4) .kisah-image-link > img { aspect-ratio: 16 / 10; }
 
 @media (max-width: 960px) {
   .about-page .about-hero .page-hero-grid,
@@ -6431,8 +6417,6 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .schedule-page .event-row { grid-template-columns: 76px 110px minmax(0, 1fr) 170px; gap: 20px; }
 
   .kisah-page .kisah-intro-grid { grid-template-columns: 1fr; gap: 32px; }
-  .kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry:nth-child(n) { grid-column: auto; }
 }
 
 @media (max-width: 640px) {
@@ -6479,8 +6463,6 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
   .kisah-page .kisah-latest { padding-block: 24px 72px; }
   .kisah-page .kisah-latest-story { grid-template-columns: 1fr; }
   .kisah-page .kisah-archive { padding-bottom: 72px; }
-  .kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) { grid-template-columns: 1fr; gap: 40px; }
-  .kisah-page .kisah-archive-grid:not(.has-one-story):not(.has-two-stories) .kisah-entry:nth-child(n) { grid-column: 1 / -1; }
 }
 
 .section { padding-block: var(--section-space); }
@@ -6693,14 +6675,6 @@ h3 {
   object-position: center 44%;
 }
 
-.kisah-page .kisah-archive-grid .kisah-image-link > img {
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  object-position: center 44%;
-}
-
-.kisah-page .kisah-archive-grid .kisah-entry:nth-child(6n + 1) .kisah-image-link > img,
-.kisah-page .kisah-archive-grid .kisah-entry:nth-child(6n + 4) .kisah-image-link > img { aspect-ratio: 16 / 10; }
 
 @media (max-width: 640px) {
   .home-page .hero-slide:nth-child(1) img { object-position: 50% 48%; }
@@ -6716,10 +6690,7 @@ h3 {
   .program-page .program-detail-card .program-image img { object-position: center 44%; }
 
   .kisah-page .kisah-intro-image img,
-  .kisah-page .kisah-latest-story > .kisah-image-link > img,
-  .kisah-page .kisah-archive-grid .kisah-image-link > img { object-position: center 42%; }
-
-  .kisah-page .kisah-archive-grid .kisah-image-link > img { aspect-ratio: 3 / 2; }
+  .kisah-page .kisah-latest-story > .kisah-image-link > img { object-position: center 42%; }
 }
 
 /* Field-journal craft: page-scoped refinements only. */
