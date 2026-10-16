@@ -247,6 +247,18 @@ One heart per device per published story; over 60 new hearts per IP per hour are
 Deploy: migration first, then `public-stories`. Before that the capsule shows the heart without
 a number (the count request fails quietly). Rollback: `supabase/rollback/20261020010000_story_likes.down.sql`.
 
+## Post-event feedback (Oct 2026)
+
+Migration `20261022010000_event_feedback.sql`: `certificates.feedback_token` (random 32 hex per
+certificate, filled for existing rows too) and `event_feedback` (one row per certificate: rating 1–5,
+highlights from warga/teman/panitia/aktivitas/lokasi, message ≤1000, anonymous; service role only).
+The certificate email (`admin-certificate-issue`) adds "Kasih feedback" → `https://kitabahagia.id/feedback?t=<token>`
+(`feedback.html` + `js/feedback.js`). `public-feedback` GET returns the first name, the event and the saved
+answer; POST upserts. `admin-certificate-issue` GET returns `feedback` (name only when not anonymous; null
+when the table is missing) for the card under "Terbitkan sertifikat". Deploy order: migration first (the
+certificate projection selects `feedback_token`), then `public-feedback` and `admin-certificate-issue`.
+Rollback: `supabase/rollback/20261022010000_event_feedback.down.sql`.
+
 ## Event "last edited by"
 
 Migration `20261004010000_event_last_edited.sql` adds `events.last_edited_by`

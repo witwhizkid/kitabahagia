@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="Ceritain pengalamanmu ikut kegiatan Kita Bahagia." name="description"/>
+  <meta name="robots" content="noindex">
+  <title>Feedback kegiatan · Kita Bahagia</title>
+  <link href="https://kitabahagia.id/feedback" rel="canonical"/>
+  <meta content="Feedback kegiatan · Kita Bahagia" property="og:title"/>
+  <meta content="Ceritain pengalamanmu ikut kegiatan Kita Bahagia." property="og:description"/>
+  <meta content="website" property="og:type"/>
+  <meta content="https://kitabahagia.id/feedback" property="og:url"/>
+  <meta content="https://kitabahagia.id/img/og/beranda.jpg" property="og:image"/>
+  <meta content="Kegiatan bersama komunitas Kita Bahagia" property="og:image:alt"/>
+  <meta content="summary_large_image" name="twitter:card"/>
+  <link rel="preload" href="fonts/instrument-sans-latin.woff2" as="font" type="font/woff2" crossorigin/>
+  <link rel="preload" href="fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin/>
+  <link href="css/style.css" rel="stylesheet"/>
+  <script src="js/curtain-gate.js"></script>
+  <link rel="icon" type="image/x-icon" href="assets/logo/favicon.ico?v=2">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/logo/favicon-32.png?v=2">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/logo/favicon-192.png?v=2">
+  <link rel="apple-touch-icon" href="assets/logo/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#7a1f2b">
+ </head>
+ <body class="feedback-page">
+  <main class="feedback-shell">
+   <a class="feedback-brand" href="index.html" aria-label="Beranda Kita Bahagia"><img src="assets/logo/logo-kita-bahagia-320.webp" alt="Logo Kita Bahagia" width="320" height="320"/></a>
+   <p class="feedback-state" data-feedback-state role="status">Memuat…</p>
+
+   <form class="feedback-card" data-feedback-form novalidate hidden>
+    <header class="feedback-head">
+     <small>1 menit aja</small>
+     <h1 data-feedback-title>Gimana kegiatannya?</h1>
+     <p>Jawabanmu dibaca langsung sama tim perancang program.</p>
+    </header>
+    <div class="feedback-event">
+     <img data-feedback-poster src="" alt="" width="44" height="55" hidden/>
+     <div><strong data-feedback-event></strong><span data-feedback-meta></span></div>
+    </div>
+    <fieldset class="feedback-q">
+     <legend>Seberapa seru kegiatannya?</legend>
+     <div class="feedback-rating">
+      <label><input class="visually-hidden" type="radio" name="rating" value="1"/><span aria-hidden="true">😞</span><b class="visually-hidden">Kurang seru</b></label>
+      <label><input class="visually-hidden" type="radio" name="rating" value="2"/><span aria-hidden="true">😕</span><b class="visually-hidden">Biasa aja</b></label>
+      <label><input class="visually-hidden" type="radio" name="rating" value="3"/><span aria-hidden="true">🙂</span><b class="visually-hidden">Lumayan</b></label>
+      <label><input class="visually-hidden" type="radio" name="rating" value="4"/><span aria-hidden="true">😄</span><b class="visually-hidden">Seru</b></label>
+      <label><input class="visually-hidden" type="radio" name="rating" value="5"/><span aria-hidden="true">🤩</span><b class="visually-hidden">Seru banget</b></label>
+     </div>
+     <div class="feedback-scale" aria-hidden="true"><span>Kurang</span><span>Seru banget</span></div>
+    </fieldset>
+    <fieldset class="feedback-q">
+     <legend>Yang paling berkesan? <span>Boleh lebih dari satu</span></legend>
+     <div class="feedback-chips">
+      <label><input class="visually-hidden" type="checkbox" name="highlights" value="warga"/><span>Interaksi sama warga</span></label>
+      <label><input class="visually-hidden" type="checkbox" name="highlights" value="teman"/><span>Teman baru</span></label>
+      <label><input class="visually-hidden" type="checkbox" name="highlights" value="panitia"/><span>Panitia</span></label>
+      <label><input class="visually-hidden" type="checkbox" name="highlights" value="aktivitas"/><span>Aktivitasnya</span></label>
+      <label><input class="visually-hidden" type="checkbox" name="highlights" value="lokasi"/><span>Lokasi</span></label>
+     </div>
+    </fieldset>
+    <label class="feedback-q feedback-message">
+     <span>Ada yang perlu kamu sampaikan?</span>
+     <textarea name="message" rows="4" maxlength="1000" placeholder="Kritik, saran, atau cerita singkat. Boleh dikosongkan."></textarea>
+    </label>
+    <label class="feedback-toggle"><input type="checkbox" name="anonymous"/><span>Kirim tanpa nama</span></label>
+    <p class="feedback-error" data-feedback-error role="alert" hidden></p>
+    <button class="btn btn-primary feedback-submit" type="submit">Kirim feedback</button>
+   </form>
+
+   <section class="feedback-card feedback-thanks" data-feedback-thanks tabindex="-1" hidden>
+    <div class="feedback-thanks-icon" aria-hidden="true">💌</div>
+    <h1>Makasih, nyampe kok!</h1>
+    <p>Feedback-mu bakal dipakai buat bikin kegiatan berikutnya lebih seru.</p>
+    <button class="feedback-edit" type="button" data-feedback-edit>Ubah jawaban</button>
+    <section class="feedback-next" data-link-events-wrap aria-labelledby="feedbackNextTitle" hidden>
+     <h2 id="feedbackNextTitle">Kegiatan berikutnya</h2>
+     <div class="link-event-list" data-link-events></div>
+    </section>
+   </section>
+  </main>
+  <script src="js/script.js"></script>
+  <script src="js/feedback.js"></script>
+ </body>
+</html>

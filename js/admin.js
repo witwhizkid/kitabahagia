@@ -3657,6 +3657,40 @@
           </div>
         </div>`;
     }).join("");
+    renderCertificateFeedback(data);
+  };
+
+  const FEEDBACK_EMOJI = ["", "😞", "😕", "🙂", "😄", "🤩"];
+  const FEEDBACK_HIGHLIGHTS = { warga: "Interaksi sama warga", teman: "Teman baru", panitia: "Panitia", aktivitas: "Aktivitasnya", lokasi: "Lokasi" };
+  // Feedback card under the recipients: average, share answered, emoji bars, top highlights, messages.
+  const renderCertificateFeedback = (data) => {
+    const box = $("#certificate-feedback");
+    const rows = Array.isArray(data?.feedback) ? data.feedback : null;
+    const issuedCount = (data?.recipients || []).filter((recipient) => recipient.certificate?.issued_at).length;
+    box.hidden = !rows || !issuedCount;
+    if (box.hidden) return;
+    if (!rows.length) {
+      box.innerHTML = `<h3>Feedback peserta</h3><p class="certificate-feedback-sub">Belum ada yang mengisi. Link feedback ikut di email sertifikat.</p>`;
+      return;
+    }
+    const average = rows.reduce((sum, row) => sum + row.rating, 0) / rows.length;
+    const counts = [5, 4, 3, 2, 1].map((rating) => [rating, rows.filter((row) => row.rating === rating).length]);
+    const top = Object.entries(rows.flatMap((row) => row.highlights || []).reduce((acc, key) => ({ ...acc, [key]: (acc[key] || 0) + 1 }), {}))
+      .sort((a, b) => b[1] - a[1]).map(([key, count]) => `${FEEDBACK_HIGHLIGHTS[key] || key} (${count})`).join(" · ");
+    const messages = rows.filter((row) => row.message);
+    box.innerHTML = `
+      <h3>Feedback peserta</h3>
+      <p class="certificate-feedback-sub">${rows.length} dari ${issuedCount} penerima sertifikat sudah mengisi</p>
+      <div class="certificate-feedback-stats">
+        <div><strong>${average.toLocaleString("id-ID", { maximumFractionDigits: 1 })}</strong><span>rata-rata (dari 5)</span></div>
+        <div><strong>${Math.round(rows.length / issuedCount * 100)}%</strong><span>yang mengisi</span></div>
+        <div><strong>${messages.length}</strong><span>pesan tertulis</span></div>
+      </div>
+      ${counts.map(([rating, count]) => `<div class="certificate-feedback-bar"><span aria-hidden="true">${FEEDBACK_EMOJI[rating]}</span><i><b data-width="${Math.round(count / rows.length * 100)}"></b></i>${count}</div>`).join("")}
+      ${top ? `<p class="certificate-feedback-sub">Paling berkesan: ${escapeHtml(top)}</p>` : ""}
+      ${messages.map((row) => `<div class="certificate-feedback-item"><small>${FEEDBACK_EMOJI[row.rating] || ""} · ${escapeHtml(row.name || "Tanpa nama")} · ${formatDateTime(row.updated_at)}</small>${escapeHtml(row.message)}</div>`).join("")}`;
+    // CSP blocks inline style attributes; widths are set through the CSSOM instead.
+    box.querySelectorAll("[data-width]").forEach((bar) => { bar.style.width = `${bar.dataset.width}%`; });
   };
 
   const loadRecipients = async () => {
