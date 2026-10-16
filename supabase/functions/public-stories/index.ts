@@ -25,6 +25,7 @@ const storyProjection = [
   "cover_image_url",
   "cover_image_alt",
   "published_at",
+  "like_count",
 ].join(",");
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
