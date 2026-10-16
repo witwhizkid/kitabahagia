@@ -127,19 +127,6 @@
     return link;
   };
 
-  const makeMeta = (story) => {
-    const meta = document.createElement("div");
-    meta.className = "kisah-meta";
-    const date = publishedDate(story);
-    if (date) {
-      const time = document.createElement("time");
-      time.dateTime = date.toISOString();
-      time.textContent = storyDateFormatter.format(date);
-      meta.append(time);
-    }
-    return meta;
-  };
-
   const makeHeading = (story, level) => {
     const heading = document.createElement(`h${level}`);
     const link = document.createElement("a");
@@ -159,19 +146,53 @@
     return link;
   };
 
-  const makeStoryCard = (story, className = "kisah-entry", headingLevel = 2, showAction = false) => {
+  // Dark story card (Oct 2026, ala Substack; same maroon as the Beranda Kisah block): program + place, title,
+  // opening line as a quote, two lines of the story (large card only), hearts + reading time + "Baca kisah".
+  // The latest story gets the large card; "Kisah lainnya" (archive + under a story) the compact one.
+  const makeFeatureCard = (story, compact = false, headingLevel = 2) => {
     const article = document.createElement("article");
-    article.className = className;
+    article.className = compact ? "kisah-latest-story is-compact" : "kisah-latest-story";
     const imageLink = makeImageLink(story);
     if (imageLink) article.append(imageLink);
     else article.classList.add("has-no-cover");
-    article.append(makeMeta(story), makeHeading(story, headingLevel));
+    const family = storyFamilies[story.event?.program_key];
+    if (family) article.classList.add(family[0]);
+    const copy = document.createElement("div");
+    copy.className = "kisah-latest-copy";
+    const kicker = document.createElement("p");
+    kicker.className = "kisah-latest-kicker";
+    const place = String(story.event?.location || "").split(",")[0].trim();
+    const published = publishedDate(story);
+    kicker.textContent = [family?.[1], place].filter(Boolean).join(" · ") || (published ? storyDateFormatter.format(published) : "Kisah relawan");
+    copy.append(kicker, makeHeading(story, headingLevel));
     if (story.excerpt) {
       const excerpt = document.createElement("p");
-      excerpt.textContent = story.excerpt;
-      article.append(excerpt);
+      excerpt.className = "kisah-latest-excerpt";
+      excerpt.textContent = `“${story.excerpt}”`;
+      copy.append(excerpt);
     }
-    if (showAction) article.append(makeStoryLink(story));
+    const snippet = String(story.body || "").split(/\r?\n\s*\r?\n/).map((block) => block.trim()).find((block) => block && !/^(>|##)/.test(block));
+    if (snippet && !compact) {
+      const body = document.createElement("p");
+      body.className = "kisah-latest-snippet";
+      body.textContent = snippet;
+      copy.append(body);
+    }
+    const foot = document.createElement("div");
+    foot.className = "kisah-latest-foot";
+    if (typeof story.like_count === "number") {
+      const likes = document.createElement("span");
+      likes.textContent = `♡ ${story.like_count}`;
+      likes.setAttribute("aria-label", `${story.like_count} hati`);
+      foot.append(likes);
+    }
+    const minutes = document.createElement("span");
+    minutes.textContent = `${readingMinutes(story)} menit baca`;
+    const cta = makeStoryLink(story);
+    cta.className = "kisah-latest-cta";
+    foot.append(minutes, cta);
+    copy.append(foot);
+    article.append(copy);
     return article;
   };
 
@@ -361,60 +382,13 @@
         return;
       }
       const latest = stories[0];
-      const latestArticle = document.createElement("article");
-      latestArticle.className = "kisah-latest-story";
-      const latestImageLink = makeImageLink(latest);
-      if (latestImageLink) latestArticle.append(latestImageLink);
-      else latestArticle.classList.add("has-no-cover");
-      // Dark featured card (Oct 2026, ala Substack): program + place, title, opening line as a quote,
-      // two lines of the story, hearts + reading time + "Baca kisah".
-      const family = storyFamilies[latest.event?.program_key];
-      if (family) latestArticle.classList.add(family[0]);
-      const copy = document.createElement("div");
-      copy.className = "kisah-latest-copy";
-      const kicker = document.createElement("p");
-      kicker.className = "kisah-latest-kicker";
-      const place = String(latest.event?.location || "").split(",")[0].trim();
-      const latestPublished = publishedDate(latest);
-      kicker.textContent = [family?.[1], place].filter(Boolean).join(" · ") || (latestPublished ? storyDateFormatter.format(latestPublished) : "Kisah relawan");
-      copy.append(kicker, makeHeading(latest, 2));
-      if (latest.excerpt) {
-        const excerpt = document.createElement("p");
-        excerpt.className = "kisah-latest-excerpt";
-        excerpt.textContent = `“${latest.excerpt}”`;
-        copy.append(excerpt);
-      }
-      const snippet = String(latest.body || "").split(/\r?\n\s*\r?\n/).map((block) => block.trim()).find((block) => block && !/^(>|##)/.test(block));
-      if (snippet) {
-        const body = document.createElement("p");
-        body.className = "kisah-latest-snippet";
-        body.textContent = snippet;
-        copy.append(body);
-      }
-      const foot = document.createElement("div");
-      foot.className = "kisah-latest-foot";
-      if (typeof latest.like_count === "number") {
-        const likes = document.createElement("span");
-        likes.textContent = `♡ ${latest.like_count}`;
-        likes.setAttribute("aria-label", `${latest.like_count} hati`);
-        foot.append(likes);
-      }
-      const minutes = document.createElement("span");
-      minutes.textContent = `${readingMinutes(latest)} menit baca`;
-      const cta = makeStoryLink(latest);
-      cta.className = "kisah-latest-cta";
-      foot.append(minutes, cta);
-      copy.append(foot);
-      latestArticle.append(copy);
+      const latestArticle = makeFeatureCard(latest);
       latestContainer.replaceChildren(latestArticle);
 
-      const latestDate = publishedDate(latest);
-      const dateLabel = document.querySelector("[data-story-latest-date]");
-      if (dateLabel) dateLabel.textContent = latestDate ? storyDateFormatter.format(latestDate) : "";
 
       const remaining = stories.slice(1);
       archiveContainer.replaceChildren();
-      remaining.forEach((story) => archiveContainer.append(makeStoryCard(story)));
+      remaining.forEach((story) => archiveContainer.append(makeFeatureCard(story, true)));
       archiveContainer.classList.remove("has-one-story", "has-two-stories", "has-many-stories");
       archiveContainer.classList.add(remaining.length === 1
         ? "has-one-story"
@@ -465,7 +439,7 @@
     if (!section || !list) return;
     try {
       const others = (await fetchPublicStories()).filter((item) => item.slug !== currentSlug).slice(0, 3);
-      list.replaceChildren(...others.map((item) => makeStoryCard(item, "kisah-entry", 3)));
+      list.replaceChildren(...others.map((item) => makeFeatureCard(item, true, 3)));
       list.classList.remove("has-one-story", "has-two-stories", "has-many-stories");
       list.classList.add(others.length === 1 ? "has-one-story" : others.length === 2 ? "has-two-stories" : "has-many-stories");
       section.hidden = others.length === 0;
