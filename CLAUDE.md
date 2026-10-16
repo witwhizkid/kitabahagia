@@ -214,8 +214,8 @@ Halaman detail Kisah (`kisah-detail.html`, `js/stories.js`), gaya editorial ala 
 - Ringkasan tampil sebagai paragraf pembuka besar; baris info "tanggal · N menit
   baca" (200 kata/menit). Drop cap sudah dihapus (user: terlalu kuno).
 - Isi, pembuka, dan kutipan memakai serif **Newsreader** (di-host sendiri, hanya di
-  halaman ini); judul/subjudul tetap font KB. Paragraf ber-indentasi baris
-  pertama. Layar ≥900px: foto sampul menempel di kiri, teks di kanan
+  halaman ini); judul/subjudul tetap font KB. Paragraf tanpa indentasi, dipisah jarak 1.25em
+  (ala Substack, 16 Okt 2026; dulu baris pertama menjorok). Layar ≥900px: foto sampul menempel di kiri, teks di kanan
   (`.story-detail-layout.has-cover`); HP/tablet bertumpuk. Baris "Bagikan:
   WhatsApp · Salin link" di atas teks.
 - Isi tetap teks polos di database; blok diawali `>` = kutipan besar (baris
