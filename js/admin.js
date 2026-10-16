@@ -1386,10 +1386,22 @@
   const MAX_SOURCE_BYTES = 25 * 1024 * 1024;
   const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
   const encodeCanvas = (canvas, type, quality) => new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+  // Some Android pickers hand over a lazily-read file (Google Photos, Drive) or a 50 MP
+  // camera photo that fails to decode at full size, so retry from a copied blob, then scaled down.
+  const decodeImage = async (file) => {
+    try {
+      return await createImageBitmap(file, { imageOrientation: "from-image" });
+    } catch {}
+    const copy = new Blob([await file.arrayBuffer()], { type: file.type });
+    try {
+      return await createImageBitmap(copy, { imageOrientation: "from-image" });
+    } catch {}
+    return createImageBitmap(copy, { imageOrientation: "from-image", resizeWidth: 2000, resizeQuality: "high" });
+  };
   const compressImage = async (file, maxWidth, maxHeight) => {
     let bitmap;
     try {
-      bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+      bitmap = await decodeImage(file);
     } catch {
       throw new Error("Foto tidak dapat dibaca. Coba simpan ulang sebagai JPG atau PNG.");
     }
@@ -2688,7 +2700,7 @@
     if (file.size > MAX_SOURCE_BYTES) throw new Error("Ukuran foto maksimal 25 MB.");
     let bitmap;
     try {
-      bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+      bitmap = await decodeImage(file);
     } catch {
       throw new Error("Foto tidak dapat dibaca. Coba simpan ulang sebagai JPG atau PNG.");
     }
@@ -3342,7 +3354,7 @@
     if (file.size > MAX_SOURCE_BYTES) throw new Error("Ukuran gambar maksimal 25 MB.");
     let bitmap;
     try {
-      bitmap = await createImageBitmap(file);
+      bitmap = await decodeImage(file);
     } catch {
       throw new Error("Gambar tidak dapat dibaca.");
     }
@@ -3369,7 +3381,7 @@
     if (file.size > MAX_SOURCE_BYTES) throw new Error("Ukuran desain maksimal 25 MB.");
     let bitmap;
     try {
-      bitmap = await createImageBitmap(file);
+      bitmap = await decodeImage(file);
     } catch {
       throw new Error("Desain tidak dapat dibaca.");
     }
