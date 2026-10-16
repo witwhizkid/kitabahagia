@@ -352,11 +352,18 @@ Deno.serve(async (request) => {
   const tokenRows = await rest<Array<{ feedback_token?: string }>>(`certificates?${new URLSearchParams({ id: `eq.${certificate.id}`, select: "feedback_token" })}`);
   const feedbackToken = tokenRows.ok && Array.isArray(tokenRows.data) ? String(tokenRows.data[0]?.feedback_token || "") : "";
   const feedbackLink = /^[a-f0-9]{32}$/.test(feedbackToken) ? `${siteUrl}/feedback?t=${feedbackToken}` : null;
-  const photosBlock = photos ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border-radius:14px;background:#f6f1ea"><tr><td style="padding:16px 18px">
-<p style="margin:0 0 6px;font-size:15px;font-weight:bold">📸 Foto-foto kegiatannya juga udah ada!</p>
-<p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#4a4140">Momen-momen seru di ${escapeHtml(event.title)} udah dikumpulin tim dokumentasi. Bebas diunduh buat kenang-kenangan atau diposting. Kalau upload, tag @kitabahagiaa_ ya, biar kami ikut senyum lihatnya.</p>
-<a href="${escapeHtml(photos)}" style="display:inline-block;padding:11px 20px;border-radius:999px;border:2px solid #780c06;color:#780c06;text-decoration:none;font-weight:bold;font-size:14px">Lihat foto kegiatan &nearr;</a>
-</td></tr></table>` : "";
+  // Layout A (Oct 2026): certificate, photos and feedback as three tiles right under the greeting,
+  // so none of them sits below the first phone screen; the long explanations move to small print below.
+  const tile = (href: string, icon: string, title: string, note: string, go: string, background: string) => `<a href="${href}" style="display:block;margin:0 0 10px;border-radius:14px;background:${background};color:#241f1d;text-decoration:none"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+<td width="44" style="padding:14px 0 14px 16px;font-size:26px;line-height:1">${icon}</td>
+<td style="padding:14px 10px;font-size:13px;line-height:1.4;color:#4a4140"><strong style="display:block;font-size:15px;color:#241f1d">${title}</strong>${note}</td>
+<td align="right" style="padding:14px 16px 14px 0;font-size:14px;font-weight:bold;color:#780c06;white-space:nowrap">${go}&nbsp;&rarr;</td>
+</tr></table></a>`;
+  const tiles = [
+    tile(link, "🎓", "Sertifikat relawan", attachment ? "PDF terlampir di email ini" : "Lihat &amp; unduh PDF-nya", "Buka", "#fdf5e1"),
+    photos ? tile(escapeHtml(photos), "📸", "Foto kegiatan", "Bebas diunduh &amp; diposting", "Lihat", "#f6f1ea") : "",
+    feedbackLink ? tile(feedbackLink, "💬", "Gimana kegiatannya?", "1 menit, boleh tanpa nama", "Isi", "#fbe4e1") : "",
+  ].filter(Boolean);
   const html = `<!doctype html><html lang="id"><body style="margin:0;background:#f6f1ea;font-family:Arial,Helvetica,sans-serif;color:#241f1d">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:20px;overflow:hidden">
@@ -365,17 +372,11 @@ Deno.serve(async (request) => {
 <p style="margin:0 0 8px;font-size:12px;font-weight:bold;letter-spacing:.12em;text-transform:uppercase;color:#780c06">Kita Bahagia</p>
 <h1 style="margin:0 0 18px;font-size:26px;line-height:1.25">${photos ? "Sertifikat &amp; foto kegiatanmu udah siap!" : "Sertifikatmu udah jadi!"}&nbsp;🎉</h1>
 <p style="margin:0 0 14px;font-size:15px;line-height:1.6">Halo ${escapeHtml(greetingName)}!</p>
-<p style="margin:0 0 18px;font-size:15px;line-height:1.6">Makasih banyak udah hadir dan ikut nyebar bahagia di <strong>${escapeHtml(event.title)}</strong> (${dateText}). ${attachment ? "Sertifikat relawanmu kami lampirkan di email ini (PDF), jadi bisa langsung diunduh. Versi online-nya juga ada di tombol di bawah" : "Ini sertifikat relawanmu, bisa dilihat dan diunduh lewat tombol di bawah"}${photos ? ", plus foto-foto kegiatan buat kenang-kenangan" : ""}.</p>
-<p style="margin:0 0 22px;padding:12px 16px;border-radius:12px;background:#fdf5e1;font-size:14px;line-height:1.5">Atas nama<br><strong style="font-size:16px;color:#780c06">${escapeHtml(name)}</strong></p>
-<p style="margin:0 0 24px"><a href="${link}" style="display:inline-block;padding:14px 24px;border-radius:999px;background:#780c06;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px">${attachment ? "Lihat sertifikat online" : "Lihat &amp; unduh sertifikat"} &rarr;</a></p>
-<p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#6b6164">Link ini khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.</p>
-<p style="margin:0 0 22px;font-size:13px;line-height:1.6;color:#6b6164;word-break:break-all">${link}</p>
-${photosBlock}
-${feedbackLink ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border-radius:14px;background:#fbe4e1"><tr><td style="padding:16px 18px">
-<p style="margin:0 0 6px;font-size:15px;font-weight:bold">💬 Gimana kegiatannya?</p>
-<p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#4a4140">Ceritain ke kami dalam 1 menit. Jawabanmu dibaca langsung sama tim perancang program, boleh tanpa nama.</p>
-<a href="${feedbackLink}" style="display:inline-block;padding:11px 20px;border-radius:999px;background:#780c06;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px">Kasih feedback</a>
-</td></tr></table>` : ""}
+<p style="margin:0 0 18px;font-size:15px;line-height:1.6">Makasih banyak udah hadir dan ikut nyebar bahagia di <strong>${escapeHtml(event.title)}</strong> (${dateText}). ${tiles.length > 1 ? `Ini ${tiles.length} hal buat kamu:` : "Ini sertifikat relawanmu:"}</p>
+${tiles.join("\n")}
+<p style="margin:18px 0 8px;font-size:13px;line-height:1.6;color:#6b6164">Sertifikat atas nama <strong style="color:#780c06">${escapeHtml(name)}</strong>. Link-nya khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.</p>
+<p style="margin:0 0 ${photos ? "8px" : "22px"};font-size:12px;line-height:1.6;color:#8a7f7a;word-break:break-all">${link}</p>
+${photos ? `<p style="margin:0 0 22px;font-size:13px;line-height:1.6;color:#6b6164">Foto kegiatan dikumpulin tim dokumentasi. Kalau diposting, tag @kitabahagiaa_ ya, biar kami ikut senyum lihatnya.</p>` : ""}
 <p style="margin:0;font-size:15px;line-height:1.6">Sampai ketemu di kegiatan berikutnya 💛<br><strong>Tim Kita Bahagia</strong></p>
 </td></tr></table>
 <p style="margin:16px 0 0;font-size:12px;color:#8a7f7a"><a href="${siteUrl}/jadwal" style="color:#8a7f7a">Jadwal kegiatan</a> · <a href="https://instagram.com/kitabahagiaa_" style="color:#8a7f7a">Instagram</a> · kitabahagia.id</p>

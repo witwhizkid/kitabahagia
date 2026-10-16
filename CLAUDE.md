@@ -734,7 +734,7 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   "Rapikan huruf kapital", terbit mulai H+3 (keputusan user Sep 2026, dulu H+7) dan hanya jika nomor/Founder/PL
   lengkap dan form sudah disimpan. PDF digambar di browser admin
   (`KBCertificate.toPdf`, JPEG dalam PDF A4), email lewat Brevo API
-  (`BREVO_API_KEY`; pengirim `CERTIFICATE_EMAIL_FROM`, disarankan `halo@`;
+  (`BREVO_API_KEY`; pengirim `CERTIFICATE_EMAIL_FROM`, disarankan `halo@`; **layout A** (16 Okt 2026, user: link foto/feedback kebawahan, sering diabaikan): setelah sapaan "Ini 3 hal buat kamu:" = 3 kartu-link berwarna 🎓 Sertifikat (krem) · 📸 Foto (kalau ada) · 💬 Feedback (pink), penjelasan panjang + link mentah pindah ke huruf kecil di bawah;
   gaya kartu playful dengan tombol, dipilih user setelah dicoba versi polos;
   subjek "<nama depan>, sertifikat relawanmu udah jadi!"; Okt 2026: PDF juga dilampirkan di email, permintaan user, link tetap ada untuk cek keaslian), email dalam satu kali terbit dikirim berjeda min. 8 detik (`EMAIL_GAP_MS` di `runIssue`; 12 email sekaligus pernah tertahan di status "Sent" Brevo ±1 jam sebelum akhirnya Delivered semua, Okt 2026: domain baru, tunggu dulu sebelum panik), per orang ada Lihat · Terbitkan ulang (kode/link tetap) ·
   Kirim ulang email · WA. Halaman publik `sertifikat.html?k=` (noindex) +
