@@ -43,7 +43,7 @@ const parseNotification = (value: unknown): Notification | null => {
     || Number(input.gross_amount) <= 0
     || !/^[a-fA-F0-9]{128}$/.test(input.signature_key)
     || !statuses.has(input.transaction_status)
-    || !input.transaction_id || input.transaction_id.length > 100
+    || !input.transaction_id || input.transaction_id.length > 255
     || (body.fraud_status !== undefined && body.fraud_status !== null
       && typeof body.fraud_status !== "string")) return null;
   input.fraud_status = typeof body.fraud_status === "string" ? body.fraud_status : null;
