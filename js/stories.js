@@ -366,15 +366,45 @@
       const latestImageLink = makeImageLink(latest);
       if (latestImageLink) latestArticle.append(latestImageLink);
       else latestArticle.classList.add("has-no-cover");
+      // Dark featured card (Oct 2026, ala Substack): program + place, title, opening line as a quote,
+      // two lines of the story, hearts + reading time + "Baca kisah".
+      const family = storyFamilies[latest.event?.program_key];
+      if (family) latestArticle.classList.add(family[0]);
       const copy = document.createElement("div");
       copy.className = "kisah-latest-copy";
-      copy.append(makeHeading(latest, 2));
+      const kicker = document.createElement("p");
+      kicker.className = "kisah-latest-kicker";
+      const place = String(latest.event?.location || "").split(",")[0].trim();
+      const latestPublished = publishedDate(latest);
+      kicker.textContent = [family?.[1], place].filter(Boolean).join(" · ") || (latestPublished ? storyDateFormatter.format(latestPublished) : "Kisah relawan");
+      copy.append(kicker, makeHeading(latest, 2));
       if (latest.excerpt) {
         const excerpt = document.createElement("p");
-        excerpt.textContent = latest.excerpt;
+        excerpt.className = "kisah-latest-excerpt";
+        excerpt.textContent = `“${latest.excerpt}”`;
         copy.append(excerpt);
       }
-      copy.append(makeStoryLink(latest));
+      const snippet = String(latest.body || "").split(/\r?\n\s*\r?\n/).map((block) => block.trim()).find((block) => block && !/^(>|##)/.test(block));
+      if (snippet) {
+        const body = document.createElement("p");
+        body.className = "kisah-latest-snippet";
+        body.textContent = snippet;
+        copy.append(body);
+      }
+      const foot = document.createElement("div");
+      foot.className = "kisah-latest-foot";
+      if (typeof latest.like_count === "number") {
+        const likes = document.createElement("span");
+        likes.textContent = `♡ ${latest.like_count}`;
+        likes.setAttribute("aria-label", `${latest.like_count} hati`);
+        foot.append(likes);
+      }
+      const minutes = document.createElement("span");
+      minutes.textContent = `${readingMinutes(latest)} menit baca`;
+      const cta = makeStoryLink(latest);
+      cta.className = "kisah-latest-cta";
+      foot.append(minutes, cta);
+      copy.append(foot);
       latestArticle.append(copy);
       latestContainer.replaceChildren(latestArticle);
 

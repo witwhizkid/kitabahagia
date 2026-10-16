@@ -227,6 +227,10 @@ Halaman detail Kisah (`kisah-detail.html`, `js/stories.js`), gaya editorial ala 
   `supabase/README.md`); Bagikan = share sheet HP / salin link. Khusus kisah-detail: scroll ke bawah = kapsul + tab bar sembunyi (`html.is-reading-down`), muncul lagi saat scroll ke
   atas, di atas halaman, atau di akhir halaman (user 16 Okt 2026, fokus baca). Komentar sengaja **belum** (spam + moderasi; saran: nanti kalau
   pembaca ramai, versi dimoderasi admin).
+- Halaman Kisah (`kisah.html`) "Kisah terbaru" = **kartu gelap ala Substack** (16 Okt 2026, user pilih A): kartu `#2a0e13` sudut 28px (HP
+  24px), foto memudar ke kartu (desktop foto kiri gradien ke kanan, HP foto 4:3 di atas gradien ke bawah), titik warna program +
+  "PROGRAM X · tempat" (kosong = tanggal), judul putih, ringkasan = kutipan Newsreader miring, cuplikan paragraf pertama 2 baris,
+  "♡ n · N menit baca" + pil emas "Baca kisah" (`like_count` dari `public-stories`). Kartu "Kisah lainnya" tetap krem.
 - Penutup: ajakan "Lihat jadwal kegiatan" lalu "Kisah lainnya" (3 kartu,
   memakai kartu arsip). Belum: foto di tengah cerita, keterangan foto, penulis
   (butuh perubahan database).
