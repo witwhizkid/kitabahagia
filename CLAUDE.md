@@ -368,6 +368,10 @@ Lainnya:
   HP ≤767px (Okt 2026, user: Beranda HP keramean): satu kartu datar (warna tetap bergilir, tanpa miring/tumpukan,
   tinggi = kutipan terpanjang), kalimat kecil di bawah judul disembunyikan. Nama + peran relawan ikut warna kartu (dulu abu-abu,
   tidak terbaca di kartu merah/maroon).
+- **Diet panah** (16 Okt 2026, user: panah "→" di mana-mana = kesan AI): panah hanya di tombol langkah berikutnya (Lanjutkan
+  pembayaran, Unggah bukti, Cari kegiatan lain), tombol panah bulat (carousel/testimoni/kartu "Berikutnya"), "Daftar →" kartu
+  kegiatan, dan panah besar `.join-note` Program. Link teks, footer "Lihat di peta", tombol grup WA, /link, CTA Program/Kisah
+  tanpa panah. Jangan tambah panah baru di link biasa.
 - "Daftar cuma 2 menit" (bingkai HP + 3 langkah, ref. bank Jago) **dicoba lalu dihapus** (Okt 2026, user: tidak efektif
   di HP dan memanjangkan Beranda). Jangan tambahkan lagi.
   Catatan: aturan `.btn` ketiga (sekitar baris 6150) sempat masih `--radius-lg` 6px, jadi "semua tombol pil" baru

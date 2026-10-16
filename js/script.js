@@ -2829,7 +2829,7 @@ if (registrationForm) {
     selectedEventIntro?.classList.remove('loading-inline');
     selectedEventIntro?.removeAttribute('aria-hidden');
     if (eventFallback && !eventFallback.querySelector('h2')) {
-      eventFallback.innerHTML = '<h2></h2><p></p><a class="text-link" href="jadwal.html">Lihat jadwal kegiatan &rarr;</a>';
+      eventFallback.innerHTML = '<h2></h2><p></p><a class="text-link" href="jadwal.html">Lihat jadwal kegiatan</a>';
     }
     const heading = eventFallback?.querySelector('h2');
     const paragraph = eventFallback?.querySelector('p');
