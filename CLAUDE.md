@@ -845,7 +845,7 @@ sebelum kegiatan Oktober; migrasi `20261013010000`, `events.documentation_url` +
 foto Kisah; tidak mengambil gambar langsung dari Drive). Tampil publik (siapa saja, bukan
 hanya peserta) di halaman kegiatan yang sudah selesai (`pendaftaran?event=`): slide foto +
 "Lihat semua foto di Drive ↗"; Kisah dengan "Kegiatan terkait" menampilkan galeri yang
-sama otomatis (satu sumber data). Tampil sebagai **jurnal tempel** (Okt 2026; versi pita film + negatif ditolak user: kaku, dan wajah anak dibalik warnanya seram): cetakan foto berbingkai krem, selotip kertas maroon, miring ±1,6°; foto tengah (`.is-developed`) lurus + terangkat, lainnya agak pudar; keterangan Newsreader miring; tap foto tengah = `<dialog>` perbesar, foto lain = digeser ke tengah; panah keyboard. Link Drive ikut di email sertifikat. Tanpa foto/link =
+sama otomatis (satu sumber data). Tampil sebagai **jurnal tempel** (Okt 2026; versi pita film + negatif ditolak user: kaku, dan wajah anak dibalik warnanya seram): cetakan foto berbingkai krem, selotip kertas maroon, miring ±1,6°; foto tengah (`.is-developed`) lurus + terangkat, lainnya agak pudar; keterangan Newsreader miring; tap foto tengah = `<dialog>` perbesar, foto lain = digeser ke tengah; panah keyboard. **Dua folder** (16 Okt 2026, owner): "Link folder kurasi" (`documentation_url`, foto yang boleh publik, tampil di web + Kisah) dan "Link folder lengkap" (`documentation_full_url`, semua foto, hanya di email sertifikat; kosong = email pakai kurasi; tidak pernah dikirim ke web). Tanpa foto/link =
 bagian disembunyikan. Foto anak: pilih yang aman/berizin (aturan tim dokum, bukan sistem).
 
 Dashboard dampak publik (setelah ± 6 laporan bulanan konsisten): angka total

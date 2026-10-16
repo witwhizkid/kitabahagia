@@ -110,7 +110,7 @@ const cleanName = (value: unknown) => {
 const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, (character) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]!));
 
-type EventRow = { id: string; title: string; event_date: string; end_at: string | null; documentation_url?: string | null };
+type EventRow = { id: string; title: string; event_date: string; end_at: string | null; documentation_url?: string | null; documentation_full_url?: string | null };
 type Settings = {
   certificate_number: string | null; founder_id: string | null; project_leader_id: string | null;
   template_mode: string; template_path: string | null;
@@ -145,7 +145,7 @@ Deno.serve(async (request) => {
     return { ok: response.ok, status: response.status, data };
   };
 
-  const events = await rest<EventRow[]>(`events?${new URLSearchParams({ slug: `eq.${slug}`, select: "id,title,event_date,end_at,documentation_url", limit: "1" })}`);
+  const events = await rest<EventRow[]>(`events?${new URLSearchParams({ slug: `eq.${slug}`, select: "id,title,event_date,end_at,documentation_url,documentation_full_url", limit: "1" })}`);
   if (!events.ok || !Array.isArray(events.data)) return fail(500, "SERVER_ERROR", "Kegiatan belum dapat dimuat.");
   const event = events.data[0];
   if (!event) return fail(404, "NOT_FOUND", "Kegiatan tidak ditemukan.");
@@ -335,8 +335,9 @@ Deno.serve(async (request) => {
   const greetingName = firstWord === firstWord.toUpperCase() || firstWord === firstWord.toLowerCase()
     ? firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase()
     : firstWord;
-  // The documentation folder rides along when the team has filled it in.
-  const photos = typeof event.documentation_url === "string" && event.documentation_url.startsWith("https://") ? event.documentation_url : null;
+  // The complete photo folder rides along when the team has filled it in (else the curated public one).
+  const folder = [event.documentation_full_url, event.documentation_url].find((url) => typeof url === "string" && url.startsWith("https://"));
+  const photos = folder || null;
   const photosBlock = photos ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border-radius:14px;background:#f6f1ea"><tr><td style="padding:16px 18px">
 <p style="margin:0 0 6px;font-size:15px;font-weight:bold">📸 Foto-foto kegiatannya juga udah ada!</p>
 <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#4a4140">Momen-momen seru di ${escapeHtml(event.title)} udah dikumpulin tim dokumentasi. Bebas diunduh buat kenang-kenangan atau diposting. Kalau upload, tag @kitabahagiaa_ ya, biar kami ikut senyum lihatnya.</p>

@@ -1532,6 +1532,8 @@
     $("#event-category-key").value = event?.category_key || "";
     $("#event-program-key").value = event?.program_key || "";
     $("#event-documentation-url").value = event?.documentation_url || "";
+    $("#event-documentation-full-url").value = event?.documentation_full_url || "";
+    $("#event-documentation-full-url").dataset.loaded = event?.documentation_full_url ? "1" : "";
     docPhotos = Array.isArray(event?.documentation_photos) ? event.documentation_photos.map((photo) => ({ url: photo.url, alt: photo.alt || "" })) : [];
     renderDocPhotos();
     // One "Deskripsi kegiatan" field (Oct 2026); older events may only have the plain description.
@@ -2397,6 +2399,9 @@
     category_key: $("#event-category-key").value.trim() || null,
     program_key: $("#event-program-key").value || null,
     documentation_url: $("#event-documentation-url").value.trim() || null,
+    // Sent only when set or being cleared, so saving still works before admin-events knows the field.
+    ...($("#event-documentation-full-url").value.trim() || $("#event-documentation-full-url").dataset.loaded
+      ? { documentation_full_url: $("#event-documentation-full-url").value.trim() || null } : {}),
     documentation_photos: docPhotos.map((photo) => ({ url: photo.url, alt: photo.alt.trim() })),
     event_date: $("#event-date").value,
     start_time: $("#event-start-time").value || null,

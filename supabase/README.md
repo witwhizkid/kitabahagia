@@ -480,6 +480,12 @@ event's documentation for the same gallery on Kisah. `admin-certificate-issue` a
 Drive link (and "sertifikat & foto" wording) to the certificate email when it is set.
 Migration: `20261013010000`.
 
+Oct 2026 (owner): two folders. `documentation_url` = curated public folder (website, Kisah);
+`events.documentation_full_url` = all photos, only read by `admin-certificate-issue` for the
+certificate email (falls back to `documentation_url`), never returned by public functions.
+Migration `20261021010000` (run before deploying `admin-events`, whose projection selects the column).
+The admin form sends the new field only when it is filled or being cleared.
+
 ## Local and deployment commands
 
 The function requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in its server environment.
