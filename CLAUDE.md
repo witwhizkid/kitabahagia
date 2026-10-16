@@ -647,6 +647,10 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   approve sampai akhir Oktober. Yang diganti cuma `create-payment` +
   `midtrans-webhook`, CSP, env, dan teks FAQ/Ketentuan/Privasi; frontend QR,
   seat-hold, `payment-status` tetap.
+  16 Okt 2026: review Midtrans terakhir = "Need correction" (5 Okt) minta "Aggregator Business Supporting Document" + Website untuk
+  QRIS/Bank Transfer/GoPay/BSI VA (KB salah dikategorikan agregator); user (tim teknis, diundang ke akun) email support@midtrans.com
+  (CC owner) minta kategori dikoreksi ke penjual langsung + daftar dokumen sisa. Webhook menerima `transaction_id` sampai 255 karakter
+  (format baru Midtrans mulai Jan 2027). Maintenance Midtrans 18 Nov 2026 23.00–23.45 WIB.
   Okt 2026: Duitku, Tripay, DOKU (personal = payment link saja) menolak akun perorangan untuk
   "penjualan tiket event" (minta PT/CV + NIB). **iPaymu** (akun Merchant atas nama owner, verifikasi
   dikirim 6 Okt) dipasang sebagai provider kedua: `PAYMENT_PROVIDER` (`midtrans` default / `ipaymu`),
