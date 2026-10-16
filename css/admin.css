@@ -456,6 +456,19 @@ input:focus, textarea:focus, select:focus { border-color: var(--maroon); box-sha
 .certificate-issue-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-bottom: 14px; }
 .certificate-issue-toolbar > span { margin-right: auto; color: var(--muted); font-size: .88rem; }
 .certificate-recipients { border-top: 1px solid var(--line); }
+/* Post-event feedback summary (public-feedback answers, read through admin-certificate-issue). */
+.certificate-feedback { margin-top: 26px; padding: 20px; border-radius: 24px; background: #fff; box-shadow: 0 0 0 1px var(--line); }
+.certificate-feedback h3 { margin: 0 0 4px; font-size: 1.1rem; }
+.certificate-feedback-sub { margin: 0 0 14px; color: var(--muted); font-size: .86rem; }
+.certificate-feedback-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.certificate-feedback-stats div { padding: 12px; border-radius: 16px; background: #f6f2ef; }
+.certificate-feedback-stats strong { display: block; color: var(--maroon); font-size: 1.5rem; line-height: 1.1; }
+.certificate-feedback-stats span { color: var(--muted); font-size: .78rem; }
+.certificate-feedback-bar { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: .8rem; }
+.certificate-feedback-bar i { position: relative; flex: 1; height: 8px; overflow: hidden; border-radius: 9px; background: #f3ebe3; }
+.certificate-feedback-bar b { position: absolute; inset: 0 auto 0 0; border-radius: 9px; background: #c23a3f; }
+.certificate-feedback-item { padding: 12px 0 4px; border-top: 1px solid var(--line); font-size: .9rem; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-line; }
+.certificate-feedback-item small { display: block; margin-bottom: 3px; color: var(--muted); font-size: .76rem; white-space: normal; }
 .certificate-recipient { display: grid; grid-template-columns: minmax(220px, 1.2fr) minmax(0, 1fr) auto; gap: 6px 18px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .certificate-recipient input { min-width: 0; }
 .certificate-recipient-contact { grid-column: 1; }

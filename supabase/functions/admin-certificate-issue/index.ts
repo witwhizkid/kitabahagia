@@ -164,7 +164,7 @@ Deno.serve(async (request) => {
       !settings?.project_leader_id && "Project Leader",
     ]).filter(Boolean) as string[];
   const linkFor = (code: string) => `${siteUrl}/sertifikat?k=${code}`;
-  const certificateProjection = "id,registration_id,verification_code,recipient_name,pdf_path,issued_at,email_sent_at,email_error";
+  const certificateProjection = "id,registration_id,verification_code,recipient_name,pdf_path,issued_at,email_sent_at,email_error,feedback_token";
 
   if (request.method === "GET") {
     const registrations = await rest<Array<Record<string, unknown>>>(`registrations?${new URLSearchParams({
@@ -195,8 +195,18 @@ Deno.serve(async (request) => {
         } : null,
       };
     });
+    // Post-event feedback (migration 20261022010000); anonymous answers never carry a name.
+    // A failed read (migration not run yet) only hides the feedback card.
+    const feedbackRows = await rest<Array<Record<string, unknown>>>(`event_feedback?${new URLSearchParams({
+      event_id: `eq.${event.id}`, select: "certificate_id,rating,highlights,message,anonymous,updated_at", order: "updated_at.desc",
+    })}`);
+    const nameByCertificate = new Map(certificates.data.map((row) => [row.id, row.recipient_name]));
+    const feedback = feedbackRows.ok && Array.isArray(feedbackRows.data)
+      ? feedbackRows.data.map(({ certificate_id, anonymous, ...row }) => ({ ...row, name: anonymous ? null : nameByCertificate.get(certificate_id) ?? null }))
+      : null;
     return json(200, {
       recipients,
+      feedback,
       opens_on: opensOn,
       open: jakartaDate(new Date()) >= opensOn,
       missing,
@@ -338,6 +348,7 @@ Deno.serve(async (request) => {
   // The complete photo folder rides along when the team has filled it in (else the curated public one).
   const folder = [event.documentation_full_url, event.documentation_url].find((url) => typeof url === "string" && url.startsWith("https://"));
   const photos = folder || null;
+  const feedbackLink = /^[a-f0-9]{32}$/.test(String(certificate.feedback_token || "")) ? `${siteUrl}/feedback?t=${certificate.feedback_token}` : null;
   const photosBlock = photos ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border-radius:14px;background:#f6f1ea"><tr><td style="padding:16px 18px">
 <p style="margin:0 0 6px;font-size:15px;font-weight:bold">📸 Foto-foto kegiatannya juga udah ada!</p>
 <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#4a4140">Momen-momen seru di ${escapeHtml(event.title)} udah dikumpulin tim dokumentasi. Bebas diunduh buat kenang-kenangan atau diposting. Kalau upload, tag @kitabahagiaa_ ya, biar kami ikut senyum lihatnya.</p>
@@ -357,6 +368,11 @@ Deno.serve(async (request) => {
 <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#6b6164">Link ini khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.</p>
 <p style="margin:0 0 22px;font-size:13px;line-height:1.6;color:#6b6164;word-break:break-all">${link}</p>
 ${photosBlock}
+${feedbackLink ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border-radius:14px;background:#fbe4e1"><tr><td style="padding:16px 18px">
+<p style="margin:0 0 6px;font-size:15px;font-weight:bold">💬 Gimana kegiatannya?</p>
+<p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#4a4140">Ceritain ke kami dalam 1 menit. Jawabanmu dibaca langsung sama tim perancang program, boleh tanpa nama.</p>
+<a href="${feedbackLink}" style="display:inline-block;padding:11px 20px;border-radius:999px;background:#780c06;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px">Kasih feedback</a>
+</td></tr></table>` : ""}
 <p style="margin:0;font-size:15px;line-height:1.6">Sampai ketemu di kegiatan berikutnya 💛<br><strong>Tim Kita Bahagia</strong></p>
 </td></tr></table>
 <p style="margin:16px 0 0;font-size:12px;color:#8a7f7a"><a href="${siteUrl}/jadwal" style="color:#8a7f7a">Jadwal kegiatan</a> · <a href="https://instagram.com/kitabahagiaa_" style="color:#8a7f7a">Instagram</a> · kitabahagia.id</p>
@@ -371,7 +387,7 @@ ${photosBlock}
       subject: photos ? `${greetingName}, sertifikat & foto kegiatanmu udah jadi!` : `${greetingName}, sertifikat relawanmu udah jadi!`,
       htmlContent: html,
       ...(attachment ? { attachment } : {}),
-      textContent: `Halo ${greetingName}!\n\nMakasih banyak udah hadir dan ikut nyebar bahagia di ${event.title} (${dateText}). Sertifikat relawanmu atas nama ${name} ${attachment ? "terlampir di email ini (PDF). Versi online-nya" : "bisa dilihat dan diunduh"} di:\n${link}\n\nLink ini khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.\n\n${photos ? `Foto-foto kegiatannya juga udah ada, bebas diunduh buat kenang-kenangan (kalau diposting, tag @kitabahagiaa_ ya):\n${photos}\n\n` : ""}Sampai ketemu di kegiatan berikutnya!\nTim Kita Bahagia`,
+      textContent: `Halo ${greetingName}!\n\nMakasih banyak udah hadir dan ikut nyebar bahagia di ${event.title} (${dateText}). Sertifikat relawanmu atas nama ${name} ${attachment ? "terlampir di email ini (PDF). Versi online-nya" : "bisa dilihat dan diunduh"} di:\n${link}\n\nLink ini khusus buat kamu dan sama dengan QR di sertifikat, jadi siapa pun yang scan bisa cek keasliannya. Nama salah tulis? Balas aja email ini.\n\n${photos ? `Foto-foto kegiatannya juga udah ada, bebas diunduh buat kenang-kenangan (kalau diposting, tag @kitabahagiaa_ ya):\n${photos}\n\n` : ""}${feedbackLink ? `Gimana kegiatannya? Ceritain dalam 1 menit (boleh tanpa nama):\n${feedbackLink}\n\n` : ""}Sampai ketemu di kegiatan berikutnya!\nTim Kita Bahagia`,
     }),
   }).catch(() => null);
   if (!send?.ok) {

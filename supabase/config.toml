@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.sync-sheets]
 verify_jwt = false
+
+[functions.public-feedback]
+verify_jwt = false

@@ -820,6 +820,12 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   **admin** (tim pelaksana absen manual lalu lapor ke admin); izin tanda tangan
   aman; anggap domain sudah ada (email jalur utama). Belum ada data lama untuk
   diimpor; kegiatan pertama Oktober 2026.
+- **Feedback setelah kegiatan** (16 Okt 2026, mockup disetujui user): email sertifikat punya blok pink "Gimana kegiatannya?" →
+  `feedback.html?t=<token per sertifikat>` (noindex, tanpa header): kartu kegiatan, rating 5 emoji (wajib), "Yang paling berkesan?"
+  (pil: warga/teman baru/panitia/aktivitas/lokasi), "Ada yang perlu kamu sampaikan?" (opsional), saklar "Kirim tanpa nama"; satu
+  jawaban per sertifikat, bisa diubah; layar terima kasih + kegiatan berikutnya (`renderLinkEvents`). Admin: kartu "Feedback
+  peserta" di bawah daftar Terbitkan sertifikat (rata-rata, % mengisi, batang per emoji, paling berkesan, pesan). Bukan syarat unduh
+  sertifikat. Detail: "Post-event feedback" di `supabase/README.md`.
 - Masih ditunggu dari user: contoh sertifikat lama, scan tanda tangan (dengan
   izin), nama font.
 - Data sebelum fitur ada dicatat di Google Sheet (template
