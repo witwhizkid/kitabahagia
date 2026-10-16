@@ -3668,7 +3668,7 @@
   };
 
   const FEEDBACK_EMOJI = ["", "😞", "😕", "🙂", "😄", "🤩"];
-  const FEEDBACK_HIGHLIGHTS = { warga: "Interaksi sama warga", teman: "Teman baru", panitia: "Panitia", aktivitas: "Aktivitasnya", lokasi: "Lokasi" };
+  const FEEDBACK_HIGHLIGHTS = { warga: "Momen bareng mereka", teman: "Teman baru", panitia: "Panitia", aktivitas: "Kegiatannya seru", lokasi: "Tempatnya" };
   // Feedback card under the recipients: average, share answered, emoji bars, top highlights, messages.
   const renderCertificateFeedback = (data) => {
     const box = $("#certificate-feedback");
