@@ -3048,6 +3048,27 @@ h2 { font-size: clamp(30px, 4vw, 50px); letter-spacing: -.045em; }
   line-height: 1.7;
 }
 
+.contact-channel {
+  max-width: 470px;
+  margin-top: 28px;
+  padding: 22px 24px 24px;
+  border-radius: 24px;
+  background: #fbe4e1;
+}
+
+.contact-channel strong {
+  display: block;
+  color: var(--maroon);
+  font-family: "Instrument Sans", "DM Sans", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.contact-channel p {
+  margin: 6px 0 16px;
+  color: #5e4a46;
+}
+
 .contact-methods {
   min-width: 0;
   border-top: 1px solid var(--ink);
