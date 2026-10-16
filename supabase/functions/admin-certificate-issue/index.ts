@@ -164,7 +164,7 @@ Deno.serve(async (request) => {
       !settings?.project_leader_id && "Project Leader",
     ]).filter(Boolean) as string[];
   const linkFor = (code: string) => `${siteUrl}/sertifikat?k=${code}`;
-  const certificateProjection = "id,registration_id,verification_code,recipient_name,pdf_path,issued_at,email_sent_at,email_error,feedback_token";
+  const certificateProjection = "id,registration_id,verification_code,recipient_name,pdf_path,issued_at,email_sent_at,email_error";
 
   if (request.method === "GET") {
     const registrations = await rest<Array<Record<string, unknown>>>(`registrations?${new URLSearchParams({
@@ -348,7 +348,10 @@ Deno.serve(async (request) => {
   // The complete photo folder rides along when the team has filled it in (else the curated public one).
   const folder = [event.documentation_full_url, event.documentation_url].find((url) => typeof url === "string" && url.startsWith("https://"));
   const photos = folder || null;
-  const feedbackLink = /^[a-f0-9]{32}$/.test(String(certificate.feedback_token || "")) ? `${siteUrl}/feedback?t=${certificate.feedback_token}` : null;
+  // Read on its own so certificates keep working before migration 20261022010000 (no link then).
+  const tokenRows = await rest<Array<{ feedback_token?: string }>>(`certificates?${new URLSearchParams({ id: `eq.${certificate.id}`, select: "feedback_token" })}`);
+  const feedbackToken = tokenRows.ok && Array.isArray(tokenRows.data) ? String(tokenRows.data[0]?.feedback_token || "") : "";
+  const feedbackLink = /^[a-f0-9]{32}$/.test(feedbackToken) ? `${siteUrl}/feedback?t=${feedbackToken}` : null;
   const photosBlock = photos ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border-radius:14px;background:#f6f1ea"><tr><td style="padding:16px 18px">
 <p style="margin:0 0 6px;font-size:15px;font-weight:bold">📸 Foto-foto kegiatannya juga udah ada!</p>
 <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#4a4140">Momen-momen seru di ${escapeHtml(event.title)} udah dikumpulin tim dokumentasi. Bebas diunduh buat kenang-kenangan atau diposting. Kalau upload, tag @kitabahagiaa_ ya, biar kami ikut senyum lihatnya.</p>
