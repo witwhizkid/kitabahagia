@@ -221,6 +221,11 @@ Halaman detail Kisah (`kisah-detail.html`, `js/stories.js`), gaya editorial ala 
 - Isi tetap teks polos di database; blok diawali `>` = kutipan besar (baris
   terakhir diawali "—" jadi nama narasumber kecil), diawali `##` = subjudul.
   Petunjuknya ada di bawah kolom Isi Kisah di admin.
+- **Hati (like)** (16 Okt 2026, mockup "kapsul melayang" dipilih user dari 3 opsi): kapsul gelap `#2a0e13` "♥ n · Bagikan"
+  menempel di bawah (HP di atas tab bar) (`[data-story-like]`, `setupStoryLike` di `js/stories.js`); tanpa akun, satu hati per
+  perangkat (id acak `localStorage kb_like_device`, daftar `kb_liked_stories`), server simpan hash saja (lihat "Story hearts" di
+  `supabase/README.md`); Bagikan = share sheet HP / salin link. Komentar sengaja **belum** (spam + moderasi; saran: nanti kalau
+  pembaca ramai, versi dimoderasi admin).
 - Penutup: ajakan "Lihat jadwal kegiatan" lalu "Kisah lainnya" (3 kartu,
   memakai kartu arsip). Belum: foto di tengah cerita, keterangan foto, penulis
   (butuh perubahan database).

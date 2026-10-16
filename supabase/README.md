@@ -237,6 +237,16 @@ function. Manual check: `supabase/tests/20261003010000_registration_rate_limit_r
 Rollback: `supabase/rollback/20261003010000_registration_rate_limit_relax.down.sql` (back to
 5/20), or `supabase/rollback/20261002010000_registration_rate_limit.down.sql` (remove the limit).
 
+## Story hearts (Oct 2026)
+
+Migration `20261020010000_story_likes.sql` adds `stories.like_count`, table `story_likes`
+(story, HMAC of a random device id kept in the browser, HMAC of the IP, time; service role only)
+and `set_story_like(slug, device_hash, ip_hash, liked)`. `public-stories` answers
+`GET ?slug=x&likes=1` with `{likes}` and `POST {slug, device, liked}` with the new count.
+One heart per device per published story; over 60 new hearts per IP per hour are ignored.
+Deploy: migration first, then `public-stories`. Before that the capsule shows the heart without
+a number (the count request fails quietly). Rollback: `supabase/rollback/20261020010000_story_likes.down.sql`.
+
 ## Event "last edited by"
 
 Migration `20261004010000_event_last_edited.sql` adds `events.last_edited_by`
