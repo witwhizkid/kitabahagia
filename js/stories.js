@@ -482,6 +482,16 @@
     };
     paint();
     bar.hidden = false;
+    // Kisah only: scrolling down hides the capsule and the tab bar (focus on reading); scrolling up, the top
+    // of the page and the end of the page bring them back.
+    let lastY = window.scrollY;
+    window.addEventListener("scroll", () => {
+      const y = window.scrollY;
+      if (Math.abs(y - lastY) < 8) return;
+      const nearEdge = y < 80 || window.innerHeight + y > document.documentElement.scrollHeight - 120;
+      document.documentElement.classList.toggle("is-reading-down", y > lastY && !nearEdge);
+      lastY = y;
+    }, { passive: true });
     fetch(`${functionsBase}/public-stories?slug=${encodeURIComponent(story.slug)}&likes=1`, { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => { if (typeof data?.likes === "number") { count = data.likes; paint(); } })

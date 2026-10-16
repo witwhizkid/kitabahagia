@@ -492,7 +492,7 @@ button { font: inherit; }
   .tab-bar svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .tab-bar a[aria-current="page"] { color: var(--maroon); font-weight: 700; }
   .tab-bar a[aria-current="page"] .tab-bar-icon { background: var(--maroon); color: var(--white); }
-  .is-typing .tab-bar, .mobile-menu-open .tab-bar { opacity: 0; transform: translateY(calc(100% + 24px)); pointer-events: none; }
+  .is-typing .tab-bar, .mobile-menu-open .tab-bar, .is-reading-down .tab-bar { opacity: 0; transform: translateY(calc(100% + 24px)); pointer-events: none; }
   .has-tab-bar { --tab-bar-space: calc(76px + max(12px, env(safe-area-inset-bottom))); }
   .has-tab-bar .site-footer::after { content: ""; display: block; height: calc(88px + env(safe-area-inset-bottom)); }
   .has-tab-bar .site-header .nav > a:is([href$="index.html"], [href$="jadwal.html"], [href$="kolaborasi.html"], [href$="kisah.html"]) { display: none; }
@@ -4334,7 +4334,7 @@ html.home-document { overflow-x: hidden; overflow-x: clip; }
 @keyframes story-like-pop { 0% { transform: scale(1); } 35% { transform: scale(1.35); } 100% { transform: scale(1); } }
 .story-like-divider { width: 1px; height: 22px; background: rgba(251, 242, 234, .22); }
 .story-detail-main:has(.story-like-bar:not([hidden])) + .site-footer { padding-bottom: 84px; }
-.is-typing .story-like-bar, .mobile-menu-open .story-like-bar { opacity: 0; transform: translate(-50%, 24px); pointer-events: none; }
+.is-typing .story-like-bar, .mobile-menu-open .story-like-bar, .is-reading-down .story-like-bar { opacity: 0; transform: translate(-50%, calc(100% + 24px)); pointer-events: none; }
 @media (hover: hover) { .story-like-bar button:hover { color: #efb635; } }
 @media (prefers-reduced-motion: reduce) { .story-like-button.is-popping svg { animation: none; } }
 /* Documentation gallery: finished event page + related Kisah (renderEventGallery). */
