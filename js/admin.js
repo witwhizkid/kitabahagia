@@ -26,6 +26,7 @@
   const storyFormView = $("#story-form-view");
   const adminsView = $("#admins-view");
   const certificatesView = $("#certificates-view");
+  const feedbackView = $("#feedback-view");
   const loginForm = $("#login-form");
   const passwordSetupForm = $("#password-setup-form");
   const eventForm = $("#event-form");
@@ -1833,7 +1834,7 @@
   });
 
   // Beranda: what needs attention today, computed from events + active registrations.
-  const home = { registrations: [], loadedAt: 0, request: null, checks: new Map(), checksAt: 0 };
+  const home = { registrations: [], loadedAt: 0, request: null, checks: new Map(), checksAt: 0, feedback: [] };
   const loadHomeRegistrations = async (force = false) => {
     if (!force && home.loadedAt && Date.now() - home.loadedAt < adminCacheTtl) return home.registrations;
     if (home.request) return home.request;
@@ -1928,6 +1929,7 @@
       }
     }));
     home.checks = checks;
+    home.feedback = await authorizedRequest(issueUrl({ feedback: "summary" })).then((data) => data.events || []).catch(() => []);
     home.checksAt = Date.now();
   };
 
@@ -1960,6 +1962,9 @@
       if (event.registration_mode !== "selection" && event.capacity && filled / event.capacity >= 0.8 && filled < event.capacity) {
         tasks.push({ tone: "hot", text: `${title} hampir penuh (${filled}/${escapeHtml(String(event.capacity))})`, go: "registrations", event: event.slug });
       }
+    });
+    home.feedback.filter((item) => item.recent).forEach((item) => {
+      tasks.push({ tone: "certificate", text: `<strong>${item.recent} feedback baru</strong> di ${escapeHtml(item.title)}`, go: "feedback", event: item.slug });
     });
     return tasks.slice(0, 7);
   };
@@ -2228,6 +2233,7 @@
     const slug = go.dataset.homeEvent || "";
     if (go.dataset.homeGo === "events") return showEvents();
     if (go.dataset.homeGo === "certificates") return void openCertificates(slug);
+    if (go.dataset.homeGo === "feedback") return void showFeedback(slug);
     if (go.dataset.homeGo === "edit") {
       const target = events.find((item) => item.slug === slug);
       return target ? showForm(target) : showEvents();
@@ -2265,6 +2271,7 @@
     $("#mobile-nav-more").classList.toggle("is-open", open);
   };
   const setActiveNavigation = (view) => {
+    feedbackView.hidden = view !== "feedback";
     document.querySelectorAll("[data-admin-view]").forEach((link) => {
       const active = link.dataset.adminView === view;
       link.classList.toggle("is-active", active);
@@ -2272,7 +2279,7 @@
       else link.removeAttribute("aria-current");
     });
     // Phone tab bar: Kisah/Sertifikat/Admin live under "Lainnya", which lights up for them.
-    $("[data-nav-more]")?.classList.toggle("is-active", ["stories", "certificates", "admins"].includes(view));
+    $("[data-nav-more]")?.classList.toggle("is-active", ["stories", "certificates", "feedback", "admins"].includes(view));
     toggleNavMore(false);
   };
   $("[data-nav-more]")?.addEventListener("click", (event) => {
@@ -3657,7 +3664,7 @@
           </div>
         </div>`;
     }).join("");
-    renderCertificateFeedback(data);
+    $("#certificate-feedback-link").hidden = !data.feedback?.length;
   };
 
   const FEEDBACK_EMOJI = ["", "😞", "😕", "🙂", "😄", "🤩"];
@@ -3692,6 +3699,57 @@
     // CSP blocks inline style attributes; widths are set through the CSSOM instead.
     box.querySelectorAll("[data-width]").forEach((bar) => { bar.style.width = `${bar.dataset.width}%`; });
   };
+
+  // Feedback tab: events that got answers (summary from admin-certificate-issue), then one event's card.
+  const feedbackTab = { events: [], slug: "", seq: 0 };
+  const renderFeedbackEvents = () => {
+    $("#feedback-events").innerHTML = feedbackTab.events.map((item) => `
+      <button class="feedback-event-row${item.slug === feedbackTab.slug ? " is-active" : ""}" type="button" data-feedback-event="${escapeHtml(item.slug)}">
+        <strong>${escapeHtml(item.title)}</strong>
+        <span>${item.event_date ? escapeHtml(formatDate(item.event_date)) : ""} · ${item.average.toLocaleString("id-ID", { maximumFractionDigits: 1 })} dari 5 · ${item.count}${item.issued ? `/${item.issued}` : ""} mengisi</span>
+        ${item.recent ? `<b>${item.recent} baru</b>` : ""}
+      </button>`).join("");
+  };
+  const openFeedbackEvent = async (slug) => {
+    feedbackTab.slug = slug;
+    renderFeedbackEvents();
+    const box = $("#certificate-feedback");
+    const seq = ++feedbackTab.seq;
+    box.hidden = false;
+    box.innerHTML = `<p class="certificate-feedback-sub">Memuat feedback…</p>`;
+    try {
+      const data = await authorizedRequest(issueUrl({ event: slug }));
+      if (seq === feedbackTab.seq) renderCertificateFeedback(data);
+    } catch (error) {
+      if (seq === feedbackTab.seq) box.innerHTML = `<p class="certificate-feedback-sub">${escapeHtml(error.message)}</p>`;
+    }
+  };
+  const showFeedback = async (slug = "") => {
+    [formView, eventsView, homeView, registrationsView, storiesView, storyFormView, adminsView, certificatesView].forEach((view) => { view.hidden = true; });
+    setActiveNavigation("feedback");
+    window.scrollTo({ top: 0, behavior: "instant" });
+    const state = $("#feedback-state");
+    state.textContent = "Memuat feedback…";
+    state.hidden = false;
+    $("#certificate-feedback").hidden = true;
+    try {
+      const data = await authorizedRequest(issueUrl({ feedback: "summary" }));
+      feedbackTab.events = data.events || [];
+    } catch (error) {
+      state.textContent = error.message;
+      return;
+    }
+    state.textContent = feedbackTab.events.length ? "" : "Belum ada feedback. Link feedback ikut di email sertifikat, jadi jawaban mulai masuk setelah sertifikat terbit.";
+    state.hidden = !state.textContent;
+    const target = feedbackTab.events.some((item) => item.slug === slug) ? slug : feedbackTab.events[0]?.slug;
+    if (target) await openFeedbackEvent(target);
+    else renderFeedbackEvents();
+  };
+  $("#feedback-events").addEventListener("click", (event) => {
+    const slug = event.target.closest("[data-feedback-event]")?.dataset.feedbackEvent;
+    if (slug) void openFeedbackEvent(slug);
+  });
+  $("[data-open-feedback]").addEventListener("click", () => void showFeedback($("#certificate-event").value));
 
   const loadRecipients = async () => {
     const slug = $("#certificate-event").value;
@@ -3865,10 +3923,12 @@
         || (view === "registrations" && !registrationsView.hidden)
         || (view === "stories" && !storiesView.hidden)
         || (view === "admins" && !adminsView.hidden)
-        || (view === "certificates" && !certificatesView.hidden);
+        || (view === "certificates" && !certificatesView.hidden)
+        || (view === "feedback" && !feedbackView.hidden);
       if (alreadyVisible || !(await confirmLeaveForm())) return;
       if (view === "home") showHome();
       else if (view === "certificates") showCertificates();
+      else if (view === "feedback") showFeedback();
       else if (view === "registrations") showRegistrations();
       else if (view === "stories") showStories();
       else if (view === "admins") showAdmins();

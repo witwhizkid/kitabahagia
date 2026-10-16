@@ -69,6 +69,7 @@
           <a class="nav-link" href="#registrations" data-admin-view="registrations">Pendaftar</a>
           <a class="nav-link" href="#stories" data-admin-view="stories">Kisah</a>
           <a class="nav-link" href="#certificates" data-admin-view="certificates">Sertifikat</a>
+          <a class="nav-link" href="#feedback" data-admin-view="feedback">Feedback</a>
           <a class="nav-link" href="#admins" data-admin-view="admins" data-super-admin-only hidden>Kelola Admin</a>
         </nav>
         <button id="logout-button" class="logout-button" type="button">Keluar</button>
@@ -87,6 +88,7 @@
           <div id="mobile-nav-more" class="mobile-nav-more">
             <a href="#stories" data-admin-view="stories"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5c2.8-1 5.4-.8 8 1 2.6-1.8 5.2-2 8-1V19c-2.8-1-5.4-.8-8 1-2.6-1.8-5.2-2-8-1z"/><path d="M12 6.5V20"/></svg><span>Kisah</span></a>
             <a href="#certificates" data-admin-view="certificates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="12" rx="1.5"/><path d="M7.5 9h9M7.5 12.5h5"/><circle cx="16.5" cy="17" r="2.5"/><path d="m15 19-.8 2.5 2.3-1 2.3 1-.8-2.5"/></svg><span>Sertifikat</span></a>
+            <a href="#feedback" data-admin-view="feedback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 6.5A2 2 0 0 1 6.5 4.5h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H11l-4.5 3.5v-3.5h0a2 2 0 0 1-2-2z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></svg><span>Feedback</span></a>
             <a href="#admins" data-admin-view="admins" data-super-admin-only hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 19 6v5.5c0 4.3-3 7.6-7 9-4-1.4-7-4.7-7-9V6z"/><path d="m9 12 2 2 4-4"/></svg><span>Admin</span></a>
           </div>
         </nav>
@@ -670,7 +672,7 @@
             </div>
             <p id="certificate-issue-feedback" class="feedback" role="status" aria-live="polite"></p>
             <div id="certificate-recipients" class="certificate-recipients"></div>
-            <div id="certificate-feedback" class="certificate-feedback" hidden></div>
+            <p id="certificate-feedback-link" class="certificate-feedback-link" hidden><button class="text-button" type="button" data-open-feedback>Lihat feedback peserta kegiatan ini</button></p>
           </section>
 
           <section class="admin-invite-section" aria-labelledby="signer-add-title">
@@ -715,6 +717,18 @@
             <div id="signers-empty" class="state-panel" hidden>Belum ada tanda tangan. Mulai dari Founder dan Project Leader kegiatan terdekat.</div>
             <div id="signers-list" class="signer-list" hidden></div>
           </section>
+        </section>
+
+        <section id="feedback-view" class="content-view" aria-labelledby="feedback-title" hidden>
+          <div class="view-heading">
+            <div>
+              <h1 id="feedback-title">Feedback</h1>
+              <p>Penilaian dan pesan relawan setelah kegiatan, dikirim lewat link di email sertifikat. Yang memilih "tanpa nama" tidak terlihat namanya.</p>
+            </div>
+          </div>
+          <p id="feedback-state" class="state-panel" hidden></p>
+          <div id="feedback-events" class="feedback-events"></div>
+          <div id="certificate-feedback" class="certificate-feedback" hidden></div>
         </section>
 
         <section id="admins-view" class="content-view" aria-labelledby="admins-title" hidden>

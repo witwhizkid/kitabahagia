@@ -129,6 +129,33 @@ Deno.serve(async (request) => {
   if (!adminEmail) return fail(401, "UNAUTHORIZED", "Sesi admin tidak valid atau akses tidak diizinkan.");
 
   const url = new URL(request.url);
+  // Feedback tab overview: per event average, answers, issued certificates and answers of the last 7 days.
+  if (request.method === "GET" && url.searchParams.get("feedback") === "summary") {
+    const get = (path: string) => fetch(`${supabaseUrl}/rest/v1/${path}`, { headers: serviceHeaders(serviceKey) })
+      .then(async (response) => response.ok ? response.json() : null).catch(() => null);
+    const rows = await get("event_feedback?select=event_id,rating,updated_at");
+    if (!Array.isArray(rows)) return fail(500, "SERVER_ERROR", "Feedback belum dapat dimuat.");
+    const ids = [...new Set(rows.map((row) => row.event_id))];
+    if (!ids.length) return json(200, { events: [] });
+    const inList = `in.(${ids.join(",")})`;
+    const [eventRows, certRows] = await Promise.all([
+      get(`events?${new URLSearchParams({ id: inList, select: "id,slug,title,event_date" })}`),
+      get(`certificates?${new URLSearchParams({ event_id: inList, issued_at: "not.is.null", select: "event_id" })}`),
+    ]);
+    if (!Array.isArray(eventRows) || !Array.isArray(certRows)) return fail(500, "SERVER_ERROR", "Feedback belum dapat dimuat.");
+    const weekAgo = Date.now() - 7 * 86400000;
+    const summary = eventRows.map((row) => {
+      const answers = rows.filter((answer) => answer.event_id === row.id);
+      return {
+        slug: row.slug, title: row.title, event_date: row.event_date,
+        count: answers.length,
+        average: answers.reduce((sum, answer) => sum + answer.rating, 0) / answers.length,
+        issued: certRows.filter((cert) => cert.event_id === row.id).length,
+        recent: answers.filter((answer) => Date.parse(answer.updated_at) >= weekAgo).length,
+      };
+    }).sort((a, b) => String(b.event_date).localeCompare(String(a.event_date)));
+    return json(200, { events: summary });
+  }
   const slug = url.searchParams.get("event") || "";
   const action = url.searchParams.get("action");
   if (slug.length > 120 || !slugPattern.test(slug)) return fail(400, "INVALID_REQUEST", "Kegiatan tidak valid.");
