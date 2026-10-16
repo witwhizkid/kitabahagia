@@ -255,8 +255,8 @@ highlights from warga/teman/panitia/aktivitas/lokasi, message ≤1000, anonymous
 The certificate email (`admin-certificate-issue`) adds "Kasih feedback" → `https://kitabahagia.id/feedback?t=<token>`
 (`feedback.html` + `js/feedback.js`). `public-feedback` GET returns the first name, the event and the saved
 answer; POST upserts. `admin-certificate-issue` GET returns `feedback` (name only when not anonymous; null
-when the table is missing) for the card under "Terbitkan sertifikat". Deploy order: migration first (the
-certificate projection selects `feedback_token`), then `public-feedback` and `admin-certificate-issue`.
+when the table is missing) for the card under "Terbitkan sertifikat". Deploy order: run the migration, then deploy `public-feedback`
+and `admin-certificate-issue` (before the migration the email simply has no feedback link; the token is read separately).
 Rollback: `supabase/rollback/20261022010000_event_feedback.down.sql`.
 
 ## Event "last edited by"

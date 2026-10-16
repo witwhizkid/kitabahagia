@@ -3703,7 +3703,14 @@
       issuance.data = data;
       renderRecipients();
     } catch (error) {
-      if (seq === issuance.loadSeq) setFeedback($("#certificate-issue-feedback"), error.message, "error");
+      if (seq !== issuance.loadSeq) return;
+      // The section stays hidden without data, so show the error in its state line.
+      $("#certificate-issue").hidden = false;
+      $("#certificate-issue-toolbar").hidden = true;
+      $("#certificate-recipients").innerHTML = "";
+      const state = $("#certificate-issue-state");
+      state.textContent = `Daftar penerima belum bisa dimuat: ${error.message}`;
+      state.hidden = false;
     }
   };
 
