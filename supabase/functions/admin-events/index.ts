@@ -19,7 +19,7 @@ const fail = (status: number, code: string, message: string) =>
 
 const eventProjection = [
   "id", "slug", "title", "description", "registration_description", "activities", "benefits",
-  "program_key", "documentation_url", "documentation_photos",
+  "program_key", "documentation_url", "documentation_full_url", "documentation_photos",
   "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location", "location_url",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "is_demo", "payment_window_minutes",
@@ -31,7 +31,7 @@ const eventProjection = [
 
 const writableFields = new Set([
   "title", "slug", "description", "registration_description", "activities", "benefits",
-  "program_key", "documentation_url", "documentation_photos",
+  "program_key", "documentation_url", "documentation_full_url", "documentation_photos",
   "category", "category_key", "event_date", "start_time", "end_at", "timezone", "location", "location_url",
   "price", "capacity", "registration_deadline", "status", "image_url", "image_alt",
   "whatsapp_group_url", "is_public", "payment_window_minutes",
@@ -127,7 +127,7 @@ const validatePayload = (input: unknown, creating: boolean) => {
       } else if (field === "registration_mode") {
         if (typeof value !== "string" || !registrationModes.has(value)) return { error: "Mode pendaftaran tidak valid." } as const;
         data[field] = value;
-      } else if (field === "documentation_url") {
+      } else if (field === "documentation_url" || field === "documentation_full_url") {
         if (value === null || value === "") data[field] = null;
         else {
           try {
