@@ -224,7 +224,8 @@ Halaman detail Kisah (`kisah-detail.html`, `js/stories.js`), gaya editorial ala 
 - **Hati (like)** (16 Okt 2026, mockup "kapsul melayang" dipilih user dari 3 opsi): kapsul gelap `#2a0e13` "♥ n · Bagikan"
   menempel di bawah (HP di atas tab bar) (`[data-story-like]`, `setupStoryLike` di `js/stories.js`); tanpa akun, satu hati per
   perangkat (id acak `localStorage kb_like_device`, daftar `kb_liked_stories`), server simpan hash saja (lihat "Story hearts" di
-  `supabase/README.md`); Bagikan = share sheet HP / salin link. Komentar sengaja **belum** (spam + moderasi; saran: nanti kalau
+  `supabase/README.md`); Bagikan = share sheet HP / salin link. Khusus kisah-detail: scroll ke bawah = kapsul + tab bar sembunyi (`html.is-reading-down`), muncul lagi saat scroll ke
+  atas, di atas halaman, atau di akhir halaman (user 16 Okt 2026, fokus baca). Komentar sengaja **belum** (spam + moderasi; saran: nanti kalau
   pembaca ramai, versi dimoderasi admin).
 - Penutup: ajakan "Lihat jadwal kegiatan" lalu "Kisah lainnya" (3 kartu,
   memakai kartu arsip). Belum: foto di tengah cerita, keterangan foto, penulis
