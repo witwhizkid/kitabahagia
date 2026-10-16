@@ -448,6 +448,82 @@
     }
   };
 
+  // Floating "♥ n · Bagikan" capsule. One heart per device: a random id in localStorage (no account);
+  // the server stores only a hash of it. The count is fetched fresh, the story itself may be cached.
+  const likedKey = "kb_liked_stories";
+  const readLiked = () => {
+    try { return JSON.parse(localStorage.getItem(likedKey) || "[]"); } catch { return []; }
+  };
+  const writeLiked = (slugs) => {
+    try { localStorage.setItem(likedKey, JSON.stringify(slugs.slice(-200))); } catch { /* storage unavailable */ }
+  };
+  const likeDevice = () => {
+    try {
+      let id = localStorage.getItem("kb_like_device");
+      if (!/^[a-f0-9]{32}$/.test(id || "")) {
+        id = [...crypto.getRandomValues(new Uint8Array(16))].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+        localStorage.setItem("kb_like_device", id);
+      }
+      return id;
+    } catch {
+      return null;
+    }
+  };
+  const setupStoryLike = (story, pageUrl) => {
+    const bar = document.querySelector("[data-story-like]");
+    if (!bar) return;
+    const button = bar.querySelector("[data-story-like-button]");
+    const countEl = bar.querySelector("[data-story-like-count]");
+    let liked = readLiked().includes(story.slug);
+    let count = null;
+    const paint = () => {
+      button.setAttribute("aria-pressed", String(liked));
+      countEl.textContent = count === null ? "" : new Intl.NumberFormat("id-ID", { notation: "compact" }).format(count);
+    };
+    paint();
+    bar.hidden = false;
+    fetch(`${functionsBase}/public-stories?slug=${encodeURIComponent(story.slug)}&likes=1`, { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => { if (typeof data?.likes === "number") { count = data.likes; paint(); } })
+      .catch(() => {});
+    button.onclick = async () => {
+      const device = likeDevice();
+      if (!device) return;
+      liked = !liked;
+      if (count !== null) count = Math.max(0, count + (liked ? 1 : -1));
+      const slugs = readLiked().filter((item) => item !== story.slug);
+      writeLiked(liked ? [...slugs, story.slug] : slugs);
+      button.classList.remove("is-popping");
+      if (liked) { void button.offsetWidth; button.classList.add("is-popping"); }
+      paint();
+      try {
+        const response = await fetch(`${functionsBase}/public-stories`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug: story.slug, device, liked }),
+        });
+        const data = await response.json().catch(() => null);
+        if (typeof data?.likes === "number") { count = data.likes; paint(); }
+      } catch {
+        // Offline: the heart stays on this device; the count catches up on the next visit.
+      }
+    };
+    bar.querySelector("[data-story-like-share]").onclick = async () => {
+      if (navigator.share) {
+        try { await navigator.share({ title: story.title, url: pageUrl }); } catch { /* closed */ }
+        return;
+      }
+      const label = bar.querySelector("[data-story-like-share]");
+      try {
+        await navigator.clipboard.writeText(pageUrl);
+        label.firstChild.textContent = "Link tersalin ";
+      } catch {
+        label.firstChild.textContent = "Gagal menyalin ";
+      }
+      setTimeout(() => { label.firstChild.textContent = "Bagikan "; }, 2000);
+    };
+  };
+
   const renderStoryDetail = async () => {
     const article = document.querySelector("[data-story-detail]");
     if (!article) return;
@@ -520,6 +596,7 @@
       const words = story.body.trim().split(/\s+/).length;
       document.querySelector("[data-story-detail-reading]").textContent = `${Math.max(1, Math.round(words / 200))} menit baca`;
       void renderMoreStories(story.slug);
+      setupStoryLike(story, pageUrl);
       state.hidden = true;
       state.removeAttribute("aria-busy");
       article.hidden = false;
