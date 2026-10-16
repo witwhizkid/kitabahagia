@@ -841,7 +841,7 @@ Sertifikat relawan otomatis (disepakati konsepnya, belum dibangun):
   diimpor; kegiatan pertama Oktober 2026.
 - **Feedback setelah kegiatan** (16 Okt 2026, mockup disetujui user): email sertifikat punya blok pink "Gimana kegiatannya?" →
   `feedback.html?t=<token per sertifikat>` (noindex, tanpa header): kartu kegiatan, rating 5 emoji (wajib), "Yang paling berkesan?"
-  (pil: Momen bareng mereka/Teman baru/Panitia/Kegiatannya seru/Tempatnya; kunci database tetap warga/teman/panitia/aktivitas/lokasi), "Ada yang perlu kamu sampaikan?" (opsional), saklar "Kirim tanpa nama"; satu
+  (8 pil, revisi user 16 Okt 2026: Interaksi Sosial/Keseruan Aktivitas/Teman Baru/Pengalaman Baru/Keramahan Panitia/Manfaat Kegiatan/Lokasi & Fasilitas/Suasana Kegiatan = kunci warga/aktivitas/teman/pengalaman/panitia/manfaat/lokasi/suasana, migrasi `20261023010000`), "Ada yang perlu kamu sampaikan?" (opsional), saklar "Kirim tanpa nama"; satu
   jawaban per sertifikat, bisa diubah; layar terima kasih + kegiatan berikutnya (`renderLinkEvents`). Admin: **tab "Feedback"** (16 Okt 2026, user: tim
   bingung nyari di Sertifikat; desktop sidebar, HP menu Lainnya): daftar kegiatan yang punya feedback (rata-rata, n/terbit mengisi, "N baru" 7 hari)
   → kartu (rata-rata, % mengisi, batang per emoji, paling berkesan, pesan); `admin-certificate-issue?feedback=summary`. Tab Sertifikat cuma link

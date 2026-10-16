@@ -251,7 +251,7 @@ a number (the count request fails quietly). Rollback: `supabase/rollback/2026102
 
 Migration `20261022010000_event_feedback.sql`: `certificates.feedback_token` (random 32 hex per
 certificate, filled for existing rows too) and `event_feedback` (one row per certificate: rating 1–5,
-highlights from warga/teman/panitia/aktivitas/lokasi, message ≤1000, anonymous; service role only).
+highlights from warga/aktivitas/teman/pengalaman/panitia/manfaat/lokasi/suasana (8 since migration `20261023010000`), message ≤1000, anonymous; service role only).
 The certificate email (`admin-certificate-issue`) adds "Kasih feedback" → `https://kitabahagia.id/feedback?t=<token>`
 (`feedback.html` + `js/feedback.js`). `public-feedback` GET returns the first name, the event and the saved
 answer; POST upserts. `admin-certificate-issue` GET returns `feedback` (name only when not anonymous; null
