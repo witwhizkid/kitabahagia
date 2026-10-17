@@ -687,10 +687,12 @@ halaman `hadir` (tanpa login/aplikasi) dengan kartu kegiatan; kalau `kb_my_regis
 satu ketukan, kalau tidak = ketik nomor WA / kode pendaftaran. Sukses = layar maroon + konfeti (`celebrate`), jam absen, kode,
 tanggal sertifikat (H+3), tombol grup WA. Penjagaan = aturan `set_attendance` yang ada (hanya hari H WIB, hanya `confirmed`);
 pesan: sudah absen (tidak dobel), QR sudah berganti, nomor tidak terdaftar di kegiatan ini, pembayaran belum terkonfirmasi.
-Admin Pendaftar: kehadiran berlabel "QR" / "Manual · <admin>" + jam; tandai hadir manual tetap jadi cadangan. Belum diputuskan
-user: (1) cukup nomor WA (risiko titip absen, admin bisa koreksi) atau + 4 digit terakhir kode; (2) layar QR dipegang admin atau
-link "layar absen" khusus kegiatan untuk ketua tim tanpa akun admin (hanya QR, tanpa data pendaftar); (3) jam buka (usul: sepanjang
-hari H). Ide lanjutan dari sesi yang sama (belum diminta): pengingat email H-1 otomatis (Brevo + pg_cron, kolom "Catatan hari H"),
+Admin Pendaftar: kehadiran berlabel "QR" / "Manual · <admin>" + jam; tandai hadir manual tetap jadi cadangan. **Keputusan user
+(17 Okt 2026):** (1) identitas = otomatis dari HP yang dipakai daftar, kalau tidak ada = ketik nomor WA **atau** email (kode
+pendaftaran juga diterima); tanpa cari nama (daftar peserta bocor); (2) ketua tim belum punya akun admin (undangan admin menunggu
+Midtrans approve), jadi layar QR dibuka lewat **link "layar absen" per kegiatan** yang dikirim admin via WA: hanya QR + angka hadir +
+nama depan yang baru absen, tanpa WA/email/menu admin, berlaku hanya di hari kegiatan, bisa dimatikan admin; (3) absen buka hari H
+00.00 sampai akhir hari terakhir kegiatan (WIB). Tidak dikebut untuk kegiatan 18 Okt (butuh migrasi + Edge Function baru + tes). Ide lanjutan dari sesi yang sama (belum diminta): pengingat email H-1 otomatis (Brevo + pg_cron, kolom "Catatan hari H"),
 daftar tunggu saat kuota penuh, laporan kegiatan 1 halaman PDF untuk owner/mitra, riwayat relawan (Kartu Relawan tahap 2).
 
 Peran Ketua Tim (usul user 10 Okt 2026, **menunggu jawaban owner**; dikerjakan **setelah** kegiatan 18 Okt, sebelum 6 ketua
