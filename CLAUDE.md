@@ -676,6 +676,20 @@ Hosting & pembayaran (keputusan user, Sep 2026):
   Grup WA kegiatan berbayar sebaiknya "Setujui anggota baru". Cara tes di live tanpa tampil publik: buat kegiatan biasa, `update events set is_demo = true where slug = ...`, buka
   `pendaftaran.html?event=<slug>&demo=1` (backend tidak membedakan demo); hapus setelahnya dengan filter `and is_demo`. Opsi jangka panjang: PT Perorangan.
 
+**Absen mandiri pakai QR** (17 Okt 2026, mockup dibuat, user: "catat dulu"; garap **setelah** kegiatan 18 Okt, pakai catatan
+absen manual hari itu sebagai bahan): admin → kegiatan → "Buka absen QR" = layar maroon gelap layar penuh di HP/tablet panitia:
+QR bulat (gaya `qrSvgMarkup`) berisi `kitabahagia.id/hadir?k=…&t=…` yang **berganti ±30 detik** (link yang difoto/disebar ke grup
+kedaluwarsa ±1 menit), angka "N / M terkonfirmasi hadir" + bar emas + nama yang baru absen (live). Peserta scan pakai kamera HP:
+halaman `hadir` (tanpa login/aplikasi) dengan kartu kegiatan; kalau `kb_my_registration` di HP itu cocok = kartu nama + "Aku hadir"
+satu ketukan, kalau tidak = ketik nomor WA / kode pendaftaran. Sukses = layar maroon + konfeti (`celebrate`), jam absen, kode,
+tanggal sertifikat (H+3), tombol grup WA. Penjagaan = aturan `set_attendance` yang ada (hanya hari H WIB, hanya `confirmed`);
+pesan: sudah absen (tidak dobel), QR sudah berganti, nomor tidak terdaftar di kegiatan ini, pembayaran belum terkonfirmasi.
+Admin Pendaftar: kehadiran berlabel "QR" / "Manual · <admin>" + jam; tandai hadir manual tetap jadi cadangan. Belum diputuskan
+user: (1) cukup nomor WA (risiko titip absen, admin bisa koreksi) atau + 4 digit terakhir kode; (2) layar QR dipegang admin atau
+link "layar absen" khusus kegiatan untuk ketua tim tanpa akun admin (hanya QR, tanpa data pendaftar); (3) jam buka (usul: sepanjang
+hari H). Ide lanjutan dari sesi yang sama (belum diminta): pengingat email H-1 otomatis (Brevo + pg_cron, kolom "Catatan hari H"),
+daftar tunggu saat kuota penuh, laporan kegiatan 1 halaman PDF untuk owner/mitra, riwayat relawan (Kartu Relawan tahap 2).
+
 Peran Ketua Tim (usul user 10 Okt 2026, **menunggu jawaban owner**; dikerjakan **setelah** kegiatan 18 Okt, sebelum 6 ketua
 tim diundang): peran baru `team_lead` + nomor tim 1–6 di `admin_users`, kolom `events.team`. Ketua Tim hanya melihat kegiatan
 timnya + pendaftarnya (data pribadi tidak terbuka ke semua ketua tim); admin/super admin tetap melihat semua. Penyaringan
